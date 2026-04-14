@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  --app-primary: #3525CD;
+  --app-primary-complement: #4F46E5;
+  --app-primary-nav: #F0F3FF;
+  --app-secondary: #DCE2F3;
+  --app-danger: #95002B;
+  --app-successful: #006C49;
+  --app-neutral: #464555;
+  --color-primary: var(--app-primary);
+  --color-primary-nav: var(--app-primary-nav);
+  --color-secondary: var(--app-secondary);
+  --color-danger: var(--app-danger);
+  --color-successful: var(--app-successful);
+  --color-neutral: var(--app-neutral);
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  background: var(--color-secondary);
+  color: var(--color-neutral);
+  --background: #ffffff;
+  --foreground: var(--app-neutral);
+  --card: #ffffff;
+  --card-foreground: var(--app-neutral);
+  --popover: #ffffff;
+  --popover-foreground: var(--app-neutral);
+  --primary: var(--app-primary);
+  --primary-complement: var(--app-primary-complement);
+  --primary-foreground: #ffffff;
+  --secondary: var(--app-secondary);
+  --secondary-foreground: var(--app-neutral);
+  --muted: var(--app-primary-nav);
+  --muted-foreground: #6a6980;
+  --accent: var(--app-primary-nav);
+  --accent-foreground: var(--app-primary);
+  --destructive: var(--app-danger);
+  --border: #ccd4ea;
+  --input: #dce2f3;
+  --ring: rgb(53 37 205 / 28%);
+  --chart-1: var(--app-primary);
+  --chart-2: #6d5df2;
+  --chart-3: #8a7cf6;
+  --chart-4: #a79af9;
+  --chart-5: #c3b8fc;
+  --radius: 0.20rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--app-neutral);
+  --sidebar-primary: var(--app-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--app-primary-nav);
+  --sidebar-accent-foreground: var(--app-primary);
+  --sidebar-border: #ccd4ea;
+  --sidebar-ring: rgb(53 37 205 / 28%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--color-secondary);
+  color: var(--color-neutral);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@theme inline {
+  --font-heading: 'Geist Variable', 'Roboto', 'Segoe UI', sans-serif;
+  --font-sans: 'Roboto', 'Segoe UI', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-complement: var(--primary-complement);
+  --color-primary-nav: var(--accent);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-neutral: var(--foreground);
+  --color-danger: var(--destructive);
+  --color-successful: var(--app-successful);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+.dark {
+  --background: #161822;
+  --foreground: #eef1ff;
+  --card: #1f2230;
+  --card-foreground: #eef1ff;
+  --popover: #1f2230;
+  --popover-foreground: #eef1ff;
+  --primary: #8f82ff;
+  --primary-foreground: #11131a;
+  --secondary: #2b3144;
+  --secondary-foreground: #eef1ff;
+  --muted: #2b3144;
+  --muted-foreground: #b1b7d1;
+  --accent: #2b3144;
+  --accent-foreground: #eef1ff;
+  --destructive: #ff8aa3;
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 16%);
+  --ring: rgb(143 130 255 / 36%);
+  --chart-1: #8f82ff;
+  --chart-2: #6e8dff;
+  --chart-3: #60d4c8;
+  --chart-4: #ffb86f;
+  --chart-5: #ff8aa3;
+  --sidebar: #1b1f2b;
+  --sidebar-foreground: #eef1ff;
+  --sidebar-primary: #8f82ff;
+  --sidebar-primary-foreground: #11131a;
+  --sidebar-accent: #2b3144;
+  --sidebar-accent-foreground: #eef1ff;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: rgb(143 130 255 / 36%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply text-foreground;
+  }
+
+  html {
+    @apply font-sans;
+  }
+}
