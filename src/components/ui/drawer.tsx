@@ -2,7 +2,8 @@ import type { ComponentProps } from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
 
 import { cn } from '@/lib/utils'
-import { useDesktopMediaQuery } from '@/hooks/useDesktopMediaQuery'
+import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
+
 
 function Drawer({
   shouldScaleBackground = true,

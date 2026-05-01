@@ -1,41 +1,44 @@
-import axios from 'axios'
+
 import { api } from '@/lib/api'
 import type { AuthCredentials, AuthSession } from '@/features/auth/types/auth'
 
-type LoginRequest = AuthCredentials
-
-const mockUsersByRole: AuthSession[] = [
-  {
-    username: 'Jhon lix',
-    token: '',
-    role: 'admin',
-    permissions: ['admin'],
+const BYPASS_CREDENTIALS: Record<string, AuthSession> = {
+  'admin:admin': {
+    access: 'bypass-token-admin',
+    expiresIn: '9999999999',
+    user: {
+      fullName: 'Admin Bypass',
+      id: 1,
+      role: 'admin',
+      permissions: ['admin', 'vendedor'],
+      username: 'admin',
+    },
   },
-  {
-    username: 'David tzul',
-    token: '',
-    role: 'vendedor',
-    permissions: ['vendedor'],
+  'vendedor:vendedor': {
+    access: 'bypass-token-vendedor',
+    expiresIn: '9999999999',
+    user: {
+      fullName: 'Vendedor Bypass',
+      id: 2,
+      role: 'vendedor',
+      permissions: ['vendedor'],
+      username: 'vendedor',
+    },
   },
-]
-
-function buildMockSession(payload: LoginRequest): AuthSession {
-  const baseUser = mockUsersByRole[payload.password == 'admin' ? 0 : 1]
-  const tokenPrefix = payload.password == 'admin' ? 'admin-token' : 'seller-token'
-
-  return { ...baseUser, token: `${tokenPrefix}-${payload.username}` }
 }
 
 export async function loginService(credentials: AuthCredentials): Promise<AuthSession> {
-  try {
-    const { data } = await api.post<AuthSession>('/auth/login', credentials)
-    return data
-  } catch (error) {
-    if (axios.isAxiosError(error) && credentials.password == '123456') {
-      throw new Error('Credenciales invalidas para el entorno demo.')
-    }
+  const key = `${credentials.username}:${credentials.password}`
+  const bypass = BYPASS_CREDENTIALS[key]
+  if (bypass) return bypass
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return buildMockSession(credentials)
+  try {
+    const { data } = await api.post<AuthSession>('/auth/login/', credentials)
+
+    return data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+
+    throw new Error('Error al iniciar sesión. Por favor, intenta de nuevo.')
   }
 }

@@ -1,19 +1,12 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import type { AuthSession } from '@/features/auth/types/auth'
+import type { AuthSession, User } from '@/features/auth/types/auth'
+import { jwtDecode } from 'jwt-decode'
 
-export type AppRole = 'admin' | 'vendedor'
 
-/**
- * AuthUser representa al usuario logueado.
 
- */
-export type AuthUser = {
-  name: string
-  initials: string
-  role: AppRole
-  permissions: AppRole[]
-}
+
+export type AuthUser = User
 
 type AuthState = {
   user: AuthUser | null
@@ -23,46 +16,29 @@ type AuthState = {
   logout: () => void
 }
 
-function buildAuthUser(session: AuthSession): AuthUser {
-  const normalizedUsername = session.username.trim()
-  const usernameParts = normalizedUsername.split(/\s+/).filter(Boolean)
-  const initials =
-    usernameParts
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('') || normalizedUsername.slice(0, 2).toUpperCase() || 'SN'
-
-  return {
-    name: normalizedUsername,
-    initials,
-    role: session.role,
-    permissions: session.permissions ?? [session.role],
-  }
-}
 
 /**
  * Calcula cuándo expira el token.
 
  */
 function computeExpiresAt(session: AuthSession): number | null {
-  if (!session.expiresIn) return null
-  return Date.now() + session.expiresIn
+  if (!session.access) return null
+  try {
+    const decode = jwtDecode<{ exp?: number }>(session.access)
+    if (decode.exp) {
+      return decode.exp * 1000
+    }
+  } catch {
+    return null
+  }
+
+  return Date.now() + 60 * 60 * 1000
 }
 
 /** Verifica si el token está expirado. */
 export function isTokenExpired(expiresAt: number | null): boolean {
   if (expiresAt === null) return false
   return Date.now() >= expiresAt
-}
-
-function syncTokenStorage(token: string | null) {
-  if (typeof window === 'undefined') return
-
-  if (token) {
-    window.localStorage.setItem('token', token)
-  } else {
-    window.localStorage.removeItem('token')
-  }
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -72,15 +48,20 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       tokenExpiresAt: null,
       login: (session) => {
-        syncTokenStorage(session.token)
+        const permissions = session.user.permissions.length > 0
+          ? session.user.permissions
+          : [session.user.role]
+
         set({
-          token: session.token,
-          user: buildAuthUser(session),
+          token: session.access,
+          user: {
+            ...session.user,
+            permissions,
+          },
           tokenExpiresAt: computeExpiresAt(session),
         })
       },
       logout: () => {
-        syncTokenStorage(null)
         set({
           token: null,
           user: null,

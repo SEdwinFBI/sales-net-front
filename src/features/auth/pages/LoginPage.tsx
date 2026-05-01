@@ -1,5 +1,5 @@
 import PageMeta from '@/components/page-template/PageMeta'
-import LoginFeature from '@/features/auth'
+import LoginFeature from '@/features/auth/components'
 import LoginLayout from '@/layouts/login/LoginLayout'
 
 export default function LoginPage() {

@@ -2,8 +2,9 @@
 import { type ReactNode, type ComponentType } from 'react'
 import { Navigate, Outlet, type RouteObject } from 'react-router'
 import { type LucideIcon } from 'lucide-react'
-import type { AppRole } from '@/store/auth-store'
+
 import ProtectedRoute from '@/components/route/ProtectedRoute'
+import type { AppRole } from '@/features/auth/types/auth'
 
 
 export type AppRouteMeta = {
