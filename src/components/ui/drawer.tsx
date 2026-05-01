@@ -65,7 +65,7 @@ function DrawerContent({
         data-slot="drawer-content"
         className={cn(
           isDesktop || isTablet ?
-            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[30vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
+            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[40vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
             'fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-[28px] border border-border/50 bg-background outline-none',
           className
         )}
@@ -129,7 +129,7 @@ function DrawerTitle({
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('text-base font-semibold text-foreground', className)}
+      className={cn('text-lg text-center font-semibold text-foreground', className)}
       {...props}
     />
   )
