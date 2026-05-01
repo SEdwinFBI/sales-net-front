@@ -1,15 +1,15 @@
 import { create } from 'zustand';
-import type { CartItem, SaleProduct, SalesDialog } from '../types/sales';
+import type { CartItem, Product, SalesDialog } from '../types/sales';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface SalesState {
   items: CartItem[];
   cartOpen: boolean;
   activeDialog: SalesDialog;
-  // Acciones
-  addItem: (product: SaleProduct) => void;
-  removeItem: (productId: string) => void;
-  increaseQty: (productId: string) => void;
-  decreaseQty: (productId: string) => void;
+  addItem: (product: Product, variantId: string) => void;
+  removeItem: (itemId: string) => void;
+  increaseQty: (itemId: string) => void;
+  decreaseQty: (itemId: string) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -17,53 +17,70 @@ interface SalesState {
   closeDialog: () => void;
 }
 
-export const useSalesStore = create<SalesState>((set) => ({
+function buildCartItemId(productId: string, variantId: string): string {
+  return `${productId}::${variantId}`
+}
+
+export const useSalesStore = create<SalesState>()(persist((set) => ({
   items: [],
   cartOpen: false,
   activeDialog: null,
 
-  addItem: (product) =>
+  addItem: (product, variantId) =>
     set((state) => {
-      const isProductInCart = state.items.some((item) => item.id === product.id);
+      const cartId = buildCartItemId(product.id, variantId)
+      const variant = product.variants.find((v) => v.id === variantId)
+      if (!variant) return state
 
-      if (isProductInCart) {
+      const existing = state.items.find((item) => item.id === cartId)
+      if (existing) {
         return {
           items: state.items.map((item) =>
-            item.id === product.id
+            item.id === cartId
               ? { ...item, qty: item.qty + 1 }
               : item
           ),
-        };
+        }
       }
 
-      const newItem: CartItem = { ...product, qty: 1 };
-      return { items: [...state.items, newItem] };
+      const newItem: CartItem = {
+        id: cartId,
+        productId: product.id,
+        name: product.name,
+        category: product.category,
+        image: product.image,
+        variantId,
+        size: variant.size,
+        price: variant.price,
+        stock: variant.stock,
+        qty: 1,
+      }
+      return { items: [...state.items, newItem] }
     }),
 
-  removeItem: (productId) =>
+  removeItem: (itemId) =>
     set((state) => ({
-      items: state.items.filter((item) => item.id !== productId),
+      items: state.items.filter((item) => item.id !== itemId),
     })),
 
-  increaseQty: (productId) =>
+  increaseQty: (itemId) =>
     set((state) => ({
       items: state.items.map((item) =>
-        item.id === productId
+        item.id === itemId
           ? { ...item, qty: item.qty + 1 }
           : item
       ),
     })),
 
-  decreaseQty: (productId) =>
+  decreaseQty: (itemId) =>
     set((state) => ({
       items: state.items
         .map((item) => {
-          if (item.id === productId) {
-            return { ...item, qty: item.qty - 1 };
+          if (item.id === itemId) {
+            return { ...item, qty: item.qty - 1 }
           }
-          return item;
+          return item
         })
-        //descarta
         .filter((item) => item.qty > 0),
     })),
 
@@ -84,4 +101,13 @@ export const useSalesStore = create<SalesState>((set) => ({
       cartOpen: true,
       activeDialog: null,
     }),
-}));
+}),
+  {
+    name: 'sales-store',
+    storage: createJSONStorage(() => localStorage),
+    partialize: (state) => ({
+      items: state.items,
+      cartOpen: state.cartOpen,
+    }),
+  }
+))

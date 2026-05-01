@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router'
-import { useAuthStore } from '@/store/auth-store'
+import { useAuthStore } from '@/features/core/store/auth-store'
 import { getHomeRoute } from '@/lib/app-routes'
 
 

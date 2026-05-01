@@ -2,8 +2,9 @@
 import { type ReactNode, type ComponentType } from 'react'
 import { Navigate, Outlet, type RouteObject } from 'react-router'
 import { type LucideIcon } from 'lucide-react'
-import type { AppRole } from '@/store/auth-store'
+
 import ProtectedRoute from '@/components/route/ProtectedRoute'
+import type { AppRole } from '@/features/auth/types/auth'
 
 
 export type AppRouteMeta = {
@@ -16,6 +17,100 @@ export type AppRouteMeta = {
   /** Ocultar de sidebar. */
   hideFromSidebar?: boolean
 }
+
+
+
+/**
+ * @example
+ * 
+ *export const salesRoutes: AppRoute[] = [
+ *{ //Patron: seccion - pagina
+ *    path: 'venta',
+ *    meta: {
+ *      name: 'Venta',
+ *      description: 'Operacion de ventas',
+ *      icon: Store,
+ *      #hideFromSidebar: true, <- oculta toda la rama del sidebar
+ *    },
+ *    children: [
+ *      {
+ *        path: 'punto-de-venta',
+ *        meta: {
+ *          name: 'Punto de venta',
+ *          description: 'Venta de productos',
+ *          icon: Store,
+ *          permissions: ['vendedor'],
+ *          lazy: () => import('./pages/PosPage'),
+ *        },
+ *      },
+ *    ],
+ *  },
+ *  { //Patron: pagina simple
+ *    path: 'punto-de-venta2',
+ *    meta: {
+ *      name: 'Punto de venta2',
+ *      description: 'Venta de productos',
+ *      icon: Store,
+ *      permissions: ['vendedor'],
+ *      lazy: () => import('./pages/PosPage'),
+ *    },
+ *  },
+ *  { //Patron: modulo - seccion - pagina
+ *    path: 'venta2',
+ *    meta: {
+ *      name: 'Venta2',
+ *      description: 'Operacion de ventas',
+ *      icon: Store,
+ *    }, //seccion
+ *    children: [
+ *      {
+ *        path: 'punto-de-venta3',
+ *        meta: {
+ *          name: 'Punto de venta3',
+ *          description: 'Venta de productos',
+ *          icon: Store,
+
+ *
+ *        }, //pagina
+ *        children: [
+ *          {
+ *            path: 'punto-de-venta3',
+ *            meta: {
+ *              name: 'Punto de venta3',
+ *              description: 'Venta de productos',
+ *              icon: Store,
+ *              permissions: ['vendedor'],
+ *              lazy: () => import('./pages/PosPage'),
+ *            },
+ *          },
+ *        ],
+ *      },
+ *      { //seccion
+ *        path: 'punto-de-venta5',
+ *        meta: {
+ *          name: 'Punto de venta3',
+ *          description: 'Venta de productos',
+ *          icon: Store,
+ *
+ *        },//pagina
+ *        children: [
+ *          {
+ *            path: 'punto-de-venta3',
+ *            meta: {
+ *              name: 'Punto de venta3',
+ *              description: 'Venta de productos',
+ *              icon: Store,
+ *              permissions: ['vendedor'],
+ *              lazy: () => import('./pages/PosPage'),
+ *            },
+ *          },
+ *        ],
+ *      },
+ *    ],
+ *  },
+ *]
+ *
+ */
 
 export type AppRoute = {
   path: string

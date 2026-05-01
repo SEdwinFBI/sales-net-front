@@ -10,20 +10,20 @@ type NavBarDesktopProps = {
   onToggleModule?: (moduleId: string) => void
 }
 
-/** Construye la ruta completa desde el item raiz hasta el hijo */
+/** Construye la ruta */
 function buildFullPath(item: SidebarItem, parentPath?: string): string {
   const currentPath = parentPath ? `${parentPath}/${item.path}` : `/${item.path}`
   return currentPath
 }
 
-/** Verifica si la ruta actual pertenece a este item o a alguno de sus descendientes */
+/** Verifica  */
 function isItemOrDescendantActive(item: SidebarItem, currentPathname: string, parentPath?: string): boolean {
   const fullPath = buildFullPath(item, parentPath)
   if (currentPathname === fullPath || currentPathname.startsWith(`${fullPath}/`)) return true
   return item.children.some((child) => isItemOrDescendantActive(child, currentPathname, fullPath))
 }
 
-/** Renderiza los hijos recursivamente como sub-items */
+/** Renderiza los hijos*/
 function SubItems({
   items,
   expanded,
@@ -68,12 +68,12 @@ function SubItems({
       <div
         className={cn(
           'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-200',
-          hasActiveInLevel ? 'bg-primary/30' : 'bg-neutral/10',
+          hasActiveInLevel ? 'bg-primary' : 'bg-stone-500',
         )}
         style={{ left: guideLeft }}
       />
 
-      <div className="space-y-0.5">
+      <div className="space-y-1.5">
         {items.map((item) => {
           const Icon = item.icon
           const hasChildren = item.children.length > 0
@@ -82,10 +82,10 @@ function SubItems({
           const isItemExpanded = expandedModules?.includes(item.id) ?? false
           const isActiveItem = location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`)
 
-          const lineClass = isActiveItem ? 'bg-primary' : 'bg-neutral/15'
-          const dotClass = isActiveItem ? 'bg-primary' : 'bg-neutral/20'
-          const textClass = isActiveItem ? 'text-neutral font-semibold text-[0.73rem]' : 'text-neutral/75 group-hover:text-neutral text-[0.73rem]'
-          const iconClass = isActiveItem ? 'text-primary' : 'text-neutral/40 group-hover:text-neutral/60'
+          const lineClass = isActiveItem ? 'bg-primary' : 'bg-stone-500'
+          const dotClass = isActiveItem ? 'bg-primary' : 'bg-stone-300/90'
+          const textClass = isActiveItem ? 'text-stone-700 font-semibold text-[0.73rem]' : 'text-stone-500 group-hover:text-stone-600 text-[0.73rem]'
+          const iconClass = isActiveItem ? 'text-primary/90' : 'text-stone-400 group-hover:text-stone-500'
 
           if (isLeaf) {
             return (
@@ -95,9 +95,9 @@ function SubItems({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'group relative flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-150 ease-out',
-                    'hover:bg-black/4',
-                    isActive && 'bg-primary/[0.07]', textClass
+                    'group relative border border-s-olive-200 flex items-center gap-1 rounded-lg px-5 py-0.5 transition-all duration-200 ease-out',
+                    'bg-stone-100/20',
+                    isActive && 'bg-primary/8', textClass
 
                   )
                 }
@@ -126,11 +126,11 @@ function SubItems({
                   )}>
                     {item.name}
                   </span>
-                  {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-neutral/40 mt-0.5">
+                  {/* {item.description && depth === 0 && (
+                    <span className="block truncate text-[0.63rem] text-stone-400 mt-0.5">
                       {item.description}
                     </span>
-                  )}
+                  )} */}
                 </div>
               </NavLink>
             )
@@ -143,9 +143,9 @@ function SubItems({
                 type="button"
                 onClick={() => onToggleModule?.(item.id)}
                 className={cn(
-                  'group relative flex w-full items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-150 ease-out',
-                  'hover:bg-black/4',
-                  isActiveItem && 'bg-primary/[0.07]',
+                  'group relative flex border border-stone-200 w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 ease-out',
+                  'hover:bg-white/3',
+                  isActiveItem && 'bg-primary/8',
 
                 )}
               >
@@ -173,11 +173,11 @@ function SubItems({
                   )}>
                     {item.name}
                   </span>
-                  {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-neutral/40 mt-0.5">
+                  {/* {item.description && depth === 0 && (
+                    <span className="block truncate text-[0.63rem] text-stone-400 mt-0.5">
                       {item.description}
                     </span>
-                  )}
+                  )} */}
                 </div>
               </button>
 
@@ -214,30 +214,30 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-[1.5rem] max-h-15 border border-white/10 bg-primary py-2 text-white shadow-[0_18px_42px_-26px_rgba(53,37,205,0.58)] transition-[padding,gap,justify-content] duration-220 ease-out',
+          'flex items-center rounded-2xl max-h-15 border border-white/15 bg-linear-to-br from-primary to-primary/85 py-2.5 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >
-        <div className="grid size-10 shrink-0 place-items-center rounded-[1rem] bg-white/14 text-[0.72rem] font-black uppercase tracking-[0.24em] text-secondary">
+        <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-xs font-black uppercase tracking-widest text-amber-300/90 ring-1 ring-white/5">
           SN
         </div>
         <div
           className={cn(
-            'overflow-hidden transition-[width,opacity,transform] duration-220 ease-out',
+            'overflow-hidden transition-[width,opacity,transform] duration-200 ease-out',
             expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
           )}
         >
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-secondary">
             Sales Net
           </p>
-          <p className="mt-1 text-xs text-white/74">
+          <p className="mt-1 text-xs text-white/60">
             Panel comercial
           </p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="mt-4 flex flex-col gap-2">
+      <nav className="mt-5 flex flex-col gap-1">
         {items.map((item) => {
           const Icon = item.icon
           const hasChildren = item.children.length > 0
@@ -253,34 +253,34 @@ export default function NavBarDesktop({
                   type="button"
                   onClick={() => onToggleModule?.(item.id)}
                   className={cn(
-                    'flex w-full items-center rounded-[1.25rem] border py-4 transition-[background-color,border-color,box-shadow,transform,gap,justify-content,padding] duration-220 ease-out hover:-translate-y-0.5',
+                    'flex w-full items-center rounded-2xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
                     expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                     isActiveModule
-                      ? 'border-primary/18 bg-primary/10 shadow-[0_14px_30px_-24px_rgba(53,37,205,0.55)]'
-                      : 'border-neutral/5 bg-neutral/5 text-neutral hover:border-primary/18 hover:bg-white/92 hover:shadow-[0_14px_28px_-24px_rgba(70,69,85,0.24)]',
+                      ? 'border-primary/20 bg-primary/8 shadow-[0_0_16px_-4px_rgba(99,102,241,0.15)]'
+                      : 'border-stone-200 bg-transparent text-stone-500 hover:border-stone-200/60 hover:bg-white/70 hover:text-stone-700 hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]',
                   )}
                 >
                   <>
                     <div
                       className={cn(
-                        'rounded-full p-2.5 transition-[background-color,transform] duration-220 ease-out',
-                        isActiveModule ? 'bg-primary/12' : 'bg-secondary',
-                        expanded && 'hover:scale-[1.03]',
+                        'rounded-xl p-2 transition-all duration-300 ease-out',
+                        isActiveModule ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-stone-100',
+                        expanded && 'hover:scale-105',
                       )}
                     >
-                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-neutral')} />}
+                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-stone-500')} />}
                     </div>
                     <div
                       className={cn(
-                        'overflow-hidden transition-[width,opacity,transform] duration-220 ease-out',
+                        'overflow-hidden transition-[width,opacity,transform] duration-300 ease-out',
                         expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
                       )}
                     >
-                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-neutral')}>
+                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-stone-700')}>
                         {item.name}
                       </p>
                       {item.description && (
-                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-primary/75' : 'text-neutral/70')}>
+                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-primary/75' : 'text-stone-400')}>
                           {item.description}
                         </p>
                       )}
@@ -306,7 +306,7 @@ export default function NavBarDesktop({
             )
           }
 
-          // Pagina simple sin hijos
+          // Pagina simple 
           return (
             <NavLink
               key={item.id}
@@ -314,11 +314,11 @@ export default function NavBarDesktop({
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-[1.25rem] border py-4 transition-[background-color,border-color,box-shadow,transform,gap,justify-content,padding] duration-220 ease-out hover:-translate-y-0.5',
+                  'flex items-center rounded-2xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
                   expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                   isActive
-                    ? 'border-primary/18 bg-primary/10 shadow-[0_14px_30px_-24px_rgba(53,37,205,0.55)]'
-                    : 'border-white/70 bg-white/72 text-neutral hover:border-primary/18 hover:bg-white/92 hover:shadow-[0_14px_28px_-24px_rgba(70,69,85,0.24)]',
+                    ? 'border-primary/20 bg-primary/8 shadow-[0_0_16px_-4px_rgba(99,102,241,0.15)]'
+                    : 'border-stone-200 bg-transparent text-stone-500 hover:border-stone-200/60 hover:bg-white/70 hover:text-stone-700 hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]',
                 )
               }
             >
@@ -326,24 +326,24 @@ export default function NavBarDesktop({
                 <>
                   <div
                     className={cn(
-                      'rounded-full p-2.5 transition-[background-color,transform] duration-220 ease-out',
-                      isActive ? 'bg-primary/12' : 'bg-secondary',
-                      expanded && 'hover:scale-[1.03]',
+                      'rounded-xl p-2 transition-all duration-300 ease-out',
+                      isActive ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-stone-100',
+                      expanded && 'hover:scale-105',
                     )}
                   >
-                    {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-neutral')} />}
+                    {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-stone-500')} />}
                   </div>
                   <div
                     className={cn(
-                      'overflow-hidden transition-[width,opacity,transform] duration-220 ease-out',
+                      'overflow-hidden transition-[width,opacity,transform] duration-300 ease-out',
                       expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
                     )}
                   >
-                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-neutral')}>
+                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-stone-700')}>
                       {item.name}
                     </p>
                     {item.description && (
-                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-primary/75' : 'text-neutral/70')}>
+                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-primary/75' : 'text-stone-400')}>
                         {item.description}
                       </p>
                     )}

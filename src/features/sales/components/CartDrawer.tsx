@@ -40,7 +40,7 @@ const CartDrawer = () => {
         closeCart()
       }}
     >
-      <DrawerContent>
+      <DrawerContent className='w-full'>
         <DrawerHeader className="mx-auto w-full max-w-2xl">
           <DrawerTitle>Carrito</DrawerTitle>
           <DrawerDescription>
@@ -50,7 +50,7 @@ const CartDrawer = () => {
           </DrawerDescription>
         </DrawerHeader>
 
-        <DrawerBody className="mx-auto w-full max-w-2xl pt-2">
+        <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100vh-15rem)]">
           {items.length === 0 ? (
             <div className="rounded-[1rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
               Agrega productos desde la lista para empezar la venta.
@@ -64,7 +64,7 @@ const CartDrawer = () => {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold">{item.name}</p>
+                      <p className="font-semibold">{item.name} - {item.size}</p>
                       <p className="text-sm text-muted-foreground">
                         {item.category}
                       </p>

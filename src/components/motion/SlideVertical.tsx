@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from "react";
 import * as motion from 'motion/react-client'
-import { slideVertical } from "@/conf/motionConf";
+import { slideVertical } from "@/lib/motion";
 
 
 
