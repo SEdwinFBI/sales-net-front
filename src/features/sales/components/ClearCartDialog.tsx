@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-import { useSalesStore } from '../hooks/useSalesStore'
+import { useSalesStore } from '../store/useSalesStore'
 
 const ClearCartDialog = () => {
   const activeDialog = useSalesStore((state) => state.activeDialog)

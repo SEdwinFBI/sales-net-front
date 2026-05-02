@@ -27,3 +27,18 @@ export type CartItem = {
   stock: number
   qty: number
 }
+export type PaymentMethod = 'efectivo' | 'credito'
+
+export type SubmitSalePayload = {
+  id: string,
+  items: CartItem[]
+  paymentMethod: PaymentMethod
+  customerId?: string
+  total: number
+}
+
+export type SubmitSaleResponse = {
+  success: boolean
+  saleId: string
+  message: string
+}

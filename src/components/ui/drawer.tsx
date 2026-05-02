@@ -39,7 +39,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn('fixed inset-0 z-40 bg-black/40', className)}
+      className={cn('fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]', className)}
       {...props}
     />
   )
@@ -59,15 +59,15 @@ function DrawerContent({
 }: DrawerContentProps) {
   const { isDesktop, isTablet } = useDesktopMediaQuery()
   return (
-    <DrawerPortal>
+    <DrawerPortal >
       <DrawerOverlay className={overlayClassName} />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
           isDesktop || isTablet ?
-            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[40vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
+            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[35vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
             'fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-[28px] border border-border/50 bg-background outline-none',
-          className
+          className,
         )}
         {...props}
       >

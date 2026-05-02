@@ -11,7 +11,7 @@
     "gen-feature": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$n = $env:npm_config_name; if ($n) { $p = \\\"src/features/$n\\\"; 'components','services','hooks','types','utils' | ForEach-Object { New-Item -Path \\\"$p/$_\\\" -ItemType Directory -Force }; New-Item -Path \\\"$p/index.tsx\\\" -ItemType File -Force } else { Write-Error 'Debes usar --name=nombre' }\""
   },
   "dependencies": {
-    "@base-ui/react": "^1.3.0",
+    "@base-ui/react": "^1.4.1",
     "@fontsource-variable/geist": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@tailwindcss/vite": "^4.2.2",
