@@ -72,7 +72,7 @@ function LayoutHeader({
                     className="inline-flex items-center gap-2 rounded-full border border-secondary bg-white px-4 py-2 text-sm font-semibold text-neutral transition hover:bg-secondary"
                 >
                     <LogOut className="size-4 text-[--color-danger]" />
-                    Cerrar sesion
+
                 </button>
             </div>
         </header>
