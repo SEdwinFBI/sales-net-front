@@ -1,4 +1,4 @@
-import { Minus, Plus, Trash2 } from 'lucide-react'
+
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,8 +11,10 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer'
 
-import { useSalesStore } from '../hooks/useSalesStore'
+import { useSalesStore } from '../store/useSalesStore'
 import { formatCurrency } from '@/helpers/money'
+import CartItemComponent from './CartItemComponent'
+import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 
 
 const CartDrawer = () => {
@@ -25,8 +27,10 @@ const CartDrawer = () => {
   const decreaseQty = useSalesStore((state) => state.decreaseQty)
   const removeItem = useSalesStore((state) => state.removeItem)
 
-  const totalItems = items.reduce((sum, item) => sum + item.qty, 0)
-  const total = items.reduce((sum, item) => sum + item.qty * item.price, 0)
+
+
+  const totalItems = useSalesStore(selectTotalItems)
+  const total = useSalesStore(selectTotal)
 
   return (
     <Drawer
@@ -42,74 +46,29 @@ const CartDrawer = () => {
     >
       <DrawerContent className='w-full'>
         <DrawerHeader className="mx-auto w-full max-w-2xl">
-          <DrawerTitle>Carrito</DrawerTitle>
+          <DrawerTitle>Carrito de Compras</DrawerTitle>
           <DrawerDescription>
             {totalItems > 0
               ? `${totalItems} item${totalItems === 1 ? '' : 's'} en la venta`
-              : 'Tu carrito esta vacio.'}
+              : 'El carrito esta vacio.'}
           </DrawerDescription>
         </DrawerHeader>
 
         <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100vh-15rem)]">
           {items.length === 0 ? (
             <div className="rounded-[1rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Agrega productos desde la lista para empezar la venta.
+              Agrega productos para empezar la venta.
             </div>
           ) : (
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               {items.map((item) => (
-                <div
+                <CartItemComponent
                   key={item.id}
-                  className="grid gap-3 rounded-[1rem] border border-border/60 p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{item.name} - {item.size}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.category}
-                      </p>
-                    </div>
-
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="icon-sm"
-                        variant="outline"
-                        onClick={() => decreaseQty(item.id)}
-                      >
-                        <Minus />
-                      </Button>
-                      <span className="min-w-8 text-center font-medium">
-                        {item.qty}
-                      </span>
-                      <Button
-                        size="icon-sm"
-                        variant="outline"
-                        onClick={() => increaseQty(item.id)}
-                      >
-                        <Plus />
-                      </Button>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(item.price)} c/u
-                      </p>
-                      <p className="font-semibold">
-                        {formatCurrency(item.price * item.qty)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  item={item}
+                  onRemove={removeItem}
+                  onIncrease={increaseQty}
+                  onDecrease={decreaseQty}
+                />
               ))}
             </div>
           )}
@@ -118,7 +77,7 @@ const CartDrawer = () => {
         <DrawerFooter className="mx-auto w-full max-w-2xl justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-lg font-semibold">{formatCurrency(total)}</p>
+            <p className="text-xl  text-primary font-bold">{formatCurrency(total)}</p>
           </div>
 
           <div className="flex gap-2">
@@ -143,3 +102,5 @@ const CartDrawer = () => {
 }
 
 export default CartDrawer
+
+
