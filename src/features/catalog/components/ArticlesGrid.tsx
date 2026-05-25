@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import type { Article } from '../types/article-types'
 import ArticleDialog from './ArticleDialog'
 import DeleteArticleDialog from './DeleteArticleDialog'
@@ -12,14 +13,24 @@ type Props = {
 }
 
 export default function ArticlesGrid({ data, isLoading }: Props) {
+  const [globalFilter, setGlobalFilter] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null)
+  const filteredData = data.filter((article) =>
+    article.title.toLowerCase().includes(globalFilter.toLowerCase())
+  )
 
   return (
     <>
       <div className="space-y-4">
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Input
+            placeholder="Buscar articulo..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-xs"
+          />
           <Button onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}>
             <Plus />
             Nuevo articulo
@@ -30,13 +41,13 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
           <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
             Cargando articulos...
           </div>
-        ) : data.length === 0 ? (
+        ) : filteredData.length === 0 ? (
           <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
             No hay articulos registrados.
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data.map((article) => (
+            {filteredData.map((article) => (
               <Card key={article.id} className="bg-white py-0 transition-shadow hover:shadow-xl">
                 <div className="group relative">
                   <img

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useCreateArticleVariant } from '../hooks/useCreateArticleVariant'
 import type { Article } from '../types/article-types'
@@ -18,7 +19,11 @@ type Props = {
 
 export default function ArticleVariantsGrid({ articles, variants, isLoading }: Props) {
   const { mutateAsync: createVariant, isPending } = useCreateArticleVariant()
+  const [globalFilter, setGlobalFilter] = useState('')
   const [variantToDelete, setVariantToDelete] = useState<ArticleVariant | null>(null)
+  const filteredArticles = articles.filter((article) =>
+    article.title.toLowerCase().includes(globalFilter.toLowerCase())
+  )
 
   const selectedArticle = useMemo(
     () => articles.find((article) => article.id === variantToDelete?.articleId),
@@ -53,8 +58,22 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {articles.map((article) => (
+      <div className="mb-4">
+        <Input
+          placeholder="Buscar articulo..."
+          value={globalFilter}
+          onChange={(event) => setGlobalFilter(event.target.value)}
+          className="max-w-xs"
+        />
+      </div>
+
+      {filteredArticles.length === 0 ? (
+        <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+          No se encontraron articulos.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredArticles.map((article) => (
           <Card key={article.id} className="bg-white py-0 transition-shadow hover:shadow-xl">
             <img
               className="h-44 w-full object-cover object-center"
@@ -63,7 +82,7 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
             />
             <CardHeader className="px-4 pb-4">
               <CardTitle className="text-base">{article.title}</CardTitle>
-              <div className="grid grid-cols-6 gap-2 pt-2">
+              <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-3">
                 {sizes.map((size) => {
                   const variant = variants.find(
                     (item) => item.articleId === article.id && item.size === size
@@ -72,10 +91,10 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
                   return (
                     <Button
                       key={size}
-                      size="icon-sm"
+                      size="sm"
                       variant={variant ? 'default' : 'outline'}
                       className={cn(
-                        'font-semibold',
+                        'w-full font-semibold',
                         variant
                           ? 'shadow-sm'
                           : 'border-dashed border-muted-foreground/40 text-muted-foreground'
@@ -83,15 +102,16 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
                       disabled={isPending}
                       onClick={() => handleSizeClick(article, size)}
                     >
-                      {size}
+                      Talla {size}
                     </Button>
                   )
                 })}
               </div>
             </CardHeader>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <DeleteArticleVariantDialog
         article={selectedArticle}
