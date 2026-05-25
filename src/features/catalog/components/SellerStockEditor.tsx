@@ -107,7 +107,7 @@ export default function SellerStockEditor({
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
         <Table>
           <TableHeader>
             <TableRow>
@@ -128,11 +128,11 @@ export default function SellerStockEditor({
               </TableRow>
             ) : (
               rows.map((row) => (
-                <TableRow key={row.article.id}>
+                <TableRow key={row.article.id} className="focus-within:bg-primary/5">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <img
-                        className="size-12 rounded-lg object-cover"
+                        className="size-12 rounded-lg object-cover shadow-sm"
                         src={row.article.image}
                         alt={row.article.title}
                       />
@@ -143,7 +143,7 @@ export default function SellerStockEditor({
                     <TableCell key={size} className="min-w-24">
                       {variant ? (
                         <Input
-                          className="mx-auto max-w-20 text-center"
+                          className="mx-auto max-w-20 text-center transition-shadow focus-visible:shadow-sm"
                           min={0}
                           type="number"
                           value={quantity}

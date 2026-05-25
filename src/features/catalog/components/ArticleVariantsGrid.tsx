@@ -74,12 +74,17 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredArticles.map((article) => (
-          <Card key={article.id} className="bg-white py-0 transition-shadow hover:shadow-xl">
-            <img
-              className="h-44 w-full object-cover object-center"
-              src={article.image}
-              alt={article.title}
-            />
+          <Card
+            key={article.id}
+            className="group bg-white py-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-within:-translate-y-1 focus-within:shadow-xl"
+          >
+            <div className="overflow-hidden">
+              <img
+                className="h-44 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
+                src={article.image}
+                alt={article.title}
+              />
+            </div>
             <CardHeader className="px-4 pb-4">
               <CardTitle className="text-base">{article.title}</CardTitle>
               <div className="grid grid-cols-2 gap-2 pt-2 sm:grid-cols-3">
@@ -96,8 +101,8 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
                       className={cn(
                         'w-full font-semibold',
                         variant
-                          ? 'shadow-sm'
-                          : 'border-dashed border-muted-foreground/40 text-muted-foreground'
+                          ? 'shadow-sm ring-1 ring-primary/15'
+                          : 'border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary'
                       )}
                       disabled={isPending}
                       onClick={() => handleSizeClick(article, size)}

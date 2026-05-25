@@ -48,10 +48,13 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredData.map((article) => (
-              <Card key={article.id} className="bg-white py-0 transition-shadow hover:shadow-xl">
-                <div className="group relative">
+              <Card
+                key={article.id}
+                className="group bg-white py-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-within:-translate-y-1 focus-within:shadow-xl"
+              >
+                <div className="relative overflow-hidden">
                   <img
-                    className="h-44 w-full object-cover object-center"
+                    className="h-44 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
                     src={article.image}
                     alt={article.title}
                   />
@@ -59,7 +62,7 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
                     <Button
                       size="icon-sm"
                       variant="outline"
-                      className="mr-2 border-white/60 bg-white/95 text-slate-700 shadow-md hover:bg-white"
+                      className="mr-2 border-white/60 bg-white/95 text-slate-700 shadow-md hover:bg-white focus-visible:ring-white/70"
                       onClick={() => {
                         setSelectedArticle(article)
                         setDialogOpen(true)
@@ -70,7 +73,7 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
                     <Button
                       size="icon-sm"
                       variant="destructive"
-                      className="border border-white/60 bg-red-600 text-white shadow-md hover:bg-red-700"
+                      className="border border-white/60 bg-red-600 text-white shadow-md hover:bg-red-700 focus-visible:ring-white/70"
                       onClick={() => setArticleToDelete(article)}
                     >
                       <Trash2 />
