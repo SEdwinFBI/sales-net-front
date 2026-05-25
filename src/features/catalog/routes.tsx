@@ -13,8 +13,8 @@ export const catalogRoutes: AppRoute[] = [
       {
         path: 'productos',
         meta: {
-          name: 'Productos',
-          description: 'Configuración de productos',
+          name: 'Articulos',
+          description: 'Configuracion de articulos',
           icon: Package,
           permissions: ['admin'],
           lazy: () => import('./pages/ProductsList'),
