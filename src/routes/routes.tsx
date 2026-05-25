@@ -7,6 +7,8 @@ import { coreRoutes, ErrorPage } from '@/features/core'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
 
+import { adminUsuariosRoutes } from '@/features/adminUsuarios'
+
 
 const mainLayoutRoutes: RouteObject = {
   path: '/',
@@ -17,7 +19,7 @@ const mainLayoutRoutes: RouteObject = {
       index: true,
       element: <RedirectIndex />,
     },
-    ...buildReactRoutes([...salesRoutes, ...catalogRoutes]),
+    ...buildReactRoutes([...adminUsuariosRoutes, ...salesRoutes, ...catalogRoutes]),
   ],
 }
 

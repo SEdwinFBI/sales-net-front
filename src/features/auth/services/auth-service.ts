@@ -10,7 +10,7 @@ const BYPASS_CREDENTIALS: Record<string, AuthSession> = {
       fullName: 'Admin Bypass',
       id: 1,
       role: 'admin',
-      permissions: ['admin', 'vendedor'],
+      permissions: ['admin'],
       username: 'admin',
     },
   },

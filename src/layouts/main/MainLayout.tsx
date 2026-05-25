@@ -4,6 +4,9 @@ import { useAuthStore } from '@/features/core/store/auth-store'
 import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
+
+import { adminUsuariosRoutes } from '@/features/adminUsuarios'
+
 import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
@@ -26,7 +29,7 @@ export default function MainLayout() {
   const isDesktopSidebarExpanded = isSidebarPinned || isSidebarHovered
 
   // Generar items del sidebar desde las rutas, filtrados por permisos del usuario
-  const allFeatureRoutes = [...salesRoutes, ...catalogRoutes]
+  const allFeatureRoutes = [...adminUsuariosRoutes, ...salesRoutes, ...catalogRoutes]
   const sidebarItems = user
     ? buildSidebarItems(allFeatureRoutes, user.permissions)
     : []
