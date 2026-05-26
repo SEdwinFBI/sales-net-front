@@ -90,25 +90,25 @@ export default function SellerStockEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
           <Button size="icon-sm" variant="outline" onClick={onBack}>
             <ArrowLeft />
           </Button>
-          <div>
-            <p className="text-sm font-semibold text-primary">{seller.fullName}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-primary">{seller.fullName}</p>
             <p className="text-sm text-muted-foreground">Stock asignado por talla</p>
           </div>
         </div>
 
-        <Button onClick={handleSave} disabled={isPending || isLoading}>
+        <Button className="w-full sm:w-auto" onClick={handleSave} disabled={isPending || isLoading}>
           <Save />
           {isPending ? 'Guardando...' : 'Guardar'}
         </Button>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border/60 bg-white shadow-sm">
-        <Table>
+        <Table className="min-w-[760px]">
           <TableHeader>
             <TableRow>
               <TableHead>Articulo</TableHead>
@@ -136,14 +136,14 @@ export default function SellerStockEditor({
                         src={row.article.image}
                         alt={row.article.title}
                       />
-                      <span className="font-medium">{row.article.title}</span>
+                      <span className="max-w-44 truncate font-medium">{row.article.title}</span>
                     </div>
                   </TableCell>
                   {row.sizes.map(({ quantity, size, variant }) => (
                     <TableCell key={size} className="min-w-24">
                       {variant ? (
                         <Input
-                          className="mx-auto max-w-20 text-center transition-shadow focus-visible:shadow-sm"
+                          className="mx-auto max-w-16 text-center transition-shadow focus-visible:shadow-sm sm:max-w-20"
                           min={0}
                           type="number"
                           value={quantity}

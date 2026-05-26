@@ -34,19 +34,19 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
         >
           <button
             type="button"
-            className="flex w-full items-center justify-between gap-4 p-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="flex w-full flex-col gap-3 p-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-row sm:items-center sm:justify-between"
             onClick={() => onSelect(seller)}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+            <div className="flex w-full min-w-0 items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 <UserRound className="size-5" />
               </div>
-              <CardHeader className="p-0">
-                <CardTitle className="text-base">{seller.fullName}</CardTitle>
-                <p className="text-sm text-muted-foreground">{seller.username}</p>
+              <CardHeader className="min-w-0 p-0">
+                <CardTitle className="break-words text-base leading-snug">{seller.fullName}</CardTitle>
+                <p className="break-words text-sm text-muted-foreground">{seller.username}</p>
               </CardHeader>
             </div>
-            <span className="inline-flex h-7 shrink-0 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium text-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary">
+            <span className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium text-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary sm:h-7 sm:w-auto">
               Abrir
             </span>
           </button>

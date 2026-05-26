@@ -63,7 +63,7 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
           placeholder="Buscar articulo..."
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-xs"
+          className="w-full sm:max-w-xs"
         />
       </div>
 
@@ -80,7 +80,7 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
           >
             <div className="overflow-hidden">
               <img
-                className="h-44 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
+                className="h-40 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-44"
                 src={article.image}
                 alt={article.title}
               />
@@ -99,7 +99,7 @@ export default function ArticleVariantsGrid({ articles, variants, isLoading }: P
                       size="sm"
                       variant={variant ? 'default' : 'outline'}
                       className={cn(
-                        'w-full font-semibold',
+                        'w-full px-2 font-semibold',
                         variant
                           ? 'shadow-sm ring-1 ring-primary/15'
                           : 'border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary'

@@ -90,14 +90,17 @@ export default function UsuariosTable({ data, isLoading }: Props) {
     <>
       <div className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Input
             placeholder="Buscar usuario..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="max-w-xs"
+            className="w-full sm:max-w-xs"
           />
-          <Button onClick={() => { setSelectedUsuario(null); setDialogOpen(true) }}>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => { setSelectedUsuario(null); setDialogOpen(true) }}
+          >
             <Plus />
             Nuevo usuario
           </Button>
@@ -105,7 +108,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
 
         {/* Table */}
         <div className="rounded-2xl border border-border overflow-hidden">
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -146,7 +149,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         </div>
 
         {/* Pagination */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
             Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
           </span>

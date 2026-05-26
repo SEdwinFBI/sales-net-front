@@ -24,14 +24,17 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Input
             placeholder="Buscar articulo..."
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-xs"
+            className="w-full sm:max-w-xs"
           />
-          <Button onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}
+          >
             <Plus />
             Nuevo articulo
           </Button>
@@ -54,11 +57,11 @@ export default function ArticlesGrid({ data, isLoading }: Props) {
               >
                 <div className="relative overflow-hidden">
                   <img
-                    className="h-44 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105"
+                    className="h-40 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-44"
                     src={article.image}
                     alt={article.title}
                   />
-                  <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/45 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                  <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/45 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <Button
                       size="icon-sm"
                       variant="outline"

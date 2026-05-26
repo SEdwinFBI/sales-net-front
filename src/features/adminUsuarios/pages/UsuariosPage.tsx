@@ -14,7 +14,7 @@ export default function UsuariosPage() {
         <p className="text-sm font-semibold text-primary">Usuarios</p>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div className="mt-4 rounded-2xl bg-white p-3 shadow-sm sm:p-4">
         <UsuariosTable data={data} isLoading={isLoading} />
       </div>
     </PageTemplateSimple>
