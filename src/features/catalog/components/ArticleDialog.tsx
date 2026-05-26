@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -13,9 +13,15 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 import { useCreateArticle } from '../hooks/useCreateArticle'
+import { useCreateArticleVariant } from '../hooks/useCreateArticleVariant'
+import { useDeleteArticleVariant } from '../hooks/useDeleteArticleVariant'
 import { useUpdateArticle } from '../hooks/useUpdateArticle'
 import type { Article } from '../types/article-types'
+import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
+
+const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
@@ -26,15 +32,28 @@ type FormValues = z.infer<typeof articleSchema>
 
 type Props = {
   article?: Article | null
+  variants?: ArticleVariant[]
   open: boolean
   onClose: () => void
 }
 
-export default function ArticleDialog({ article, open, onClose }: Props) {
+export default function ArticleDialog({ article, variants = [], open, onClose }: Props) {
   const isEdit = !!article
+  const initialSizes = useMemo(
+    () =>
+      article
+        ? variants
+            .filter((variant) => variant.articleId === article.id)
+            .map((variant) => variant.size)
+        : [],
+    [article, variants]
+  )
   const { mutateAsync: createArticle, isPending: isCreating } = useCreateArticle()
   const { mutateAsync: updateArticle, isPending: isUpdating } = useUpdateArticle()
-  const isPending = isCreating || isUpdating
+  const { mutateAsync: createVariant, isPending: isCreatingVariant } = useCreateArticleVariant()
+  const { mutateAsync: deleteVariant, isPending: isDeletingVariant } = useDeleteArticleVariant()
+  const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(initialSizes)
+  const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant
 
   const {
     register,
@@ -52,13 +71,38 @@ export default function ArticleDialog({ article, open, onClose }: Props) {
     }
   }, [article, open, reset])
 
+  const toggleSize = (size: ArticleSize) => {
+    setSelectedSizes((current) =>
+      current.includes(size)
+        ? current.filter((item) => item !== size)
+        : [...current, size]
+    )
+  }
+
   const onSubmit = async (values: FormValues) => {
     try {
+      const savedArticle = isEdit
+        ? await updateArticle({ id: article.id, ...values })
+        : await createArticle(values)
+
+      const currentVariants = variants.filter(
+        (variant) => variant.articleId === savedArticle.id
+      )
+      const selectedSet = new Set(selectedSizes)
+      const currentSet = new Set(currentVariants.map((variant) => variant.size))
+
+      await Promise.all([
+        ...selectedSizes
+          .filter((size) => !currentSet.has(size))
+          .map((size) => createVariant({ articleId: savedArticle.id, size })),
+        ...currentVariants
+          .filter((variant) => !selectedSet.has(variant.size))
+          .map((variant) => deleteVariant(variant.id)),
+      ])
+
       if (isEdit) {
-        await updateArticle({ id: article.id, ...values })
         toast.success('Articulo actualizado correctamente')
       } else {
-        await createArticle(values)
         toast.success('Articulo creado correctamente')
       }
       onClose()
@@ -86,6 +130,32 @@ export default function ArticleDialog({ article, open, onClose }: Props) {
               <FieldLabel>Imagen</FieldLabel>
               <Input {...register('image')} placeholder="https://..." />
               <FieldError errors={[errors.image]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Tallas disponibles</FieldLabel>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {sizes.map((size) => {
+                  const isSelected = selectedSizes.includes(size)
+
+                  return (
+                    <Button
+                      key={size}
+                      type="button"
+                      size="sm"
+                      variant={isSelected ? 'default' : 'outline'}
+                      className={cn(
+                        'px-2 font-semibold',
+                        !isSelected &&
+                          'border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary'
+                      )}
+                      onClick={() => toggleSize(size)}
+                    >
+                      Talla {size}
+                    </Button>
+                  )
+                })}
+              </div>
             </Field>
           </FieldGroup>
 
