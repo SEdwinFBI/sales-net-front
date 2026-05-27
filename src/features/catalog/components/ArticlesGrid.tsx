@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import type { Article } from '../types/article-types'
-import type { ArticleVariant } from '../types/article-variant-types'
+import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 import ArticleDialog from './ArticleDialog'
 import DeleteArticleDialog from './DeleteArticleDialog'
 
@@ -17,23 +18,85 @@ type Props = {
 
 export default function ArticlesGrid({ data, variants = [], isLoading }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
+  const [sizeFilter, setSizeFilter] = useState<'all' | ArticleSize>('all')
+  const [sizesStateFilter, setSizesStateFilter] = useState<'all' | 'with-sizes' | 'without-sizes'>('all')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null)
-  const filteredData = data.filter((article) =>
-    article.title.toLowerCase().includes(globalFilter.toLowerCase())
+  const availableSizes = useMemo(
+    () => Array.from(new Set(variants.map((variant) => variant.size))).sort(),
+    [variants]
   )
+  const hasActiveFilters = globalFilter.length > 0 || sizeFilter !== 'all' || sizesStateFilter !== 'all'
+  const filteredData = data.filter((article) => {
+    const term = globalFilter.toLowerCase()
+    const articleSizes = variants
+      .filter((variant) => variant.articleId === article.id)
+      .map((variant) => variant.size)
+    const matchesSearch = article.title.toLowerCase().includes(term)
+    const matchesSize = sizeFilter === 'all' || articleSizes.includes(sizeFilter)
+    const matchesSizesState =
+      sizesStateFilter === 'all' ||
+      (sizesStateFilter === 'with-sizes' && articleSizes.length > 0) ||
+      (sizesStateFilter === 'without-sizes' && articleSizes.length === 0)
+
+    return matchesSearch && matchesSize && matchesSizesState
+  })
+
+  const clearFilters = () => {
+    setGlobalFilter('')
+    setSizeFilter('all')
+    setSizesStateFilter('all')
+  }
 
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Input
-            placeholder="Buscar articulo..."
-            value={globalFilter}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="w-full sm:max-w-xs"
-          />
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_150px_170px_auto] lg:min-w-[680px] lg:max-w-4xl">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar articulo..."
+                value={globalFilter}
+                onChange={(event) => setGlobalFilter(event.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select
+              aria-label="Filtrar por talla"
+              value={sizeFilter}
+              onChange={(event) => setSizeFilter(event.target.value as 'all' | ArticleSize)}
+            >
+              <option value="all">Todas las tallas</option>
+              {availableSizes.map((size) => (
+                <option key={size} value={size}>
+                  Talla {size}
+                </option>
+              ))}
+            </Select>
+            <Select
+              aria-label="Filtrar por estado de tallas"
+              value={sizesStateFilter}
+              onChange={(event) =>
+                setSizesStateFilter(event.target.value as 'all' | 'with-sizes' | 'without-sizes')
+              }
+            >
+              <option value="all">Todos</option>
+              <option value="with-sizes">Con tallas</option>
+              <option value="without-sizes">Sin tallas</option>
+            </Select>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+              className="w-full sm:w-auto"
+            >
+              <X />
+              Limpiar
+            </Button>
+          </div>
           <Button
             className="w-full sm:w-auto"
             onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}
