@@ -1,16 +1,19 @@
+import { api } from '@/lib/api'
+import type { SalesArticlesResponse, SubmitSalePayload, SubmitSaleResponse, ApiResponse, Venta, SalesHistoryFilters } from '../types/sales'
 
-import type { Product, SubmitSalePayload, SubmitSaleResponse, } from '../types/sales'
-
-export const getProducts = async () => {
-    try {
-        return new Promise<Product[]>(
-            (resolve) => setTimeout(() => resolve(import('../mocks/productos').then((module) => module.products)), 2000)
-        )
-    } catch {
-        throw new Error('Error al obtener los productos')
-    }
+export const getArticles = async (page = 1, pageSize = 10): Promise<SalesArticlesResponse> => {
+    const { data } = await api.get<SalesArticlesResponse>('/sales/articles', {
+        params: { page, page_size: pageSize },
+    })
+    return data
 }
 
+export const getSalesHistory = async (filters?: SalesHistoryFilters): Promise<ApiResponse<Venta[]>> => {
+    const { data } = await api.get<ApiResponse<Venta[]>>('/ventas/historial', {
+        params: filters,
+    })
+    return data
+}
 
 export const submitSale = async (payload: SubmitSalePayload): Promise<SubmitSaleResponse> => {
     try {
@@ -25,9 +28,7 @@ export const submitSale = async (payload: SubmitSalePayload): Promise<SubmitSale
             saleId: `VEN-${Date.now()}`,
             message: `Venta por Q${payload.total.toFixed(2)} registrada exitosamente`,
         }
-
     } catch {
         throw new Error('Error al registrar la venta: ')
     }
-
 }

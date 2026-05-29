@@ -6,7 +6,7 @@ import ProductCard from "./ProductCard"
 import VariantSelectionDrawer from "./VariantSelectionDrawer"
 
 type Props = {
-    onClick: (product: Product, variantId: string) => void
+    onClick: (product: Product, variantId: number) => void
     item: Product
 }
 

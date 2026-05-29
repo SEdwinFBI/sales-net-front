@@ -11,6 +11,8 @@ import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
+import { reportingRoutes } from '@/features/reporting'
+import { clientesRoutes } from '@/features/customers'
 
 export default function MainLayout() {
   const user = useAuthStore((state) => state.user)
@@ -29,7 +31,7 @@ export default function MainLayout() {
   const isDesktopSidebarExpanded = isSidebarPinned || isSidebarHovered
 
   // Generar items del sidebar desde las rutas, filtrados por permisos del usuario
-  const allFeatureRoutes = [...adminUsuariosRoutes, ...salesRoutes, ...catalogRoutes]
+  const allFeatureRoutes = [...adminUsuariosRoutes, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...catalogRoutes]
   const sidebarItems = user
     ? buildSidebarItems(allFeatureRoutes, user.permissions)
     : []

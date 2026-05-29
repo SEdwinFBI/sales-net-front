@@ -28,7 +28,10 @@ export const queryKeys = {
   customers: {
     all: ['customers'] as const,
     list: () => [...queryKeys.customers.all, 'list'] as const,
-
+    detail: (id: number) => [...queryKeys.customers.all, 'detail', id] as const,
+    abonos: (idCliente: number) => [...queryKeys.customers.all, 'abonos', idCliente] as const,
+    compras: (idCliente: number, filters?: Record<string, unknown>) =>
+      [...queryKeys.customers.all, 'compras', idCliente, filters] as const,
   },
   sales: {
     all: ['sales'] as const,
@@ -36,5 +39,16 @@ export const queryKeys = {
     details: () => [...queryKeys.sales.all, 'detail'] as const,
     detail: (id: string) =>
       [...queryKeys.sales.details(), id] as const,
+    articles: (page: number, pageSize: number) =>
+      [...queryKeys.sales.all, 'articles', page, pageSize] as const,
+    historial: (filters?: Record<string, unknown>) =>
+      [...queryKeys.sales.all, 'historial', filters] as const,
+  },
+  reporting: {
+    all: ['reporting'] as const,
+    ventas: (filters?: Record<string, unknown>) =>
+      [...queryKeys.reporting.all, 'ventas', filters] as const,
+    deudores: (filters?: Record<string, unknown>) =>
+      [...queryKeys.reporting.all, 'deudores', filters] as const,
   },
 }

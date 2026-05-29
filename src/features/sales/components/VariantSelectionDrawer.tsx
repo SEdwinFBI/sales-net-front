@@ -1,9 +1,11 @@
+import { useCallback } from 'react'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
 import { ShoppingCart } from "lucide-react"
 import type { FC } from "react"
+import imageUrl from '@/assets/img.jpg'
 
 type Props = {
     item: Product
@@ -13,6 +15,10 @@ type Props = {
 }
 
 const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart }) => {
+    const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+        e.currentTarget.src = imageUrl
+    }, [])
+
     return (
         <DrawerContent className="bg-white w-full">
             <DrawerHeader className="mx-auto w-full max-w-md">
@@ -22,20 +28,22 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 </DrawerDescription>
             </DrawerHeader>
 
-            <DrawerBody className="mx-5 rounded-t-[20px] bg-white pt-2">
-                <div className='grid grid-cols-2 gap-4'>
-                    <div className="rounded-2xl relative overflow-hidden w-full h-50 lg:h-70 flex items-center justify-center bg-white">
-                        <div className="absolute inset-0">
-                            <img
-                                src={item.image}
-                                className="w-full h-full object-cover blur-md opacity-90 transform scale-105"
-                                alt=""
-                            />
-                        </div>
+            <DrawerBody className="flex-1 mx-5 rounded-t-[20px] bg-white pt-2">
+                <div className='flex-1 grid grid-cols-2 gap-4'>
+                    <div className="rounded-2xl relative overflow-hidden w-full  flex items-center justify-center bg-white">
+                        <div className="absolute inset-0 ">
                         <img
-                            src={item.image}
+                            src={item.image ?? imageUrl}
+                            className="w-full h-full object-cover blur-md opacity-90 transform scale-105 "
+                            alt=""
+                            onError={handleImageError}
+                        />
+                    </div>
+<img
+                        src={item.image ?? imageUrl}
                             className="relative w-[90%] h-[97%] rounded-3xl object-cover drop-shadow-md z-10"
                             alt="imagen del producto"
+                            onError={handleImageError}
                         />
                     </div>
                     <div>

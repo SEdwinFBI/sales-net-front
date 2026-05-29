@@ -22,9 +22,11 @@ type AuthState = {
 
  */
 function computeExpiresAt(session: AuthSession): number | null {
+  console.log("hay  session");
   if (!session.access) return null
   try {
     const decode = jwtDecode<{ exp?: number }>(session.access)
+    console.log("decoded", decode);
     if (decode.exp) {
       return decode.exp * 1000
     }
@@ -48,7 +50,9 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       tokenExpiresAt: null,
       login: (session) => {
-        const permissions = session.user.permissions.length > 0
+
+        console.log("Session:", session);
+        const permissions = session.user?.permissions?.length > 0
           ? session.user.permissions
           : [session.user.role]
 

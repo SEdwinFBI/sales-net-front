@@ -6,7 +6,7 @@ export interface SalesState {
   items: CartItem[];
   cartOpen: boolean;
   activeDialog: SalesDialog;
-  addItem: (product: Product, variantId: string) => void;
+  addItem: (product: Product, variantId: number) => void;
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
@@ -17,7 +17,7 @@ export interface SalesState {
   closeDialog: () => void;
 }
 
-function buildCartItemId(productId: string, variantId: string): string {
+function buildCartItemId(productId: number, variantId: number): string {
   return `${productId}::${variantId}`
 }
 
