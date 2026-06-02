@@ -58,7 +58,7 @@ function LayoutHeader({
 
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-                            Sales Net
+                            Distribuidora MZ
                         </p>
                         <p className="text-sm text-neutral/70">
                             Tablero comercial

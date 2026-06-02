@@ -12,9 +12,6 @@ export default function ProductsList() {
       title="Articulos"
       description="Listado de articulos del catalogo."
     >
-      <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-4">
-        <p className="text-sm font-semibold text-primary">Articulos</p>
-      </div>
 
       <div className="mt-4">
         <ArticlesGrid

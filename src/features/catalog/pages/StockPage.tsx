@@ -25,9 +25,6 @@ export default function StockPage() {
       title="Stock"
       description="Gestion de stock por vendedor."
     >
-      <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-4">
-        <p className="text-sm font-semibold text-primary">Stock</p>
-      </div>
 
       <div className="mt-4">
         {selectedSeller ? (

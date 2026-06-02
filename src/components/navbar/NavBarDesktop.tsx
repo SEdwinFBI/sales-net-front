@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router'
 import { cn } from '@/lib/utils'
+import logoImage from '@/assets/logo.jpg'
 import type { SidebarItem } from '@/lib/app-routes'
 
 type NavBarDesktopProps = {
@@ -214,25 +215,27 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-2xl max-h-15 border border-white/15 bg-linear-to-br from-primary to-primary/85 py-2.5 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
+          'flex items-center rounded-2xl max-h-16 border border-white/15 bg-linear-to-br from-primary to-primary/85 py-3 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >
-        <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10 text-xs font-black uppercase tracking-widest text-amber-300/90 ring-1 ring-white/5">
-          SN
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 ring-1 ring-white/10">
+          <img src={logoImage} alt="Logo del cliente" className="h-full w-full object-contain p-1" />
         </div>
         <div
           className={cn(
             'overflow-hidden transition-[width,opacity,transform] duration-200 ease-out',
-            expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
+            expanded ? 'w-40 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
           )}
         >
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-secondary">
-            Sales Net
-          </p>
-          <p className="mt-1 text-xs text-white/60">
-            Panel comercial
-          </p>
+          <div className="flex flex-col justify-center gap-0.5 overflow-hidden">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-secondary leading-none">
+              Distribuidora MZ
+            </p>
+            <p className="text-[0.78rem] font-medium text-white/75 leading-tight">
+              Gestión de ventas
+            </p>
+          </div>
         </div>
       </div>
 
