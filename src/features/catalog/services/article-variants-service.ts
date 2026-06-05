@@ -11,6 +11,13 @@ type ApiResponse<T> = {
   data: T
 }
 
+type PaginatedData<T> = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 type TallaApi = {
   id: number
   nombre: string
@@ -27,6 +34,31 @@ type VariantApi = {
 
 const knownSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 
+const normalizeList = <T>(payload: T[] | PaginatedData<T>) =>
+  Array.isArray(payload) ? payload : payload.results
+
+const getAllPages = async <T>(url: string): Promise<T[]> => {
+  const { data } = await api.get<ApiResponse<T[] | PaginatedData<T>>>(url)
+  const firstData = data.data
+
+  if (Array.isArray(firstData)) return firstData
+  if (firstData.results.length === 0) return []
+
+  const totalPages = Math.ceil(firstData.count / firstData.results.length)
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      api.get<ApiResponse<T[] | PaginatedData<T>>>(url, {
+        params: { page: index + 2 },
+      })
+    )
+  )
+
+  return [
+    ...firstData.results,
+    ...restPages.flatMap((response) => normalizeList(response.data.data)),
+  ]
+}
+
 const toArticleSize = (value: string): ArticleSize | null => {
   const normalized = value.trim()
   return knownSizes.includes(normalized as ArticleSize)
@@ -35,8 +67,7 @@ const toArticleSize = (value: string): ArticleSize | null => {
 }
 
 const getTallas = async (): Promise<TallaApi[]> => {
-  const { data } = await api.get<ApiResponse<TallaApi[]>>('/admin/tallas/')
-  return data.data
+  return getAllPages<TallaApi>('/admin/tallas/')
 }
 
 const getOrCreateTalla = async (size: ArticleSize): Promise<TallaApi> => {
@@ -49,13 +80,13 @@ const getOrCreateTalla = async (size: ArticleSize): Promise<TallaApi> => {
 }
 
 export const getArticleVariants = async (): Promise<ArticleVariant[]> => {
-  const [variantsResponse, tallas] = await Promise.all([
-    api.get<ApiResponse<VariantApi[]>>('/admin/variantes/'),
+  const [variants, tallas] = await Promise.all([
+    getAllPages<VariantApi>('/admin/variantes/'),
     getTallas(),
   ])
   const tallasById = new Map(tallas.map((talla) => [talla.id, talla]))
 
-  return variantsResponse.data.data
+  return variants
     .map((variant) => {
       const size = toArticleSize(tallasById.get(variant.id_talla)?.nombre ?? '')
       if (!size) return null

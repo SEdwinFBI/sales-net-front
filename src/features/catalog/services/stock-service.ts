@@ -9,11 +9,43 @@ type ApiResponse<T> = {
   data: T
 }
 
+type PaginatedData<T> = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 type StockApi = {
   id: number
   id_variante: number
   id_usuario: number
   cantidad: number
+}
+
+const normalizeList = <T>(payload: T[] | PaginatedData<T>) =>
+  Array.isArray(payload) ? payload : payload.results
+
+const getAllPages = async <T>(url: string): Promise<T[]> => {
+  const { data } = await api.get<ApiResponse<T[] | PaginatedData<T>>>(url)
+  const firstData = data.data
+
+  if (Array.isArray(firstData)) return firstData
+  if (firstData.results.length === 0) return []
+
+  const totalPages = Math.ceil(firstData.count / firstData.results.length)
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      api.get<ApiResponse<T[] | PaginatedData<T>>>(url, {
+        params: { page: index + 2 },
+      })
+    )
+  )
+
+  return [
+    ...firstData.results,
+    ...restPages.flatMap((response) => normalizeList(response.data.data)),
+  ]
 }
 
 const mapStock = (item: StockApi): StockAssignment => ({
@@ -24,8 +56,7 @@ const mapStock = (item: StockApi): StockAssignment => ({
 })
 
 const getAllStock = async (): Promise<StockApi[]> => {
-  const { data } = await api.get<ApiResponse<StockApi[]>>('/admin/stock/')
-  return data.data
+  return getAllPages<StockApi>('/admin/stock/')
 }
 
 export const getSellerStock = async (sellerId: number): Promise<StockAssignment[]> => {

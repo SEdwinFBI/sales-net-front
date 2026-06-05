@@ -1,9 +1,17 @@
 import { useCallback, useMemo, useState } from 'react'
-import { ArrowLeft, ChevronDown, Minus, Plus, Save, Search } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  Save,
+  Search,
+} from 'lucide-react'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 import { cn } from '@/lib/utils'
@@ -14,6 +22,7 @@ import type { StockAssignment } from '../types/stock-types'
 import ArticleImage from './ArticleImage'
 
 const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
+const pageSize = 8
 
 type Props = {
   articles: Article[]
@@ -34,6 +43,7 @@ export default function SellerStockEditor({
 }: Props) {
   const { mutateAsync: saveStock, isPending } = useSaveSellerStock()
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [draftQuantities, setDraftQuantities] = useState<Record<number, number>>({})
   const [expandedArticles, setExpandedArticles] = useState<Record<number, boolean>>({})
 
@@ -84,6 +94,9 @@ export default function SellerStockEditor({
         }),
     [articles, getQuantity, search, variants]
   )
+  const totalPages = Math.max(Math.ceil(rows.length / pageSize), 1)
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const handleQuantityChange = (variantId: number, value: string) => {
     const quantity = Math.max(0, Number(value) || 0)
@@ -143,7 +156,10 @@ export default function SellerStockEditor({
           className="pl-9"
           placeholder="Buscar articulo..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setCurrentPage(1)
+          }}
         />
       </div>
 
@@ -157,8 +173,14 @@ export default function SellerStockEditor({
         </div>
       ) : (
         <div className="space-y-4">
-          {rows.map((row) => {
+          {paginatedRows.map((row) => {
             const isExpanded = expandedArticles[row.article.id] ?? false
+            const stockSummary =
+              row.availableSizes.length === 0
+                ? 'Sin tallas configuradas'
+                : row.total > 0
+                  ? `${row.total} unidades asignadas`
+                  : 'Sin stock asignado'
 
             return (
               <Card
@@ -166,56 +188,38 @@ export default function SellerStockEditor({
                 size="sm"
                 className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md"
               >
-                <div className="space-y-4 p-4">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,280px)_auto] lg:items-center">
-                    <div className="flex min-w-0 gap-3">
+                <div className="p-4">
+                  <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                    <div className="flex min-w-0 items-center gap-3">
                       <ArticleImage
-                        className="size-16 shrink-0 rounded-lg object-cover shadow-sm sm:size-18"
+                        className="size-14 shrink-0 rounded-lg object-cover shadow-sm sm:size-16"
                         src={row.article.image}
                         alt={row.article.title}
                       />
-                      <CardHeader className="min-w-0 p-0">
-                        <CardTitle className="truncate text-base leading-snug">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold sm:text-base">
                           {row.article.title}
-                        </CardTitle>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          Stock por talla
                         </p>
-                      </CardHeader>
-                    </div>
-
-                    <div className="rounded-lg border border-border bg-muted/20 p-3">
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Stock
-                          </p>
-                          <p className="text-sm font-semibold">{row.total}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Tallas
-                          </p>
-                          <p className="text-sm font-semibold">{row.availableSizes.length}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            Asignadas
-                          </p>
-                          <p className="text-sm font-semibold">{row.assignedSizes.length}</p>
-                        </div>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                          {stockSummary}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex lg:justify-end">
+                    <div className="flex items-center gap-2 md:justify-end">
+                      {row.availableSizes.length > 0 && (
+                        <span className="hidden text-sm text-muted-foreground sm:inline">
+                          {row.availableSizes.length} tallas
+                        </span>
+                      )}
                       <Button
                         type="button"
                         variant={isExpanded ? 'default' : 'outline'}
-                        className="w-full justify-between sm:w-44 lg:w-40"
+                        className="w-full justify-between sm:w-44"
                         disabled={row.availableSizes.length === 0}
                         onClick={() => toggleArticle(row.article.id)}
                       >
-                        {isExpanded ? 'Ocultar tallas' : 'Asignar tallas'}
+                        {isExpanded ? 'Cerrar' : 'Asignar stock'}
                         <ChevronDown
                           className={cn(
                             'transition-transform',
@@ -232,20 +236,24 @@ export default function SellerStockEditor({
                     </div>
                   ) : (
                     isExpanded && (
-                      <div className="rounded-lg border border-border bg-muted/20 p-3">
-                        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
+                      <div className="mt-4 overflow-hidden rounded-lg border border-border bg-white">
+                        <div className="hidden grid-cols-[minmax(6rem,1fr)_12rem] bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
+                          <span>Talla</span>
+                          <span className="text-center">Cantidad</span>
+                        </div>
+                        <div className="divide-y divide-border">
                           {row.availableSizes.map(({ quantity, size, variant }) => (
                             <div
                               key={size}
-                              className="rounded-lg border border-border bg-white p-3 shadow-sm transition-colors focus-within:border-primary/50 focus-within:bg-primary/5"
+                              className="grid gap-3 p-3 transition-colors focus-within:bg-primary/5 sm:grid-cols-[minmax(6rem,1fr)_12rem] sm:items-center sm:px-4"
                             >
-                              <div className="mb-3 flex items-center justify-between gap-2">
+                              <div className="flex items-center justify-between gap-2 sm:block">
                                 <span className="text-sm font-semibold">Talla {size}</span>
-                                <Badge variant={quantity > 0 ? 'default' : 'outline'}>
-                                  {quantity}
-                                </Badge>
+                                <span className="text-xs text-muted-foreground sm:hidden">
+                                  {quantity} unidades
+                                </span>
                               </div>
-                              <div className="grid grid-cols-[2rem_1fr_2rem] items-center gap-2">
+                              <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2">
                                 <Button
                                   type="button"
                                   size="icon-sm"
@@ -283,6 +291,31 @@ export default function SellerStockEditor({
               </Card>
             )
           })}
+          {rows.length > pageSize && (
+            <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {rows.length} articulos - Pagina {safePage} de {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                  disabled={safePage === 1}
+                >
+                  <ChevronLeft />
+                </Button>
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                  disabled={safePage === totalPages}
+                >
+                  <ChevronRight />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

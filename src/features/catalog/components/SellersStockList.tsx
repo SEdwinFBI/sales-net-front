@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Search, UserRound } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, UserRound } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 
@@ -10,8 +11,11 @@ type Props = {
   onSelect: (seller: Usuario) => void
 }
 
+const pageSize = 9
+
 export default function SellersStockList({ isLoading, sellers, onSelect }: Props) {
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const filteredSellers = sellers.filter((seller) => {
     const term = search.toLowerCase()
 
@@ -20,6 +24,9 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
       seller.username.toLowerCase().includes(term)
     )
   })
+  const totalPages = Math.max(Math.ceil(filteredSellers.length / pageSize), 1)
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedSellers = filteredSellers.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   if (isLoading) {
     return (
@@ -45,7 +52,10 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
           className="pl-9"
           placeholder="Buscar vendedor..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setCurrentPage(1)
+          }}
         />
       </div>
 
@@ -55,7 +65,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredSellers.map((seller) => (
+          {paginatedSellers.map((seller) => (
             <Card
               key={seller.id}
               className="group border-l-4 border-l-primary bg-white p-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
@@ -80,6 +90,31 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
               </button>
             </Card>
           ))}
+        </div>
+      )}
+      {filteredSellers.length > pageSize && (
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {filteredSellers.length} vendedores - Pagina {safePage} de {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon-sm"
+              variant="outline"
+              onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+              disabled={safePage === 1}
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="outline"
+              onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+              disabled={safePage === totalPages}
+            >
+              <ChevronRight />
+            </Button>
+          </div>
         </div>
       )}
     </div>

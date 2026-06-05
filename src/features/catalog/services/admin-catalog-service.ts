@@ -23,6 +23,28 @@ interface PaginatedData<T> {
 const normalizeList = <T>(payload: T[] | PaginatedData<T>) =>
   Array.isArray(payload) ? payload : payload.results
 
+const getAllPages = async <T>(url: string): Promise<T[]> => {
+  const firstPage = await api.get<ApiResponse<T[] | PaginatedData<T>>>(url)
+  const firstData = firstPage.data.data
+
+  if (Array.isArray(firstData)) return firstData
+  if (firstData.results.length === 0) return []
+
+  const totalPages = Math.ceil(firstData.count / firstData.results.length)
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      api.get<ApiResponse<T[] | PaginatedData<T>>>(url, {
+        params: { page: index + 2 },
+      })
+    )
+  )
+
+  return [
+    ...firstData.results,
+    ...restPages.flatMap((response) => normalizeList(response.data.data)),
+  ]
+}
+
 // Artículos
 export const getArticulos = async (): Promise<Articulo[]> => {
   const firstPage = await api.get<ApiResponse<Articulo[] | PaginatedData<Articulo>>>('/admin/articles/')
@@ -76,8 +98,7 @@ export const deleteArticulo = async (id: number): Promise<void> => {
 
 // Tallas
 export const getTallas = async (): Promise<Talla[]> => {
-  const { data } = await api.get<ApiResponse<Talla[]>>('/admin/tallas/')
-  return data.data
+  return getAllPages<Talla>('/admin/tallas/')
 }
 
 export const createTalla = async (payload: CreateTallaPayload): Promise<Talla> => {
@@ -96,8 +117,7 @@ export const deleteTalla = async (id: number): Promise<void> => {
 
 // Variantes
 export const getVariantes = async (): Promise<Variante[]> => {
-  const { data } = await api.get<ApiResponse<Variante[]>>('/admin/variantes/')
-  return data.data
+  return getAllPages<Variante>('/admin/variantes/')
 }
 
 export const createVariante = async (payload: CreateVariantePayload): Promise<Variante> => {
@@ -116,8 +136,7 @@ export const deleteVariante = async (id: number): Promise<void> => {
 
 // Stock
 export const getStock = async (): Promise<StockItem[]> => {
-  const { data } = await api.get<ApiResponse<StockItem[]>>('/admin/stock/')
-  return data.data
+  return getAllPages<StockItem>('/admin/stock/')
 }
 
 export const createStock = async (payload: CreateStockPayload): Promise<StockItem> => {
@@ -132,8 +151,7 @@ export const updateStock = async (id: number, payload: UpdateStockPayload): Prom
 
 // Reglas Precio
 export const getReglasPrecio = async (): Promise<ReglaPrecio[]> => {
-  const { data } = await api.get<ApiResponse<ReglaPrecio[]>>('/admin/reglas_precio/')
-  return data.data
+  return getAllPages<ReglaPrecio>('/admin/reglas_precio/')
 }
 
 export const createReglaPrecio = async (payload: CreateReglaPrecioPayload): Promise<ReglaPrecio> => {
@@ -148,8 +166,7 @@ export const updateReglaPrecio = async (id: number, payload: UpdateReglaPrecioPa
 
 // Formas de Pago
 export const getFormasPago = async (): Promise<FormaPago[]> => {
-  const { data } = await api.get<ApiResponse<FormaPago[]>>('/admin/forma_pago/')
-  return data.data
+  return getAllPages<FormaPago>('/admin/forma_pago/')
 }
 
 export const createFormaPago = async (payload: CreateFormaPagoPayload): Promise<FormaPago> => {

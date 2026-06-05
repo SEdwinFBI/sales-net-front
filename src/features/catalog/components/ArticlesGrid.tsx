@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,11 +18,13 @@ type Props = {
 }
 
 const formatPrice = (value: number) => `Q${value.toFixed(2)}`
+const pageSize = 12
 
 export default function ArticlesGrid({ data, variants = [], isLoading }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [sizeFilter, setSizeFilter] = useState<'all' | ArticleSize>('all')
   const [sizesStateFilter, setSizesStateFilter] = useState<'all' | 'with-sizes' | 'without-sizes'>('all')
+  const [currentPage, setCurrentPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null)
@@ -45,11 +47,15 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
 
     return matchesSearch && matchesSize && matchesSizesState
   })
+  const totalPages = Math.max(Math.ceil(filteredData.length / pageSize), 1)
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedData = filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const clearFilters = () => {
     setGlobalFilter('')
     setSizeFilter('all')
     setSizesStateFilter('all')
+    setCurrentPage(1)
   }
 
   return (
@@ -62,14 +68,20 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Input
                 placeholder="Buscar articulo..."
                 value={globalFilter}
-                onChange={(event) => setGlobalFilter(event.target.value)}
+                onChange={(event) => {
+                  setGlobalFilter(event.target.value)
+                  setCurrentPage(1)
+                }}
                 className="pl-9"
               />
             </div>
             <Select
               aria-label="Filtrar por talla"
               value={sizeFilter}
-              onChange={(event) => setSizeFilter(event.target.value as 'all' | ArticleSize)}
+              onChange={(event) => {
+                setSizeFilter(event.target.value as 'all' | ArticleSize)
+                setCurrentPage(1)
+              }}
             >
               <option value="all">Todas las tallas</option>
               {availableSizes.map((size) => (
@@ -81,9 +93,10 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
             <Select
               aria-label="Filtrar por estado de tallas"
               value={sizesStateFilter}
-              onChange={(event) =>
+              onChange={(event) => {
                 setSizesStateFilter(event.target.value as 'all' | 'with-sizes' | 'without-sizes')
-              }
+                setCurrentPage(1)
+              }}
             >
               <option value="all">Todos</option>
               <option value="with-sizes">Con tallas</option>
@@ -119,7 +132,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredData.map((article) => {
+            {paginatedData.map((article) => {
               const articleVariants = variants.filter((variant) => variant.articleId === article.id)
               const articleSizes = articleVariants
                 .map((variant) => variant.size)
@@ -183,6 +196,31 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                 </Card>
               )
             })}
+          </div>
+        )}
+        {filteredData.length > pageSize && (
+          <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              {filteredData.length} articulos - Pagina {safePage} de {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon-sm"
+                variant="outline"
+                onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
+                disabled={safePage === 1}
+              >
+                <ChevronLeft />
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="outline"
+                onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
+                disabled={safePage === totalPages}
+              >
+                <ChevronRight />
+              </Button>
+            </div>
           </div>
         )}
       </div>
