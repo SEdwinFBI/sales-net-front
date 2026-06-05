@@ -6,7 +6,7 @@ export const useDeleteArticle = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => deleteArticle(id),
+    mutationFn: (id: number) => deleteArticle(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ARTICLES_QUERY_KEY })
     },

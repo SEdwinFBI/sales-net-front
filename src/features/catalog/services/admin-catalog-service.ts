@@ -1,5 +1,4 @@
 import { api } from '@/lib/api'
-import type { ApiResponse } from '@/features/sales/types/sales'
 import type {
   Articulo, CreateArticuloPayload, UpdateArticuloPayload,
   Talla, CreateTallaPayload, UpdateTallaPayload,
@@ -9,10 +8,41 @@ import type {
   FormaPago, CreateFormaPagoPayload, UpdateFormaPagoPayload,
 } from '../types/admin-catalog-types'
 
+interface ApiResponse<T> {
+  status: 'success' | 'error'
+  data: T
+}
+
+interface PaginatedData<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
+const normalizeList = <T>(payload: T[] | PaginatedData<T>) =>
+  Array.isArray(payload) ? payload : payload.results
+
 // Artículos
 export const getArticulos = async (): Promise<Articulo[]> => {
-  const { data } = await api.get<ApiResponse<Articulo[]>>('/admin/articles/')
-  return data.data
+  const firstPage = await api.get<ApiResponse<Articulo[] | PaginatedData<Articulo>>>('/admin/articles/')
+  const firstData = firstPage.data.data
+
+  if (Array.isArray(firstData)) return firstData
+
+  const totalPages = Math.ceil(firstData.count / Math.max(firstData.results.length, 1))
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      api.get<ApiResponse<PaginatedData<Articulo>>>('/admin/articles/', {
+        params: { page: index + 2 },
+      })
+    )
+  )
+
+  return [
+    ...firstData.results,
+    ...restPages.flatMap((response) => normalizeList(response.data.data)),
+  ]
 }
 
 export const getArticuloById = async (id: number): Promise<Articulo> => {
@@ -23,7 +53,7 @@ export const getArticuloById = async (id: number): Promise<Articulo> => {
 export const createArticulo = async (payload: CreateArticuloPayload): Promise<Articulo> => {
   const formData = new FormData()
   formData.append('titulo', payload.titulo)
-  if (payload.imagen) formData.append('imagen', payload.imagen)
+  if (payload.imagen) formData.append('imagen_url', payload.imagen)
   const { data } = await api.post<ApiResponse<Articulo>>('/admin/articles/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
@@ -33,7 +63,7 @@ export const createArticulo = async (payload: CreateArticuloPayload): Promise<Ar
 export const updateArticulo = async (id: number, payload: UpdateArticuloPayload): Promise<Articulo> => {
   const formData = new FormData()
   if (payload.titulo) formData.append('titulo', payload.titulo)
-  if (payload.imagen) formData.append('imagen', payload.imagen)
+  if (payload.imagen) formData.append('imagen_url', payload.imagen)
   const { data } = await api.put<ApiResponse<Articulo>>(`/admin/articles/${id}/`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })

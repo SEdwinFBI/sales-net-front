@@ -1,24 +1,24 @@
 import type { ArticleSize } from './article-variant-types'
 
 export type StockAssignment = {
-  id: string
-  sellerId: string
-  variantId: string
+  id: number
+  sellerId: number
+  variantId: number
   quantity: number
 }
 
 export type StockDraftItem = {
-  variantId: string
+  variantId: number
   quantity: number
 }
 
 export type SaveSellerStockPayload = {
-  sellerId: string
+  sellerId: number
   items: StockDraftItem[]
 }
 
 export type StockSizeColumn = {
   size: ArticleSize
-  variantId?: string
+  variantId?: number
   quantity: number
 }

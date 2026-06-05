@@ -31,7 +31,20 @@ const mapUser = (u: UserApi): Usuario => ({
 
 export const getUsuarios = async (): Promise<Usuario[]> => {
   const { data } = await api.get<ApiResponse<PaginatedData<UserApi>>>('/auth/usuarios/')
-  return data.data.results.map(mapUser)
+  const firstPage = data.data
+  const totalPages = Math.ceil(firstPage.count / Math.max(firstPage.results.length, 1))
+  const restPages = await Promise.all(
+    Array.from({ length: Math.max(totalPages - 1, 0) }, (_, index) =>
+      api.get<ApiResponse<PaginatedData<UserApi>>>('/auth/usuarios/', {
+        params: { page: index + 2 },
+      })
+    )
+  )
+
+  return [
+    ...firstPage.results,
+    ...restPages.flatMap((response) => response.data.data.results),
+  ].map(mapUser)
 }
 
 export const getUsuarioById = async (id: number): Promise<Usuario> => {

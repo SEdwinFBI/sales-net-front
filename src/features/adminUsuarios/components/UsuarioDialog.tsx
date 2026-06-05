@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
@@ -23,7 +23,7 @@ const schema = z.object({
   username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
   email: z.string().email('Email inválido').or(z.literal('')),
   role: z.enum(['admin', 'vendedor']),
-  password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres').or(z.literal('')),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').or(z.literal('')),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -62,6 +62,11 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      if (!isEdit && !values.password) {
+        toast.error('La contraseña es requerida')
+        return
+      }
+
       const payload = {
         first_name: values.first_name,
         last_name: values.last_name,
@@ -74,7 +79,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         await updateUsuario({ id: usuario.id, ...payload })
         toast.success('Usuario actualizado correctamente')
       } else {
-        await createUsuario({ ...payload, password: values.password || 'temporal123' })
+        await createUsuario({ ...payload, password: values.password })
         toast.success('Usuario creado correctamente')
       }
       onClose()
@@ -94,31 +99,36 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
           <FieldGroup>
             <Field>
               <FieldLabel>Nombre</FieldLabel>
-              <Input {...register('first_name')} placeholder="Juan" />
+              <Input {...register('first_name')} placeholder="Ej. Juan Carlos" />
               <FieldError errors={[errors.first_name]} />
             </Field>
 
             <Field>
               <FieldLabel>Apellido</FieldLabel>
-              <Input {...register('last_name')} placeholder="Pérez" />
+              <Input {...register('last_name')} placeholder="Ej. Perez Lopez" />
               <FieldError errors={[errors.last_name]} />
             </Field>
 
             <Field>
-              <FieldLabel>Email</FieldLabel>
-              <Input {...register('email')} type="email" placeholder="juan@example.com" />
+              <FieldLabel>Correo (opcional)</FieldLabel>
+              <Input {...register('email')} type="email" placeholder="Ej. juan.perez@tipicos.com" />
               <FieldError errors={[errors.email]} />
             </Field>
 
             <Field>
               <FieldLabel>Username</FieldLabel>
-              <Input {...register('username')} placeholder="juan.perez" />
+              <Input {...register('username')} placeholder="Ej. juan.perez" />
               <FieldError errors={[errors.username]} />
             </Field>
 
             <Field>
               <FieldLabel>{isEdit ? 'Nueva contraseña (opcional)' : 'Contraseña'}</FieldLabel>
-              <Input {...register('password')} type="password" placeholder="••••••••" />
+              <Input {...register('password')} type="password" placeholder="Ej. Tipicos2026" />
+              {isEdit && (
+                <FieldDescription>
+                  Dejalo vacio para conservar la contraseña actual.
+                </FieldDescription>
+              )}
               <FieldError errors={[errors.password]} />
             </Field>
 

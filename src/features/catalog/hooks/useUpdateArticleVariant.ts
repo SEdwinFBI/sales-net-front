@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteArticleVariant } from '../services/article-variants-service'
+import { updateArticleVariant } from '../services/article-variants-service'
+import type { UpdateArticleVariantPayload } from '../types/article-variant-types'
 import { ARTICLE_VARIANTS_QUERY_KEY } from './useArticleVariants'
 
-export const useDeleteArticleVariant = () => {
+export const useUpdateArticleVariant = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: number) => deleteArticleVariant(id),
+    mutationFn: (payload: UpdateArticleVariantPayload) => updateArticleVariant(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ARTICLE_VARIANTS_QUERY_KEY })
     },

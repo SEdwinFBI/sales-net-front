@@ -33,12 +33,12 @@ export default function SellerStockEditor({
 }: Props) {
   const { mutateAsync: saveStock, isPending } = useSaveSellerStock()
   const [search, setSearch] = useState('')
-  const [draftQuantities, setDraftQuantities] = useState<Record<string, number>>({})
-  const [expandedArticles, setExpandedArticles] = useState<Record<string, boolean>>({})
+  const [draftQuantities, setDraftQuantities] = useState<Record<number, number>>({})
+  const [expandedArticles, setExpandedArticles] = useState<Record<number, boolean>>({})
 
   const stockByVariant = useMemo(
     () =>
-      stock.reduce<Record<string, number>>((acc, item) => {
+      stock.reduce<Record<number, number>>((acc, item) => {
         acc[item.variantId] = item.quantity
         return acc
       }, {}),
@@ -46,7 +46,7 @@ export default function SellerStockEditor({
   )
 
   const getQuantity = useCallback(
-    (variantId: string) => draftQuantities[variantId] ?? stockByVariant[variantId] ?? 0,
+    (variantId: number) => draftQuantities[variantId] ?? stockByVariant[variantId] ?? 0,
     [draftQuantities, stockByVariant]
   )
 
@@ -84,19 +84,19 @@ export default function SellerStockEditor({
     [articles, getQuantity, search, variants]
   )
 
-  const handleQuantityChange = (variantId: string, value: string) => {
+  const handleQuantityChange = (variantId: number, value: string) => {
     const quantity = Math.max(0, Number(value) || 0)
     setDraftQuantities((current) => ({ ...current, [variantId]: quantity }))
   }
 
-  const adjustQuantity = (variantId: string, amount: number) => {
+  const adjustQuantity = (variantId: number, amount: number) => {
     setDraftQuantities((current) => ({
       ...current,
       [variantId]: Math.max(0, (current[variantId] ?? stockByVariant[variantId] ?? 0) + amount),
     }))
   }
 
-  const toggleArticle = (articleId: string) => {
+  const toggleArticle = (articleId: number) => {
     setExpandedArticles((current) => ({
       ...current,
       [articleId]: !(current[articleId] ?? false),
@@ -164,11 +164,17 @@ export default function SellerStockEditor({
                 <div className="space-y-3 p-3">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex min-w-0 gap-3">
-                      <img
-                        className="size-16 rounded-lg object-cover shadow-sm"
-                        src={row.article.image}
-                        alt={row.article.title}
-                      />
+                      {row.article.image ? (
+                        <img
+                          className="size-16 rounded-lg object-cover shadow-sm"
+                          src={row.article.image}
+                          alt={row.article.title}
+                        />
+                      ) : (
+                        <div className="flex size-16 items-center justify-center rounded-lg bg-muted text-[10px] text-muted-foreground shadow-sm">
+                          Sin imagen
+                        </div>
+                      )}
                       <CardHeader className="min-w-0 p-0">
                         <CardTitle className="truncate text-base leading-snug">
                           {row.article.title}

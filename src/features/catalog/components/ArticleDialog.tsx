@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
 import z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useCreateArticle } from '../hooks/useCreateArticle'
@@ -25,10 +25,12 @@ const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
-  image: z.string().min(1, 'La imagen es requerida'),
+  basePrice: z.coerce.number().min(0, 'El precio no puede ser negativo'),
 })
 
-type FormValues = z.infer<typeof articleSchema>
+type FormValues = z.infer<typeof articleSchema> & {
+  image?: FileList
+}
 
 type Props = {
   article?: Article | null
@@ -61,15 +63,23 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(articleSchema),
-    defaultValues: { title: '', image: '' },
+    resolver: zodResolver(articleSchema) as unknown as Resolver<FormValues>,
+    defaultValues: { title: '', basePrice: 0 },
   })
 
   useEffect(() => {
     if (open) {
-      reset(article ? { title: article.title, image: article.image } : { title: '', image: '' })
+      reset(
+        article
+          ? {
+              title: article.title,
+              basePrice:
+                variants.find((variant) => variant.articleId === article.id)?.price ?? 0,
+            }
+          : { title: '', basePrice: 0 }
+      )
     }
-  }, [article, open, reset])
+  }, [article, open, reset, variants])
 
   const toggleSize = (size: ArticleSize) => {
     setSelectedSizes((current) =>
@@ -81,20 +91,31 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const savedArticle = isEdit
-        ? await updateArticle({ id: article.id, ...values })
-        : await createArticle(values)
+      const imageFile = values.image?.item(0) ?? undefined
+      if (!isEdit && !imageFile) {
+        toast.error('Selecciona una imagen para el articulo')
+        return
+      }
 
-      const currentVariants = variants.filter(
-        (variant) => variant.articleId === savedArticle.id
-      )
+      const currentVariants = article
+        ? variants.filter((variant) => variant.articleId === article.id)
+        : []
       const selectedSet = new Set(selectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
+      const sizesToCreate = selectedSizes.filter((size) => !currentSet.has(size))
+
+      if (sizesToCreate.length > 0 && values.basePrice <= 0) {
+        toast.error('Ingresa un precio base mayor a 0 para las nuevas tallas')
+        return
+      }
+
+      const savedArticle = isEdit
+        ? await updateArticle({ id: article.id, title: values.title, image: imageFile })
+        : await createArticle({ title: values.title, image: imageFile as File })
 
       await Promise.all([
-        ...selectedSizes
-          .filter((size) => !currentSet.has(size))
-          .map((size) => createVariant({ articleId: savedArticle.id, size })),
+        ...sizesToCreate
+          .map((size) => createVariant({ articleId: savedArticle.id, size, price: values.basePrice })),
         ...currentVariants
           .filter((variant) => !selectedSet.has(variant.size))
           .map((variant) => deleteVariant(variant.id)),
@@ -122,18 +143,39 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
           <FieldGroup>
             <Field>
               <FieldLabel>Titulo</FieldLabel>
-              <Input {...register('title')} placeholder="Huipil bordado" />
+              <Input {...register('title')} placeholder="Ej. Huipil bordado rojo" />
               <FieldError errors={[errors.title]} />
             </Field>
 
             <Field>
-              <FieldLabel>Imagen</FieldLabel>
-              <Input {...register('image')} placeholder="https://..." />
-              <FieldError errors={[errors.image]} />
+              <FieldLabel>{isEdit ? 'Imagen (opcional)' : 'Imagen'}</FieldLabel>
+              <Input
+                {...register('image')}
+                accept="image/*"
+                type="file"
+              />
+              <FieldDescription>
+                Ej. huipil-bordado-rojo.jpg, huipil-bordado-rojo.png o huipil-bordado-rojo.webp.
+              </FieldDescription>
             </Field>
 
             <Field>
-              <FieldLabel>Tallas disponibles</FieldLabel>
+              <FieldLabel>Precio base para nuevas tallas (opcional si no seleccionas tallas)</FieldLabel>
+              <Input
+                {...register('basePrice')}
+                min={0}
+                step="0.01"
+                type="number"
+                placeholder="Ej. 125.00"
+              />
+              <FieldError errors={[errors.basePrice]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Tallas disponibles (opcional)</FieldLabel>
+              <FieldDescription>
+                Ej. selecciona Talla 1, Talla 2 y Talla 3.
+              </FieldDescription>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {sizes.map((size) => {
                   const isSelected = selectedSizes.includes(size)

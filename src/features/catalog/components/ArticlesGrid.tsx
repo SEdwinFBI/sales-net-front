@@ -128,11 +128,17 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                   className="group bg-white py-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-within:-translate-y-1 focus-within:shadow-xl"
                 >
                   <div className="relative overflow-hidden">
-                    <img
-                      className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-36"
-                      src={article.image}
-                      alt={article.title}
-                    />
+                    {article.image ? (
+                      <img
+                        className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-36"
+                        src={article.image}
+                        alt={article.title}
+                      />
+                    ) : (
+                      <div className="flex h-32 w-full items-center justify-center bg-muted text-xs text-muted-foreground sm:h-36">
+                        Sin imagen
+                      </div>
+                    )}
                     <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/45 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       <Button
                         size="icon-sm"
@@ -177,7 +183,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
       </div>
 
       <ArticleDialog
-        key={`${selectedArticle?.id ?? 'new'}-${variants
+        key={`${dialogOpen ? 'open' : 'closed'}-${selectedArticle?.id ?? 'new'}-${variants
           .filter((variant) => variant.articleId === selectedArticle?.id)
           .map((variant) => variant.id)
           .join('-')}`}

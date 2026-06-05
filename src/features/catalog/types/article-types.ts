@@ -1,14 +1,16 @@
 export type Article = {
-  id: string
+  id: number
   title: string
-  image: string
+  image: string | null
 }
 
 export type CreateArticlePayload = {
   title: string
-  image: string
+  image: File
 }
 
-export type UpdateArticlePayload = CreateArticlePayload & {
-  id: string
+export type UpdateArticlePayload = {
+  id: number
+  title: string
+  image?: File
 }

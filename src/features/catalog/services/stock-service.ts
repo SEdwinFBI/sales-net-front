@@ -1,38 +1,69 @@
+import { api } from '@/lib/api'
 import type {
   SaveSellerStockPayload,
   StockAssignment,
 } from '../types/stock-types'
 
-let store: StockAssignment[] = [
-  { id: 'stock-2-faja-seda-1', sellerId: '2', variantId: 'faja-seda-1', quantity: 8 },
-  { id: 'stock-2-faja-seda-2', sellerId: '2', variantId: 'faja-seda-2', quantity: 5 },
-  { id: 'stock-3-faja-colombiana-1', sellerId: '3', variantId: 'faja-colombiana-1', quantity: 3 },
-  { id: 'stock-4-blusa-manga-corta-3', sellerId: '4', variantId: 'blusa-manga-corta-3', quantity: 4 },
-]
+type ApiResponse<T> = {
+  status: 'success' | 'error'
+  data: T
+}
 
-export const getSellerStock = async (sellerId: string): Promise<StockAssignment[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 400))
-  return store.filter((item) => item.sellerId === sellerId)
+type StockApi = {
+  id: number
+  id_variante: number
+  id_usuario: number
+  cantidad: number
+}
+
+const mapStock = (item: StockApi): StockAssignment => ({
+  id: item.id,
+  sellerId: item.id_usuario,
+  variantId: item.id_variante,
+  quantity: item.cantidad,
+})
+
+const getAllStock = async (): Promise<StockApi[]> => {
+  const { data } = await api.get<ApiResponse<StockApi[]>>('/admin/stock/')
+  return data.data
+}
+
+export const getSellerStock = async (sellerId: number): Promise<StockAssignment[]> => {
+  const stock = await getAllStock()
+  return stock.filter((item) => item.id_usuario === sellerId).map(mapStock)
 }
 
 export const saveSellerStock = async (
   payload: SaveSellerStockPayload
 ): Promise<StockAssignment[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  const currentStock = await getAllStock()
+  const currentByVariant = new Map(
+    currentStock
+      .filter((item) => item.id_usuario === payload.sellerId)
+      .map((item) => [item.id_variante, item])
+  )
 
-  const nextSellerStock = payload.items
-    .filter((item) => item.quantity > 0)
-    .map((item) => ({
-      id: `${payload.sellerId}-${item.variantId}`,
-      sellerId: payload.sellerId,
-      variantId: item.variantId,
-      quantity: item.quantity,
-    }))
+  const saved = await Promise.all(
+    payload.items.map(async (item) => {
+      const existing = currentByVariant.get(item.variantId)
 
-  store = [
-    ...store.filter((item) => item.sellerId !== payload.sellerId),
-    ...nextSellerStock,
-  ]
+      if (existing) {
+        const { data } = await api.put<ApiResponse<StockApi>>(`/admin/stock/${existing.id}/`, {
+          cantidad: item.quantity,
+        })
+        return data.data
+      }
 
-  return nextSellerStock
+      if (item.quantity <= 0) return null
+
+      const { data } = await api.post<ApiResponse<StockApi>>('/admin/stock/', {
+        id_variante: item.variantId,
+        id_usuario: payload.sellerId,
+        cantidad: item.quantity,
+      })
+      return data.data
+    })
+  )
+
+  return saved.filter((item): item is StockApi => item !== null).map(mapStock)
 }
