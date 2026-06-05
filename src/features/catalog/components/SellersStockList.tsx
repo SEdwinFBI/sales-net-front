@@ -23,7 +23,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
         Cargando vendedores...
       </div>
     )
@@ -31,7 +31,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
 
   if (sellers.length === 0) {
     return (
-      <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
         No hay vendedores registrados.
       </div>
     )
@@ -43,22 +43,22 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Buscar sucursal..."
+          placeholder="Buscar vendedor..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
 
       {filteredSellers.length === 0 ? (
-        <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
-          No se encontraron sucursales.
+        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          No se encontraron vendedores.
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSellers.map((seller) => (
             <Card
               key={seller.id}
-              className="group bg-white p-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-within:-translate-y-1 focus-within:shadow-xl"
+              className="group border-l-4 border-l-primary bg-white p-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
             >
               <button
                 type="button"
@@ -66,7 +66,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
                 onClick={() => onSelect(seller)}
               >
                 <div className="flex w-full min-w-0 items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <UserRound className="size-5" />
                   </div>
                   <CardHeader className="min-w-0 p-0">
@@ -74,7 +74,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
                     <p className="break-words text-sm text-muted-foreground">{seller.username}</p>
                   </CardHeader>
                 </div>
-                <span className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium text-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary sm:h-7 sm:w-auto">
+                <span className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary sm:h-7 sm:w-auto">
                   Abrir
                 </span>
               </button>

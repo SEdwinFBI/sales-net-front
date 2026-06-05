@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
+import ArticleImage from './ArticleImage'
 import ArticleDialog from './ArticleDialog'
 import DeleteArticleDialog from './DeleteArticleDialog'
 
@@ -107,15 +108,15 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         </div>
 
         {isLoading ? (
-          <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
             Cargando articulos...
           </div>
         ) : filteredData.length === 0 ? (
-          <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
             No hay articulos registrados.
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredData.map((article) => {
               const articleSizes = variants
                 .filter((variant) => variant.articleId === article.id)
@@ -125,25 +126,19 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                 <Card
                   key={article.id}
                   size="sm"
-                  className="group bg-white py-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl focus-within:-translate-y-1 focus-within:shadow-xl"
+                  className="group overflow-hidden bg-white py-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
                 >
                   <div className="relative overflow-hidden">
-                    {article.image ? (
-                      <img
-                        className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-36"
-                        src={article.image}
-                        alt={article.title}
-                      />
-                    ) : (
-                      <div className="flex h-32 w-full items-center justify-center bg-muted text-xs text-muted-foreground sm:h-36">
-                        Sin imagen
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/45 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                    <ArticleImage
+                      className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-36"
+                      src={article.image}
+                      alt={article.title}
+                    />
+                    <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/35 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       <Button
-                        size="icon-sm"
-                        variant="outline"
-                        className="mr-2 border-white/60 bg-white/95 text-slate-700 shadow-md hover:bg-white focus-visible:ring-white/70"
+                        size="icon-xs"
+                        variant="ghost"
+                        className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
                         onClick={() => {
                           setSelectedArticle(article)
                           setDialogOpen(true)
@@ -152,9 +147,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         <Pencil />
                       </Button>
                       <Button
-                        size="icon-sm"
-                        variant="destructive"
-                        className="border border-white/60 bg-red-600 text-white shadow-md hover:bg-red-700 focus-visible:ring-white/70"
+                        size="icon-xs"
+                        variant="ghost"
+                        className="bg-white/95 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:ring-white/70"
                         onClick={() => setArticleToDelete(article)}
                       >
                         <Trash2 />

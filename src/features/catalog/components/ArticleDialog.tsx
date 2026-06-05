@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useCreateArticle } from '../hooks/useCreateArticle'
@@ -154,13 +154,10 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
                 accept="image/*"
                 type="file"
               />
-              <FieldDescription>
-                Ej. huipil-bordado-rojo.jpg, huipil-bordado-rojo.png o huipil-bordado-rojo.webp.
-              </FieldDescription>
             </Field>
 
             <Field>
-              <FieldLabel>Precio base para nuevas tallas (opcional si no seleccionas tallas)</FieldLabel>
+              <FieldLabel>Precio base</FieldLabel>
               <Input
                 {...register('basePrice')}
                 min={0}
@@ -172,10 +169,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
             </Field>
 
             <Field>
-              <FieldLabel>Tallas disponibles (opcional)</FieldLabel>
-              <FieldDescription>
-                Ej. selecciona Talla 1, Talla 2 y Talla 3.
-              </FieldDescription>
+              <FieldLabel>Tallas disponibles</FieldLabel>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {sizes.map((size) => {
                   const isSelected = selectedSizes.includes(size)

@@ -37,7 +37,7 @@ export default function DeleteArticleDialog({ article, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>Eliminar articulo</DialogTitle>
           <DialogDescription>
-            Estas seguro que deseas eliminar <strong>{article?.title}</strong>? Esta accion no se puede deshacer.
+            Eliminar <strong>{article?.title}</strong>. Esta accion no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

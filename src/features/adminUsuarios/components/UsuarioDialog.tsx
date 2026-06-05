@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
@@ -124,11 +124,6 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
             <Field>
               <FieldLabel>{isEdit ? 'Nueva contraseña (opcional)' : 'Contraseña'}</FieldLabel>
               <Input {...register('password')} type="password" placeholder="Ej. Tipicos2026" />
-              {isEdit && (
-                <FieldDescription>
-                  Dejalo vacio para conservar la contraseña actual.
-                </FieldDescription>
-              )}
               <FieldError errors={[errors.password]} />
             </Field>
 

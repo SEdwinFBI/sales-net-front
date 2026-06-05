@@ -46,8 +46,11 @@ export default function UsuariosTable({ data, isLoading }: Props) {
       accessorKey: 'role',
       header: 'Rol',
       cell: ({ row }) => (
-        <Badge variant={row.original.role === 'admin' ? 'default' : 'secondary'}>
-          {row.original.role}
+        <Badge
+          variant={row.original.role === 'admin' ? 'default' : 'secondary'}
+          className="px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+        >
+          {row.original.role ?? 'Sin rol'}
         </Badge>
       ),
     },
@@ -55,10 +58,10 @@ export default function UsuariosTable({ data, isLoading }: Props) {
       id: 'actions',
       header: 'Acciones',
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
-            size="icon-sm"
-            variant="outline"
+            size="icon-xs"
+            variant="ghost"
             onClick={() => {
               setSelectedUsuario(row.original)
               setDialogOpen(true)
@@ -67,8 +70,9 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             <Pencil />
           </Button>
           <Button
-            size="icon-sm"
-            variant="destructive"
+            size="icon-xs"
+            variant="ghost"
+            className="text-red-500 hover:text-red-600"
             onClick={() => setUsuarioToDelete(row.original)}
           >
             <Trash2 />
@@ -148,7 +152,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         </div>
 
         {/* Table */}
-        <div className="rounded-2xl border border-border overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
           <Table className="min-w-[640px]">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -175,8 +179,8 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                   </TableCell>
                 </TableRow>
               ) : (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
+                table.getRowModel().rows.map((row, index) => (
+                  <TableRow key={row.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

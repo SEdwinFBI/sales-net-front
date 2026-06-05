@@ -11,6 +11,7 @@ import { useSaveSellerStock } from '../hooks/useSaveSellerStock'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 import type { StockAssignment } from '../types/stock-types'
+import ArticleImage from './ArticleImage'
 
 const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 
@@ -147,34 +148,28 @@ export default function SellerStockEditor({
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
           Cargando stock...
         </div>
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-6 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
           No se encontraron articulos.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rows.map((row) => {
             const isExpanded = expandedArticles[row.article.id] ?? false
 
             return (
-              <Card key={row.article.id} size="sm" className="bg-white p-0">
-                <div className="space-y-3 p-3">
+              <Card key={row.article.id} size="sm" className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md">
+                <div className="space-y-3 p-4">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex min-w-0 gap-3">
-                      {row.article.image ? (
-                        <img
-                          className="size-16 rounded-lg object-cover shadow-sm"
-                          src={row.article.image}
-                          alt={row.article.title}
-                        />
-                      ) : (
-                        <div className="flex size-16 items-center justify-center rounded-lg bg-muted text-[10px] text-muted-foreground shadow-sm">
-                          Sin imagen
-                        </div>
-                      )}
+                      <ArticleImage
+                        className="size-16 shrink-0 rounded-lg object-cover shadow-sm"
+                        src={row.article.image}
+                        alt={row.article.title}
+                      />
                       <CardHeader className="min-w-0 p-0">
                         <CardTitle className="truncate text-base leading-snug">
                           {row.article.title}
@@ -227,12 +222,12 @@ export default function SellerStockEditor({
                     </div>
                   ) : (
                     isExpanded && (
-                      <div className="rounded-xl border border-border/70 bg-muted/20 p-3">
+                      <div className="rounded-lg border border-border bg-muted/20 p-3">
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                           {row.availableSizes.map(({ quantity, size, variant }) => (
                             <div
                               key={size}
-                              className="rounded-xl border border-border bg-white p-3 shadow-sm transition-colors focus-within:border-primary/50 focus-within:bg-primary/5"
+                              className="rounded-lg border border-border bg-white p-3 shadow-sm transition-colors focus-within:border-primary/50 focus-within:bg-primary/5"
                             >
                               <div className="mb-3 flex items-center justify-between gap-2">
                                 <span className="text-sm font-semibold">Talla {size}</span>

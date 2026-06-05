@@ -36,7 +36,7 @@ export default function DeleteUsuarioDialog({ usuario, onClose }: Props) {
         <DialogHeader>
           <DialogTitle>Eliminar usuario</DialogTitle>
           <DialogDescription>
-            ¿Estás seguro que deseas eliminar a <strong>{usuario?.fullName}</strong>? Esta acción no se puede deshacer.
+            Eliminar a <strong>{usuario?.fullName}</strong>. Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

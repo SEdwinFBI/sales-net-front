@@ -10,7 +10,7 @@ export default function UsuariosPage() {
       title="Usuarios"
       description="Gestión de usuarios del sistema."
     >
-      <div className="mt-4 rounded-2xl bg-white p-3 shadow-sm sm:p-4">
+      <div className="mt-4">
         <UsuariosTable data={data} isLoading={isLoading} />
       </div>
     </PageTemplateSimple>
