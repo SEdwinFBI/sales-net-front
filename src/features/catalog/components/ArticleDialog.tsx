@@ -26,11 +26,10 @@ const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
   basePrice: z.coerce.number().min(0, 'El precio no puede ser negativo'),
+  image: z.any().optional(),
 })
 
-type FormValues = z.infer<typeof articleSchema> & {
-  image?: FileList
-}
+type FormValues = z.infer<typeof articleSchema>
 
 type Props = {
   article?: Article | null
@@ -41,20 +40,24 @@ type Props = {
 
 export default function ArticleDialog({ article, variants = [], open, onClose }: Props) {
   const isEdit = !!article
-  const initialSizes = useMemo(
+  const articleVariants = useMemo(
     () =>
       article
-        ? variants
-            .filter((variant) => variant.articleId === article.id)
-            .map((variant) => variant.size)
+        ? variants.filter((variant) => variant.articleId === article.id)
         : [],
     [article, variants]
   )
+  const initialSizes = useMemo(
+    () => articleVariants.map((variant) => variant.size),
+    [articleVariants]
+  )
+  const initialBasePrice = articleVariants[0]?.price ?? 0
   const { mutateAsync: createArticle, isPending: isCreating } = useCreateArticle()
   const { mutateAsync: updateArticle, isPending: isUpdating } = useUpdateArticle()
   const { mutateAsync: createVariant, isPending: isCreatingVariant } = useCreateArticleVariant()
   const { mutateAsync: deleteVariant, isPending: isDeletingVariant } = useDeleteArticleVariant()
   const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(initialSizes)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant
 
   const {
@@ -66,20 +69,22 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     resolver: zodResolver(articleSchema) as unknown as Resolver<FormValues>,
     defaultValues: { title: '', basePrice: 0 },
   })
+  const imageField = register('image')
 
   useEffect(() => {
     if (open) {
+      setSelectedSizes(initialSizes)
+      setSelectedImage(null)
       reset(
         article
           ? {
               title: article.title,
-              basePrice:
-                variants.find((variant) => variant.articleId === article.id)?.price ?? 0,
+              basePrice: initialBasePrice,
             }
           : { title: '', basePrice: 0 }
       )
     }
-  }, [article, open, reset, variants])
+  }, [article, initialBasePrice, initialSizes, open, reset])
 
   const toggleSize = (size: ArticleSize) => {
     setSelectedSizes((current) =>
@@ -91,15 +96,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const imageFile = values.image?.item(0) ?? undefined
+      const imageFile = selectedImage ?? undefined
       if (!isEdit && !imageFile) {
         toast.error('Selecciona una imagen para el articulo')
         return
       }
 
-      const currentVariants = article
-        ? variants.filter((variant) => variant.articleId === article.id)
-        : []
+      const currentVariants = articleVariants
       const selectedSet = new Set(selectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
       const sizesToCreate = selectedSizes.filter((size) => !currentSet.has(size))
@@ -148,10 +151,14 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
             </Field>
 
             <Field>
-              <FieldLabel>{isEdit ? 'Imagen (opcional)' : 'Imagen'}</FieldLabel>
+              <FieldLabel>{isEdit ? 'Imagen (opcional)' : 'Imagen obligatoria'}</FieldLabel>
               <Input
-                {...register('image')}
+                {...imageField}
                 accept="image/*"
+                onChange={(event) => {
+                  void imageField.onChange(event)
+                  setSelectedImage(event.currentTarget.files?.item(0) ?? null)
+                }}
                 type="file"
               />
             </Field>

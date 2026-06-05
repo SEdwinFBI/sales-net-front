@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
-import { useAuthStore } from '@/features/core/store/auth-store'
+import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
@@ -16,6 +16,8 @@ import { clientesRoutes } from '@/features/customers'
 
 export default function MainLayout() {
   const user = useAuthStore((state) => state.user)
+  const token = useAuthStore((state) => state.token)
+  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
   const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,7 +56,7 @@ export default function MainLayout() {
     setIsMobileSidebarOpen(false)
   }
 
-  if (!user) {
+  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 

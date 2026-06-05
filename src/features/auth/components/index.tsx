@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import LoginForm from '@/features/auth/components/LoginForm'
-import { useAuthStore } from '@/features/core/store/auth-store'
+import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { useLoginMutation } from '../hooks/useLoginMutation'
 import type { LoginFormValues } from '../types/form'
 
@@ -12,7 +12,10 @@ export default function LoginFeature() {
   const toastId = 'login-request'
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
+  const token = useAuthStore((state) => state.token)
+  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
   const applySession = useAuthStore((state) => state.login)
+  const logout = useAuthStore((state) => state.logout)
   const { mutateAsync: login, isPending } = useLoginMutation()
 
   const performLogin = async (values: LoginFormValues) => {
@@ -40,10 +43,15 @@ export default function LoginFeature() {
 
 
   useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true })
+    if (!user) return
+
+    if (!token || isTokenExpired(tokenExpiresAt)) {
+      logout()
+      return
     }
-  }, [navigate, user])
+
+    navigate('/', { replace: true })
+  }, [logout, navigate, token, tokenExpiresAt, user])
 
   return (
     <LoginForm onSubmit={performLogin} />

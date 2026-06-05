@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { Settings, Users } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const adminUsuariosRoutes: AppRoute[] = [
@@ -7,7 +7,7 @@ export const adminUsuariosRoutes: AppRoute[] = [
     meta: {
       name: 'Administración',
       description: 'Gestión del sistema',
-      icon: Users,
+      icon: Settings,
     },
     children: [
       {

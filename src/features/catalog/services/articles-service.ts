@@ -34,12 +34,13 @@ const getApiOrigin = () => {
   }
 }
 
-const resolveImageUrl = (imageUrl: string | null): string | null => {
+const resolveArticleImageUrl = (imageUrl: string | null): string | null => {
   if (!imageUrl) return null
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl
 
   const origin = getApiOrigin()
   if (!origin) return imageUrl
+  if (imageUrl.startsWith('/media/')) return `${origin}${imageUrl}`
   if (imageUrl.startsWith('/')) return `${origin}${imageUrl}`
 
   return `${origin}/media/${imageUrl}`
@@ -48,7 +49,7 @@ const resolveImageUrl = (imageUrl: string | null): string | null => {
 const mapArticle = (article: ArticleApi): Article => ({
   id: article.id,
   title: article.titulo,
-  image: resolveImageUrl(article.imagen_url),
+  image: resolveArticleImageUrl(article.imagen_url),
 })
 
 const normalizeArticleList = (payload: ArticleApi[] | PaginatedData<ArticleApi>) =>
@@ -81,6 +82,7 @@ export const createArticle = async (payload: CreateArticlePayload): Promise<Arti
   const formData = new FormData()
   formData.append('titulo', payload.title)
   formData.append('imagen_url', payload.image)
+  formData.append('activo', 'true')
 
   const { data } = await api.post<ApiResponse<ArticleApi>>('/admin/articles/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

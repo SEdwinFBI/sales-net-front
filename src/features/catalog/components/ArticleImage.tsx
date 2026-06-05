@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +16,10 @@ export default function ArticleImage({
   src,
 }: Props) {
   const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    setHasError(false)
+  }, [src])
 
   if (!src || hasError) {
     return (

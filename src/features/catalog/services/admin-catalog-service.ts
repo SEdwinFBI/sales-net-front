@@ -75,6 +75,7 @@ export const getArticuloById = async (id: number): Promise<Articulo> => {
 export const createArticulo = async (payload: CreateArticuloPayload): Promise<Articulo> => {
   const formData = new FormData()
   formData.append('titulo', payload.titulo)
+  formData.append('activo', 'true')
   if (payload.imagen) formData.append('imagen_url', payload.imagen)
   const { data } = await api.post<ApiResponse<Articulo>>('/admin/articles/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
