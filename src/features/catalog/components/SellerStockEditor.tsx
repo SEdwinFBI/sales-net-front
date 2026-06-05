@@ -161,12 +161,16 @@ export default function SellerStockEditor({
             const isExpanded = expandedArticles[row.article.id] ?? false
 
             return (
-              <Card key={row.article.id} size="sm" className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md">
-                <div className="space-y-3 p-4">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <Card
+                key={row.article.id}
+                size="sm"
+                className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div className="space-y-4 p-4">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,280px)_auto] lg:items-center">
                     <div className="flex min-w-0 gap-3">
                       <ArticleImage
-                        className="size-16 shrink-0 rounded-lg object-cover shadow-sm"
+                        className="size-16 shrink-0 rounded-lg object-cover shadow-sm sm:size-18"
                         src={row.article.image}
                         alt={row.article.title}
                       />
@@ -174,34 +178,40 @@ export default function SellerStockEditor({
                         <CardTitle className="truncate text-base leading-snug">
                           {row.article.title}
                         </CardTitle>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge variant={row.total > 0 ? 'default' : 'secondary'}>
-                            {row.total} unidades
-                          </Badge>
-                          <Badge variant="outline">
-                            {row.availableSizes.length} tallas
-                          </Badge>
-                          {row.assignedSizes.length === 0 && (
-                            <span className="text-xs text-muted-foreground">Sin asignar</span>
-                          )}
-                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Stock por talla
+                        </p>
                       </CardHeader>
                     </div>
 
-                    <div className="flex flex-col gap-2 lg:items-end">
-                      {row.assignedSizes.length > 0 && (
-                        <div className="flex max-w-full flex-wrap gap-1.5 lg:justify-end">
-                          {row.assignedSizes.map(({ quantity, size }) => (
-                            <Badge key={size} variant="secondary">
-                              Talla {size}: {quantity}
-                            </Badge>
-                          ))}
+                    <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Stock
+                          </p>
+                          <p className="text-sm font-semibold">{row.total}</p>
                         </div>
-                      )}
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Tallas
+                          </p>
+                          <p className="text-sm font-semibold">{row.availableSizes.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Asignadas
+                          </p>
+                          <p className="text-sm font-semibold">{row.assignedSizes.length}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex lg:justify-end">
                       <Button
                         type="button"
                         variant={isExpanded ? 'default' : 'outline'}
-                        className="w-full justify-between sm:w-44"
+                        className="w-full justify-between sm:w-44 lg:w-40"
                         disabled={row.availableSizes.length === 0}
                         onClick={() => toggleArticle(row.article.id)}
                       >
@@ -223,7 +233,7 @@ export default function SellerStockEditor({
                   ) : (
                     isExpanded && (
                       <div className="rounded-lg border border-border bg-muted/20 p-3">
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))]">
                           {row.availableSizes.map(({ quantity, size, variant }) => (
                             <div
                               key={size}

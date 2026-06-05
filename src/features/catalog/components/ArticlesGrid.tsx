@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 import ArticleImage from './ArticleImage'
@@ -16,6 +16,8 @@ type Props = {
   variants?: ArticleVariant[]
   isLoading: boolean
 }
+
+const formatPrice = (value: number) => `Q${value.toFixed(2)}`
 
 export default function ArticlesGrid({ data, variants = [], isLoading }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
@@ -92,7 +94,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               variant="outline"
               onClick={clearFilters}
               disabled={!hasActiveFilters}
-              className="w-full sm:w-auto"
+              className={cn('w-full sm:w-auto', !hasActiveFilters && 'hidden sm:inline-flex')}
             >
               <X />
               Limpiar
@@ -118,9 +120,20 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredData.map((article) => {
-              const articleSizes = variants
-                .filter((variant) => variant.articleId === article.id)
+              const articleVariants = variants.filter((variant) => variant.articleId === article.id)
+              const articleSizes = articleVariants
                 .map((variant) => variant.size)
+              const prices = articleVariants
+                .map((variant) => variant.price)
+                .filter((price) => Number.isFinite(price))
+              const minPrice = prices.length > 0 ? Math.min(...prices) : null
+              const maxPrice = prices.length > 0 ? Math.max(...prices) : null
+              const priceLabel =
+                minPrice === null
+                  ? 'Sin precio'
+                  : minPrice === maxPrice
+                    ? formatPrice(minPrice)
+                    : `Desde ${formatPrice(minPrice)}`
 
               return (
                 <Card
@@ -158,16 +171,13 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                   </div>
                   <CardHeader className="px-3 pb-3">
                     <CardTitle className="text-sm leading-snug">{article.title}</CardTitle>
-                    <div className="flex min-h-5 flex-wrap gap-1 pt-1">
-                      {articleSizes.length > 0 ? (
-                        articleSizes.map((size) => (
-                          <Badge key={size} variant="secondary">
-                            Talla {size}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Sin tallas</span>
-                      )}
+                    <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/50 pt-2">
+                      <p className="truncate text-sm font-semibold text-primary">
+                        {priceLabel}
+                      </p>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {articleSizes.length > 0 ? `${articleSizes.length} tallas` : 'Sin tallas'}
+                      </span>
                     </div>
                   </CardHeader>
                 </Card>

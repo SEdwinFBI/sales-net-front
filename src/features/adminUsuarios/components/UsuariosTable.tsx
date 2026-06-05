@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Pencil, Trash2, Plus, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Usuario } from '../types/usuario-types'
 import UsuarioDialog from './UsuarioDialog'
 import DeleteUsuarioDialog from './DeleteUsuarioDialog'
@@ -136,7 +137,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
               variant="outline"
               onClick={clearFilters}
               disabled={!hasActiveFilters}
-              className="w-full sm:w-auto"
+              className={cn('w-full sm:w-auto', !hasActiveFilters && 'hidden sm:inline-flex')}
             >
               <X />
               Limpiar
