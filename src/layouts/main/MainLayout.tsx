@@ -61,7 +61,11 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen bg-gray-50 text-neutral">
       {!isDesktop && (
-        <MobileSidebar items={sidebarItems} isOpen={isMobileSidebarOpen} onClose={handleMobileSidebarClose} />
+        <MobileSidebar
+          items={sidebarItems}
+          isOpen={isMobileSidebarOpen}
+          onClose={handleMobileSidebarClose}
+        />
       )}
 
       <div className="grid min-h-screen grid-cols-1 gap-4 px-1 py-1 md:px-6 md:py-4 lg:grid-cols-[auto_1fr] lg:gap-6 xl:px-8">
@@ -81,6 +85,7 @@ export default function MainLayout() {
             isMobileSidebarOpen={isMobileSidebarOpen}
             isSidebarExpanded={isDesktopSidebarExpanded}
             isSidebarPinned={isSidebarPinned}
+            user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
           />

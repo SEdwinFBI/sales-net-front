@@ -215,7 +215,7 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-2xl max-h-16 border border-white/15 bg-linear-to-br from-primary to-primary/85 py-3 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
+          'flex items-center rounded-2xl border border-white/15 bg-linear-to-br from-primary to-primary/85 py-3 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >

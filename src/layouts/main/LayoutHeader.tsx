@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
+import type { User } from "@/features/auth/types/auth"
 
 type LayoutHeaderProps = {
     hasSidebarNavigation: boolean
@@ -7,8 +8,14 @@ type LayoutHeaderProps = {
     isMobileSidebarOpen: boolean
     isSidebarExpanded: boolean
     isSidebarPinned: boolean
+    user: User
     onLogout: () => void
     onSidebarToggle: () => void
+}
+
+const roleLabels: Record<User['role'], string> = {
+    admin: 'Admin',
+    vendedor: 'Vendedor',
 }
 
 function LayoutHeader({
@@ -17,9 +24,12 @@ function LayoutHeader({
     isMobileSidebarOpen,
     isSidebarExpanded,
     isSidebarPinned,
+    user,
     onLogout,
     onSidebarToggle,
 }: LayoutHeaderProps) {
+    const displayName = user.fullName?.trim() || user.username
+    const roleLabel = roleLabels[user.role]
     const sidebarLabel = isDesktop
         ? isSidebarPinned
             ? 'Liberar sidebar'
@@ -66,14 +76,24 @@ function LayoutHeader({
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={onLogout}
-                    className="inline-flex items-center gap-2 rounded-full border border-secondary bg-white px-4 py-2 text-sm font-semibold text-neutral transition hover:bg-secondary"
-                >
-                    <LogOut className="size-4 text-[--color-danger]" />
-
-                </button>
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="min-w-0 text-right">
+                        <p className="max-w-42 truncate text-sm font-semibold text-neutral">
+                            {displayName}
+                        </p>
+                        <p className="text-xs font-medium uppercase tracking-wide text-neutral/55">
+                            {roleLabel}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onLogout}
+                        aria-label="Cerrar sesión"
+                        className="inline-flex size-10 items-center justify-center rounded-full border border-secondary bg-white text-neutral transition hover:bg-secondary"
+                    >
+                        <LogOut className="size-4 text-[--color-danger]" />
+                    </button>
+                </div>
             </div>
         </header>
     )
