@@ -19,9 +19,12 @@ export default function ClientesPage() {
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
 
-  const filtered = clientes.filter((c) => {
+  const clientesList = Array.isArray(clientes) ? clientes : []
+  const filtered = clientesList.filter((c) => {
     const q = search.toLowerCase()
-    const matchesSearch = !q || c.nombre_completo.toLowerCase().includes(q) || c.telefono.includes(q)
+    const nombre = (c.nombre_completo || '').toLowerCase()
+    const telefono = c.telefono || ''
+    const matchesSearch = !q || nombre.includes(q) || telefono.includes(q)
     const matchesActivo = filterActivo === 'todos' || (filterActivo === 'activo' && c.activo) || (filterActivo === 'inactivo' && !c.activo)
     return matchesSearch && matchesActivo
   })
@@ -56,7 +59,7 @@ export default function ClientesPage() {
           </Button>
         </div>
 
-        {isLoading ? (
+        {isLoading && filtered.length === 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => <ClienteCardSkeleton key={i} />)}
           </div>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import z from 'zod'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,30 +15,18 @@ import { Input } from '@/components/ui/input'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
-import type { AppRole } from '@/features/auth/types/auth'
 import { toast } from 'sonner'
 
-const baseSchema = z.object({
-  fullName: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+const schema = z.object({
+  first_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  last_name: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
   username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
+  email: z.string().email('Email inválido').or(z.literal('')),
   role: z.enum(['admin', 'vendedor']),
-  password: z.string(),
-})
-
-const createSchema = baseSchema.extend({
-  password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres'),
-})
-
-const editSchema = baseSchema.extend({
   password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres').or(z.literal('')),
 })
 
-type FormValues = {
-  fullName: string
-  username: string
-  password: string
-  role: AppRole
-}
+type FormValues = z.infer<typeof schema>
 
 type Props = {
   open: boolean
@@ -58,38 +46,35 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(isEdit ? editSchema : createSchema),
-    defaultValues: { fullName: '', username: '', password: '', role: 'vendedor' },
+    resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
+    defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor' },
   })
 
   useEffect(() => {
     if (open) {
       reset(
         usuario
-          ? { fullName: usuario.fullName, username: usuario.username, password: '', role: usuario.role }
-          : { fullName: '', username: '', password: '', role: 'vendedor' }
+          ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor' }
+          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor' }
       )
     }
   }, [open, usuario, reset])
 
   const onSubmit = async (values: FormValues) => {
     try {
+      const payload = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        username: values.username,
+        role: values.role,
+        ...(values.email ? { email: values.email } : {}),
+        ...(values.password ? { password: values.password } : {}),
+      }
       if (isEdit) {
-        await updateUsuario({
-          id: usuario.id,
-          fullName: values.fullName,
-          username: values.username,
-          role: values.role,
-          ...(values.password ? { password: values.password } : {}),
-        })
+        await updateUsuario({ id: usuario.id, ...payload })
         toast.success('Usuario actualizado correctamente')
       } else {
-        await createUsuario({
-          fullName: values.fullName,
-          username: values.username,
-          password: values.password,
-          role: values.role,
-        })
+        await createUsuario({ ...payload, password: values.password || 'temporal123' })
         toast.success('Usuario creado correctamente')
       }
       onClose()
@@ -108,9 +93,21 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
           <FieldGroup>
             <Field>
-              <FieldLabel>Nombre completo</FieldLabel>
-              <Input {...register('fullName')} placeholder="Juan Pérez" />
-              <FieldError errors={[errors.fullName]} />
+              <FieldLabel>Nombre</FieldLabel>
+              <Input {...register('first_name')} placeholder="Juan" />
+              <FieldError errors={[errors.first_name]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Apellido</FieldLabel>
+              <Input {...register('last_name')} placeholder="Pérez" />
+              <FieldError errors={[errors.last_name]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Email</FieldLabel>
+              <Input {...register('email')} type="email" placeholder="juan@example.com" />
+              <FieldError errors={[errors.email]} />
             </Field>
 
             <Field>

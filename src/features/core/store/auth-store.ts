@@ -3,41 +3,29 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import type { AuthSession, User } from '@/features/auth/types/auth'
 import { jwtDecode } from 'jwt-decode'
 
-
-
-
 export type AuthUser = User
 
 type AuthState = {
   user: AuthUser | null
   token: string | null
+  refreshToken: string | null
   tokenExpiresAt: number | null
   login: (session: AuthSession) => void
   logout: () => void
+  setAccessToken: (access: string) => void
 }
 
-
-/**
- * Calcula cuándo expira el token.
-
- */
 function computeExpiresAt(session: AuthSession): number | null {
-  console.log("hay  session");
   if (!session.access) return null
   try {
     const decode = jwtDecode<{ exp?: number }>(session.access)
-    console.log("decoded", decode);
-    if (decode.exp) {
-      return decode.exp * 1000
-    }
+    if (decode.exp) return decode.exp * 1000
   } catch {
     return null
   }
-
   return Date.now() + 60 * 60 * 1000
 }
 
-/** Verifica si el token está expirado. */
 export function isTokenExpired(expiresAt: number | null): boolean {
   if (expiresAt === null) return false
   return Date.now() >= expiresAt
@@ -48,16 +36,16 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       tokenExpiresAt: null,
       login: (session) => {
-
-        console.log("Session:", session);
         const permissions = session.user?.permissions?.length > 0
           ? session.user.permissions
           : [session.user.role]
 
         set({
           token: session.access,
+          refreshToken: session.refresh,
           user: {
             ...session.user,
             permissions,
@@ -68,16 +56,19 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({
           token: null,
+          refreshToken: null,
           user: null,
           tokenExpiresAt: null,
         })
       },
+      setAccessToken: (access) => set({ token: access }),
     }),
     {
       name: 'sales-net-auth',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         token: state.token,
+        refreshToken: state.refreshToken,
         user: state.user,
         tokenExpiresAt: state.tokenExpiresAt,
       }),

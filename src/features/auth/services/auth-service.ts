@@ -5,7 +5,7 @@ import type { AuthCredentials, AuthSession } from '@/features/auth/types/auth'
 const BYPASS_CREDENTIALS: Record<string, AuthSession> = {
   'admin:admin': {
     access: 'bypass-token-admin',
-    expiresIn: '9999999999',
+    refresh: 'bypass-refresh-admin',
     user: {
       fullName: 'Admin Bypass',
       id: 1,
@@ -16,7 +16,7 @@ const BYPASS_CREDENTIALS: Record<string, AuthSession> = {
   },
   'vendedor:vendedor': {
     access: 'bypass-token-vendedor',
-    expiresIn: '9999999999',
+    refresh: 'bypass-refresh-vendedor',
     user: {
       fullName: 'Vendedor Bypass',
       id: 2,
@@ -32,13 +32,15 @@ export async function loginService(credentials: AuthCredentials): Promise<AuthSe
   const bypass = BYPASS_CREDENTIALS[key]
   if (bypass) return bypass
 
-  try {
-    const { data } = await api.post<AuthSession>('/auth/login/', credentials)
+  const { data } = await api.post<AuthSession>('/auth/login/', credentials)
+  return data
+}
 
-    return data
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+export async function logoutService(refresh: string): Promise<void> {
+  await api.post('/auth/logout/', { refresh })
+}
 
-    throw new Error('Error al iniciar sesión. Por favor, intenta de nuevo.')
-  }
+export async function refreshService(refresh: string): Promise<{ access: string }> {
+  const { data } = await api.post<{ access: string }>('/auth/refresh/', { refresh })
+  return data
 }

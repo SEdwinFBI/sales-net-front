@@ -67,6 +67,8 @@ export interface Venta {
   fecha: string
   total: number
   estado: string
+  abonado: number
+  saldo: number
   forma_pago: string
   vendedor: {
     id: number
@@ -99,4 +101,41 @@ export interface SalesHistoryFilters {
   fecha_hasta?: string
   estado?: string
   id_cliente?: number
+}
+
+export interface CreateVentaPayload {
+  id_usuario: number
+  id_cliente: number
+  id_forma_pago: number
+  estado: string
+  detalles: {
+    id_variante: number
+    cantidad: number
+  }[]
+}
+
+export interface CreateVentaResponse {
+  status: 'success'
+  message: string
+  data: {
+    id_venta: number
+    total: number
+    estado: string
+  }
+}
+
+export interface AdminVentaFilters {
+  estado?: string
+  page?: number
+  page_size?: number
+}
+
+export interface VentaListResponse {
+  status: 'success'
+  data: {
+    count: number
+    next: string | null
+    previous: string | null
+    results: Venta[]
+  }
 }

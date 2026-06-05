@@ -45,6 +45,8 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
@@ -117,7 +119,10 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
 
             <Field orientation="horizontal">
               <FieldLabel>Activo</FieldLabel>
-              <Switch {...register('activo')} />
+              <Switch
+                checked={watch('activo')}
+                onCheckedChange={(checked: boolean) => setValue('activo', checked)}
+              />
             </Field>
           </FieldGroup>
 

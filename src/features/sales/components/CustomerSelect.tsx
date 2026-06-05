@@ -144,11 +144,12 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
                                         )}
                                     >
                                         <span className="size-7 flex items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                            {c.name
+                                            {(c.name ?? '')
                                                 .split(" ")
                                                 .map((w) => w[0])
                                                 .join("")
-                                                .slice(0, 2)}
+                                                .slice(0, 2)
+                                                .toUpperCase() || '?'}
                                         </span>
 
                                         <div className="flex-1 text-sm">

@@ -4,16 +4,18 @@ import { getClientes } from '../services/clientes-service'
 import type { Cliente } from '../types/clientes'
 
 export const useClientes = () => {
-  const { data, isLoading, isError } = useQuery<Cliente[]>({
+  const { data, isLoading, isError, isFetching } = useQuery<Cliente[]>({
     queryKey: queryKeys.customers.list(),
-    placeholderData: [],
     queryFn: getClientes,
-    staleTime: 1000 * 60 * 15,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+    refetchOnMount: true,
   })
 
   return {
-    data: data ?? [],
+    data: Array.isArray(data) ? data : [],
     isLoading,
+    isFetching,
     isError,
   }
 }

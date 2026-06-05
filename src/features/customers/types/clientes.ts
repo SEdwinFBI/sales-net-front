@@ -1,3 +1,5 @@
+import type { Venta } from "@/features/sales/types/sales"
+
 export interface Cliente {
   id: number
   nombre_completo: string
@@ -39,6 +41,7 @@ export interface Abono {
   id_venta: number
   venta_total: number
   venta_estado: string
+  saldo_restante: number
   cliente: {
     id: number
     nombre_completo: string
@@ -67,11 +70,12 @@ export interface ComprasFilters {
 }
 
 export interface ComprasData {
-  ventas: import('@/features/sales/types/sales').Venta[]
+  ventas: Venta[]
   resumen: {
     total_ventas: number
     total_general: number
-    total_pendiente: number
-    balance_cliente: number
+    total_pagado: number
+    total_abonado: number
+    balance: number
   }
 }

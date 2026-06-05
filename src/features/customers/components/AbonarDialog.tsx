@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import VentaSelect from './VentaSelect'
 import { useAbonarVenta } from '../hooks/useAbonarVenta'
 import type { Venta } from '@/features/sales/types/sales'
 import { toast } from 'sonner'
@@ -36,6 +36,7 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
     register,
     handleSubmit,
     reset,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<FormValues>({
@@ -43,8 +44,8 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
     defaultValues: { idVenta: 0, monto: 0 },
   })
 
-  const selectedVentaId = watch('idVenta')
-  const selectedVenta = ventas.find((v) => v.id === selectedVentaId)
+  const idVentaValue = watch('idVenta')
+  const selectedVenta = ventas.find((v) => v.id === idVentaValue)
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -67,22 +68,35 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Field>
             <FieldLabel>Venta</FieldLabel>
-            <Select {...register('idVenta')}>
-              <option value={0}>Selecciona una venta</option>
-              {ventas.map((v) => (
-<option key={v.id} value={v.id}>
-                            Venta #{v.id} — Q{Number(v.total).toFixed(2)} — {v.estado}
-                          </option>
-                        ))}
-                      </Select>
-                      <FieldError errors={[errors.idVenta]} />
-                    </Field>
+            <VentaSelect
+              ventas={ventas}
+              value={idVentaValue}
+              onChange={(id) => setValue('idVenta', id)}
+            />
+            <FieldError errors={[errors.idVenta]} />
+          </Field>
 
                     {selectedVenta && (
-                      <p className="text-sm text-muted-foreground">
-                        Total: Q{Number(selectedVenta.total).toFixed(2)} | Estado: {selectedVenta.estado}
-            </p>
+                      <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total</span>
+                          <span className="font-semibold">Q{Number(selectedVenta.total).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Abonado</span>
+                          <span className="text-amber-600">Q{Number(selectedVenta.abonado).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Saldo</span>
+                          <span className="text-red-600 font-semibold">Q{Number(selectedVenta.saldo).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Estado</span>
+                          <span>{selectedVenta.estado}</span>
+                        </div>
+                      </div>
           )}
+
 
           <Field>
             <FieldLabel>Monto a abonar</FieldLabel>

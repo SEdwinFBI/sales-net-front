@@ -26,6 +26,7 @@ export default function AbonosTable({ abonos }: Props) {
             <TableHead>Fecha</TableHead>
             <TableHead>Venta ID</TableHead>
             <TableHead>Total venta</TableHead>
+            <TableHead>Saldo restante</TableHead>
             <TableHead>Estado venta</TableHead>
           </TableRow>
         </TableHeader>
@@ -37,6 +38,7 @@ export default function AbonosTable({ abonos }: Props) {
               <TableCell>{abono.fecha_abono}</TableCell>
               <TableCell className="font-mono text-xs">{abono.id_venta}</TableCell>
               <TableCell>Q{Number(abono.venta_total).toFixed(2)}</TableCell>
+              <TableCell className="text-red-600">Q{Number(abono.saldo_restante).toFixed(2)}</TableCell>
               <TableCell>{abono.venta_estado}</TableCell>
             </TableRow>
           ))}

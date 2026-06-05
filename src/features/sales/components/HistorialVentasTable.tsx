@@ -50,6 +50,8 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span> },
     { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString() },
     { accessorKey: 'total', header: 'Total', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
+    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => <span className="text-amber-600">Q{Number(row.original.abonado).toFixed(2)}</span> },
+    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.saldo).toFixed(2)}</span> },
     {
       accessorKey: 'estado',
       header: 'Estado',

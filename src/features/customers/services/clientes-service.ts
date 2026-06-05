@@ -2,8 +2,9 @@ import { api } from '@/lib/api'
 import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, ComprasData, ComprasFilters } from '../types/clientes'
 
 export const getClientes = async (): Promise<Cliente[]> => {
-  const { data } = await api.get<ApiResponse<Cliente[]>>('/admin/clientes/')
-  return data.data
+  const { data } = await api.get<ApiResponse<Cliente[] | { count: number; results: Cliente[] }>>('/admin/clientes/')
+  if (Array.isArray(data.data)) return data.data
+  return data.data.results ?? []
 }
 
 export const getClienteById = async (id: number): Promise<Cliente> => {

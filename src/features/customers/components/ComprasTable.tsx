@@ -13,7 +13,7 @@ export default function ComprasTable({ ventas, resumen }: Props) {
   return (
     <div className="space-y-4">
       {resumen && (
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <div className="rounded-xl border border-border bg-white p-4">
             <p className="text-xs text-muted-foreground">Total ventas</p>
             <p className="text-xl font-bold">{resumen.total_ventas}</p>
@@ -23,12 +23,16 @@ export default function ComprasTable({ ventas, resumen }: Props) {
             <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
           </div>
           <div className="rounded-xl border border-border bg-white p-4">
-            <p className="text-xs text-muted-foreground">Total pendiente</p>
-            <p className="text-xl font-bold text-amber-600">Q{Number(resumen.total_pendiente).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Pagado</p>
+            <p className="text-xl font-bold text-emerald-600">Q{Number(resumen.total_pagado).toFixed(2)}</p>
           </div>
           <div className="rounded-xl border border-border bg-white p-4">
-            <p className="text-xs text-muted-foreground">Balance cliente</p>
-            <p className="text-xl font-bold text-primary">Q{Number(resumen.balance_cliente).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Abonado</p>
+            <p className="text-xl font-bold text-amber-600">Q{Number(resumen.total_abonado).toFixed(2)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-white p-4">
+            <p className="text-xs text-muted-foreground">Balance (deuda)</p>
+            <p className="text-xl font-bold text-red-600">Q{Number(resumen.balance).toFixed(2)}</p>
           </div>
         </div>
       )}
@@ -45,6 +49,8 @@ export default function ComprasTable({ ventas, resumen }: Props) {
                 <TableHead>ID</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Total</TableHead>
+                <TableHead>Abonado</TableHead>
+                <TableHead>Saldo</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Forma de pago</TableHead>
                 <TableHead>Vendedor</TableHead>
@@ -56,6 +62,8 @@ export default function ComprasTable({ ventas, resumen }: Props) {
                   <TableCell className="font-mono text-xs">{venta.id}</TableCell>
                   <TableCell>{new Date(venta.fecha).toLocaleDateString()}</TableCell>
                   <TableCell className="font-semibold">Q{Number(venta.total).toFixed(2)}</TableCell>
+                  <TableCell className="text-amber-600">Q{Number(venta.abonado).toFixed(2)}</TableCell>
+                  <TableCell className="text-red-600">Q{Number(venta.saldo).toFixed(2)}</TableCell>
                   <TableCell>{venta.estado}</TableCell>
                   <TableCell className="capitalize">{venta.forma_pago}</TableCell>
                   <TableCell>{venta.vendedor.full_name}</TableCell>

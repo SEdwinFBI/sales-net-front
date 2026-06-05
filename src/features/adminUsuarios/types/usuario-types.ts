@@ -1,23 +1,30 @@
-import type { AppRole } from '@/features/auth/types/auth'
-
 export type Usuario = {
-  id: string
-  fullName: string
+  id: number
   username: string
-  role: AppRole
+  first_name: string
+  last_name: string
+  email: string
+  fullName: string
+  role: string | null
+  is_active: boolean
+  created_at: string
 }
 
 export type CreateUsuarioPayload = {
-  fullName: string
   username: string
   password: string
-  role: AppRole
+  first_name: string
+  last_name: string
+  email?: string
+  role?: string
 }
 
 export type UpdateUsuarioPayload = {
-  id: string
-  fullName: string
-  username: string
+  id: number
+  username?: string
   password?: string
-  role: AppRole
+  first_name?: string
+  last_name?: string
+  email?: string
+  role?: string
 }

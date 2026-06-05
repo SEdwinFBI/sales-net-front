@@ -51,4 +51,43 @@ export const queryKeys = {
     deudores: (filters?: Record<string, unknown>) =>
       [...queryKeys.reporting.all, 'deudores', filters] as const,
   },
+  adminUsuarios: {
+    all: ['adminUsuarios'] as const,
+    list: () => [...queryKeys.adminUsuarios.all, 'list'] as const,
+    detail: (id: number) => [...queryKeys.adminUsuarios.all, 'detail', id] as const,
+  },
+  adminVentas: {
+    all: ['adminVentas'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.adminVentas.all, 'list', filters] as const,
+    detail: (id: number) => [...queryKeys.adminVentas.all, 'detail', id] as const,
+  },
+  adminCatalog: {
+    all: ['adminCatalog'] as const,
+    articles: {
+      all: () => [...queryKeys.adminCatalog.all, 'articles'] as const,
+      list: () => [...queryKeys.adminCatalog.articles.all(), 'list'] as const,
+      detail: (id: number) => [...queryKeys.adminCatalog.articles.all(), 'detail', id] as const,
+    },
+    tallas: {
+      all: () => [...queryKeys.adminCatalog.all, 'tallas'] as const,
+      list: () => [...queryKeys.adminCatalog.tallas.all(), 'list'] as const,
+    },
+    variantes: {
+      all: () => [...queryKeys.adminCatalog.all, 'variantes'] as const,
+      list: () => [...queryKeys.adminCatalog.variantes.all(), 'list'] as const,
+    },
+    stock: {
+      all: () => [...queryKeys.adminCatalog.all, 'stock'] as const,
+      list: () => [...queryKeys.adminCatalog.stock.all(), 'list'] as const,
+    },
+    reglasPrecio: {
+      all: () => [...queryKeys.adminCatalog.all, 'reglas-precio'] as const,
+      list: () => [...queryKeys.adminCatalog.reglasPrecio.all(), 'list'] as const,
+    },
+    formaPago: {
+      all: () => [...queryKeys.adminCatalog.all, 'forma-pago'] as const,
+      list: () => [...queryKeys.adminCatalog.formaPago.all(), 'list'] as const,
+    },
+  },
 }

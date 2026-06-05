@@ -6,7 +6,7 @@ export interface ReporteVentasFilters {
   id_variante?: number
   id_vendedor?: number
   id_articulo?: number
-  format?: 'json' | 'pdf'
+  output?: 'json' | 'pdf'
 }
 
 export interface ReporteVentas {

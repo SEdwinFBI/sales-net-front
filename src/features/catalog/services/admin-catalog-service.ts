@@ -1,0 +1,137 @@
+import { api } from '@/lib/api'
+import type { ApiResponse } from '@/features/sales/types/sales'
+import type {
+  Articulo, CreateArticuloPayload, UpdateArticuloPayload,
+  Talla, CreateTallaPayload, UpdateTallaPayload,
+  Variante, CreateVariantePayload,
+  StockItem, CreateStockPayload, UpdateStockPayload,
+  ReglaPrecio, CreateReglaPrecioPayload, UpdateReglaPrecioPayload,
+  FormaPago, CreateFormaPagoPayload, UpdateFormaPagoPayload,
+} from '../types/admin-catalog-types'
+
+// Artículos
+export const getArticulos = async (): Promise<Articulo[]> => {
+  const { data } = await api.get<ApiResponse<Articulo[]>>('/admin/articles/')
+  return data.data
+}
+
+export const getArticuloById = async (id: number): Promise<Articulo> => {
+  const { data } = await api.get<ApiResponse<Articulo>>(`/admin/articles/${id}/`)
+  return data.data
+}
+
+export const createArticulo = async (payload: CreateArticuloPayload): Promise<Articulo> => {
+  const formData = new FormData()
+  formData.append('titulo', payload.titulo)
+  if (payload.imagen) formData.append('imagen', payload.imagen)
+  const { data } = await api.post<ApiResponse<Articulo>>('/admin/articles/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.data
+}
+
+export const updateArticulo = async (id: number, payload: UpdateArticuloPayload): Promise<Articulo> => {
+  const formData = new FormData()
+  if (payload.titulo) formData.append('titulo', payload.titulo)
+  if (payload.imagen) formData.append('imagen', payload.imagen)
+  const { data } = await api.put<ApiResponse<Articulo>>(`/admin/articles/${id}/`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.data
+}
+
+export const deleteArticulo = async (id: number): Promise<void> => {
+  await api.delete(`/admin/articles/${id}/`)
+}
+
+// Tallas
+export const getTallas = async (): Promise<Talla[]> => {
+  const { data } = await api.get<ApiResponse<Talla[]>>('/admin/tallas/')
+  return data.data
+}
+
+export const createTalla = async (payload: CreateTallaPayload): Promise<Talla> => {
+  const { data } = await api.post<ApiResponse<Talla>>('/admin/tallas/', payload)
+  return data.data
+}
+
+export const updateTalla = async (id: number, payload: UpdateTallaPayload): Promise<Talla> => {
+  const { data } = await api.put<ApiResponse<Talla>>(`/admin/tallas/${id}/`, payload)
+  return data.data
+}
+
+export const deleteTalla = async (id: number): Promise<void> => {
+  await api.delete(`/admin/tallas/${id}/`)
+}
+
+// Variantes
+export const getVariantes = async (): Promise<Variante[]> => {
+  const { data } = await api.get<ApiResponse<Variante[]>>('/admin/variantes/')
+  return data.data
+}
+
+export const createVariante = async (payload: CreateVariantePayload): Promise<Variante> => {
+  const { data } = await api.post<ApiResponse<Variante>>('/admin/variantes/', payload)
+  return data.data
+}
+
+export const updateVariante = async (id: number, payload: Partial<CreateVariantePayload>): Promise<Variante> => {
+  const { data } = await api.put<ApiResponse<Variante>>(`/admin/variantes/${id}/`, payload)
+  return data.data
+}
+
+export const deleteVariante = async (id: number): Promise<void> => {
+  await api.delete(`/admin/variantes/${id}/`)
+}
+
+// Stock
+export const getStock = async (): Promise<StockItem[]> => {
+  const { data } = await api.get<ApiResponse<StockItem[]>>('/admin/stock/')
+  return data.data
+}
+
+export const createStock = async (payload: CreateStockPayload): Promise<StockItem> => {
+  const { data } = await api.post<ApiResponse<StockItem>>('/admin/stock/', payload)
+  return data.data
+}
+
+export const updateStock = async (id: number, payload: UpdateStockPayload): Promise<StockItem> => {
+  const { data } = await api.put<ApiResponse<StockItem>>(`/admin/stock/${id}/`, payload)
+  return data.data
+}
+
+// Reglas Precio
+export const getReglasPrecio = async (): Promise<ReglaPrecio[]> => {
+  const { data } = await api.get<ApiResponse<ReglaPrecio[]>>('/admin/reglas_precio/')
+  return data.data
+}
+
+export const createReglaPrecio = async (payload: CreateReglaPrecioPayload): Promise<ReglaPrecio> => {
+  const { data } = await api.post<ApiResponse<ReglaPrecio>>('/admin/reglas_precio/', payload)
+  return data.data
+}
+
+export const updateReglaPrecio = async (id: number, payload: UpdateReglaPrecioPayload): Promise<ReglaPrecio> => {
+  const { data } = await api.put<ApiResponse<ReglaPrecio>>(`/admin/reglas_precio/${id}/`, payload)
+  return data.data
+}
+
+// Formas de Pago
+export const getFormasPago = async (): Promise<FormaPago[]> => {
+  const { data } = await api.get<ApiResponse<FormaPago[]>>('/admin/forma_pago/')
+  return data.data
+}
+
+export const createFormaPago = async (payload: CreateFormaPagoPayload): Promise<FormaPago> => {
+  const { data } = await api.post<ApiResponse<FormaPago>>('/admin/forma_pago/', payload)
+  return data.data
+}
+
+export const updateFormaPago = async (id: number, payload: UpdateFormaPagoPayload): Promise<FormaPago> => {
+  const { data } = await api.put<ApiResponse<FormaPago>>(`/admin/forma_pago/${id}/`, payload)
+  return data.data
+}
+
+export const deleteFormaPago = async (id: number): Promise<void> => {
+  await api.delete(`/admin/forma_pago/${id}/`)
+}
