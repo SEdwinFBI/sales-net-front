@@ -1,42 +1,90 @@
-import type { Venta } from '@/features/sales/types/sales'
-
 export interface ReporteVentasFilters {
   fecha_desde?: string
   fecha_hasta?: string
   id_variante?: number
   id_vendedor?: number
   id_articulo?: number
+  id_talla?: number
   output?: 'json' | 'pdf'
 }
 
 export interface ReporteVentas {
   status: 'success'
   data: {
-    resumen: {
-      total_general: number
-      cantidad_total: number
-      total_descuento: number
-      total_ventas: number
-    }
-    por_variante: {
-      id_variante: number
-      id_talla: number
-      articulo: string
-      talla: string
-      unidades: number
-      precio_promedio: number
-      total: number
-      descuento_total: number
-    }[]
-    por_vendedor: {
-      id_vendedor: number
-      nombre: string
-      cantidad_ventas: number
-      unidades: number
-      total: number
-    }[]
-    detalle_ventas: Venta[]
+    resumen: ReporteResumen
+    por_variante: ReporteVentaItem[]
+    por_vendedor: ReporteVentaVendedor[]
   }
+}
+
+export interface ReporteResumen {
+  total_general: number
+  cantidad_total: number
+  total_descuento: number
+  total_ventas: number
+}
+
+export interface ReporteVentaItem {
+  id_variante: number
+  id_talla: number
+  id_articulo: number
+  articulo: string
+  talla: string
+  unidades: number
+  precio_unitario: number
+  precio_promedio: number
+  total: number
+  descuento_total: number
+  total_neto: number
+  ventas: VentaEnVariante[]
+}
+
+export interface VentaEnVariante {
+  id_venta: number
+  fecha: string
+  cantidad: number
+  precio_unitario: number
+  monto: number
+  descuento: number
+  vendedor: VendedorInfo
+  cliente: ClienteInfo
+  estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
+  forma_pago: string
+}
+
+export interface VendedorInfo {
+  id: number
+  full_name: string
+}
+
+export interface ClienteInfo {
+  id: number
+  nombre_completo: string
+}
+
+export interface ReporteVentaVendedor {
+  id_vendedor: number
+  nombre: string
+  cantidad_ventas: number
+  unidades: number
+  total: number
+  descuento_total: number
+  total_neto: number
+  articulos: VendedorArticulo[]
+}
+
+export interface VendedorArticulo {
+  id_variante: number
+  id_talla: number
+  id_articulo: number
+  articulo: string
+  talla: string
+  precio_unitario: number
+  precio_promedio: number
+  unidades: number
+  total: number
+  descuento_total: number
+  total_neto: number
 }
 
 export interface ReporteDeudores {

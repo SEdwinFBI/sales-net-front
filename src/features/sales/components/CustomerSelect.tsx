@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, type FC } from "react"
 import { Search, X, ChevronDown, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type Customer = { id: string; name: string; phone: string }
+type Customer = { id: string; name: string; phone: string; balance: number }
 
 type Props = {
     customers: Customer[]
@@ -155,7 +155,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
                                         <div className="flex-1 text-sm">
                                             <div>{c.name}</div>
                                             <div className="text-xs text-stone-400">
-                                                {c.phone}
+                                                {c.phone} · Saldo: Q{c.balance.toFixed(2)}
                                             </div>
                                         </div>
 

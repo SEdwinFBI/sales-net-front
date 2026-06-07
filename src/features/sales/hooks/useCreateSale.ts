@@ -14,7 +14,7 @@ export const useCreateSale = () => {
     mutationFn: async (payload) => {
       if (!user) throw new Error('Usuario no autenticado')
 
-      return createAdminVenta({
+      const payloadBuild = {
         id_usuario: user.id,
         id_cliente: Number(payload.customerId) || 0,
         id_forma_pago: PAGO_MAP[payload.paymentMethod] || 1,
@@ -22,13 +22,17 @@ export const useCreateSale = () => {
         detalles: payload.items.map((item) => ({
           id_variante: item.variantId,
           cantidad: item.qty,
+          ...(item.discount > 0 ? { descuento: item.discount } : {}),
         })),
-      })
+      }
+      // console.log(payloadBuild);
+      return createAdminVenta(payloadBuild)
     },
     retry: 1,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminVentas.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.historial() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.sales.all })
     },
   })
 }

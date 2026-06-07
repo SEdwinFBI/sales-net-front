@@ -33,7 +33,13 @@ export default function MainLayout() {
   const isDesktopSidebarExpanded = isSidebarPinned || isSidebarHovered
 
   // Generar items del sidebar desde las rutas, filtrados por permisos del usuario
-  const allFeatureRoutes = [...adminUsuariosRoutes, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...catalogRoutes]
+  const allFeatureRoutes = [
+    ...salesRoutes,
+    ...reportingRoutes,
+    ...clientesRoutes,
+    ...catalogRoutes,
+    ...adminUsuariosRoutes
+  ]
   const sidebarItems = user
     ? buildSidebarItems(allFeatureRoutes, user.permissions)
     : []
@@ -70,7 +76,7 @@ export default function MainLayout() {
         />
       )}
 
-      <div className="grid min-h-screen grid-cols-1 gap-4 px-1 py-1 md:px-6 md:py-4 lg:grid-cols-[auto_1fr] lg:gap-6 xl:px-8">
+      <div className="grid min-h-screen grid-cols-1 gap-4 px-2 py-2 lg:grid-cols-[auto_1fr]">
         {isDesktop && (
           <DesktopSidebar
             expanded={isDesktopSidebarExpanded}
@@ -96,8 +102,8 @@ export default function MainLayout() {
             <Outlet />
           </main>
 
-          <footer className="pb-4 text-sm text-neutral/75">
-            footer
+          <footer className="pb-4 text-[12px] text-neutral/75 self-center">
+            &copy; {new Date().getFullYear()} Code QX. Todos los derechos reservados.
           </footer>
         </div>
       </div>

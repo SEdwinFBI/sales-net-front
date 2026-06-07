@@ -10,6 +10,7 @@ export interface SalesState {
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
+  setDiscount: (itemId: string, discount: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -55,6 +56,7 @@ export const useSalesStore = create<SalesState>()(
           price: variant.price,
           stock: variant.stock,
           qty: 1,
+          discount: 0,
         }
         return { items: [...state.items, newItem] }
       }),
@@ -83,6 +85,13 @@ export const useSalesStore = create<SalesState>()(
             return item
           })
           .filter((item) => item.qty > 0),
+      })),
+
+    setDiscount: (itemId, discount) =>
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.id === itemId ? { ...item, discount } : item
+        ),
       })),
 
     clearCart: () => set({ items: [] }),

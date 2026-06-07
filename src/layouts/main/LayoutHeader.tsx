@@ -13,10 +13,6 @@ type LayoutHeaderProps = {
     onSidebarToggle: () => void
 }
 
-const roleLabels: Record<User['role'], string> = {
-    admin: 'Admin',
-    vendedor: 'Vendedor',
-}
 
 function LayoutHeader({
     hasSidebarNavigation,
@@ -29,7 +25,7 @@ function LayoutHeader({
     onSidebarToggle,
 }: LayoutHeaderProps) {
     const displayName = user.fullName?.trim() || user.username
-    const roleLabel = roleLabels[user.role]
+
     const sidebarLabel = isDesktop
         ? isSidebarPinned
             ? 'Liberar sidebar'
@@ -82,7 +78,7 @@ function LayoutHeader({
                             {displayName}
                         </p>
                         <p className="text-xs font-medium uppercase tracking-wide text-neutral/55">
-                            {roleLabel}
+                            {user?.username}
                         </p>
                     </div>
                     <button

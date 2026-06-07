@@ -13,6 +13,11 @@ type CartItemProps = {
 }
 
 const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDecrease }) => {
+    const precioFinal = item.discount > 0
+        ? item.price - item.discount
+        : item.price
+    const subtotal = precioFinal * item.qty
+
     return (
         <div
             key={item.id}
@@ -57,11 +62,22 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                 </div>
 
                 <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                        {formatCurrency(item.price)} c/u
-                    </p>
+                    {item.discount > 0 ? (
+                        <>
+                            <p className="text-sm text-muted-foreground line-through">
+                                {formatCurrency(item.price)} c/u
+                            </p>
+                            <p className="text-xs text-green-600 font-medium">
+                                {formatCurrency(precioFinal)} c/u (-{formatCurrency(item.discount)} desc)
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">
+                            {formatCurrency(item.price)} c/u
+                        </p>
+                    )}
                     <p className="font-semibold text-primary">
-                        {formatCurrency(item.price * item.qty)}
+                        {formatCurrency(subtotal)}
                     </p>
                 </div>
             </div>

@@ -14,6 +14,7 @@ export const useCustomers = () => {
                 id: String(c.id),
                 name: c.nombre_completo,
                 phone: c.telefono,
+                balance: Number(c.balance) || 0,
             })),
         }
     )

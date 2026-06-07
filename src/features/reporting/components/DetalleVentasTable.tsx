@@ -4,6 +4,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
@@ -16,10 +17,11 @@ import {
 import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX } from 'lucide-react'
-import type { Venta } from '@/features/sales/types/sales'
+import TablePagination from '@/components/shared/table/TablePagination'
+import type { VentaEnVariante } from '../types/reportes'
 
 type Props = {
-  data: Venta[]
+  data: VentaEnVariante[]
   isLoading: boolean
 }
 
@@ -27,16 +29,20 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-  const columns = useMemo<ColumnDef<Venta>[]>(() => [
-    { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span> },
-    { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString() },
-    { accessorKey: 'total', header: 'Total', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
-    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => <span className="text-amber-600">Q{Number(row.original.abonado).toFixed(2)}</span> },
-    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.saldo).toFixed(2)}</span> },
+  const columns = useMemo<ColumnDef<VentaEnVariante>[]>(() => [
+    { accessorKey: 'id_venta', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id_venta}</span> },
+    { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => {
+      const d = new Date(row.original.fecha)
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    } },
+    { accessorKey: 'cantidad', header: 'Cant.' },
+    { accessorKey: 'precio_unitario', header: 'Precio u.', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
+    { accessorKey: 'monto', header: 'Monto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.monto).toFixed(2)}</span> },
+    { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.descuento).toFixed(2)}</span> },
     { accessorKey: 'estado', header: 'Estado' },
     { accessorKey: 'forma_pago', header: 'Forma de pago' },
     { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
-    { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo },
+    { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente.nombre_completo },
   ], [])
 
   const uniqueValues = useMemo(() => ({
@@ -54,6 +60,8 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
   })
 
   const hasFilters = columnFilters.length > 0
@@ -69,6 +77,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
   }
 
   return (
+    <>
     <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 border-b border-border/50 bg-gradient-to-b from-muted/10 to-white px-5 py-2.5">
         <Select
@@ -105,7 +114,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
               return e.target.value ? [...rest, { id: 'vendedor', value: e.target.value }] : rest
             })
           }}
-          className="h-7 w-44 text-xs"
+          className="h-8 w-44 rounded-lg border border-input bg-white px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
         >
           <option value="">Todos los vendedores</option>
           {uniqueValues.vendedor.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -183,5 +192,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
         </div>
       )}
     </div>
+      <TablePagination table={table} />
+    </>
   )
 }

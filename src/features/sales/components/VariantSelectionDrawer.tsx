@@ -32,15 +32,15 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 <div className='flex-1 grid grid-cols-2 gap-4'>
                     <div className="rounded-2xl relative overflow-hidden w-full  flex items-center justify-center bg-white">
                         <div className="absolute inset-0 ">
+                            <img
+                                src={item.image ?? imageUrl}
+                                className="w-full h-full object-cover blur-md opacity-90 transform scale-105 "
+                                alt=""
+                                onError={handleImageError}
+                            />
+                        </div>
                         <img
                             src={item.image ?? imageUrl}
-                            className="w-full h-full object-cover blur-md opacity-90 transform scale-105 "
-                            alt=""
-                            onError={handleImageError}
-                        />
-                    </div>
-<img
-                        src={item.image ?? imageUrl}
                             className="relative w-[90%] h-[97%] rounded-3xl object-cover drop-shadow-md z-10"
                             alt="imagen del producto"
                             onError={handleImageError}
@@ -73,7 +73,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                             key={variant.id}
                             aria-disabled={variant.stock <= 0}
                             onClick={() => onVariantChange(variant)}
-                            variant={variant.id === variantSelected?.id ? 'secondary' : 'default'}
+                            variant={variant.id !== variantSelected?.id ? 'secondary' : 'default'}
                         >
                             {variant.size}
                         </Badge>

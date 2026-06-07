@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { FileDown } from 'lucide-react'
 import { downloadReporteDeudoresPdf } from '../services/reportes-service'
 import { toast } from 'sonner'
+import { Card } from '@/components/ui/card'
 
 export default function ReporteDeudoresPage() {
   const { clientes, resumen, isLoading } = useReporteDeudores()
@@ -26,17 +27,20 @@ export default function ReporteDeudoresPage() {
 
   return (
     <PageTemplateSimple title="Reporte de Deudores" description="Clientes con saldo pendiente.">
-      <div className="space-y-6">
+
+      <Card className='px-5'>
+
         <div className="flex items-center justify-between">
           <div />
           <Button onClick={handleExportPdf} disabled={pdfLoading}>
             <FileDown />
-            {pdfLoading ? 'Descargando...' : 'Exportar PDF'}
+            {pdfLoading ? 'Descargando...' : 'Descargar Reporte'}
           </Button>
         </div>
         <DeudoresResumenCards resumen={resumen} isLoading={isLoading} />
         <DeudoresTable data={clientes} isLoading={isLoading} />
-      </div>
-    </PageTemplateSimple>
+      </Card>
+
+    </PageTemplateSimple >
   )
 }

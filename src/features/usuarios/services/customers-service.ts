@@ -4,6 +4,7 @@ export interface CustomerRaw {
     id: number
     nombre_completo: string
     telefono: string
+    balance: number
 }
 
 export const getCustomers = async (): Promise<CustomerRaw[]> => {

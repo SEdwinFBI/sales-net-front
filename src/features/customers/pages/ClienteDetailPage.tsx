@@ -11,6 +11,7 @@ import AbonarDialog from '../components/AbonarDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card } from '@/components/ui/card'
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -46,33 +47,37 @@ export default function ClienteDetailPage() {
   return (
     <PageTemplateSimple title={cliente.nombre_completo} description="Detalle del cliente">
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => navigate('/clientes')} className="w-fit">
-          <ArrowLeft />
-          Volver a clientes
-        </Button>
+        <Card className='px-5'>
 
-        <ClienteInfo cliente={cliente} />
 
-        <Tabs defaultValue="abonos">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="abonos">Abonos</TabsTrigger>
-              <TabsTrigger value="compras">Compras</TabsTrigger>
-            </TabsList>
-            <Button onClick={() => setAbonarOpen(true)} size="sm">
-              <Plus />
-              Registrar abono
-            </Button>
-          </div>
+          <Button variant="ghost" onClick={() => navigate('/clientes')} className="w-fit">
+            <ArrowLeft />
+            Volver a clientes
+          </Button>
 
-          <TabsContent value="abonos" className="mt-4">
-            <AbonosTable abonos={abonos} />
-          </TabsContent>
+          <ClienteInfo cliente={cliente} />
 
-          <TabsContent value="compras" className="mt-4">
-            <ComprasTable ventas={ventas} resumen={resumen} />
-          </TabsContent>
-        </Tabs>
+          <Tabs defaultValue="abonos">
+            <div className="flex items-center justify-between">
+              <TabsList>
+                <TabsTrigger value="abonos">Abonos</TabsTrigger>
+                <TabsTrigger value="compras">Compras</TabsTrigger>
+              </TabsList>
+              <Button onClick={() => setAbonarOpen(true)} size="sm">
+                <Plus />
+                Registrar abono
+              </Button>
+            </div>
+
+            <TabsContent value="abonos" className="mt-4">
+              <AbonosTable abonos={abonos} />
+            </TabsContent>
+
+            <TabsContent value="compras" className="mt-4">
+              <ComprasTable ventas={ventas} resumen={resumen} />
+            </TabsContent>
+          </Tabs>
+        </Card>
       </div>
 
       <AbonarDialog

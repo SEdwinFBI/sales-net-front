@@ -39,7 +39,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
 
           <div className="mt-2 flex items-baseline gap-1">
             <span className="text-lg font-bold text-primary">Q{Number(cliente.balance).toFixed(2)}</span>
-            <span className="text-xs text-muted-foreground">balance</span>
+            <span className="text-xs text-primary">balance</span>
           </div>
 
           <p className="mt-1 text-xs text-muted-foreground">

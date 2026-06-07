@@ -23,11 +23,11 @@ export default function DeudoresResumenCards({ resumen, isLoading }: Props) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <div className="rounded-xl border border-border bg-white p-4">
+      <div className="rounded-xl shadow-sm bg-white p-4">
         <p className="text-xs text-muted-foreground">Total deudores</p>
         <p className="text-2xl font-bold mt-1">{resumen.total_deudores}</p>
       </div>
-      <div className="rounded-xl border border-border bg-white p-4">
+      <div className="rounded-xl shadow-sm bg-white p-4">
         <p className="text-xs text-muted-foreground">Total adeudado</p>
         <p className="text-2xl font-bold text-red-600 mt-1">Q{Number(resumen.total_adeudado).toFixed(2)}</p>
       </div>

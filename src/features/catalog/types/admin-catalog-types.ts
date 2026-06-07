@@ -66,7 +66,7 @@ export interface ReglaPrecio {
   id: number
   cantidad_min: number
   cantidad_max: number
-  descuento: number
+  descuento: string
 }
 
 export interface CreateReglaPrecioPayload {

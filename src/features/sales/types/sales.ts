@@ -26,6 +26,7 @@ export type CartItem = {
   price: number
   stock: number
   qty: number
+  discount: number
 }
 
 export type PaymentMethod = 'efectivo' | 'credito'
@@ -66,10 +67,12 @@ export interface Venta {
   id: number
   fecha: string
   total: number
-  estado: string
+  total_neto: number
+  total_descuento: number
+  estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
+  forma_pago: string
   abonado: number
   saldo: number
-  forma_pago: string
   vendedor: {
     id: number
     username: string
@@ -91,7 +94,8 @@ export interface DetalleVenta {
   precio_unitario: number
   cantidad: number
   descuento: number
-  monto: number
+  total: number
+  total_neto: number
   articulo: string
   talla: string
 }
@@ -111,6 +115,7 @@ export interface CreateVentaPayload {
   detalles: {
     id_variante: number
     cantidad: number
+    descuento?: number
   }[]
 }
 

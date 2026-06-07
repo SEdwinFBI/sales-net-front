@@ -1,7 +1,7 @@
-import type { ReporteVentas } from '../types/reportes'
+import type { ReporteResumen } from '../types/reportes'
 
 type Props = {
-  resumen?: ReporteVentas['data']['resumen']
+  resumen?: ReporteResumen
   isLoading: boolean
 }
 
@@ -31,7 +31,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <div key={card.label} className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+        <div key={card.label} className="rounded-2xl  shadow-sm p-4 hover:shadow-sm">
           <p className="text-xs text-muted-foreground">{card.label}</p>
           <p className={`text-2xl font-bold mt-1 ${card.color}`}>{card.value}</p>
         </div>

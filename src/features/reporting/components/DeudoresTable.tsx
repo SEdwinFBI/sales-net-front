@@ -5,9 +5,11 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
+  type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
 import {
@@ -16,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown, Search, Eye } from 'lucide-react'
+import TablePagination from '@/components/shared/table/TablePagination'
 import type { ReporteDeudores } from '../types/reportes'
 
 type Row = ReporteDeudores['data']['clientes'][number]
@@ -28,6 +31,7 @@ type Props = {
 export default function DeudoresTable({ data, isLoading }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState('')
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columns = useMemo<ColumnDef<Row>[]>(() => [
     { accessorKey: 'nombre_completo', header: 'Cliente' },
@@ -35,7 +39,11 @@ export default function DeudoresTable({ data, isLoading }: Props) {
     { accessorKey: 'balance', header: 'Balance', cell: ({ row }) => <span className="font-semibold text-primary">Q{Number(row.original.balance).toFixed(2)}</span> },
     { accessorKey: 'total_ventas_pendientes', header: 'Pendiente de cancelar', cell: ({ row }) => `Q${Number(row.original.total_ventas_pendientes).toFixed(2)}` },
     { accessorKey: 'total_abonado', header: 'Total abonado', cell: ({ row }) => `Q${Number(row.original.total_abonado).toFixed(2)}` },
-    { accessorKey: 'ultima_compra', header: 'Última compra', cell: ({ row }) => row.original.ultima_compra ?? '—' },
+    { accessorKey: 'ultima_compra', header: 'Última compra', cell: ({ row }) => {
+      if (!row.original.ultima_compra) return '—'
+      const d = new Date(row.original.ultima_compra)
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+    } },
     {
       id: 'actions',
       header: '',
@@ -52,12 +60,15 @@ export default function DeudoresTable({ data, isLoading }: Props) {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter, columnFilters },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
   })
 
   if (isLoading) {
@@ -71,6 +82,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
   }
 
   return (
+    <>
     <div className="space-y-4">
       <div className="relative max-w-xs">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -82,20 +94,32 @@ export default function DeudoresTable({ data, isLoading }: Props) {
         />
       </div>
 
-      <div className="rounded-2xl border border-border overflow-hidden bg-white">
+      <div className="rounded-2xl shadow-sm overflow-hidden bg-white">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    <button
-                      className="flex items-center gap-1 font-medium text-xs"
-                      onClick={() => header.column.toggleSorting()}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {header.column.id !== 'actions' && <ArrowUpDown className="size-3" />}
-                    </button>
+                    <div className="space-y-0.5">
+                      {header.column.id !== 'actions' && (
+                        <button
+                          className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+                          onClick={() => header.column.toggleSorting()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          <ArrowUpDown className="size-3 opacity-40" />
+                        </button>
+                      )}
+                      {header.column.id !== 'actions' && (
+                        <Input
+                          value={(header.column.getFilterValue() ?? '') as string}
+                          onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
+                          placeholder="Filtrar..."
+                          className="h-5 text-[11px] border-0 border-b border-transparent rounded-none px-0 focus-visible:border-primary focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                        />
+                      )}
+                    </div>
                   </TableHead>
                 ))}
               </TableRow>
@@ -121,5 +145,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
         </Table>
       </div>
     </div>
+      <TablePagination table={table} />
+    </>
   )
 }
