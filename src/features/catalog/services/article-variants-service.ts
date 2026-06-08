@@ -32,8 +32,6 @@ type VariantApi = {
   activo: boolean
 }
 
-const knownSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
-
 const normalizeList = <T>(payload: T[] | PaginatedData<T>) =>
   Array.isArray(payload) ? payload : payload.results
 
@@ -61,9 +59,7 @@ const getAllPages = async <T>(url: string): Promise<T[]> => {
 
 const toArticleSize = (value: string): ArticleSize | null => {
   const normalized = value.trim()
-  return knownSizes.includes(normalized as ArticleSize)
-    ? (normalized as ArticleSize)
-    : null
+  return normalized || null
 }
 
 const getTallas = async (): Promise<TallaApi[]> => {
@@ -72,10 +68,14 @@ const getTallas = async (): Promise<TallaApi[]> => {
 
 const getOrCreateTalla = async (size: ArticleSize): Promise<TallaApi> => {
   const tallas = await getTallas()
-  const existing = tallas.find((talla) => talla.nombre.trim() === size)
+  const existing = tallas.find(
+    (talla) => talla.nombre.trim().toLowerCase() === size.trim().toLowerCase()
+  )
   if (existing) return existing
 
-  const { data } = await api.post<ApiResponse<TallaApi>>('/admin/tallas/', { nombre: size })
+  const { data } = await api.post<ApiResponse<TallaApi>>('/admin/tallas/', {
+    nombre: size.trim(),
+  })
   return data.data
 }
 

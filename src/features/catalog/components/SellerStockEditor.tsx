@@ -17,11 +17,10 @@ import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 import { cn } from '@/lib/utils'
 import { useSaveSellerStock } from '../hooks/useSaveSellerStock'
 import type { Article } from '../types/article-types'
-import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
+import type { ArticleVariant } from '../types/article-variant-types'
 import type { StockAssignment } from '../types/stock-types'
 import ArticleImage from './ArticleImage'
 
-const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 const pageSize = 8
 
 type Props = {
@@ -67,15 +66,15 @@ export default function SellerStockEditor({
         .filter((article) => article.title.toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => a.title.localeCompare(b.title))
         .map((article) => {
-          const sizeRows = sizes.map((size) => {
-            const variant = variants.find(
-              (item) => item.articleId === article.id && item.size === size
-            )
+          const articleVariants = variants
+            .filter((item) => item.articleId === article.id)
+            .sort((a, b) => a.size.localeCompare(b.size, undefined, { numeric: true }))
 
+          const sizeRows = articleVariants.map((variant) => {
             return {
-              size,
+              size: variant.size,
               variant,
-              quantity: variant ? getQuantity(variant.id) : 0,
+              quantity: getQuantity(variant.id),
             }
           })
 

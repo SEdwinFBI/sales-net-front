@@ -1,10 +1,6 @@
 import image from '@/assets/img.jpg'
 import image2 from '@/assets/test.png'
-import type { Product } from '../types/sales'
-
-
-
-export const products: Product[] = [
+export const products = [
     {
         id: 'faja-seda',
         name: 'Faja bordada',

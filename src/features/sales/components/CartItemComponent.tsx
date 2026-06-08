@@ -56,6 +56,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                         size="icon-sm"
                         variant="outline"
                         onClick={() => onIncrease(item.id)}
+                        disabled={item.qty >= item.stock}
                     >
                         <Plus />
                     </Button>
