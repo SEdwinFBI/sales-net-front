@@ -62,7 +62,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
     <>
       <div className="space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_150px_170px_auto] lg:min-w-[680px] lg:max-w-4xl">
+          <div className="grid w-full gap-2 sm:grid-cols-[minmax(220px,1fr)_150px_170px_auto] lg:min-w-[680px] lg:max-w-4xl">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -183,9 +183,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                     </div>
                   </div>
                   <CardHeader className="px-3 pb-3">
-                    <CardTitle className="text-sm leading-snug">{article.title}</CardTitle>
-                    <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/50 pt-2">
-                      <p className="truncate text-sm font-semibold text-primary">
+                    <CardTitle className="break-words text-sm leading-snug">{article.title}</CardTitle>
+                    <div className="mt-2 flex flex-col gap-1 border-t border-border/50 pt-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+                      <p className="break-words text-sm font-semibold text-primary">
                         {priceLabel}
                       </p>
                       <span className="shrink-0 text-xs text-muted-foreground">

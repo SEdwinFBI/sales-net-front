@@ -149,7 +149,7 @@ export default function SellerStockEditor({
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="relative w-full max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
@@ -205,7 +205,7 @@ export default function SellerStockEditor({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 md:justify-end">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center md:justify-end">
                       {row.availableSizes.length > 0 && (
                         <span className="hidden text-sm text-muted-foreground sm:inline">
                           {row.availableSizes.length} tallas
@@ -243,7 +243,7 @@ export default function SellerStockEditor({
                         <div className="divide-y divide-border">
                           {row.availableSizes.map(({ quantity, size, variant }) => (
                             <div
-                              key={size}
+                              key={variant.id}
                               className="grid gap-3 p-3 transition-colors focus-within:bg-primary/5 sm:grid-cols-[minmax(6rem,1fr)_12rem] sm:items-center sm:px-4"
                             >
                               <div className="flex items-center justify-between gap-2 sm:block">
