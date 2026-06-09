@@ -13,19 +13,21 @@ import ListProduct from "./ListProduct"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 function getDiscountFromRules(qty: number, rules: ReglaPrecio[]): number {
-  const sorted = [...rules].sort((a, b) => a.cantidad_min - b.cantidad_min)
-  const rule = sorted.find(r => qty >= r.cantidad_min && qty <= r.cantidad_max)
-  return rule ? Number(rule.descuento) : 0
+    const sorted = [...rules].sort((a, b) => a.cantidad_min - b.cantidad_min)
+    const rule = sorted.find(r => qty >= r.cantidad_min && qty <= r.cantidad_max)
+    return rule ? Number(rule.descuento) : 0
 }
 
 const Sales = () => {
+    const user = useAuthStore(state => state.user)
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(10)
     const [searchInput, setSearchInput] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
-    const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch)
+    const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch, String(user?.id))
     const { data: rules = [] } = useReglasPrecio()
 
     const items = useSalesStore((state) => state.items)
