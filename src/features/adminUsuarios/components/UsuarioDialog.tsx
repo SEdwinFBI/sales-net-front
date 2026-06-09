@@ -90,7 +90,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar usuario' : 'Crear usuario'}</DialogTitle>
         </DialogHeader>
@@ -141,10 +141,10 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
           </FieldGroup>
 
           <DialogFooter className="pt-4">
-            <Button variant="outline" type="button" onClick={onClose} disabled={isPending}>
+            <Button className="w-full sm:w-auto" variant="outline" type="button" onClick={onClose} disabled={isPending}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
               {isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear usuario'}
             </Button>
           </DialogFooter>

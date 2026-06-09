@@ -21,7 +21,7 @@ import { useUpdateArticle } from '../hooks/useUpdateArticle'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 
-const sizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
+const defaultSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
@@ -50,6 +50,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
   const initialSizes = useMemo(
     () => articleVariants.map((variant) => variant.size),
     [articleVariants]
+  )
+  const availableSizes = useMemo(
+    () =>
+      Array.from(new Set([...defaultSizes, ...initialSizes])).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      ),
+    [initialSizes]
   )
   const initialBasePrice = articleVariants[0]?.price ?? 0
   const { mutateAsync: createArticle, isPending: isCreating } = useCreateArticle()
@@ -137,7 +144,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Editar articulo' : 'Crear articulo'}</DialogTitle>
         </DialogHeader>
@@ -177,8 +184,8 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
             <Field>
               <FieldLabel>Tallas disponibles</FieldLabel>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {sizes.map((size) => {
+              <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3 sm:grid-cols-6">
+                {availableSizes.map((size) => {
                   const isSelected = selectedSizes.includes(size)
 
                   return (
@@ -188,13 +195,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
                       size="sm"
                       variant={isSelected ? 'default' : 'outline'}
                       className={cn(
-                        'px-2 font-semibold',
+                        'min-w-0 px-2 font-semibold',
                         !isSelected &&
                           'border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary'
                       )}
                       onClick={() => toggleSize(size)}
                     >
-                      Talla {size}
+                      <span className="truncate">Talla {size}</span>
                     </Button>
                   )
                 })}
@@ -203,10 +210,10 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
           </FieldGroup>
 
           <DialogFooter className="pt-4">
-            <Button variant="outline" type="button" onClick={onClose} disabled={isPending}>
+            <Button className="w-full sm:w-auto" variant="outline" type="button" onClick={onClose} disabled={isPending}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
               {isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear articulo'}
             </Button>
           </DialogFooter>

@@ -109,7 +109,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
       <div className="space-y-4">
         {/* Toolbar */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_auto] lg:min-w-[560px] lg:max-w-3xl">
+          <div className="grid w-full gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_auto] lg:min-w-[560px] lg:max-w-3xl">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -153,7 +153,68 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+        <div className="grid gap-3 md:hidden">
+          {isLoading ? (
+            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
+              Cargando usuarios...
+            </div>
+          ) : table.getRowModel().rows.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
+              No se encontraron usuarios.
+            </div>
+          ) : (
+            table.getRowModel().rows.map((row) => {
+              const usuario = row.original
+
+              return (
+                <div
+                  key={usuario.id}
+                  className="rounded-xl border border-border bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold text-primary">
+                        {usuario.fullName || usuario.username}
+                      </p>
+                      <p className="mt-0.5 break-words text-sm text-muted-foreground">
+                        {usuario.username}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={usuario.role === 'admin' ? 'default' : 'secondary'}
+                      className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                    >
+                      {usuario.role ?? 'Sin rol'}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUsuario(usuario)
+                        setDialogOpen(true)
+                      }}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      className="text-red-500 hover:text-red-600"
+                      onClick={() => setUsuarioToDelete(usuario)}
+                    >
+                      <Trash2 />
+                    </Button>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        <div className="hidden overflow-hidden rounded-xl border border-border bg-white shadow-sm md:block">
           <Table className="min-w-[640px]">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

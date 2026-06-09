@@ -1,4 +1,4 @@
-export type ArticleSize = '1' | '2' | '3' | '4' | '5' | '6'
+export type ArticleSize = string
 
 export type ArticleVariant = {
   id: number

@@ -36,6 +36,8 @@ export const useSalesStore = create<SalesState>()(
 
         const existing = state.items.find((item) => item.id === cartItemId)
         if (existing) {
+          if (existing.qty >= existing.stock) return state
+
           return {
             items: state.items.map((item) =>
               item.id === cartItemId
@@ -70,7 +72,7 @@ export const useSalesStore = create<SalesState>()(
       set((state) => ({
         items: state.items.map((item) =>
           item.id === itemId
-            ? { ...item, qty: item.qty + 1 }
+            ? { ...item, qty: Math.min(item.stock, item.qty + 1) }
             : item
         ),
       })),
