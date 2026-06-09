@@ -15,7 +15,7 @@ export const reportingRoutes: AppRoute[] = [
         meta: {
           name: 'Ventas',
           description: 'Reporte de ventas',
-          permissions: ['admin', 'vendedor'],
+          permissions: ['admin'],
           lazy: () => import('./pages/ReporteVentasPage'),
         },
       },
@@ -24,7 +24,7 @@ export const reportingRoutes: AppRoute[] = [
         meta: {
           name: 'Deudores',
           description: 'Reporte de deudores',
-          permissions: ['admin', 'vendedor'],
+          permissions: ['admin'],
           lazy: () => import('./pages/ReporteDeudoresPage'),
         },
       },

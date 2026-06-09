@@ -10,8 +10,11 @@ import { RotateCcw } from 'lucide-react'
 import { getDefaultDateRange } from '@/lib/dates'
 import type { SalesHistoryFilters } from '../types/sales'
 import { Card } from '@/components/ui/card'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 export default function HistorialVentasPage() {
+
+  const user = useAuthStore(state => state.user)
   const [searchParams, setSearchParams] = useSearchParams()
   const [filters, _setFilters] = useState<SalesHistoryFilters>(() => {
     const d = getDefaultDateRange()
@@ -22,7 +25,7 @@ export default function HistorialVentasPage() {
   })
   const [formaPagoFilter, setFormaPagoFilter] = useState('')
   const [searchText, setSearchText] = useState('')
-  const { ventas, isLoading } = useSalesHistory(filters)
+  const { ventas, isLoading } = useSalesHistory(filters, String(user?.id))
   const [estados, setEstados] = useState<string[]>([])
   const [formasPago, setFormasPago] = useState<string[]>([])
 

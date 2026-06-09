@@ -34,8 +34,8 @@ export default function MainLayout() {
 
   // Generar items del sidebar desde las rutas, filtrados por permisos del usuario
   const allFeatureRoutes = [
-    ...salesRoutes,
     ...reportingRoutes,
+    ...salesRoutes,
     ...clientesRoutes,
     ...catalogRoutes,
     ...adminUsuariosRoutes
