@@ -20,7 +20,11 @@ import type { Article } from '../types/article-types'
 import type { ArticleVariant } from '../types/article-variant-types'
 import type { StockAssignment } from '../types/stock-types'
 import ArticleImage from './ArticleImage'
-import { getStockInputClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
+import {
+  getStockAccentBorderClass,
+  getStockInputClass,
+  getStockTextClass,
+} from '@/lib/stock-status'
 
 const pageSize = 8
 
@@ -175,7 +179,6 @@ export default function SellerStockEditor({
         <div className="space-y-4">
           {paginatedRows.map((row) => {
             const isExpanded = expandedArticles[row.article.id] ?? false
-            const stockStatus = getStockStatus(row.total)
             const stockSummary =
               row.availableSizes.length === 0
                 ? 'Sin tallas configuradas'
@@ -189,9 +192,7 @@ export default function SellerStockEditor({
                 size="sm"
                 className={cn(
                   "border-l-4 bg-white p-0 shadow-sm transition-shadow hover:shadow-md",
-                  stockStatus === 'out' && 'border-l-red-500',
-                  stockStatus === 'low' && 'border-l-orange-500',
-                  stockStatus === 'available' && 'border-l-primary/70'
+                  getStockAccentBorderClass(row.total)
                 )}
               >
                 <div className="p-4">

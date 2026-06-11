@@ -61,7 +61,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                             Stock disponible: {variantSelected?.stock ?? '-'} unidades
                         </p>
                         {selectedStockStatus === 'low' && (
-                            <p className="text-xs text-orange-600 font-medium mt-1">Últimas unidades</p>
+                            <p className="text-xs text-yellow-700 font-medium mt-1">Últimas unidades</p>
                         )}
                         {selectedStockStatus === 'out' && (
                             <p className="text-xs text-red-600 font-medium mt-1">Agotado</p>

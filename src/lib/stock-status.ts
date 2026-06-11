@@ -13,9 +13,18 @@ export function getStockTextClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') return 'text-red-600'
-  if (status === 'low') return 'text-orange-600'
+  if (status === 'low') return 'text-yellow-700'
 
   return 'text-muted-foreground'
+}
+
+export function getStockAccentBorderClass(quantity: number) {
+  const status = getStockStatus(quantity)
+
+  if (status === 'out') return 'border-l-red-500'
+  if (status === 'low') return 'border-l-yellow-400'
+
+  return 'border-l-primary/70'
 }
 
 export function getStockBadgeClass(quantity: number) {
@@ -26,7 +35,7 @@ export function getStockBadgeClass(quantity: number) {
   }
 
   if (status === 'low') {
-    return 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100'
+    return 'border-yellow-300 bg-yellow-50 text-yellow-800 hover:bg-yellow-100'
   }
 
   return ''
@@ -36,7 +45,7 @@ export function getStockInputClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') return 'border-red-300 text-red-700 focus-visible:border-red-500'
-  if (status === 'low') return 'border-orange-300 text-orange-700 focus-visible:border-orange-500'
+  if (status === 'low') return 'border-yellow-400 text-yellow-800 focus-visible:border-yellow-500'
 
   return ''
 }
