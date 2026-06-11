@@ -165,6 +165,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         size="icon-xs"
                         variant="ghost"
                         className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
+                        aria-label={`Editar ${article.title}`}
                         onClick={() => {
                           setSelectedArticle(article)
                           setDialogOpen(true)
@@ -176,6 +177,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         size="icon-xs"
                         variant="ghost"
                         className="bg-white/95 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:ring-white/70"
+                        aria-label={`Eliminar ${article.title}`}
                         onClick={() => setArticleToDelete(article)}
                       >
                         <Trash2 />
@@ -207,6 +209,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Button
                 size="icon-sm"
                 variant="outline"
+                aria-label="Pagina anterior"
                 onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                 disabled={safePage === 1}
               >
@@ -215,6 +218,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Button
                 size="icon-sm"
                 variant="outline"
+                aria-label="Pagina siguiente"
                 onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                 disabled={safePage === totalPages}
               >

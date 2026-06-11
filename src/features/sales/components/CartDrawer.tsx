@@ -35,6 +35,7 @@ const CartDrawer = () => {
 
   return (
     <Drawer
+      shouldScaleBackground={false}
       open={cartOpen}
       onOpenChange={(open) => {
         if (open) {

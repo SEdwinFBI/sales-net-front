@@ -58,10 +58,10 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
         </Link>
 
         <div className="flex gap-1">
-          <Button size="icon-xs" variant="ghost" onClick={onEdit}>
+          <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label={`Editar ${cliente.nombre_completo}`}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="ghost" onClick={onDelete} className="text-danger hover:text-danger">
+          <Button size="icon-xs" variant="ghost" onClick={onDelete} className="text-danger hover:text-danger" aria-label={`Eliminar ${cliente.nombre_completo}`}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>

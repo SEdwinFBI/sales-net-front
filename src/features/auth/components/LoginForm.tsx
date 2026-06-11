@@ -49,7 +49,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Iniciar Sesion
+              Iniciar sesion
             </CardTitle>
             <CardDescription>
               Ingrese sus credenciales para acceder
@@ -60,13 +60,13 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
             <form className="mt-8 space-y-5 " onSubmit={handleFormSubmit}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="username">Email Address</FieldLabel>
+                  <FieldLabel htmlFor="username">Correo o usuario</FieldLabel>
                   <InputGroup >
                     <InputGroupInput
                       {...register('username')}
                       id="username"
                       type="text"
-                      placeholder="admin@tailadmin.com"
+                      placeholder="usuario@distribuidoramz.com"
                       aria-invalid={!!errors.username} />
                     <InputGroupAddon>
                       <Mail />
@@ -78,7 +78,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
                     </FieldDescription> : null}
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password">Contraseña</FieldLabel>
                   <InputGroup >
                     <InputGroupInput
                       {...register('password')}
@@ -106,7 +106,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
               </FieldGroup>
               <RotateHover rotate={0.7}>
                 <Button className={"w-full font-bold!"} type='submit' size={'lg'} disabled={isSubmitting}>
-                  {isSubmitting ? 'Iniciando...' : 'Login'} <MoveRight />
+                  {isSubmitting ? 'Iniciando...' : 'Ingresar'} <MoveRight />
                 </Button>
               </RotateHover>
 

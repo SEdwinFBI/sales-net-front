@@ -39,6 +39,8 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
       header: '',
       cell: ({ row }) => (
         <button
+          type="button"
+          aria-label={row.getIsExpanded() ? 'Ocultar ventas de la variante' : 'Ver ventas de la variante'}
           onClick={(e) => { e.stopPropagation(); row.toggleExpanded() }}
           className="p-0.5 hover:bg-muted/60 rounded"
         >
@@ -89,7 +91,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
 
   return (
     <>
-    <div className="rounded-xl shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -111,7 +113,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                         value={(header.column.getFilterValue() ?? '') as string}
                         onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                         placeholder="Filtrar..."
-                        className="h-5 text-[11px] border-0 border-b border-transparent rounded-none px-0 focus-visible:border-primary focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                        className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
                       />
                     )}
                   </div>

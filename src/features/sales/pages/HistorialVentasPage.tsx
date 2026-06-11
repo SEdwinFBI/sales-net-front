@@ -6,7 +6,7 @@ import HistorialVentasTable from '../components/HistorialVentasTable'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Search } from 'lucide-react'
 import { getDefaultDateRange } from '@/lib/dates'
 import type { SalesHistoryFilters } from '../types/sales'
 import { Card } from '@/components/ui/card'
@@ -139,6 +139,18 @@ export default function HistorialVentasPage() {
                 <option value="">Todas</option>
                 {formasPago.map((f) => <option key={f} value={f}>{f}</option>)}
               </Select>
+            </div>
+            <div className="min-w-0">
+              <label className="mb-1 block text-xs text-muted-foreground">Buscar</label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="ID, cliente o vendedor..."
+                  className="w-full pl-9"
+                />
+              </div>
             </div>
 
             {hasFilters && (

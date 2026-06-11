@@ -139,7 +139,7 @@ export default function SellerStockEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <Button size="icon-sm" variant="outline" onClick={onBack}>
+          <Button size="icon-sm" variant="outline" onClick={onBack} aria-label="Volver a vendedores">
             <ArrowLeft />
           </Button>
           <div className="min-w-0">
@@ -261,11 +261,12 @@ export default function SellerStockEditor({
                                 </span>
                               </div>
                               <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2">
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="outline"
-                                  disabled={quantity === 0}
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="outline"
+                                    aria-label={`Restar una unidad de talla ${size}`}
+                                    disabled={quantity === 0}
                                   onClick={() => adjustQuantity(variant.id, -1)}
                                 >
                                   <Minus />
@@ -283,6 +284,7 @@ export default function SellerStockEditor({
                                   type="button"
                                   size="icon-sm"
                                   variant="outline"
+                                  aria-label={`Sumar una unidad de talla ${size}`}
                                   onClick={() => adjustQuantity(variant.id, 1)}
                                 >
                                   <Plus />
@@ -307,6 +309,7 @@ export default function SellerStockEditor({
                 <Button
                   size="icon-sm"
                   variant="outline"
+                  aria-label="Pagina anterior"
                   onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                   disabled={safePage === 1}
                 >
@@ -315,6 +318,7 @@ export default function SellerStockEditor({
                 <Button
                   size="icon-sm"
                   variant="outline"
+                  aria-label="Pagina siguiente"
                   onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                   disabled={safePage === totalPages}
                 >

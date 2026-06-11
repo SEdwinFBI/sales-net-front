@@ -40,8 +40,9 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
       header: '',
       cell: ({ row }) =>
         row.getCanExpand() ? (
-          <Button
-            size="icon-xs"
+            <Button
+              aria-label={row.getIsExpanded() ? 'Ocultar detalle de venta' : 'Ver detalle de venta'}
+              size="icon-xs"
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); row.toggleExpanded() }}
             className="size-6"
@@ -113,7 +114,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
 
   return (
     <>
-      <div className="rounded-xl  bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
         {columnFilters.length > 0 && (
           <div className="flex items-center gap-2 border-b border-border/50 bg-primary/5 px-4 py-1.5">
             <SearchX className="size-3.5 text-primary" />
@@ -147,7 +148,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                           placeholder="Filtrar..."
-                          className="h-5 text-[11px] border-0 border-b border-transparent rounded-none px-0 focus-visible:border-primary focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
                         />
                       </div>
                     )}
@@ -179,7 +180,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                       <TableCell colSpan={columns.length} className="bg-gradient-to-br from-muted/30 to-white p-4">
                         <div className="space-y-2">
                           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Detalle de la venta</p>
-                          <div className="rounded-lg border border-border bg-white">
+                          <div className="overflow-x-auto rounded-lg border border-border bg-white">
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="border-b border-border bg-muted/20">

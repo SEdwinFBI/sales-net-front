@@ -19,9 +19,10 @@ const CartButton = () => {
     <>
 
       <Button
-        className="fixed right-0  max-[420px]:inset-x-0  bottom-0 mx-2 mb-10 flex items-center justify-between rounded-[1rem] px-4"
+        className="fixed inset-x-3 bottom-4 z-30 mx-auto flex w-auto max-w-md items-center justify-between rounded-xl px-4 shadow-lg sm:inset-x-auto sm:right-5 sm:bottom-5 sm:min-w-72"
         size="md"
         onClick={openCart}
+        aria-label={`Abrir carrito con ${totalItems} items por ${formatCurrency(total)}`}
       >
         <div className="flex items-center gap-3">
           <span className="relative">

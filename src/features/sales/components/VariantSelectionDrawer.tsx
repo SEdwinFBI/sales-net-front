@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Badge } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
@@ -71,18 +71,21 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
 
                 <div className='mt-4 grid w-full grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] items-center justify-center gap-2 sm:gap-3'>
                     {item.variants.map((variant) => (
-                        <Badge
+                        <button
+                            type="button"
                             className={cn(
-                                "flex h-10 w-full cursor-pointer items-center justify-center text-sm",
+                                badgeVariants({ variant: variant.id !== variantSelected?.id ? 'secondary' : 'default' }),
+                                "flex h-10 w-full cursor-pointer items-center justify-center text-sm disabled:cursor-not-allowed disabled:opacity-60",
                                 getStockBadgeClass(variant.stock)
                             )}
                             key={variant.id}
-                            aria-disabled={variant.stock <= 0}
+                            aria-label={`Seleccionar talla ${variant.size}, stock ${variant.stock}`}
+                            aria-pressed={variant.id === variantSelected?.id}
+                            disabled={variant.stock <= 0}
                             onClick={() => onVariantChange(variant)}
-                            variant={variant.id !== variantSelected?.id ? 'secondary' : 'default'}
                         >
                             {variant.size}
-                        </Badge>
+                        </button>
                     ))}
                 </div>
                 {item.variants.filter(v => v.stock > 0).length === 0 && (

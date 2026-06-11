@@ -32,7 +32,7 @@ const ProductItem: FC<Props> = ({ onClick, item }) => {
     }
 
     return (
-        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <Drawer shouldScaleBackground={false} open={isOpen} onOpenChange={setIsOpen}>
             <DrawerTrigger asChild>
                 <ProductCard item={item} />
             </DrawerTrigger>
