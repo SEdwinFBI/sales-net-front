@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { cn } from '@/lib/utils'
 import { useCreateArticle } from '../hooks/useCreateArticle'
 import { useCreateArticleVariant } from '../hooks/useCreateArticleVariant'
@@ -155,7 +156,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
           <FieldGroup>
             <Field>
               <FieldLabel>Titulo</FieldLabel>
-              <Input {...register('title')} placeholder="Ej. Huipil bordado rojo" />
+              <Input {...register('title')} placeholder="Faja cruceta, bordada..." />
               <FieldError errors={[errors.title]} />
             </Field>
 
@@ -174,13 +175,16 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
             <Field>
               <FieldLabel>Precio base</FieldLabel>
-              <Input
-                {...register('basePrice')}
-                min={0}
-                step="0.01"
-                type="number"
-                placeholder="Ej. 125.00"
-              />
+              <InputGroup>
+                <InputGroupAddon>Q</InputGroupAddon>
+                <InputGroupInput
+                  {...register('basePrice')}
+                  min={0}
+                  step="0.01"
+                  type="number"
+                  placeholder="Ej. 125.00"
+                />
+              </InputGroup>
               <FieldError errors={[errors.basePrice]} />
             </Field>
 
