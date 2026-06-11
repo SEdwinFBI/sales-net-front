@@ -27,10 +27,10 @@ function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave }: Desktop
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             className={cn(
-                'sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border p-3 backdrop-blur-2xl transition-all duration-300 ease-out lg:block',
+                'sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border p-3 contain-layout contain-paint transition-[width,background-color,border-color] duration-200 ease-out will-change-[width] lg:block',
                 expanded
-                    ? 'w-64 border-border/70 bg-white/95 shadow-sm'
-                    : 'w-24 border-border/60 bg-white/75 shadow-sm',
+                    ? 'w-64 border-border/70 bg-white shadow-sm'
+                    : 'w-24 border-border/60 bg-white/80 shadow-sm',
             )}
         >
             <NavBarDesktop

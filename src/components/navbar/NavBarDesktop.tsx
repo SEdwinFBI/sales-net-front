@@ -68,7 +68,7 @@ function SubItems({
       {/* Línea guía vertical */}
       <div
         className={cn(
-          'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-200',
+          'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-150',
           hasActiveInLevel ? 'bg-primary' : 'bg-border',
         )}
         style={{ left: guideLeft }}
@@ -96,7 +96,7 @@ function SubItems({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'group relative flex items-center gap-1 rounded-lg border border-border/60 px-5 py-0.5 transition-all duration-200 ease-out',
+                    'group relative flex items-center gap-1 rounded-lg border border-border/60 px-5 py-0.5 transition-[background-color,border-color,color] duration-150 ease-out',
                     'bg-white/40',
                     isActive && 'bg-primary/8', textClass
 
@@ -104,7 +104,7 @@ function SubItems({
                 }
               >
                 {/* Conector horizontal */}
-                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-200', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
+                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-150', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
 
                 {Icon && (
                   <div className={cn(
@@ -116,7 +116,7 @@ function SubItems({
                 )}
                 {!Icon && (
                   <span className={cn(
-                    'size-1 shrink-0 rounded-full mt-px transition-colors duration-150',
+                    'mt-px size-1 shrink-0 rounded-full transition-colors duration-150',
                     dotClass,
                   )} />
                 )}
@@ -144,14 +144,14 @@ function SubItems({
                 type="button"
                 onClick={() => onToggleModule?.(item.id)}
                 className={cn(
-                  'group relative flex w-full items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5 transition-all duration-200 ease-out',
+                  'group relative flex w-full items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5 transition-[background-color,border-color,color] duration-150 ease-out',
                   'hover:bg-primary-nav/60',
                   isActiveItem && 'bg-primary/8',
 
                 )}
               >
                 {/* Conector horizontal */}
-                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-200', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
+                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-150', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
 
                 {Icon && (
                   <div className={cn(
@@ -163,7 +163,7 @@ function SubItems({
                 )}
                 {!Icon && (
                   <span className={cn(
-                    'size-1 shrink-0 rounded-full mt-px transition-colors duration-150',
+                    'mt-px size-1 shrink-0 rounded-full transition-colors duration-150',
                     dotClass,
                   )} />
                 )}
@@ -215,7 +215,7 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-xl border border-primary/20 bg-primary py-3 text-white shadow-sm transition-all duration-200 ease-out',
+          'flex items-center rounded-xl border border-primary/20 bg-primary py-3 text-white shadow-sm transition-[background-color,border-color,box-shadow] duration-150 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >
@@ -224,8 +224,8 @@ export default function NavBarDesktop({
         </div>
         <div
           className={cn(
-            'overflow-hidden transition-[width,opacity,transform] duration-200 ease-out',
-            expanded ? 'w-40 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
+            'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
+            expanded ? 'w-40 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
           )}
         >
           <div className="flex flex-col justify-center gap-0.5 overflow-hidden">
@@ -256,7 +256,7 @@ export default function NavBarDesktop({
                   type="button"
                   onClick={() => onToggleModule?.(item.id)}
                   className={cn(
-                    'flex w-full items-center rounded-xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
+                    'flex w-full items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
                     expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                     isActiveModule
                       ? 'border-primary/25 bg-primary/10 shadow-sm'
@@ -266,17 +266,16 @@ export default function NavBarDesktop({
                   <>
                     <div
                       className={cn(
-                        'rounded-xl p-2 transition-all duration-300 ease-out',
+                        'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
                         isActiveModule ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
-                        expanded && 'hover:scale-105',
                       )}
                     >
                       {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-neutral/60')} />}
                     </div>
                     <div
                       className={cn(
-                        'overflow-hidden transition-[width,opacity,transform] duration-300 ease-out',
-                        expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
+                        'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
+                        expanded ? 'w-32 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
                       )}
                     >
                       <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-neutral')}>
@@ -317,7 +316,7 @@ export default function NavBarDesktop({
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
+                  'flex items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
                   expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                   isActive
                     ? 'border-primary/25 bg-primary/10 shadow-sm'
@@ -329,17 +328,16 @@ export default function NavBarDesktop({
                 <>
                   <div
                     className={cn(
-                      'rounded-xl p-2 transition-all duration-300 ease-out',
+                      'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
                       isActive ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
-                      expanded && 'hover:scale-105',
                     )}
                   >
                     {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-neutral/60')} />}
                   </div>
                   <div
                     className={cn(
-                      'overflow-hidden transition-[width,opacity,transform] duration-300 ease-out',
-                      expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
+                      'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
+                      expanded ? 'w-32 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
                     )}
                   >
                     <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-neutral')}>

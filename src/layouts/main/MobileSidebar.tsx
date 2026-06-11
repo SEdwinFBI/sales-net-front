@@ -36,7 +36,7 @@ function MobileSidebar({ items, isOpen, onClose }: MobileSidebarProps) {
             <aside
                 id="app-sidebar"
                 className={cn(
-                    'fixed inset-y-3 left-3 z-40 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/70 bg-white/95 p-3 shadow-lg backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden',
+                    'fixed inset-y-3 left-3 z-40 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/70 bg-white p-3 shadow-lg transition-transform duration-200 ease-out lg:hidden',
                     isOpen ? 'translate-x-0' : '-translate-x-[calc(100%+1rem)]',
                 )}
             >
