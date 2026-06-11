@@ -35,7 +35,7 @@ function LayoutHeader({
             : 'Abrir menu lateral'
 
     return (
-        <header className="sticky top-0 z-10 rounded-4xl border border-secondary bg-white/92 px-6 py-3 shadow-[0_24px_60px_-42px_rgba(53,37,205,0.26)] backdrop-blur">
+        <header className="sticky top-0 z-10 rounded-2xl border border-secondary bg-white/92 px-4 py-3 shadow-[0_24px_60px_-42px_rgba(53,37,205,0.26)] backdrop-blur sm:rounded-4xl sm:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <button
@@ -63,7 +63,7 @@ function LayoutHeader({
                     </button>
 
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary sm:tracking-[0.3em]">
                             Distribuidora MZ
                         </p>
                         <p className="text-sm text-neutral/70">

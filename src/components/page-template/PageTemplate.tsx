@@ -23,7 +23,7 @@ export default function PageTemplate({
         description={description}
       />
 
-      <div className="rounded-3xl bg-transparent p-2 text-neutral ">
+      <div className="rounded-3xl bg-transparent p-0 text-neutral sm:p-2">
         <PageTabs tabs={tabs} />
         {children ?? <Outlet />}
       </div>

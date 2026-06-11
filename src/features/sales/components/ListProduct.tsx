@@ -30,7 +30,7 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
   const addItem = useSalesStore((state) => state.addItem)
 
   if (isLoading) {
-    return <div className="gap-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    return <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-4 sm:gap-5 xl:gap-6">
       {
         Array.from({ length: 12 }).map((_, index) => (
           <SkeletonProductCard key={index} />
@@ -41,14 +41,14 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
 
   return (
     <>
-      <div className="gap-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 justify-items-center">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-4 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:gap-5 xl:gap-6">
         {data.map((product) => (
           <ProductItem key={product.id} item={product} onClick={addItem} />
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-4 mt-6">
-        <Field orientation="horizontal" className="w-fit items-center">
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <Field orientation="horizontal" className="w-full items-center justify-between sm:w-fit sm:justify-start">
           <FieldLabel htmlFor="select-rows-per-page">Filas por página</FieldLabel>
           <Select
             id="select-rows-per-page"
@@ -63,8 +63,8 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
           </Select>
         </Field>
 
-        <PaginationNav className="mx-0 w-auto">
-          <PaginationContent>
+        <PaginationNav className="mx-0 w-full sm:w-auto">
+          <PaginationContent className="flex-wrap justify-center sm:justify-end">
             <PaginationItem>
               <PaginationPrevious
                 href="#"

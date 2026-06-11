@@ -98,8 +98,8 @@ export default function HistorialVentasPage() {
   return (
     <PageTemplateSimple title="Historial de Ventas" description="Todas las ventas registradas en el sistema.">
       <div className="space-y-6">
-        <Card className="px-5">
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 items-center gap-3 justify-center  rounded-2xl shadow-sm p-4">
+        <Card className="p-3 sm:px-5">
+          <div className="grid grid-cols-1 items-center justify-center gap-3 rounded-2xl p-3 shadow-sm min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6">
             <div className="min-w-0">
               <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
               <Input

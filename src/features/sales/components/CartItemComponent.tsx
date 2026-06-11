@@ -49,7 +49,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                 </Button>
             </div>
 
-            <div className="flex items-center justify-between gap-1">
+            <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                 <div className="flex items-center gap-2">
                     <Button
                         size="icon-sm"
@@ -79,7 +79,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                     </Button>
                 </div>
 
-                <div className="text-right">
+                <div className="text-left min-[420px]:text-right">
                     {item.discount > 0 ? (
                         <>
                             <p className="text-sm text-muted-foreground line-through">

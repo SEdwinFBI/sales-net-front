@@ -76,7 +76,7 @@ export default function MainLayout() {
         />
       )}
 
-      <div className="grid min-h-screen grid-cols-1 gap-4 px-2 py-2 lg:grid-cols-[auto_1fr]">
+      <div className="grid min-h-screen grid-cols-1 gap-3 px-2 py-2 sm:gap-4 sm:px-3 lg:grid-cols-[auto_1fr]">
         {isDesktop && (
           <DesktopSidebar
             expanded={isDesktopSidebarExpanded}
@@ -98,7 +98,7 @@ export default function MainLayout() {
             onSidebarToggle={handleSidebarToggle}
           />
 
-          <main className="flex-1 py-2 pb-8">
+          <main className="min-w-0 flex-1 py-2 pb-8">
             <Outlet />
           </main>
 

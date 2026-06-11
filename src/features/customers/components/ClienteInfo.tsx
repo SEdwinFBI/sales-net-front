@@ -12,13 +12,13 @@ const initials = (name?: string) =>
 export default function ClienteInfo({ cliente }: Props) {
   return (
     <Card className="bg-white p-6">
-      <div className="flex items-start gap-4">
+      <div className="flex flex-col gap-4 min-[420px]:flex-row min-[420px]:items-start">
         <div className={`flex size-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white ${cliente.activo ? 'bg-emerald-500' : 'bg-stone-400'}`}>
           {initials(cliente.nombre_completo)}
         </div>
 
         <div className="flex-1 space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-bold">{cliente.nombre_completo}</h2>
             <Badge variant={cliente.activo ? 'default' : 'secondary'}>
               {cliente.activo ? 'Activo' : 'Inactivo'}

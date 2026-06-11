@@ -33,11 +33,11 @@ export default function ClientesPage() {
   return (
     <PageTemplateSimple title="Clientes" description="Gestión de clientes del sistema.">
       <div className="space-y-6">
-        <Card className='px-5'>
+        <Card className='p-3 sm:px-5'>
 
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex gap-2 flex-1 max-w-xl">
+            <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row">
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -50,14 +50,14 @@ export default function ClientesPage() {
               <Select
                 value={filterActivo}
                 onChange={(e) => setFilterActivo(e.target.value)}
-                className="w-32"
+                className="w-full sm:w-32"
               >
                 <option value="todos">Todos</option>
                 <option value="activo">Activos</option>
                 <option value="inactivo">Inactivos</option>
               </Select>
             </div>
-            <Button onClick={() => { setSelectedCliente(null); setDialogOpen(true) }}>
+            <Button className="w-full sm:w-auto" onClick={() => { setSelectedCliente(null); setDialogOpen(true) }}>
               <Plus />
               Nuevo cliente
             </Button>

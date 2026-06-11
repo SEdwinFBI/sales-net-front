@@ -23,7 +23,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
     const selectedStockStatus = variantSelected ? getStockStatus(variantSelected.stock) : null
 
     return (
-        <DrawerContent className="bg-white w-full">
+        <DrawerContent className="w-full bg-white sm:max-w-md">
             <DrawerHeader className="mx-auto w-full max-w-md">
                 <DrawerTitle>Elige la variante</DrawerTitle>
                 <DrawerDescription className="text-center">
@@ -31,9 +31,9 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 </DrawerDescription>
             </DrawerHeader>
 
-            <DrawerBody className="flex-1 mx-5 rounded-t-[20px] bg-white pt-2">
-                <div className='flex-1 grid grid-cols-2 gap-4'>
-                    <div className="rounded-2xl relative overflow-hidden w-full  flex items-center justify-center bg-white">
+            <DrawerBody className="mx-2 flex-1 rounded-t-[20px] bg-white pt-2 sm:mx-5">
+                <div className='grid flex-1 grid-cols-1 gap-4 min-[430px]:grid-cols-2'>
+                    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl bg-white min-[430px]:aspect-auto">
                         <div className="absolute inset-0 ">
                             <img
                                 src={item.image ?? imageUrl}
@@ -44,14 +44,14 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                         </div>
                         <img
                             src={item.image ?? imageUrl}
-                            className="relative w-[90%] h-[97%] rounded-3xl object-cover drop-shadow-md z-10"
+                            className="relative z-10 h-[97%] w-[90%] rounded-3xl object-cover drop-shadow-md"
                             alt="imagen del producto"
                             onError={handleImageError}
                         />
                     </div>
                     <div>
                         <Badge variant="secondary" className="mb-2">{item.category}</Badge>
-                        <p className="font-medium text-xl mb-1">{item.name}</p>
+                        <p className="mb-1 text-lg font-medium leading-tight sm:text-xl">{item.name}</p>
                         <div className="h-px bg-stone-200 my-2" />
                         <p className="text-2xl font-medium text-primary">Q{variantSelected?.price}</p>
                         <p className="text-sm text-stone-500">
@@ -69,11 +69,11 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     </div>
                 </div>
 
-                <div className='grid grid-cols-6 gap-3 w-full justify-center items-center mt-4'>
+                <div className='mt-4 grid w-full grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] items-center justify-center gap-2 sm:gap-3'>
                     {item.variants.map((variant) => (
                         <Badge
                             className={cn(
-                                "h-10 w-full cursor-pointer flex items-center justify-center",
+                                "flex h-10 w-full cursor-pointer items-center justify-center text-sm",
                                 getStockBadgeClass(variant.stock)
                             )}
                             key={variant.id}
@@ -92,7 +92,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <p className="text-xs text-stone-400 mt-2">Algunas variantes no tienen stock disponible.</p>
                 )}
             </DrawerBody>
-            <DrawerFooter className="mx-5 flex flex-col items-center justify-center">
+            <DrawerFooter className="mx-2 flex flex-col items-center justify-center sm:mx-5">
                 <Button
                     size={"lg"}
                     className="w-full"

@@ -20,8 +20,8 @@ export default function TablePagination<TData>({ table }: Props<TData>) {
   const pageCount = table.getPageCount()
 
   return (
-    <div className="flex items-center justify-between gap-4 mt-4">
-      <Field orientation="horizontal" className="w-fit items-center">
+    <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Field orientation="horizontal" className="w-full items-center justify-between sm:w-fit sm:justify-start">
         <FieldLabel htmlFor="table-rows-per-page">Filas por página</FieldLabel>
         <Select
           id="table-rows-per-page"
@@ -36,8 +36,8 @@ export default function TablePagination<TData>({ table }: Props<TData>) {
         </Select>
       </Field>
 
-      <PaginationNav className="mx-0 w-auto">
-        <PaginationContent>
+      <PaginationNav className="mx-0 w-full sm:w-auto">
+        <PaginationContent className="flex-wrap justify-center sm:justify-end">
           <PaginationItem>
             <PaginationPrevious
               href="#"
