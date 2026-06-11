@@ -97,16 +97,16 @@ export default function HistorialVentasPage() {
 
   return (
     <PageTemplateSimple title="Historial de Ventas" description="Todas las ventas registradas en el sistema.">
-      <div className="space-y-6">
-        <Card className="p-3 sm:px-5">
-          <div className="grid grid-cols-1 items-center justify-center gap-3 rounded-2xl p-3 shadow-sm min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="space-y-5">
+        <Card className="p-3.5 sm:p-5">
+          <div className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6">
             <div className="min-w-0">
               <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
               <Input
                 type="date"
                 value={filters.fecha_desde ?? ''}
                 onChange={(e) => setFilters((prev) => ({ ...prev, fecha_desde: e.target.value || undefined }))}
-                className="h-8 w-full"
+                className="w-full"
               />
             </div>
             <div className="min-w-0">
@@ -115,7 +115,7 @@ export default function HistorialVentasPage() {
                 type="date"
                 value={filters.fecha_hasta ?? ''}
                 onChange={(e) => setFilters((prev) => ({ ...prev, fecha_hasta: e.target.value || undefined }))}
-                className="h-8 w-full"
+                className="w-full"
               />
             </div>
             <div className="min-w-0">
@@ -123,7 +123,7 @@ export default function HistorialVentasPage() {
               <Select
                 value={filters.estado ?? ''}
                 onChange={(e) => setFilters((prev) => ({ ...prev, estado: e.target.value || undefined }))}
-                className="h-8 w-full"
+                className="w-full"
               >
                 <option value="">Todos</option>
                 {estados.map((e) => <option key={e} value={e}>{e}</option>)}
@@ -134,7 +134,7 @@ export default function HistorialVentasPage() {
               <Select
                 value={formaPagoFilter}
                 onChange={(e) => setFormaPagoFilter(e.target.value)}
-                className="h-8 w-full"
+                className="w-full"
               >
                 <option value="">Todas</option>
                 {formasPago.map((f) => <option key={f} value={f}>{f}</option>)}
@@ -143,7 +143,7 @@ export default function HistorialVentasPage() {
 
             {hasFilters && (
               <div className="min-w-0 self-end">
-                <Button variant="secondary" size="sm" onClick={clearFilters} className="h-8 w-full">
+                <Button variant="secondary" size="sm" onClick={clearFilters} className="h-9 w-full">
                   <RotateCcw />
                 </Button>
               </div>

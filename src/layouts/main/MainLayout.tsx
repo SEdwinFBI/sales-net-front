@@ -67,7 +67,7 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-neutral">
+    <div className="min-h-screen bg-secondary text-neutral">
       {!isDesktop && (
         <MobileSidebar
           items={sidebarItems}
@@ -76,7 +76,7 @@ export default function MainLayout() {
         />
       )}
 
-      <div className="grid min-h-screen grid-cols-1 gap-3 px-2 py-2 sm:gap-4 sm:px-3 lg:grid-cols-[auto_1fr]">
+      <div className="grid min-h-screen grid-cols-1 gap-3 px-2.5 py-2.5 sm:gap-4 sm:px-4 lg:grid-cols-[auto_1fr]">
         {isDesktop && (
           <DesktopSidebar
             expanded={isDesktopSidebarExpanded}
@@ -98,11 +98,11 @@ export default function MainLayout() {
             onSidebarToggle={handleSidebarToggle}
           />
 
-          <main className="min-w-0 flex-1 py-2 pb-8">
+          <main className="min-w-0 flex-1 py-2 pb-8 sm:py-3">
             <Outlet />
           </main>
 
-          <footer className="pb-4 text-[12px] text-neutral/75 self-center">
+          <footer className="self-center pb-4 text-[12px] text-neutral/65">
             &copy; {new Date().getFullYear()} Code QX. Todos los derechos reservados.
           </footer>
         </div>

@@ -20,9 +20,9 @@ const initials = (name?: string) =>
 
 export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
   return (
-    <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-emerald-500' : 'border-l-stone-300'} bg-white p-4 transition-shadow hover:shadow-md`}>
+    <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-successful' : 'border-l-border'} bg-white p-4 transition-shadow hover:shadow-md`}>
       <div className="flex items-start gap-3">
-        <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${cliente.activo ? 'bg-emerald-500' : 'bg-stone-400'}`}>
+        <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${cliente.activo ? 'bg-successful' : 'bg-muted-foreground/70'}`}>
           {initials(cliente.nombre_completo)}
         </div>
 
@@ -61,7 +61,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
           <Button size="icon-xs" variant="ghost" onClick={onEdit}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="ghost" onClick={onDelete} className="text-red-500 hover:text-red-600">
+          <Button size="icon-xs" variant="ghost" onClick={onDelete} className="text-danger hover:text-danger">
             <Trash2 className="size-3.5" />
           </Button>
         </div>

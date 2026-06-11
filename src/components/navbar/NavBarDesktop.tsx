@@ -69,7 +69,7 @@ function SubItems({
       <div
         className={cn(
           'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-200',
-          hasActiveInLevel ? 'bg-primary' : 'bg-stone-500',
+          hasActiveInLevel ? 'bg-primary' : 'bg-border',
         )}
         style={{ left: guideLeft }}
       />
@@ -83,10 +83,10 @@ function SubItems({
           const isItemExpanded = expandedModules?.includes(item.id) ?? false
           const isActiveItem = location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`)
 
-          const lineClass = isActiveItem ? 'bg-primary' : 'bg-stone-500'
-          const dotClass = isActiveItem ? 'bg-primary' : 'bg-stone-300/90'
-          const textClass = isActiveItem ? 'text-stone-700 font-semibold text-[0.73rem]' : 'text-stone-500 group-hover:text-stone-600 text-[0.73rem]'
-          const iconClass = isActiveItem ? 'text-primary/90' : 'text-stone-400 group-hover:text-stone-500'
+          const lineClass = isActiveItem ? 'bg-primary' : 'bg-border'
+          const dotClass = isActiveItem ? 'bg-primary' : 'bg-border'
+          const textClass = isActiveItem ? 'text-neutral font-semibold text-[0.73rem]' : 'text-neutral/65 group-hover:text-neutral text-[0.73rem]'
+          const iconClass = isActiveItem ? 'text-primary/90' : 'text-neutral/45 group-hover:text-neutral/70'
 
           if (isLeaf) {
             return (
@@ -96,8 +96,8 @@ function SubItems({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'group relative border border-s-olive-200 flex items-center gap-1 rounded-lg px-5 py-0.5 transition-all duration-200 ease-out',
-                    'bg-stone-100/20',
+                    'group relative flex items-center gap-1 rounded-lg border border-border/60 px-5 py-0.5 transition-all duration-200 ease-out',
+                    'bg-white/40',
                     isActive && 'bg-primary/8', textClass
 
                   )
@@ -144,8 +144,8 @@ function SubItems({
                 type="button"
                 onClick={() => onToggleModule?.(item.id)}
                 className={cn(
-                  'group relative flex border border-stone-200 w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-all duration-200 ease-out',
-                  'hover:bg-white/3',
+                  'group relative flex w-full items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5 transition-all duration-200 ease-out',
+                  'hover:bg-primary-nav/60',
                   isActiveItem && 'bg-primary/8',
 
                 )}
@@ -215,11 +215,11 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-2xl border border-white/15 bg-linear-to-br from-primary to-primary/85 py-3 text-white shadow-[0_4px_16px_-4px_rgba(53,37,205,0.25),0_0_0_1px_rgba(53,37,205,0.1)] transition-all duration-200 ease-out',
+          'flex items-center rounded-xl border border-primary/20 bg-primary py-3 text-white shadow-sm transition-all duration-200 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 ring-1 ring-white/10">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/20 bg-white/10 ring-1 ring-white/10">
           <img src={logoImage} alt="Logo del cliente" className="h-full w-full object-contain p-1" />
         </div>
         <div
@@ -256,22 +256,22 @@ export default function NavBarDesktop({
                   type="button"
                   onClick={() => onToggleModule?.(item.id)}
                   className={cn(
-                    'flex w-full items-center rounded-2xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
+                    'flex w-full items-center rounded-xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
                     expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                     isActiveModule
-                      ? 'border-primary/20 bg-primary/8 shadow-[0_0_16px_-4px_rgba(99,102,241,0.15)]'
-                      : 'border-stone-200 bg-transparent text-stone-500 hover:border-stone-200/60 hover:bg-white/70 hover:text-stone-700 hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]',
+                      ? 'border-primary/25 bg-primary/10 shadow-sm'
+                      : 'border-border/70 bg-transparent text-neutral/65 hover:border-primary/25 hover:bg-primary-nav hover:text-neutral',
                   )}
                 >
                   <>
                     <div
                       className={cn(
                         'rounded-xl p-2 transition-all duration-300 ease-out',
-                        isActiveModule ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-stone-100',
+                        isActiveModule ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
                         expanded && 'hover:scale-105',
                       )}
                     >
-                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-stone-500')} />}
+                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-neutral/60')} />}
                     </div>
                     <div
                       className={cn(
@@ -279,11 +279,11 @@ export default function NavBarDesktop({
                         expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
                       )}
                     >
-                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-stone-700')}>
+                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-neutral')}>
                         {item.name}
                       </p>
                       {item.description && (
-                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-primary/75' : 'text-stone-400')}>
+                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-primary/75' : 'text-neutral/50')}>
                           {item.description}
                         </p>
                       )}
@@ -317,11 +317,11 @@ export default function NavBarDesktop({
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-2xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
+                  'flex items-center rounded-xl border py-1.5 transition-all duration-300 ease-out active:scale-[0.98]',
                   expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                   isActive
-                    ? 'border-primary/20 bg-primary/8 shadow-[0_0_16px_-4px_rgba(99,102,241,0.15)]'
-                    : 'border-stone-200 bg-transparent text-stone-500 hover:border-stone-200/60 hover:bg-white/70 hover:text-stone-700 hover:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]',
+                    ? 'border-primary/25 bg-primary/10 shadow-sm'
+                    : 'border-border/70 bg-transparent text-neutral/65 hover:border-primary/25 hover:bg-primary-nav hover:text-neutral',
                 )
               }
             >
@@ -330,11 +330,11 @@ export default function NavBarDesktop({
                   <div
                     className={cn(
                       'rounded-xl p-2 transition-all duration-300 ease-out',
-                      isActive ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-stone-100',
+                      isActive ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
                       expanded && 'hover:scale-105',
                     )}
                   >
-                    {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-stone-500')} />}
+                    {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-neutral/60')} />}
                   </div>
                   <div
                     className={cn(
@@ -342,11 +342,11 @@ export default function NavBarDesktop({
                       expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-2 opacity-0',
                     )}
                   >
-                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-stone-700')}>
+                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-neutral')}>
                       {item.name}
                     </p>
                     {item.description && (
-                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-primary/75' : 'text-stone-400')}>
+                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-primary/75' : 'text-neutral/50')}>
                         {item.description}
                       </p>
                     )}

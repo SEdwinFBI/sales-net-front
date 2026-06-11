@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 export default function UnauthorizePage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,var(--color-secondary)_0%,#ffffff_100%)] px-4 py-6">
-      <div className="max-w-xl rounded-[36px] border border-(--color-secondary) bg-white/95 p-8 text-center shadow-[0_28px_80px_-42px_rgba(53,37,205,0.24)]">
+      <div className="max-w-xl rounded-2xl border border-border/70 bg-white/95 p-8 text-center shadow-sm">
         <ShieldAlert className="mx-auto size-12 text-(--color-danger)" />
         <h1 className="mt-6 text-5xl font-semibold text-(--color-neutral)">
           Acceso denegado
@@ -15,7 +15,7 @@ export default function UnauthorizePage() {
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             to="/"
-            className="inline-flex rounded-full bg-(--color-primary) px-5 py-3 text-sm font-semibold transition hover:opacity-90"
+            className="inline-flex rounded-xl bg-(--color-primary) px-5 py-3 text-sm font-semibold transition hover:bg-(--color-primary-complement)"
           >
             <p className='text-white'>
               Ir al inicio

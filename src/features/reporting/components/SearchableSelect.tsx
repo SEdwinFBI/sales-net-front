@@ -55,7 +55,7 @@ export default function SearchableSelect({ value, onChange, options, placeholder
             <Input
               value={selectedLabel ?? ''}
               readOnly
-              className="h-8 pr-14 text-xs cursor-pointer"
+              className="cursor-pointer pr-14 text-xs"
               onFocus={() => setOpen(true)}
             />
             <button
@@ -71,13 +71,13 @@ export default function SearchableSelect({ value, onChange, options, placeholder
             onChange={(e) => { setSearch(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
             placeholder={placeholder}
-            className="h-8 pr-8 text-xs"
+            className="pr-8 text-xs"
           />
         )}
         <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
       </div>
       {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-48 overflow-auto rounded-lg border border-border bg-white shadow-lg">
+        <div className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-border bg-white shadow-lg">
           {filtered.length === 0 ? (
             <div className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</div>
           ) : (

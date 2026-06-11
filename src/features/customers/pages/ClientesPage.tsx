@@ -32,11 +32,11 @@ export default function ClientesPage() {
 
   return (
     <PageTemplateSimple title="Clientes" description="Gestión de clientes del sistema.">
-      <div className="space-y-6">
-        <Card className='p-3 sm:px-5'>
+      <div className="space-y-5">
+        <Card className="p-3.5 sm:p-5">
 
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row">
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -64,15 +64,15 @@ export default function ClientesPage() {
           </div>
 
           {isLoading && filtered.length === 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => <ClienteCardSkeleton key={i} />)}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground sm:p-12">
               {search || filterActivo !== 'todos' ? 'No hay clientes que coincidan con los filtros.' : 'No hay clientes registrados.'}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((cliente) => (
                 <ClienteCard
                   key={cliente.id}

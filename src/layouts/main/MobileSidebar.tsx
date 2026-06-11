@@ -27,7 +27,7 @@ function MobileSidebar({ items, isOpen, onClose }: MobileSidebarProps) {
                 aria-hidden="true"
                 onClick={onClose}
                 className={cn(
-                    'fixed inset-0 z-30 bg-stone-900/30 backdrop-blur-sm transition-opacity duration-300 ease-out lg:hidden',
+                    'fixed inset-0 z-30 bg-neutral/35 backdrop-blur-sm transition-opacity duration-300 ease-out lg:hidden',
                     isOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
                 )}
             />
@@ -36,7 +36,7 @@ function MobileSidebar({ items, isOpen, onClose }: MobileSidebarProps) {
             <aside
                 id="app-sidebar"
                 className={cn(
-                    'fixed inset-y-3 left-3 z-40 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-3xl border border-stone-200/50 bg-gradient-to-b from-stone-50/95 via-white/92 to-zinc-50/85 p-3 shadow-[0_0_0_1px_rgba(0,0,0,0.02),0_4px_32px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden',
+                    'fixed inset-y-3 left-3 z-40 w-[min(18rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-border/70 bg-white/95 p-3 shadow-lg backdrop-blur-2xl transition-transform duration-300 ease-out lg:hidden',
                     isOpen ? 'translate-x-0' : '-translate-x-[calc(100%+1rem)]',
                 )}
             >

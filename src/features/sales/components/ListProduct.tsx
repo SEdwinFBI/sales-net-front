@@ -30,7 +30,7 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
   const addItem = useSalesStore((state) => state.addItem)
 
   if (isLoading) {
-    return <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-4 sm:gap-5 xl:gap-6">
+    return <div className="grid grid-cols-[repeat(auto-fill,minmax(9.25rem,1fr))] gap-3.5 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:gap-5">
       {
         Array.from({ length: 12 }).map((_, index) => (
           <SkeletonProductCard key={index} />
@@ -41,13 +41,13 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
 
   return (
     <>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-4 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:gap-5 xl:gap-6">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(9.25rem,1fr))] gap-3.5 sm:grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] sm:gap-5">
         {data.map((product) => (
           <ProductItem key={product.id} item={product} onClick={addItem} />
         ))}
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border/60 bg-primary-nav/35 p-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
         <Field orientation="horizontal" className="w-full items-center justify-between sm:w-fit sm:justify-start">
           <FieldLabel htmlFor="select-rows-per-page">Filas por página</FieldLabel>
           <Select

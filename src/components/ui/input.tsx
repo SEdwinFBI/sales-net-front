@@ -9,10 +9,10 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "h-8 w-full min-w-0",
-        "rounded-2xl",
-        "border border-border/50",
-        "bg-transparent",
+        "h-9 w-full min-w-0",
+        "rounded-xl",
+        "border border-border",
+        "bg-white",
         "px-3 text-sm",
 
 
@@ -20,7 +20,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "transition-all duration-150",
 
         "hover:border-border",
-        "hover:bg-muted/20",
+        "hover:bg-primary-nav/45",
 
         "focus-visible:outline-none",
         "focus-visible:border-primary",
