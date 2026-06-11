@@ -63,7 +63,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
   const { mutateAsync: updateArticle, isPending: isUpdating } = useUpdateArticle()
   const { mutateAsync: createVariant, isPending: isCreatingVariant } = useCreateArticleVariant()
   const { mutateAsync: deleteVariant, isPending: isDeletingVariant } = useDeleteArticleVariant()
-  const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(initialSizes)
+  const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(isEdit ? initialSizes : defaultSizes)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant
 
@@ -80,7 +80,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
   useEffect(() => {
     if (open) {
-      setSelectedSizes(initialSizes)
+      setSelectedSizes(isEdit ? initialSizes : defaultSizes)
       setSelectedImage(null)
       reset(
         article
