@@ -22,6 +22,7 @@ import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 
 const defaultSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
+const showSizeSelectorOnCreate = false
 
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
@@ -109,10 +110,11 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         return
       }
 
+      const effectiveSelectedSizes = isEdit ? selectedSizes : defaultSizes
       const currentVariants = articleVariants
-      const selectedSet = new Set(selectedSizes)
+      const selectedSet = new Set(effectiveSelectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
-      const sizesToCreate = selectedSizes.filter((size) => !currentSet.has(size))
+      const sizesToCreate = effectiveSelectedSizes.filter((size) => !currentSet.has(size))
 
       if (sizesToCreate.length > 0 && values.basePrice <= 0) {
         toast.error('Ingresa un precio base mayor a 0 para las nuevas tallas')
@@ -182,6 +184,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
               <FieldError errors={[errors.basePrice]} />
             </Field>
 
+            {(isEdit || showSizeSelectorOnCreate) && (
             <Field>
               <FieldLabel>Tallas disponibles</FieldLabel>
               <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3 sm:grid-cols-6">
@@ -207,6 +210,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
                 })}
               </div>
             </Field>
+            )}
           </FieldGroup>
 
           <DialogFooter className="pt-4">
