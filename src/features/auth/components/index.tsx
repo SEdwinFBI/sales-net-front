@@ -1,16 +1,19 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import LoginForm from '@/features/auth/components/LoginForm'
 import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { useLoginMutation } from '../hooks/useLoginMutation'
 import type { LoginFormValues } from '../types/form'
+import { queryKeys } from '@/lib/query-keys'
 
 
 export default function LoginFeature() {
 
   const toastId = 'login-request'
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
   const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
@@ -32,6 +35,7 @@ export default function LoginFeature() {
       })
 
       applySession(session)
+      queryClient.removeQueries({ queryKey: queryKeys.sales.all })
       toast.success('Sesion iniciada', { id: toastId })
       navigate('/', { replace: true })
     } catch (error) {

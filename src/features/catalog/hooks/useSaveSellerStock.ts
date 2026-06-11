@@ -12,6 +12,7 @@ export const useSaveSellerStock = () => {
     onSuccess: (_data, payload) => {
       queryClient.invalidateQueries({ queryKey: sellerStockQueryKey(payload.sellerId) })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminCatalog.stock.all() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.sales.all })
     },
   })
 }

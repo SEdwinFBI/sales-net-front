@@ -37,12 +37,20 @@ export const useSalesStore = create<SalesState>()(
 
         const existing = state.items.find((item) => item.id === cartItemId)
         if (existing) {
-          if (existing.qty >= existing.stock) return state
+          if (existing.qty >= variant.stock) {
+            return {
+              items: state.items.map((item) =>
+                item.id === cartItemId
+                  ? { ...item, stock: variant.stock, price: variant.price }
+                  : item
+              ),
+            }
+          }
 
           return {
             items: state.items.map((item) =>
               item.id === cartItemId
-                ? { ...item, qty: item.qty + 1 }
+                ? { ...item, qty: item.qty + 1, stock: variant.stock, price: variant.price }
                 : item
             ),
           }

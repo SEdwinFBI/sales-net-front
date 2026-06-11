@@ -1,4 +1,4 @@
-import { useState, type FC } from "react"
+import { useEffect, useState, type FC } from "react"
 import { Drawer, DrawerTrigger } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
 import { toast } from "sonner"
@@ -15,6 +15,14 @@ const ProductItem: FC<Props> = ({ onClick, item }) => {
     const [variantSelected, setVariantSelected] = useState<ProductVariant | null>(
         item.variants[0] || null
     )
+
+    useEffect(() => {
+        setVariantSelected((current) => {
+            if (!current) return item.variants[0] || null
+
+            return item.variants.find((variant) => variant.id === current.id) || item.variants[0] || null
+        })
+    }, [item.variants])
 
     const handleAddVariant = () => {
         if (!variantSelected || variantSelected.stock <= 0) return
