@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge"
 import type { FC } from "react"
 import type { Product } from "@/features/sales/types/sales"
 import imageUrl from '@/assets/img.jpg'
+import { cn } from '@/lib/utils'
+import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -19,6 +21,7 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
         ? Math.max(...item.variants.map(v => v.price))
         : item.variants[0]?.price
     const hasPriceRange = item.variants.length > 1 && item.variants[0]?.price !== maxPrice
+    const totalStock = item.variants.reduce((s, v) => s + v.stock, 0)
 
     return (
         <Card className="bg-white w-40" onClick={onClick}>
@@ -29,18 +32,26 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
                 <CardDescription className="h-10">
                     <div>
                         <div className="flex items-center gap-2 text-[10px]">
-                            <small className="text-stone-400">
+                            <small className={getStockTextClass(totalStock)}>
                                 Desde Q.{item.variants[0]?.price}
                                 {hasPriceRange && <> a Q.{maxPrice} </>}
-                                en stock {item.variants.reduce((s, v) => s + v.stock, 0)}
+                                en stock {totalStock}
                             </small>
                         </div>
                         <div className="grid grid-cols-4 gap-1 mt-1">
-                            {item.variants.map(v => (
-                                <Badge key={v.id} variant={v.stock > 0 ? 'default' : 'secondary'} className="text-[5px]">
-                                    {v.size}
-                                </Badge>
-                            ))}
+                            {item.variants.map(v => {
+                                const stockStatus = getStockStatus(v.stock)
+
+                                return (
+                                    <Badge
+                                        key={v.id}
+                                        variant={stockStatus === 'available' ? 'default' : 'outline'}
+                                        className={cn("text-[5px]", getStockBadgeClass(v.stock))}
+                                    >
+                                        {v.size}
+                                    </Badge>
+                                )
+                            })}
                         </div>
                     </div>
                 </CardDescription>

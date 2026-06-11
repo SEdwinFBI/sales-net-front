@@ -6,6 +6,8 @@ import type { Product, ProductVariant } from "@/features/sales/types/sales"
 import { ShoppingCart } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
+import { cn } from '@/lib/utils'
+import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -18,6 +20,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
     const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.src = imageUrl
     }, [])
+    const selectedStockStatus = variantSelected ? getStockStatus(variantSelected.stock) : null
 
     return (
         <DrawerContent className="bg-white w-full">
@@ -54,14 +57,14 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                         <p className="text-sm text-stone-500">
                             {variantSelected ? `Talla: ${variantSelected.size}` : 'Selecciona una talla'}
                         </p>
-                        <p className="text-sm text-stone-500">
+                        <p className={cn("text-sm", variantSelected ? getStockTextClass(variantSelected.stock) : "text-stone-500")}>
                             Stock disponible: {variantSelected?.stock ?? '-'} unidades
                         </p>
-                        {variantSelected && variantSelected.stock > 0 && variantSelected.stock <= 3 && (
-                            <p className="text-xs text-amber-600 font-medium mt-1">Últimas unidades</p>
+                        {selectedStockStatus === 'low' && (
+                            <p className="text-xs text-orange-600 font-medium mt-1">Últimas unidades</p>
                         )}
-                        {variantSelected && variantSelected.stock <= 0 && (
-                            <p className="text-xs text-red-500 font-medium mt-1">Agotado</p>
+                        {selectedStockStatus === 'out' && (
+                            <p className="text-xs text-red-600 font-medium mt-1">Agotado</p>
                         )}
                     </div>
                 </div>
@@ -69,7 +72,10 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 <div className='grid grid-cols-6 gap-3 w-full justify-center items-center mt-4'>
                     {item.variants.map((variant) => (
                         <Badge
-                            className="h-10 w-full cursor-pointer flex items-center justify-center"
+                            className={cn(
+                                "h-10 w-full cursor-pointer flex items-center justify-center",
+                                getStockBadgeClass(variant.stock)
+                            )}
                             key={variant.id}
                             aria-disabled={variant.stock <= 0}
                             onClick={() => onVariantChange(variant)}

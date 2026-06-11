@@ -20,6 +20,7 @@ import type { Article } from '../types/article-types'
 import type { ArticleVariant } from '../types/article-variant-types'
 import type { StockAssignment } from '../types/stock-types'
 import ArticleImage from './ArticleImage'
+import { getStockInputClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 const pageSize = 8
 
@@ -174,6 +175,7 @@ export default function SellerStockEditor({
         <div className="space-y-4">
           {paginatedRows.map((row) => {
             const isExpanded = expandedArticles[row.article.id] ?? false
+            const stockStatus = getStockStatus(row.total)
             const stockSummary =
               row.availableSizes.length === 0
                 ? 'Sin tallas configuradas'
@@ -185,7 +187,12 @@ export default function SellerStockEditor({
               <Card
                 key={row.article.id}
                 size="sm"
-                className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md"
+                className={cn(
+                  "border-l-4 bg-white p-0 shadow-sm transition-shadow hover:shadow-md",
+                  stockStatus === 'out' && 'border-l-red-500',
+                  stockStatus === 'low' && 'border-l-orange-500',
+                  stockStatus === 'available' && 'border-l-primary/70'
+                )}
               >
                 <div className="p-4">
                   <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
@@ -199,7 +206,7 @@ export default function SellerStockEditor({
                         <p className="truncate text-sm font-semibold sm:text-base">
                           {row.article.title}
                         </p>
-                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        <p className={cn("mt-0.5 truncate text-sm", getStockTextClass(row.total))}>
                           {stockSummary}
                         </p>
                       </div>
@@ -248,7 +255,7 @@ export default function SellerStockEditor({
                             >
                               <div className="flex items-center justify-between gap-2 sm:block">
                                 <span className="text-sm font-semibold">Talla {size}</span>
-                                <span className="text-xs text-muted-foreground sm:hidden">
+                                <span className={cn("text-xs sm:hidden", getStockTextClass(quantity))}>
                                   {quantity} unidades
                                 </span>
                               </div>
@@ -263,7 +270,7 @@ export default function SellerStockEditor({
                                   <Minus />
                                 </Button>
                                 <Input
-                                  className="h-9 text-center font-semibold"
+                                  className={cn("h-9 text-center font-semibold", getStockInputClass(quantity))}
                                   min={0}
                                   type="number"
                                   value={quantity}
