@@ -125,6 +125,9 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       const selectedSet = new Set(effectiveSelectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
       const sizesToCreate = effectiveSelectedSizes.filter((size) => !currentSet.has(size))
+      const orderedSizesToCreate = sizesToCreate.sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true })
+      )
 
       const zeroLevelSizes = effectiveSelectedSizes.filter((size) => getSizePrice(size) === 0)
       if (zeroLevelSizes.length > 0) {
@@ -142,10 +145,11 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         : await createArticle({ title: values.title, image: imageFile as File })
 
       if (isEdit) {
+        for (const size of orderedSizesToCreate) {
+          await createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
+        }
+
         await Promise.all([
-          ...sizesToCreate.map((size) =>
-            createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
-          ),
           ...currentVariants
             .filter((variant) => selectedSet.has(variant.size))
             .map((variant) => updateVariant({ id: variant.id, price: getSizePrice(variant.size) })),
@@ -154,11 +158,9 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
             .map((variant) => deleteVariant(variant.id)),
         ])
       } else {
-        await Promise.all(
-          defaultSizes.map((size) =>
-            createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
-          )
-        )
+        for (const size of defaultSizes) {
+          await createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
+        }
       }
 
       if (isEdit) {
