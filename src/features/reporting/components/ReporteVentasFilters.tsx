@@ -44,14 +44,14 @@ export default function ReporteVentasFilters({
     || filters.id_talla !== undefined
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 items-center gap-3 justify-center  rounded-2xl shadow-sm p-4">
+    <div className="grid w-full grid-cols-1 items-end gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6">
       <div className="min-w-0">
         <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
         <Input
           type="date"
           value={filters.fecha_desde ?? ''}
           onChange={(e) => set('fecha_desde', e.target.value)}
-          className="h-8 w-full"
+          className="w-full"
         />
       </div>
       <div className="min-w-0">
@@ -60,7 +60,7 @@ export default function ReporteVentasFilters({
           type="date"
           value={filters.fecha_hasta ?? ''}
           onChange={(e) => set('fecha_hasta', e.target.value)}
-          className="h-8 w-full"
+          className="w-full"
         />
       </div>
       <div className="min-w-0">
@@ -95,7 +95,7 @@ export default function ReporteVentasFilters({
       </div>
       {hasFilters && (
         <div className="min-w-0 self-end">
-          <Button variant="secondary" size="sm" onClick={clear} className=" h-8 self-end w-full">
+          <Button variant="secondary" size="sm" onClick={clear} className="h-9 w-full self-end">
             <RotateCcw />
           </Button>
         </div>

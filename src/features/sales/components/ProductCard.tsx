@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge"
 import type { FC } from "react"
 import type { Product } from "@/features/sales/types/sales"
 import imageUrl from '@/assets/img.jpg'
+import { cn } from '@/lib/utils'
+import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -19,28 +21,37 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
         ? Math.max(...item.variants.map(v => v.price))
         : item.variants[0]?.price
     const hasPriceRange = item.variants.length > 1 && item.variants[0]?.price !== maxPrice
+    const totalStock = item.variants.reduce((s, v) => s + v.stock, 0)
 
     return (
-        <Card className="bg-white w-40" onClick={onClick}>
-            <img className="h-30 lg:h-30 w-full object-cover object-center" src={item.image ?? imageUrl} onError={handleImageError} />
-            <CardHeader>
-                <Badge variant="secondary">{item.category}</Badge>
-                <CardTitle>{item.name}</CardTitle>
-                <CardDescription className="h-10">
-                    <div>
-                        <div className="flex items-center gap-2 text-[10px]">
-                            <small className="text-stone-400">
+        <Card size="sm" className="h-full w-full cursor-pointer bg-white py-0 transition-shadow hover:shadow-md" onClick={onClick}>
+            <img className="aspect-[4/3] w-full object-cover object-center" src={item.image ?? imageUrl} onError={handleImageError} />
+            <CardHeader className="gap-1.5 px-3 pb-3">
+                <Badge variant="secondary" className="max-w-full truncate text-xs">{item.category}</Badge>
+                <CardTitle className="line-clamp-2 text-sm leading-tight sm:text-[0.95rem]">{item.name}</CardTitle>
+                <CardDescription>
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs leading-snug sm:text-[0.82rem]">
+                            <small className={cn("font-medium", getStockTextClass(totalStock))}>
                                 Desde Q.{item.variants[0]?.price}
                                 {hasPriceRange && <> a Q.{maxPrice} </>}
-                                en stock {item.variants.reduce((s, v) => s + v.stock, 0)}
+                                en stock {totalStock}
                             </small>
                         </div>
-                        <div className="grid grid-cols-4 gap-1 mt-1">
-                            {item.variants.map(v => (
-                                <Badge key={v.id} variant={v.stock > 0 ? 'default' : 'secondary'} className="text-[5px]">
-                                    {v.size}
-                                </Badge>
-                            ))}
+                        <div className="flex flex-wrap gap-1.5">
+                            {item.variants.map(v => {
+                                const stockStatus = getStockStatus(v.stock)
+
+                                return (
+                                    <Badge
+                                        key={v.id}
+                                        variant={stockStatus === 'available' ? 'default' : 'outline'}
+                                        className={cn("min-h-6 min-w-9 px-2.5 text-[0.72rem] leading-none tabular-nums", getStockBadgeClass(v.stock))}
+                                    >
+                                        {v.size}
+                                    </Badge>
+                                )
+                            })}
                         </div>
                     </div>
                 </CardDescription>

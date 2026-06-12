@@ -10,7 +10,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse rounded-xl border border-border bg-white p-4">
+          <div key={i} className="animate-pulse rounded-xl border border-border/70 bg-white p-4">
             <div className="h-3 w-20 rounded bg-muted mb-2" />
             <div className="h-6 w-24 rounded bg-muted" />
           </div>
@@ -24,14 +24,14 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
   const cards = [
     { label: 'Total general', value: `Q${Number(resumen.total_general).toFixed(2)}`, color: 'text-primary' },
     { label: 'Cantidad total', value: resumen.cantidad_total, color: '' },
-    { label: 'Total descuento', value: `Q${Number(resumen.total_descuento).toFixed(2)}`, color: 'text-red-600' },
+    { label: 'Total descuento', value: `Q${Number(resumen.total_descuento).toFixed(2)}`, color: 'text-danger' },
     { label: 'Total ventas', value: resumen.total_ventas, color: '' },
   ]
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
-        <div key={card.label} className="rounded-2xl  shadow-sm p-4 hover:shadow-sm">
+        <div key={card.label} className="rounded-xl border border-border/70 bg-white p-4 shadow-sm">
           <p className="text-xs text-muted-foreground">{card.label}</p>
           <p className={`text-2xl font-bold mt-1 ${card.color}`}>{card.value}</p>
         </div>

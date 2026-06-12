@@ -20,7 +20,7 @@ export default function PageTemplateSimple({
         description={description}
       />
 
-      <div className="rounded-3xl bg-transparent p-2 text-neutral ">
+      <div className="rounded-2xl bg-transparent p-0 text-neutral sm:p-1">
         {children ?? <Outlet />}
       </div>
     </>

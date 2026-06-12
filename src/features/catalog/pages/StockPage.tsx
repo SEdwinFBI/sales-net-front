@@ -26,7 +26,7 @@ export default function StockPage() {
       description="Gestion de stock por vendedor."
     >
 
-      <div className="mt-4">
+      <div className="mt-2 sm:mt-3">
         {selectedSeller ? (
           <SellerStockEditor
             articles={articles}

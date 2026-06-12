@@ -61,8 +61,8 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-2 sm:grid-cols-[minmax(220px,1fr)_150px_170px_auto] lg:min-w-[680px] lg:max-w-4xl">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-white p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="grid w-full gap-2.5 sm:grid-cols-2 lg:min-w-[680px] lg:max-w-4xl lg:grid-cols-[minmax(220px,1fr)_150px_170px_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -107,7 +107,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               variant="outline"
               onClick={clearFilters}
               disabled={!hasActiveFilters}
-              className={cn('w-full sm:w-auto', !hasActiveFilters && 'hidden sm:inline-flex')}
+              className={cn('w-full sm:w-auto', !hasActiveFilters && 'hidden lg:inline-flex')}
             >
               <X />
               Limpiar
@@ -123,15 +123,15 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         </div>
 
         {isLoading ? (
-          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border bg-white p-8 text-center text-muted-foreground sm:p-12">
             Cargando articulos...
           </div>
         ) : filteredData.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          <div className="rounded-xl border border-dashed border-border bg-white p-8 text-center text-muted-foreground sm:p-12">
             No hay articulos registrados.
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedData.map((article) => {
               const articleVariants = variants.filter((variant) => variant.articleId === article.id)
               const articleSizes = articleVariants
@@ -165,6 +165,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         size="icon-xs"
                         variant="ghost"
                         className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
+                        aria-label={`Editar ${article.title}`}
                         onClick={() => {
                           setSelectedArticle(article)
                           setDialogOpen(true)
@@ -176,6 +177,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         size="icon-xs"
                         variant="ghost"
                         className="bg-white/95 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:ring-white/70"
+                        aria-label={`Eliminar ${article.title}`}
                         onClick={() => setArticleToDelete(article)}
                       >
                         <Trash2 />
@@ -199,7 +201,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
           </div>
         )}
         {filteredData.length > pageSize && (
-          <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-white p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
               {filteredData.length} articulos - Pagina {safePage} de {totalPages}
             </span>
@@ -207,6 +209,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Button
                 size="icon-sm"
                 variant="outline"
+                aria-label="Pagina anterior"
                 onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                 disabled={safePage === 1}
               >
@@ -215,6 +218,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Button
                 size="icon-sm"
                 variant="outline"
+                aria-label="Pagina siguiente"
                 onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                 disabled={safePage === totalPages}
               >

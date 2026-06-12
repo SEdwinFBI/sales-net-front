@@ -10,6 +10,7 @@ export interface SalesState {
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
+  setQty: (itemId: string, qty: number) => void;
   setDiscount: (itemId: string, discount: number) => void;
   clearCart: () => void;
   openCart: () => void;
@@ -36,12 +37,20 @@ export const useSalesStore = create<SalesState>()(
 
         const existing = state.items.find((item) => item.id === cartItemId)
         if (existing) {
-          if (existing.qty >= existing.stock) return state
+          if (existing.qty >= variant.stock) {
+            return {
+              items: state.items.map((item) =>
+                item.id === cartItemId
+                  ? { ...item, stock: variant.stock, price: variant.price }
+                  : item
+              ),
+            }
+          }
 
           return {
             items: state.items.map((item) =>
               item.id === cartItemId
-                ? { ...item, qty: item.qty + 1 }
+                ? { ...item, qty: item.qty + 1, stock: variant.stock, price: variant.price }
                 : item
             ),
           }
@@ -87,6 +96,18 @@ export const useSalesStore = create<SalesState>()(
             return item
           })
           .filter((item) => item.qty > 0),
+      })),
+
+    setQty: (itemId, qty) =>
+      set((state) => ({
+        items: state.items.map((item) => {
+          if (item.id !== itemId || !Number.isFinite(qty)) return item
+
+          const normalizedQty = Math.trunc(qty)
+          const nextQty = Math.max(1, Math.min(item.stock, normalizedQty))
+
+          return { ...item, qty: nextQty }
+        }),
       })),
 
     setDiscount: (itemId, discount) =>

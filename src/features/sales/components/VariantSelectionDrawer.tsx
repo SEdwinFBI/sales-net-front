@@ -1,11 +1,13 @@
 import { useCallback } from 'react'
-import { Badge } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
 import { ShoppingCart } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
+import { cn } from '@/lib/utils'
+import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -18,9 +20,10 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
     const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.src = imageUrl
     }, [])
+    const selectedStockStatus = variantSelected ? getStockStatus(variantSelected.stock) : null
 
     return (
-        <DrawerContent className="bg-white w-full">
+        <DrawerContent className="w-full bg-white sm:max-w-md">
             <DrawerHeader className="mx-auto w-full max-w-md">
                 <DrawerTitle>Elige la variante</DrawerTitle>
                 <DrawerDescription className="text-center">
@@ -28,9 +31,9 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 </DrawerDescription>
             </DrawerHeader>
 
-            <DrawerBody className="flex-1 mx-5 rounded-t-[20px] bg-white pt-2">
-                <div className='flex-1 grid grid-cols-2 gap-4'>
-                    <div className="rounded-2xl relative overflow-hidden w-full  flex items-center justify-center bg-white">
+            <DrawerBody className="mx-2 flex-1 rounded-t-[20px] bg-white pt-2 sm:mx-5">
+                <div className='grid flex-1 grid-cols-1 gap-4 min-[430px]:grid-cols-2'>
+                    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl bg-white min-[430px]:aspect-auto">
                         <div className="absolute inset-0 ">
                             <img
                                 src={item.image ?? imageUrl}
@@ -41,42 +44,48 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                         </div>
                         <img
                             src={item.image ?? imageUrl}
-                            className="relative w-[90%] h-[97%] rounded-3xl object-cover drop-shadow-md z-10"
+                            className="relative z-10 h-[97%] w-[90%] rounded-3xl object-cover drop-shadow-md"
                             alt="imagen del producto"
                             onError={handleImageError}
                         />
                     </div>
                     <div>
                         <Badge variant="secondary" className="mb-2">{item.category}</Badge>
-                        <p className="font-medium text-xl mb-1">{item.name}</p>
+                        <p className="mb-1 text-lg font-medium leading-tight sm:text-xl">{item.name}</p>
                         <div className="h-px bg-stone-200 my-2" />
                         <p className="text-2xl font-medium text-primary">Q{variantSelected?.price}</p>
                         <p className="text-sm text-stone-500">
                             {variantSelected ? `Talla: ${variantSelected.size}` : 'Selecciona una talla'}
                         </p>
-                        <p className="text-sm text-stone-500">
+                        <p className={cn("text-sm", variantSelected ? getStockTextClass(variantSelected.stock) : "text-stone-500")}>
                             Stock disponible: {variantSelected?.stock ?? '-'} unidades
                         </p>
-                        {variantSelected && variantSelected.stock > 0 && variantSelected.stock <= 3 && (
-                            <p className="text-xs text-amber-600 font-medium mt-1">Últimas unidades</p>
+                        {selectedStockStatus === 'low' && (
+                            <p className="text-xs text-yellow-700 font-medium mt-1">Últimas unidades</p>
                         )}
-                        {variantSelected && variantSelected.stock <= 0 && (
-                            <p className="text-xs text-red-500 font-medium mt-1">Agotado</p>
+                        {selectedStockStatus === 'out' && (
+                            <p className="text-xs text-red-600 font-medium mt-1">Agotado</p>
                         )}
                     </div>
                 </div>
 
-                <div className='grid grid-cols-6 gap-3 w-full justify-center items-center mt-4'>
+                <div className='mt-4 grid w-full grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] items-center justify-center gap-2 sm:gap-3'>
                     {item.variants.map((variant) => (
-                        <Badge
-                            className="h-10 w-full cursor-pointer flex items-center justify-center"
+                        <button
+                            type="button"
+                            className={cn(
+                                badgeVariants({ variant: variant.id !== variantSelected?.id ? 'secondary' : 'default' }),
+                                "flex h-10 w-full cursor-pointer items-center justify-center text-sm disabled:cursor-not-allowed disabled:opacity-60",
+                                getStockBadgeClass(variant.stock)
+                            )}
                             key={variant.id}
-                            aria-disabled={variant.stock <= 0}
+                            aria-label={`Seleccionar talla ${variant.size}, stock ${variant.stock}`}
+                            aria-pressed={variant.id === variantSelected?.id}
+                            disabled={variant.stock <= 0}
                             onClick={() => onVariantChange(variant)}
-                            variant={variant.id !== variantSelected?.id ? 'secondary' : 'default'}
                         >
                             {variant.size}
-                        </Badge>
+                        </button>
                     ))}
                 </div>
                 {item.variants.filter(v => v.stock > 0).length === 0 && (
@@ -86,7 +95,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <p className="text-xs text-stone-400 mt-2">Algunas variantes no tienen stock disponible.</p>
                 )}
             </DrawerBody>
-            <DrawerFooter className="mx-5 flex flex-col items-center justify-center">
+            <DrawerFooter className="mx-2 flex flex-col items-center justify-center sm:mx-5">
                 <Button
                     size={"lg"}
                     className="w-full"

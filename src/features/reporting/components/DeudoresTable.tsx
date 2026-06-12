@@ -49,7 +49,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
       header: '',
       cell: ({ row }) => (
         <Link to={`/clientes/listado/${row.original.id}`}>
-          <Button size="icon-xs" variant="ghost">
+            <Button size="icon-xs" variant="ghost" aria-label={`Ver detalle de ${row.original.nombre_completo}`}>
             <Eye className="size-3.5" />
           </Button>
         </Link>
@@ -94,7 +94,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
         />
       </div>
 
-      <div className="rounded-2xl shadow-sm overflow-hidden bg-white">
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -116,7 +116,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                           placeholder="Filtrar..."
-                          className="h-5 text-[11px] border-0 border-b border-transparent rounded-none px-0 focus-visible:border-primary focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
                         />
                       )}
                     </div>

@@ -25,6 +25,7 @@ const CartDrawer = () => {
   const openDialog = useSalesStore((state) => state.openDialog)
   const increaseQty = useSalesStore((state) => state.increaseQty)
   const decreaseQty = useSalesStore((state) => state.decreaseQty)
+  const setQty = useSalesStore((state) => state.setQty)
   const removeItem = useSalesStore((state) => state.removeItem)
 
 
@@ -34,6 +35,7 @@ const CartDrawer = () => {
 
   return (
     <Drawer
+      shouldScaleBackground={false}
       open={cartOpen}
       onOpenChange={(open) => {
         if (open) {
@@ -68,6 +70,7 @@ const CartDrawer = () => {
                   onRemove={removeItem}
                   onIncrease={increaseQty}
                   onDecrease={decreaseQty}
+                  onSetQty={setQty}
                 />
               ))}
             </div>

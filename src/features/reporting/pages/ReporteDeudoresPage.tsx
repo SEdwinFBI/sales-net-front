@@ -28,11 +28,11 @@ export default function ReporteDeudoresPage() {
   return (
     <PageTemplateSimple title="Reporte de Deudores" description="Clientes con saldo pendiente.">
 
-      <Card className='px-5'>
+      <Card className="p-3.5 sm:p-5">
 
         <div className="flex items-center justify-between">
           <div />
-          <Button onClick={handleExportPdf} disabled={pdfLoading}>
+          <Button onClick={handleExportPdf} disabled={pdfLoading} className="w-full sm:w-auto">
             <FileDown />
             {pdfLoading ? 'Descargando...' : 'Descargar Reporte'}
           </Button>

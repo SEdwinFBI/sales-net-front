@@ -47,7 +47,7 @@ export default function ClienteDetailPage() {
   return (
     <PageTemplateSimple title={cliente.nombre_completo} description="Detalle del cliente">
       <div className="space-y-6">
-        <Card className='px-5'>
+        <Card className="p-3.5 sm:p-5">
 
 
           <Button variant="ghost" onClick={() => navigate('/clientes')} className="w-fit">
@@ -58,12 +58,12 @@ export default function ClienteDetailPage() {
           <ClienteInfo cliente={cliente} />
 
           <Tabs defaultValue="abonos">
-            <div className="flex items-center justify-between">
-              <TabsList>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <TabsList className="w-full sm:w-fit">
                 <TabsTrigger value="abonos">Abonos</TabsTrigger>
                 <TabsTrigger value="compras">Compras</TabsTrigger>
               </TabsList>
-              <Button onClick={() => setAbonarOpen(true)} size="sm">
+              <Button onClick={() => setAbonarOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar abono
               </Button>

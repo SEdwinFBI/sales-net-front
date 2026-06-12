@@ -42,7 +42,7 @@ export default function ComprasTable({ ventas, resumen }: Props) {
           No hay compras registradas.
         </div>
       ) : (
-        <div className="rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>

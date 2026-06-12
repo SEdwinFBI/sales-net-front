@@ -35,7 +35,7 @@ function LayoutHeader({
             : 'Abrir menu lateral'
 
     return (
-        <header className="sticky top-0 z-10 rounded-4xl border border-secondary bg-white/92 px-6 py-3 shadow-[0_24px_60px_-42px_rgba(53,37,205,0.26)] backdrop-blur">
+        <header className="sticky top-0 z-10 rounded-2xl border border-border/70 bg-white/95 px-3.5 py-3 shadow-sm backdrop-blur sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <button
@@ -45,7 +45,7 @@ function LayoutHeader({
                         aria-expanded={isSidebarExpanded}
                         aria-label={sidebarLabel}
                         className={cn(
-                            'size-11 items-center justify-center rounded-2xl border border-secondary bg-secondary/58 text-neutral transition hover:bg-secondary',
+                            'size-10 items-center justify-center rounded-xl border border-border bg-secondary/70 text-neutral transition hover:bg-primary-nav',
                             hasSidebarNavigation ? 'inline-flex' : 'hidden',
                         )}
                     >
@@ -63,7 +63,7 @@ function LayoutHeader({
                     </button>
 
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary sm:tracking-[0.22em]">
                             Distribuidora MZ
                         </p>
                         <p className="text-sm text-neutral/70">
@@ -85,7 +85,7 @@ function LayoutHeader({
                         type="button"
                         onClick={onLogout}
                         aria-label="Cerrar sesión"
-                        className="inline-flex size-10 items-center justify-center rounded-full border border-secondary bg-white text-neutral transition hover:bg-secondary"
+                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-white text-neutral transition hover:bg-primary-nav"
                     >
                         <LogOut className="size-4 text-[--color-danger]" />
                     </button>

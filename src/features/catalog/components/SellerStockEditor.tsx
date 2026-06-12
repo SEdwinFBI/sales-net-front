@@ -20,6 +20,11 @@ import type { Article } from '../types/article-types'
 import type { ArticleVariant } from '../types/article-variant-types'
 import type { StockAssignment } from '../types/stock-types'
 import ArticleImage from './ArticleImage'
+import {
+  getStockAccentBorderClass,
+  getStockInputClass,
+  getStockTextClass,
+} from '@/lib/stock-status'
 
 const pageSize = 8
 
@@ -134,7 +139,7 @@ export default function SellerStockEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <Button size="icon-sm" variant="outline" onClick={onBack}>
+          <Button size="icon-sm" variant="outline" onClick={onBack} aria-label="Volver a vendedores">
             <ArrowLeft />
           </Button>
           <div className="min-w-0">
@@ -185,7 +190,10 @@ export default function SellerStockEditor({
               <Card
                 key={row.article.id}
                 size="sm"
-                className="border-l-4 border-l-primary/70 bg-white p-0 shadow-sm transition-shadow hover:shadow-md"
+                className={cn(
+                  "border-l-4 bg-white p-0 shadow-sm transition-shadow hover:shadow-md",
+                  getStockAccentBorderClass(row.total)
+                )}
               >
                 <div className="p-4">
                   <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
@@ -199,7 +207,7 @@ export default function SellerStockEditor({
                         <p className="truncate text-sm font-semibold sm:text-base">
                           {row.article.title}
                         </p>
-                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                        <p className={cn("mt-0.5 truncate text-sm", getStockTextClass(row.total))}>
                           {stockSummary}
                         </p>
                       </div>
@@ -248,22 +256,23 @@ export default function SellerStockEditor({
                             >
                               <div className="flex items-center justify-between gap-2 sm:block">
                                 <span className="text-sm font-semibold">Talla {size}</span>
-                                <span className="text-xs text-muted-foreground sm:hidden">
+                                <span className={cn("text-xs sm:hidden", getStockTextClass(quantity))}>
                                   {quantity} unidades
                                 </span>
                               </div>
                               <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2">
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="outline"
-                                  disabled={quantity === 0}
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="outline"
+                                    aria-label={`Restar una unidad de talla ${size}`}
+                                    disabled={quantity === 0}
                                   onClick={() => adjustQuantity(variant.id, -1)}
                                 >
                                   <Minus />
                                 </Button>
                                 <Input
-                                  className="h-9 text-center font-semibold"
+                                  className={cn("h-9 text-center font-semibold", getStockInputClass(quantity))}
                                   min={0}
                                   type="number"
                                   value={quantity}
@@ -275,6 +284,7 @@ export default function SellerStockEditor({
                                   type="button"
                                   size="icon-sm"
                                   variant="outline"
+                                  aria-label={`Sumar una unidad de talla ${size}`}
                                   onClick={() => adjustQuantity(variant.id, 1)}
                                 >
                                   <Plus />
@@ -299,6 +309,7 @@ export default function SellerStockEditor({
                 <Button
                   size="icon-sm"
                   variant="outline"
+                  aria-label="Pagina anterior"
                   onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                   disabled={safePage === 1}
                 >
@@ -307,6 +318,7 @@ export default function SellerStockEditor({
                 <Button
                   size="icon-sm"
                   variant="outline"
+                  aria-label="Pagina siguiente"
                   onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                   disabled={safePage === totalPages}
                 >

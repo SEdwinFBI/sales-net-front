@@ -78,7 +78,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
 
   return (
     <>
-    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
       <div className="flex flex-wrap items-center gap-3 border-b border-border/50 bg-gradient-to-b from-muted/10 to-white px-5 py-2.5">
         <Select
           value={(columnFilters.find((f) => f.id === 'estado')?.value as string) ?? ''}
@@ -157,7 +157,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
                       value={(header.column.getFilterValue() ?? '') as string}
                       onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                       placeholder="Filtrar..."
-                      className="h-5 text-[11px] border-0 border-b border-transparent rounded-none px-0 focus-visible:border-primary focus-visible:ring-0 placeholder:text-muted-foreground/40"
+                      className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
                     />
                   </div>
                 </TableHead>

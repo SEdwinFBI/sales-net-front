@@ -117,8 +117,8 @@ export default function ReporteVentasPage() {
 
   return (
     <PageTemplateSimple title="Reporte de Ventas" description="Análisis de ventas del sistema.">
-      <Card className="mx-auto px-5">
-        <div className="space-y-6">
+      <Card className="mx-auto p-3.5 sm:p-5">
+        <div className="space-y-5 sm:space-y-6">
           <div className="flex items-center justify-center gap-4">
             <ReporteVentasFilters
               filters={filters}
@@ -135,10 +135,10 @@ export default function ReporteVentasPage() {
 
 
             <Tabs defaultValue="variante">
-              <TabsList>
+              <TabsList className="h-auto w-full flex-wrap justify-start gap-1 sm:w-fit">
                 <TabsTrigger value="variante">Variantes</TabsTrigger>
                 <TabsTrigger value="vendedor">Vendedores</TabsTrigger>
-                <Button onClick={handleExportPdf} disabled={pdfLoading} className="shrink-0 h-8">
+                <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 w-full shrink-0 sm:w-auto">
                   <FileDown />
                   {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
                 </Button>

@@ -65,7 +65,7 @@ function DrawerContent({
         data-slot="drawer-content"
         className={cn(
           isDesktop || isTablet ?
-            'fixed right-0 top-0  z-50  flex min-h-screen max-w-90 flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
+            'fixed right-0 top-0 z-50 flex min-h-screen w-full max-w-md flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
             'fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-[28px] border border-border/50 bg-background outline-none',
           className,
         )}

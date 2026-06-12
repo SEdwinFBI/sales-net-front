@@ -13,7 +13,7 @@ export default function ProductsList() {
       description="Listado de articulos del catalogo."
     >
 
-      <div className="mt-4">
+      <div className="mt-2 sm:mt-3">
         <ArticlesGrid
           data={data}
           variants={variants}

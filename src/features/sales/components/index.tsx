@@ -61,14 +61,14 @@ const Sales = () => {
 
     return (
         <>
-            <Card className="flex-1 p-3">
-                <div className="relative mb-4">
+            <Card className="flex-1 p-3.5 sm:p-5">
+                <div className="relative mb-4 sm:mb-5">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                         value={searchInput}
                         onChange={(e) => handleSearchChange(e.target.value)}
                         placeholder="Buscar producto por nombre..."
-                        className="h-9 pl-9"
+                        className="pl-9"
                     />
                 </div>
                 <ListProduct

@@ -63,6 +63,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
           <Button
             size="icon-xs"
             variant="ghost"
+            aria-label={`Editar ${row.original.fullName || row.original.username}`}
             onClick={() => {
               setSelectedUsuario(row.original)
               setDialogOpen(true)
@@ -74,6 +75,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             size="icon-xs"
             variant="ghost"
             className="text-red-500 hover:text-red-600"
+            aria-label={`Eliminar ${row.original.fullName || row.original.username}`}
             onClick={() => setUsuarioToDelete(row.original)}
           >
             <Trash2 />
@@ -192,6 +194,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                     <Button
                       size="icon-sm"
                       variant="outline"
+                      aria-label={`Editar ${usuario.fullName || usuario.username}`}
                       onClick={() => {
                         setSelectedUsuario(usuario)
                         setDialogOpen(true)
@@ -203,6 +206,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                       size="icon-sm"
                       variant="outline"
                       className="text-red-500 hover:text-red-600"
+                      aria-label={`Eliminar ${usuario.fullName || usuario.username}`}
                       onClick={() => setUsuarioToDelete(usuario)}
                     >
                       <Trash2 />
@@ -264,6 +268,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             <Button
               size="icon-sm"
               variant="outline"
+              aria-label="Pagina anterior"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -272,6 +277,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             <Button
               size="icon-sm"
               variant="outline"
+              aria-label="Pagina siguiente"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

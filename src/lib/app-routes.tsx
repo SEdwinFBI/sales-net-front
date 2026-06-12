@@ -263,7 +263,6 @@ function buildRouteObject(route: AppRoute): RouteObject {
       },
     }
   }
-  console.log("permiso", route);
   return {
     path: route.path,
     element: hasPermissions ? (
