@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
+import { Card } from '@/components/ui/card'
 import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
 import SellerStockEditor from '../components/SellerStockEditor'
@@ -26,7 +27,7 @@ export default function StockPage() {
       description="Gestion de stock por vendedor."
     >
 
-      <div className="mt-2 sm:mt-3">
+      <Card className="mt-2 bg-white p-3.5 sm:mt-3 sm:p-5">
         {selectedSeller ? (
           <SellerStockEditor
             articles={articles}
@@ -43,7 +44,7 @@ export default function StockPage() {
             onSelect={setSelectedSeller}
           />
         )}
-      </div>
+      </Card>
     </PageTemplateSimple>
   )
 }
