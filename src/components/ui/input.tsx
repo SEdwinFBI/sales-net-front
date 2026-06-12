@@ -12,7 +12,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "h-9 w-full min-w-0",
         "rounded-xl",
         "border border-border",
-        "bg-white",
+        "bg-transparent",
         "px-3 text-sm",
 
 

@@ -106,7 +106,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     return (
       <div className="animate-pulse rounded-xl border border-border bg-white p-6 shadow-sm">
         <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 rounded-lg bg-muted" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 rounded-lg " />)}
         </div>
       </div>
     )

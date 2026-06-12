@@ -11,45 +11,44 @@ const initials = (name?: string) =>
 
 export default function ClienteInfo({ cliente }: Props) {
   return (
-    <Card className="bg-white p-6">
-      <div className="flex flex-col gap-4 min-[420px]:flex-row min-[420px]:items-start">
-        <div className={`flex size-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white ${cliente.activo ? 'bg-emerald-500' : 'bg-stone-400'}`}>
-          {initials(cliente.nombre_completo)}
+    <Card className="bg-white p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+          <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${cliente.activo ? 'bg-emerald-500' : 'bg-stone-400'}`}>
+            {initials(cliente.nombre_completo)}
+          </div>
+
+          <div className="min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h2 className="truncate text-lg font-bold sm:text-xl">{cliente.nombre_completo}</h2>
+              <Badge variant={cliente.activo ? 'default' : 'secondary'}>
+                {cliente.activo ? 'Activo' : 'Inactivo'}
+              </Badge>
+            </div>
+
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              <span className="whitespace-nowrap text-muted-foreground">
+                Tel: <span className="font-medium text-foreground">{cliente.telefono}</span>
+              </span>
+              <span className="whitespace-nowrap text-muted-foreground">
+                Direccion: <span className="font-medium text-foreground">{cliente.direccion}</span>
+              </span>
+              <span className="whitespace-nowrap text-muted-foreground">
+                Fecha Notificacion: <span className="font-medium text-foreground">{cliente.fecha_notificacion ?? "Sin fecha"}</span>
+              </span>
+            </div>
+
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Cliente desde {new Date(cliente.fecha_creacion).toLocaleDateString()}
+            </p>
+          </div>
         </div>
 
-        <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-bold">{cliente.nombre_completo}</h2>
-            <Badge variant={cliente.activo ? 'default' : 'secondary'}>
-              {cliente.activo ? 'Activo' : 'Inactivo'}
-            </Badge>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Teléfono</p>
-              <p className="font-medium">{cliente.telefono}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Dirección</p>
-              <p className="font-medium">{cliente.direccion}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Balance</p>
-              <p className="text-lg font-bold text-primary">Q{Number(cliente.balance).toFixed(2)}</p>
-            </div>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <p className="text-xs text-muted-foreground">Fecha de notificación</p>
-              <p className="font-medium">{cliente.fecha_notificacion}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Fecha de creación</p>
-              <p className="font-medium">{new Date(cliente.fecha_creacion).toLocaleDateString()}</p>
-            </div>
-          </div>
+        <div className="shrink-0 text-right">
+          <p className="text-xs text-muted-foreground">Balance</p>
+          <p className="text-xl font-bold text-primary sm:text-2xl">
+            Q{Number(cliente.balance).toFixed(2)}
+          </p>
         </div>
       </div>
     </Card>

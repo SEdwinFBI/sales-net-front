@@ -84,14 +84,15 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSizes(isEdit ? initialSizes : defaultSizes)
       setSelectedImage(null)
       reset(
         article
           ? {
-              title: article.title,
-              basePrice: initialBasePrice,
-            }
+            title: article.title,
+            basePrice: initialBasePrice,
+          }
           : { title: '', basePrice: 0 }
       )
     }
@@ -214,31 +215,31 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
             </Field>
 
             {showSizeSelectorOnCreate && (
-            <Field>
-              <FieldLabel>Tallas disponibles</FieldLabel>
-              <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3 sm:grid-cols-6">
-                {availableSizes.map((size) => {
-                  const isSelected = selectedSizes.includes(size)
+              <Field>
+                <FieldLabel>Tallas disponibles</FieldLabel>
+                <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3 sm:grid-cols-6">
+                  {availableSizes.map((size) => {
+                    const isSelected = selectedSizes.includes(size)
 
-                  return (
-                    <Button
-                      key={size}
-                      type="button"
-                      size="sm"
-                      variant={isSelected ? 'default' : 'outline'}
-                      className={cn(
-                        'min-w-0 px-2 font-semibold',
-                        !isSelected &&
+                    return (
+                      <Button
+                        key={size}
+                        type="button"
+                        size="sm"
+                        variant={isSelected ? 'default' : 'outline'}
+                        className={cn(
+                          'min-w-0 px-2 font-semibold',
+                          !isSelected &&
                           'border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary/50 hover:text-primary'
-                      )}
-                      onClick={() => toggleSize(size)}
-                    >
-                      <span className="truncate">Talla {size}</span>
-                    </Button>
-                  )
-                })}
-              </div>
-            </Field>
+                        )}
+                        onClick={() => toggleSize(size)}
+                      >
+                        <span className="truncate">Talla {size}</span>
+                      </Button>
+                    )
+                  })}
+                </div>
+              </Field>
             )}
           </FieldGroup>
 
