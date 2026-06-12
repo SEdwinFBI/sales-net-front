@@ -5,7 +5,7 @@ import type { FC } from "react"
 import type { Product } from "@/features/sales/types/sales"
 import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
-import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
+import { getStockBadgeClass, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -39,19 +39,15 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
                             </small>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                            {item.variants.map(v => {
-                                const stockStatus = getStockStatus(v.stock)
-
-                                return (
-                                    <Badge
-                                        key={v.id}
-                                        variant={stockStatus === 'available' ? 'default' : 'outline'}
-                                        className={cn("min-h-6 min-w-9 px-2.5 text-[0.72rem] leading-none tabular-nums", getStockBadgeClass(v.stock))}
-                                    >
-                                        {v.size}
-                                    </Badge>
-                                )
-                            })}
+                            {item.variants.map(v => (
+                                <Badge
+                                    key={v.id}
+                                        variant="default"
+                                    className={cn("min-h-6 min-w-9 px-2.5 text-[0.72rem] leading-none tabular-nums", getStockBadgeClass(v.stock))}
+                                >
+                                    {v.size}
+                                </Badge>
+                            ))}
                         </div>
                     </div>
                 </CardDescription>

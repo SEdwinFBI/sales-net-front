@@ -7,7 +7,7 @@ import { ShoppingCart } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
-import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
+import { getStockBadgeClassDrawer, getStockStatus, getStockTextClass } from '@/lib/stock-status'
 
 type Props = {
     item: Product
@@ -76,7 +76,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                             className={cn(
                                 badgeVariants({ variant: variant.id !== variantSelected?.id ? 'secondary' : 'default' }),
                                 "flex h-10 w-full cursor-pointer items-center justify-center text-sm disabled:cursor-not-allowed disabled:opacity-60",
-                                getStockBadgeClass(variant.stock)
+                                getStockBadgeClassDrawer(variant.stock)
                             )}
                             key={variant.id}
                             aria-label={`Seleccionar talla ${variant.size}, stock ${variant.stock}`}

@@ -47,7 +47,7 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
         ))}
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border/60 bg-primary-nav/35 p-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-3 rounded-xl  p-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between">
         <Field orientation="horizontal" className="w-full items-center justify-between sm:w-fit sm:justify-start">
           <FieldLabel htmlFor="select-rows-per-page">Filas por página</FieldLabel>
           <Select

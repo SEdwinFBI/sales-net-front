@@ -31,12 +31,25 @@ export function getStockBadgeClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') {
-    return 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+    return 'bg-red-500/80 text-white hover:bg-red-500/80'
   }
 
   if (status === 'low') {
-    return 'border-yellow-300 bg-yellow-50 text-yellow-800 hover:bg-yellow-100'
+    return 'bg-orange-400/80 text-white hover:bg-orange-400/80'
   }
+
+  return ''
+}
+export function getStockBadgeClassDrawer(quantity: number) {
+  const status = getStockStatus(quantity)
+
+  if (status === 'out') {
+    return 'bg-red-500/80 text-white hover:bg-red-500/80'
+  }
+
+  // if (status === 'low') {
+  //   return 'bg-orange-400/80 text-white hover:bg-orange-400/80'
+  // }
 
   return ''
 }

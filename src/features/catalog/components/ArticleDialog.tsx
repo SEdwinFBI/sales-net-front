@@ -19,6 +19,7 @@ import { useCreateArticle } from '../hooks/useCreateArticle'
 import { useCreateArticleVariant } from '../hooks/useCreateArticleVariant'
 import { useDeleteArticleVariant } from '../hooks/useDeleteArticleVariant'
 import { useUpdateArticle } from '../hooks/useUpdateArticle'
+import { useUpdateArticleVariant } from '../hooks/useUpdateArticleVariant'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 
@@ -60,14 +61,15 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       ),
     [initialSizes]
   )
-  const initialBasePrice = articleVariants[0]?.price ?? 0
+  const initialBasePrice = articleVariants.find((v) => v.size === '6')?.price ?? 0
   const { mutateAsync: createArticle, isPending: isCreating } = useCreateArticle()
   const { mutateAsync: updateArticle, isPending: isUpdating } = useUpdateArticle()
   const { mutateAsync: createVariant, isPending: isCreatingVariant } = useCreateArticleVariant()
   const { mutateAsync: deleteVariant, isPending: isDeletingVariant } = useDeleteArticleVariant()
+  const { mutateAsync: updateVariant, isPending: isUpdatingVariant } = useUpdateArticleVariant()
   const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(isEdit ? initialSizes : defaultSizes)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant
+  const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant || isUpdatingVariant
 
   const {
     register,
@@ -111,11 +113,22 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         return
       }
 
+      const getSizePrice = (size: string) => {
+        const sizeNum = parseInt(size)
+        return Math.max(0, values.basePrice - (6 - sizeNum) * 10)
+      }
+
       const effectiveSelectedSizes = isEdit ? selectedSizes : defaultSizes
       const currentVariants = articleVariants
       const selectedSet = new Set(effectiveSelectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
       const sizesToCreate = effectiveSelectedSizes.filter((size) => !currentSet.has(size))
+
+      const zeroLevelSizes = effectiveSelectedSizes.filter((size) => getSizePrice(size) === 0)
+      if (zeroLevelSizes.length > 0) {
+        const sortedSizes = zeroLevelSizes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        toast.warning(`Las tallas ${sortedSizes.join(', ')} quedaran con precio 0 debido a la regla de precios establecida`)
+      }
 
       if (sizesToCreate.length > 0 && values.basePrice <= 0) {
         toast.error('Ingresa un precio base mayor a 0 para las nuevas tallas')
@@ -126,13 +139,25 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         ? await updateArticle({ id: article.id, title: values.title, image: imageFile })
         : await createArticle({ title: values.title, image: imageFile as File })
 
-      await Promise.all([
-        ...sizesToCreate
-          .map((size) => createVariant({ articleId: savedArticle.id, size, price: values.basePrice })),
-        ...currentVariants
-          .filter((variant) => !selectedSet.has(variant.size))
-          .map((variant) => deleteVariant(variant.id)),
-      ])
+      if (isEdit) {
+        await Promise.all([
+          ...sizesToCreate.map((size) =>
+            createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
+          ),
+          ...currentVariants
+            .filter((variant) => selectedSet.has(variant.size))
+            .map((variant) => updateVariant({ id: variant.id, price: getSizePrice(variant.size) })),
+          ...currentVariants
+            .filter((variant) => !selectedSet.has(variant.size))
+            .map((variant) => deleteVariant(variant.id)),
+        ])
+      } else {
+        await Promise.all(
+          defaultSizes.map((size) =>
+            createVariant({ articleId: savedArticle.id, size, price: getSizePrice(size) })
+          )
+        )
+      }
 
       if (isEdit) {
         toast.success('Articulo actualizado correctamente')
@@ -188,7 +213,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
               <FieldError errors={[errors.basePrice]} />
             </Field>
 
-            {(isEdit || showSizeSelectorOnCreate) && (
+            {showSizeSelectorOnCreate && (
             <Field>
               <FieldLabel>Tallas disponibles</FieldLabel>
               <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-3 sm:grid-cols-6">
