@@ -2,18 +2,18 @@ import { ShoppingCart } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
-import { useSalesStore } from '../hooks/useSalesStore'
+import { useSalesStore } from '../store/useSalesStore'
 import { formatCurrency } from '@/helpers/money'
+import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 
 
 
 
 const CartButton = () => {
-  const items = useSalesStore((state) => state.items)
   const openCart = useSalesStore((state) => state.openCart)
 
-  const totalItems = items.reduce((sum, item) => sum + item.qty, 0)
-  const total = items.reduce((sum, item) => sum + item.qty * item.price, 0)
+  const totalItems = useSalesStore(selectTotalItems)
+  const total = useSalesStore(selectTotal)
 
   return (
     <>

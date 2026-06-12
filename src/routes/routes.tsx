@@ -2,9 +2,9 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import MainLayout from '@/layouts/main/MainLayout'
 import RedirectIndex from '@/components/route/RedirectIndex'
 import { buildReactRoutes } from '@/lib/app-routes'
-import { authRoutes } from '@/features/auth/routes'
+import { authRoutes } from '@/features/auth'
 import { coreRoutes, ErrorPage } from '@/features/core'
-import { salesRoutes } from '@/features/sales/routes'
+import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
 
 

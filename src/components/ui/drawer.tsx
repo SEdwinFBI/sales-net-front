@@ -2,7 +2,8 @@ import type { ComponentProps } from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
 
 import { cn } from '@/lib/utils'
-import { useDesktopMediaQuery } from '@/hooks/useDesktopMediaQuery'
+import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
+
 
 function Drawer({
   shouldScaleBackground = true,
@@ -38,7 +39,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn('fixed inset-0 z-40 bg-black/40', className)}
+      className={cn('fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]', className)}
       {...props}
     />
   )
@@ -58,15 +59,15 @@ function DrawerContent({
 }: DrawerContentProps) {
   const { isDesktop, isTablet } = useDesktopMediaQuery()
   return (
-    <DrawerPortal>
+    <DrawerPortal >
       <DrawerOverlay className={overlayClassName} />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
           isDesktop || isTablet ?
-            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[30vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
+            'fixed right-0 top-0  z-50  flex min-h-screen max-w-[35vw] flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
             'fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-[28px] border border-border/50 bg-background outline-none',
-          className
+          className,
         )}
         {...props}
       >
@@ -128,7 +129,7 @@ function DrawerTitle({
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('text-base font-semibold text-foreground', className)}
+      className={cn('text-lg text-center font-semibold text-foreground', className)}
       {...props}
     />
   )

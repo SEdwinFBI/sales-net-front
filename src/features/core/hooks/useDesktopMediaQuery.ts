@@ -1,4 +1,5 @@
-import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useMediaQuery } from "./useMediaQuery"
+
 
 /**
  * Para calcular el tamaño de pantalla segun dispositivos

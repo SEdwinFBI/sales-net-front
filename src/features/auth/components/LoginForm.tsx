@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { LoginFormValues } from '../types/form'
 import { loginSchema } from '../utils/schema'
@@ -26,7 +26,6 @@ type LoginFormProps = {
 export default function LoginForm({ onSubmit }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const {
-    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -35,15 +34,10 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
     defaultValues: {
       username: '',
       password: '',
-      role: 'admin',
+
     },
   })
 
-  //escuchar el cambio de la variable
-  const selectedRole = useWatch({
-    control,
-    name: 'role',
-  })
 
   const handleFormSubmit = handleSubmit(onSubmit)
 
@@ -79,7 +73,9 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
                     </InputGroupAddon>
 
                   </InputGroup>
-                  {errors.username ? <FieldDescription className="text-sm text-(--color-danger)">{errors.username.message}</FieldDescription> : null}
+                  {errors.username ?
+                    <FieldDescription className="text-sm text-(--color-danger)">{errors.username.message}
+                    </FieldDescription> : null}
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -108,26 +104,6 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
                   {errors.password ? <FieldDescription className="text-sm text-(--color-danger)">{errors.password.message}</FieldDescription> : null}
                 </Field>
               </FieldGroup>
-
-
-              <fieldset className="space-y-3">
-                <legend className="text-sm font-medium text-(--color-neutral)">Rol (para desarrollo, despues se elimina)</legend>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {(['admin', 'vendedor'] as const).map((role) => (
-                    <label
-                      key={role}
-                      className={`cursor-pointer rounded-3xl border p-4 transition ${selectedRole === role
-                        ? 'border-primary bg-primary text-white'
-                        : 'border-secondary bg-secondary/30 text-(--color-neutral)'
-                        }`}
-                    >
-                      <input {...register('role')} type="radio" value={role} className="sr-only" />
-                      <p className="text-sm font-semibold uppercase tracking-[0.2em]">{role}</p>
-
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
               <RotateHover rotate={0.7}>
                 <Button className={"w-full font-bold!"} type='submit' size={'lg'} disabled={isSubmitting}>
                   {isSubmitting ? 'Iniciando...' : 'Login'} <MoveRight />

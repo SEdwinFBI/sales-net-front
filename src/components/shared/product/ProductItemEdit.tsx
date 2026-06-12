@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { type ComponentType } from 'react'
-import ProductItem from './ProductItem';
+import ProductItem from '../../../features/sales/components/ProductItem';
 
 type WithAdminActionProps = {
     onEdit: () => void;
