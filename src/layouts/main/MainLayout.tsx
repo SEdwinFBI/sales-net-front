@@ -103,7 +103,7 @@ export default function MainLayout() {
           </main>
 
           <footer className="pb-4 text-[12px] text-neutral/75 self-center">
-            &copy; {new Date().getFullYear()} Code QX. Todos los derechos reservados.
+            &copy; {new Date().getFullYear()} Code QX.  Código que construye el futuro, Todos los derechos reservados.
           </footer>
         </div>
       </div>
