@@ -17,6 +17,7 @@ import { useCreateCliente } from '../hooks/useCreateCliente'
 import { useUpdateCliente } from '../hooks/useUpdateCliente'
 import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
   nombre_completo: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
@@ -73,8 +74,8 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
         toast.success('Cliente creado correctamente')
       }
       onClose()
-    } catch {
-      toast.error('Error al guardar el cliente')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al guardar el cliente'))
     }
   }
 

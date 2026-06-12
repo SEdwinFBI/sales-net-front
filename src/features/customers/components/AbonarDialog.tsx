@@ -15,6 +15,7 @@ import VentaSelect from './VentaSelect'
 import { useAbonarVenta } from '../hooks/useAbonarVenta'
 import type { Venta } from '@/features/sales/types/sales'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
   idVenta: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona una venta')),
@@ -53,8 +54,8 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
       toast.success('Abono registrado correctamente')
       reset()
       onClose()
-    } catch {
-      toast.error('Error al registrar el abono')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al registrar el abono'))
     }
   }
 

@@ -10,6 +10,7 @@ import {
 import { useDeleteCliente } from '../hooks/useDeleteCliente'
 import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 type Props = {
   cliente: Cliente | null
@@ -25,8 +26,8 @@ export default function DeleteClienteDialog({ cliente, onClose }: Props) {
       await deleteCliente(cliente.id)
       toast.success(`Cliente ${cliente.nombre_completo} eliminado`)
       onClose()
-    } catch {
-      toast.error('Error al eliminar el cliente')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al eliminar el cliente'))
     }
   }
 

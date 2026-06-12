@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 import z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -166,8 +167,8 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         toast.success('Articulo creado correctamente')
       }
       onClose()
-    } catch {
-      toast.error('Error al guardar el articulo')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al guardar el articulo'))
     }
   }
 

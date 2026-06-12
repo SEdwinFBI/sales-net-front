@@ -10,6 +10,7 @@ import {
 import { useDeleteUsuario } from '../hooks/useDeleteUsuario'
 import type { Usuario } from '../types/usuario-types'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 type Props = {
   usuario: Usuario | null
@@ -25,8 +26,8 @@ export default function DeleteUsuarioDialog({ usuario, onClose }: Props) {
       await deleteUsuario(usuario.id)
       toast.success(`Usuario ${usuario.fullName} eliminado`)
       onClose()
-    } catch {
-      toast.error('Error al eliminar el usuario')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al eliminar el usuario'))
     }
   }
 

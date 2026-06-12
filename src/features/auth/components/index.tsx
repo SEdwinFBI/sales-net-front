@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 import LoginForm from '@/features/auth/components/LoginForm'
 import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { useLoginMutation } from '../hooks/useLoginMutation'
@@ -39,9 +40,7 @@ export default function LoginFeature() {
       toast.success('Sesion iniciada', { id: toastId })
       navigate('/', { replace: true })
     } catch (error) {
-      toast.error(String(error), {
-        id: toastId,
-      })
+      toast.error(getApiErrorMessage(error, 'Error al iniciar sesion'), { id: toastId })
     }
   }
 

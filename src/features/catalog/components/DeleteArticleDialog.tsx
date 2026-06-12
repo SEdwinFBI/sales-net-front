@@ -1,4 +1,5 @@
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,8 +27,8 @@ export default function DeleteArticleDialog({ article, onClose }: Props) {
       await deleteArticle(article.id)
       toast.success(`Articulo ${article.title} eliminado`)
       onClose()
-    } catch {
-      toast.error('Error al eliminar el articulo')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al eliminar el articulo'))
     }
   }
 

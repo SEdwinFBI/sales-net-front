@@ -10,6 +10,7 @@ import {
   Search,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -130,8 +131,8 @@ export default function SellerStockEditor({
     try {
       await saveStock({ sellerId: seller.id, items })
       toast.success('Stock guardado correctamente')
-    } catch {
-      toast.error('Error al guardar el stock')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al guardar el stock'))
     }
   }
 

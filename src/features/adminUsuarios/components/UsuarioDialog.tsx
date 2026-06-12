@@ -16,6 +16,7 @@ import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
   first_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -83,8 +84,8 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         toast.success('Usuario creado correctamente')
       }
       onClose()
-    } catch {
-      toast.error('Error al guardar el usuario')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al guardar el usuario'))
     }
   }
 
