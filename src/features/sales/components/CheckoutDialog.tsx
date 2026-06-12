@@ -34,7 +34,7 @@ const CheckoutDialog = () => {
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
-  const { data: customers } = useCustomers()
+  const { data: customers, isLoading } = useCustomers()
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
@@ -87,6 +87,7 @@ const CheckoutDialog = () => {
               customers={customers}
               value={selectedCustomerId}
               onChange={setSelectedCustomerId}
+              loading={isLoading}
             />
           </div>
 
