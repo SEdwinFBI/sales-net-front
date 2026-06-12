@@ -112,6 +112,7 @@ export interface CreateVentaPayload {
   id_cliente: number
   id_forma_pago: number
   estado: string
+  idempotencia_key: string
   detalles: {
     id_variante: number
     cantidad: number

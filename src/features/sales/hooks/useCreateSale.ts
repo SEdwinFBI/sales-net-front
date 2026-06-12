@@ -19,6 +19,7 @@ export const useCreateSale = () => {
         id_cliente: Number(payload.customerId) || 0,
         id_forma_pago: PAGO_MAP[payload.paymentMethod] || 1,
         estado: payload.paymentMethod === 'credito' ? 'PENDIENTE' : 'PAGADA',
+        idempotencia_key: crypto.randomUUID(),
         detalles: payload.items.map((item) => ({
           id_variante: item.variantId,
           cantidad: item.qty,

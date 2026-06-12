@@ -1,18 +1,18 @@
 import { useMutation } from '@tanstack/react-query'
 import { refreshService } from '@/features/auth/services/auth-service'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import type { AuthSession } from '@/features/auth/types/auth'
 
 export function useRefreshMutation() {
   const refreshToken = useAuthStore((state) => state.refreshToken)
-  const setAccessToken = useAuthStore((state) => state.setAccessToken)
+  const login = useAuthStore((state) => state.login)
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<AuthSession> => {
       if (!refreshToken) throw new Error('No refresh token available')
-      const { access } = await refreshService(refreshToken)
-      return access
+      return refreshService(refreshToken)
     },
-    onSuccess: (access) => setAccessToken(access),
+    onSuccess: (session) => login(session),
     retry: false,
   })
 }
