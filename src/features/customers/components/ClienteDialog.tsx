@@ -24,7 +24,7 @@ const schema = z.object({
   direccion: z.string().min(3, 'La dirección debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
   balance: z.preprocess((val) => Number(val), z.number().min(0, 'El balance debe ser un número positivo')),
-  fecha_notificacion: z.string().min(1, 'La fecha es requerida'),
+  fecha_notificacion: z.string().optional(),
   activo: z.boolean(),
 })
 
@@ -65,12 +65,17 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
   }, [open, cliente, reset])
 
   const onSubmit = async (values: FormValues) => {
+    const payload = {
+      ...values,
+      fecha_notificacion: values.fecha_notificacion || undefined,
+    }
+
     try {
       if (isEdit) {
-        await updateCliente({ id: cliente!.id, data: values })
+        await updateCliente({ id: cliente!.id, data: payload })
         toast.success('Cliente actualizado correctamente')
       } else {
-        await createCliente(values)
+        await createCliente(payload)
         toast.success('Cliente creado correctamente')
       }
       onClose()
