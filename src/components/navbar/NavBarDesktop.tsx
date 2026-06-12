@@ -240,7 +240,7 @@ export default function NavBarDesktop({
       </div>
 
       {/* Navigation */}
-      <nav className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
+      <nav className="mt-5 min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
           const Icon = item.icon
           const hasChildren = item.children.length > 0
