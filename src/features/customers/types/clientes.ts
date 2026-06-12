@@ -21,7 +21,7 @@ export interface CreateClientePayload {
   direccion: string
   telefono: string
   balance: number
-  fecha_notificacion: string
+  fecha_notificacion?: string
   activo?: boolean
 }
 

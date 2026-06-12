@@ -39,9 +39,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       tokenExpiresAt: null,
       login: (session) => {
-        const permissions = session.user?.permissions?.length > 0
-          ? session.user.permissions
-          : [session.user.role]
+        const permissions = [session.user.role]
 
         set({
           token: session.access,
