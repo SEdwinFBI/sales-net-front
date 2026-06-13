@@ -29,7 +29,6 @@ const showSizeSelectorOnCreate = false
 
 const articleSchema = z.object({
   title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
-  basePrice: z.coerce.number().min(0, 'El precio no puede ser negativo'),
   image: z.any().optional(),
 })
 
@@ -55,6 +54,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     () => articleVariants.map((variant) => variant.size),
     [articleVariants]
   )
+  const initialPricesBySize = useMemo(
+    () =>
+      Object.fromEntries(
+        articleVariants.map((variant) => [variant.size, String(variant.price)])
+      ) as Record<ArticleSize, string>,
+    [articleVariants]
+  )
   const availableSizes = useMemo(
     () =>
       Array.from(new Set([...defaultSizes, ...initialSizes])).sort((a, b) =>
@@ -62,13 +68,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       ),
     [initialSizes]
   )
-  const initialBasePrice = articleVariants.find((v) => v.size === '6')?.price ?? 0
   const { mutateAsync: createArticle, isPending: isCreating } = useCreateArticle()
   const { mutateAsync: updateArticle, isPending: isUpdating } = useUpdateArticle()
   const { mutateAsync: createVariant, isPending: isCreatingVariant } = useCreateArticleVariant()
   const { mutateAsync: deleteVariant, isPending: isDeletingVariant } = useDeleteArticleVariant()
   const { mutateAsync: updateVariant, isPending: isUpdatingVariant } = useUpdateArticleVariant()
   const [selectedSizes, setSelectedSizes] = useState<ArticleSize[]>(isEdit ? initialSizes : defaultSizes)
+  const [pricesBySize, setPricesBySize] = useState<Record<ArticleSize, string>>({})
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const isPending = isCreating || isUpdating || isCreatingVariant || isDeletingVariant || isUpdatingVariant
 
@@ -79,7 +85,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(articleSchema) as unknown as Resolver<FormValues>,
-    defaultValues: { title: '', basePrice: 0 },
+    defaultValues: { title: '' },
   })
   const imageField = register('image')
 
@@ -87,17 +93,24 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     if (open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSizes(isEdit ? initialSizes : defaultSizes)
+      setPricesBySize(
+        Object.fromEntries(
+          (isEdit ? initialSizes : defaultSizes).map((size) => [
+            size,
+            initialPricesBySize[size] ?? '',
+          ])
+        ) as Record<ArticleSize, string>
+      )
       setSelectedImage(null)
       reset(
         article
           ? {
             title: article.title,
-            basePrice: initialBasePrice,
           }
-          : { title: '', basePrice: 0 }
+          : { title: '' }
       )
     }
-  }, [article, initialBasePrice, initialSizes, open, reset])
+  }, [article, initialPricesBySize, initialSizes, isEdit, open, reset])
 
   const toggleSize = (size: ArticleSize) => {
     setSelectedSizes((current) =>
@@ -105,6 +118,11 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         ? current.filter((item) => item !== size)
         : [...current, size]
     )
+    setPricesBySize((current) => ({ ...current, [size]: current[size] ?? '' }))
+  }
+
+  const updateSizePrice = (size: ArticleSize, price: string) => {
+    setPricesBySize((current) => ({ ...current, [size]: price }))
   }
 
   const onSubmit = async (values: FormValues) => {
@@ -115,12 +133,19 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         return
       }
 
-      const getSizePrice = (size: string) => {
-        const sizeNum = parseInt(size)
-        return Math.max(0, values.basePrice - (6 - sizeNum) * 10)
+      const effectiveSelectedSizes = isEdit ? selectedSizes : defaultSizes
+      const invalidPriceSizes = effectiveSelectedSizes.filter((size) => {
+        const price = Number(pricesBySize[size])
+        return !Number.isFinite(price) || price <= 0
+      })
+
+      if (invalidPriceSizes.length > 0) {
+        const sortedSizes = invalidPriceSizes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        toast.error(`Ingresa un precio mayor a 0 para las tallas: ${sortedSizes.join(', ')}`)
+        return
       }
 
-      const effectiveSelectedSizes = isEdit ? selectedSizes : defaultSizes
+      const getSizePrice = (size: ArticleSize) => Number(pricesBySize[size])
       const currentVariants = articleVariants
       const selectedSet = new Set(effectiveSelectedSizes)
       const currentSet = new Set(currentVariants.map((variant) => variant.size))
@@ -128,17 +153,6 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       const orderedSizesToCreate = sizesToCreate.sort((a, b) =>
         a.localeCompare(b, undefined, { numeric: true })
       )
-
-      const zeroLevelSizes = effectiveSelectedSizes.filter((size) => getSizePrice(size) === 0)
-      if (zeroLevelSizes.length > 0) {
-        const sortedSizes = zeroLevelSizes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-        toast.warning(`Las tallas ${sortedSizes.join(', ')} quedaran con precio 0 debido a la regla de precios establecida`)
-      }
-
-      if (sizesToCreate.length > 0 && values.basePrice <= 0) {
-        toast.error('Ingresa un precio base mayor a 0 para las nuevas tallas')
-        return
-      }
 
       const savedArticle = isEdit
         ? await updateArticle({ id: article.id, title: values.title, image: imageFile })
@@ -202,21 +216,6 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
               />
             </Field>
 
-            <Field>
-              <FieldLabel>Precio base</FieldLabel>
-              <InputGroup>
-                <InputGroupAddon>Q</InputGroupAddon>
-                <InputGroupInput
-                  {...register('basePrice')}
-                  min={0}
-                  step="0.01"
-                  type="number"
-                  placeholder="Ej. 125.00"
-                />
-              </InputGroup>
-              <FieldError errors={[errors.basePrice]} />
-            </Field>
-
             {showSizeSelectorOnCreate && (
               <Field>
                 <FieldLabel>Tallas disponibles</FieldLabel>
@@ -244,6 +243,30 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
                 </div>
               </Field>
             )}
+
+            <Field>
+              <FieldLabel>Precios por talla</FieldLabel>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[...(isEdit ? selectedSizes : defaultSizes)]
+                  .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                  .map((size) => (
+                    <div key={size} className="space-y-1.5">
+                      <FieldLabel className="text-xs text-muted-foreground">Talla {size}</FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>Q</InputGroupAddon>
+                        <InputGroupInput
+                          min={0}
+                          step="0.01"
+                          type="number"
+                          value={pricesBySize[size] ?? ''}
+                          placeholder="Ej. 125.00"
+                          onChange={(event) => updateSizePrice(size, event.currentTarget.value)}
+                        />
+                      </InputGroup>
+                    </div>
+                  ))}
+              </div>
+            </Field>
           </FieldGroup>
 
           <DialogFooter className="pt-4">

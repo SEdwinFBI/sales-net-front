@@ -96,11 +96,11 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if ((originalRequest as Record<string, unknown>)._retry) {
+    if ((originalRequest as unknown as Record<string, unknown>)._retry) {
       useAuthStore.getState().logout()
       return Promise.reject(error)
     }
-    ;(originalRequest as Record<string, unknown>)._retry = true
+    ;(originalRequest as unknown as Record<string, unknown>)._retry = true
 
     if (isRefreshing) {
       return new Promise<ReturnType<typeof api>>((resolve, reject) => {
