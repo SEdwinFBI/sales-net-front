@@ -1,16 +1,31 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
-import { useAuthStore } from '@/features/core/store/auth-store'
+import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
+
+import { adminUsuariosRoutes } from '@/features/adminUsuarios'
+
 import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
+import { reportingRoutes } from '@/features/reporting'
+import { clientesRoutes } from '@/features/customers'
+
+const allFeatureRoutes = [
+  ...reportingRoutes,
+  ...salesRoutes,
+  ...clientesRoutes,
+  ...catalogRoutes,
+  ...adminUsuariosRoutes
+]
 
 export default function MainLayout() {
   const user = useAuthStore((state) => state.user)
+  const token = useAuthStore((state) => state.token)
+  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
   const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
   const location = useLocation()
@@ -20,52 +35,79 @@ export default function MainLayout() {
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
   const [isSidebarHovered, setIsSidebarHovered] = useState(false)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const sidebarHoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const hasSidebarNavigation = true
 
   const isDesktopSidebarExpanded = isSidebarPinned || isSidebarHovered
 
-  // Generar items del sidebar desde las rutas, filtrados por permisos del usuario
-  const allFeatureRoutes = [...salesRoutes, ...catalogRoutes]
-  const sidebarItems = user
-    ? buildSidebarItems(allFeatureRoutes, user.permissions)
-    : []
+  const sidebarItems = useMemo(
+    () => (user ? buildSidebarItems(allFeatureRoutes, user.permissions) : []),
+    [user]
+  )
 
-  const handleLogout = () => {
+  const clearSidebarHoverTimer = useCallback(() => {
+    if (sidebarHoverTimer.current) {
+      clearTimeout(sidebarHoverTimer.current)
+      sidebarHoverTimer.current = null
+    }
+  }, [])
+
+  const handleLogout = useCallback(() => {
     logout()
     navigate('/login', { replace: true })
-  }
+  }, [logout, navigate])
 
-  const handleSidebarToggle = () => {
+  const handleSidebarToggle = useCallback(() => {
     if (!hasSidebarNavigation) return
     if (isDesktop) {
       setIsSidebarPinned((c) => !c)
     } else {
       setIsMobileSidebarOpen((c) => !c)
     }
-  }
+  }, [hasSidebarNavigation, isDesktop])
 
-  const handleMobileSidebarClose = () => {
+  const handleMobileSidebarClose = useCallback(() => {
     setIsMobileSidebarOpen(false)
-  }
+  }, [])
 
-  if (!user) {
+  const handleDesktopSidebarMouseEnter = useCallback(() => {
+    clearSidebarHoverTimer()
+    sidebarHoverTimer.current = setTimeout(() => {
+      setIsSidebarHovered(true)
+    }, 60)
+  }, [clearSidebarHoverTimer])
+
+  const handleDesktopSidebarMouseLeave = useCallback(() => {
+    clearSidebarHoverTimer()
+    sidebarHoverTimer.current = setTimeout(() => {
+      setIsSidebarHovered(false)
+    }, 100)
+  }, [clearSidebarHoverTimer])
+
+  useEffect(() => clearSidebarHoverTimer, [clearSidebarHoverTimer])
+
+  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-neutral">
+    <div className="min-h-screen bg-secondary text-neutral">
       {!isDesktop && (
-        <MobileSidebar items={sidebarItems} isOpen={isMobileSidebarOpen} onClose={handleMobileSidebarClose} />
+        <MobileSidebar
+          items={sidebarItems}
+          isOpen={isMobileSidebarOpen}
+          onClose={handleMobileSidebarClose}
+        />
       )}
 
-      <div className="grid min-h-screen grid-cols-1 gap-4 px-1 py-1 md:px-6 md:py-4 lg:grid-cols-[auto_1fr] lg:gap-6 xl:px-8">
+      <div className="grid min-h-screen grid-cols-1 gap-3 px-2.5 py-2.5 sm:gap-4 sm:px-4 lg:grid-cols-[auto_1fr]">
         {isDesktop && (
           <DesktopSidebar
             expanded={isDesktopSidebarExpanded}
             items={sidebarItems}
-            onMouseEnter={() => setIsSidebarHovered(true)}
-            onMouseLeave={() => setIsSidebarHovered(false)}
+            onMouseEnter={handleDesktopSidebarMouseEnter}
+            onMouseLeave={handleDesktopSidebarMouseLeave}
           />
         )}
 
@@ -76,16 +118,17 @@ export default function MainLayout() {
             isMobileSidebarOpen={isMobileSidebarOpen}
             isSidebarExpanded={isDesktopSidebarExpanded}
             isSidebarPinned={isSidebarPinned}
+            user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
           />
 
-          <main className="flex-1 py-2 pb-8">
+          <main className="min-w-0 flex-1 py-2 pb-8 sm:py-3">
             <Outlet />
           </main>
 
-          <footer className="pb-4 text-sm text-neutral/75">
-            footer
+          <footer className="pb-4 text-[12px] text-neutral/75 self-center">
+            &copy; {new Date().getFullYear()} Code QX.  Código que construye el futuro, Todos los derechos reservados.
           </footer>
         </div>
       </div>

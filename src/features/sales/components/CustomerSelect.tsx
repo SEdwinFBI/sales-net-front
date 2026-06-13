@@ -4,15 +4,16 @@ import { useState, useRef, useEffect, type FC } from "react"
 import { Search, X, ChevronDown, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type Customer = { id: string; name: string; phone: string }
+type Customer = { id: string; name: string; phone: string; balance: number }
 
 type Props = {
     customers: Customer[]
     value: string
     onChange: (id: string) => void
+    loading?: boolean
 }
 
-const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
+const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
     const [highlighted, setHighlighted] = useState(0)
@@ -25,8 +26,8 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
     const filtered = query
         ? customers.filter(
             (c) =>
-                c.name.toLowerCase().includes(query.toLowerCase()) ||
-                c.phone.includes(query)
+                (c.name ?? '').toLowerCase().includes(query.toLowerCase()) ||
+                (c.phone ?? '').includes(query)
         )
         : customers
 
@@ -120,7 +121,15 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
             {/* Dropdown */}
             {open && (
                 <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-white shadow-lg">
-                    {filtered.length === 0 ? (
+                    {loading ? (
+                        <div className="p-6 text-center text-sm text-stone-400">
+                            Cargando clientes...
+                        </div>
+                    ) : customers.length === 0 ? (
+                        <div className="p-6 text-center text-sm text-stone-400">
+                            No hay clientes disponibles
+                        </div>
+                    ) : filtered.length === 0 ? (
                         <div className="p-6 text-center text-sm text-stone-400">
                             Sin coincidencias
                         </div>
@@ -144,17 +153,18 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange }) => {
                                         )}
                                     >
                                         <span className="size-7 flex items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                            {c.name
+                                            {(c.name ?? '')
                                                 .split(" ")
                                                 .map((w) => w[0])
                                                 .join("")
-                                                .slice(0, 2)}
+                                                .slice(0, 2)
+                                                .toUpperCase() || '?'}
                                         </span>
 
-                                        <div className="flex-1 text-sm">
-                                            <div>{c.name}</div>
-                                            <div className="text-xs text-stone-400">
-                                                {c.phone}
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <div className="truncate">{c.name ?? 'Sin nombre'}</div>
+                                            <div className="text-xs text-stone-400 truncate">
+                                                {c.phone ?? 'Sin teléfono'} · Saldo: Q{(c.balance ?? 0).toFixed(2)}
                                             </div>
                                         </div>
 

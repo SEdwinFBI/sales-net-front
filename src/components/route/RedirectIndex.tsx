@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router'
-import { useAuthStore } from '@/features/core/store/auth-store'
+import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { getHomeRoute } from '@/lib/app-routes'
 
 
@@ -9,8 +9,10 @@ import { getHomeRoute } from '@/lib/app-routes'
  */
 export default function RedirectIndex() {
   const user = useAuthStore((state) => state.user)
+  const token = useAuthStore((state) => state.token)
+  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
 
-  if (!user) {
+  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
     return <Navigate to="/login" replace />
   }
 

@@ -17,8 +17,8 @@ export default function PageTabs({ tabs }: PageTabsProps) {
   }
 
   return (
-    <div className="-mx-6 -mt-2 mb-6 border-b border-secondary px-6 md:hidden">
-      <div className="flex gap-6 overflow-x-auto">
+    <div className="-mx-3 -mt-1 mb-4 border-b border-border px-3 md:hidden">
+      <div className="flex gap-5 overflow-x-auto">
         {tabs.map((tab) => (
           <NavLink
             key={tab.id}

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
+import type { User } from "@/features/auth/types/auth"
 
 type LayoutHeaderProps = {
     hasSidebarNavigation: boolean
@@ -7,9 +8,11 @@ type LayoutHeaderProps = {
     isMobileSidebarOpen: boolean
     isSidebarExpanded: boolean
     isSidebarPinned: boolean
+    user: User
     onLogout: () => void
     onSidebarToggle: () => void
 }
+
 
 function LayoutHeader({
     hasSidebarNavigation,
@@ -17,9 +20,12 @@ function LayoutHeader({
     isMobileSidebarOpen,
     isSidebarExpanded,
     isSidebarPinned,
+    user,
     onLogout,
     onSidebarToggle,
 }: LayoutHeaderProps) {
+    const displayName = user.fullName?.trim() || user.username
+
     const sidebarLabel = isDesktop
         ? isSidebarPinned
             ? 'Liberar sidebar'
@@ -29,7 +35,7 @@ function LayoutHeader({
             : 'Abrir menu lateral'
 
     return (
-        <header className="sticky top-0 z-10 rounded-4xl border border-secondary bg-white/92 px-6 py-3 shadow-[0_24px_60px_-42px_rgba(53,37,205,0.26)] backdrop-blur">
+        <header className="sticky top-0 z-10 rounded-2xl border border-border/70 bg-white/95 px-3.5 py-3 shadow-sm backdrop-blur sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <button
@@ -39,7 +45,7 @@ function LayoutHeader({
                         aria-expanded={isSidebarExpanded}
                         aria-label={sidebarLabel}
                         className={cn(
-                            'size-11 items-center justify-center rounded-2xl border border-secondary bg-secondary/58 text-neutral transition hover:bg-secondary',
+                            'size-10 items-center justify-center rounded-xl border border-border bg-secondary/70 text-neutral transition hover:bg-primary-nav',
                             hasSidebarNavigation ? 'inline-flex' : 'hidden',
                         )}
                     >
@@ -57,8 +63,8 @@ function LayoutHeader({
                     </button>
 
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary">
-                            Sales Net
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary sm:tracking-[0.22em]">
+                            Distribuidora MZ
                         </p>
                         <p className="text-sm text-neutral/70">
                             Tablero comercial
@@ -66,14 +72,24 @@ function LayoutHeader({
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={onLogout}
-                    className="inline-flex items-center gap-2 rounded-full border border-secondary bg-white px-4 py-2 text-sm font-semibold text-neutral transition hover:bg-secondary"
-                >
-                    <LogOut className="size-4 text-[--color-danger]" />
-
-                </button>
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="min-w-0 text-right">
+                        <p className="max-w-42 truncate text-sm font-semibold text-neutral">
+                            {displayName}
+                        </p>
+                        <p className="text-xs font-medium uppercase tracking-wide text-neutral/55">
+                            {user?.username}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onLogout}
+                        aria-label="Cerrar sesión"
+                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-white text-neutral transition hover:bg-primary-nav"
+                    >
+                        <LogOut className="size-4 text-[--color-danger]" />
+                    </button>
+                </div>
             </div>
         </header>
     )

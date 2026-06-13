@@ -28,7 +28,10 @@ export const queryKeys = {
   customers: {
     all: ['customers'] as const,
     list: () => [...queryKeys.customers.all, 'list'] as const,
-
+    detail: (id: number) => [...queryKeys.customers.all, 'detail', id] as const,
+    abonos: (idCliente: number) => [...queryKeys.customers.all, 'abonos', idCliente] as const,
+    compras: (idCliente: number, filters?: Record<string, unknown>) =>
+      [...queryKeys.customers.all, 'compras', idCliente, filters] as const,
   },
   sales: {
     all: ['sales'] as const,
@@ -36,5 +39,55 @@ export const queryKeys = {
     details: () => [...queryKeys.sales.all, 'detail'] as const,
     detail: (id: string) =>
       [...queryKeys.sales.details(), id] as const,
+    articles: (page: number, pageSize: number, search?: string, idUser?: string) =>
+      [...queryKeys.sales.all, 'articles', page, pageSize, search, idUser] as const,
+    historial: (filters?: Record<string, unknown>, idUser?: string) =>
+      [...queryKeys.sales.all, 'historial', filters, idUser] as const,
+  },
+  reporting: {
+    all: ['reporting'] as const,
+    ventas: (filters?: Record<string, unknown>) =>
+      [...queryKeys.reporting.all, 'ventas', filters] as const,
+    deudores: (filters?: Record<string, unknown>) =>
+      [...queryKeys.reporting.all, 'deudores', filters] as const,
+  },
+  adminUsuarios: {
+    all: ['adminUsuarios'] as const,
+    list: () => [...queryKeys.adminUsuarios.all, 'list'] as const,
+    detail: (id: number) => [...queryKeys.adminUsuarios.all, 'detail', id] as const,
+  },
+  adminVentas: {
+    all: ['adminVentas'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.adminVentas.all, 'list', filters] as const,
+    detail: (id: number) => [...queryKeys.adminVentas.all, 'detail', id] as const,
+  },
+  adminCatalog: {
+    all: ['adminCatalog'] as const,
+    articles: {
+      all: () => [...queryKeys.adminCatalog.all, 'articles'] as const,
+      list: () => [...queryKeys.adminCatalog.articles.all(), 'list'] as const,
+      detail: (id: number) => [...queryKeys.adminCatalog.articles.all(), 'detail', id] as const,
+    },
+    tallas: {
+      all: () => [...queryKeys.adminCatalog.all, 'tallas'] as const,
+      list: () => [...queryKeys.adminCatalog.tallas.all(), 'list'] as const,
+    },
+    variantes: {
+      all: () => [...queryKeys.adminCatalog.all, 'variantes'] as const,
+      list: () => [...queryKeys.adminCatalog.variantes.all(), 'list'] as const,
+    },
+    stock: {
+      all: () => [...queryKeys.adminCatalog.all, 'stock'] as const,
+      list: () => [...queryKeys.adminCatalog.stock.all(), 'list'] as const,
+    },
+    reglasPrecio: {
+      all: () => [...queryKeys.adminCatalog.all, 'reglas-precio'] as const,
+      list: () => [...queryKeys.adminCatalog.reglasPrecio.all(), 'list'] as const,
+    },
+    formaPago: {
+      all: () => [...queryKeys.adminCatalog.all, 'forma-pago'] as const,
+      list: () => [...queryKeys.adminCatalog.formaPago.all(), 'list'] as const,
+    },
   },
 }

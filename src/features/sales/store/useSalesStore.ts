@@ -6,10 +6,12 @@ export interface SalesState {
   items: CartItem[];
   cartOpen: boolean;
   activeDialog: SalesDialog;
-  addItem: (product: Product, variantId: string) => void;
+  addItem: (product: Product, variantId: number) => void;
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
+  setQty: (itemId: string, qty: number) => void;
+  setDiscount: (itemId: string, discount: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -17,7 +19,7 @@ export interface SalesState {
   closeDialog: () => void;
 }
 
-function buildCartItemId(productId: string, variantId: string): string {
+function buildCartItemId(productId: number, variantId: number): string {
   return `${productId}::${variantId}`
 }
 
@@ -35,10 +37,20 @@ export const useSalesStore = create<SalesState>()(
 
         const existing = state.items.find((item) => item.id === cartItemId)
         if (existing) {
+          if (existing.qty >= variant.stock) {
+            return {
+              items: state.items.map((item) =>
+                item.id === cartItemId
+                  ? { ...item, stock: variant.stock, price: variant.price }
+                  : item
+              ),
+            }
+          }
+
           return {
             items: state.items.map((item) =>
               item.id === cartItemId
-                ? { ...item, qty: item.qty + 1 }
+                ? { ...item, qty: item.qty + 1, stock: variant.stock, price: variant.price }
                 : item
             ),
           }
@@ -55,6 +67,7 @@ export const useSalesStore = create<SalesState>()(
           price: variant.price,
           stock: variant.stock,
           qty: 1,
+          discount: 0,
         }
         return { items: [...state.items, newItem] }
       }),
@@ -68,7 +81,7 @@ export const useSalesStore = create<SalesState>()(
       set((state) => ({
         items: state.items.map((item) =>
           item.id === itemId
-            ? { ...item, qty: item.qty + 1 }
+            ? { ...item, qty: Math.min(item.stock, item.qty + 1) }
             : item
         ),
       })),
@@ -83,6 +96,25 @@ export const useSalesStore = create<SalesState>()(
             return item
           })
           .filter((item) => item.qty > 0),
+      })),
+
+    setQty: (itemId, qty) =>
+      set((state) => ({
+        items: state.items.map((item) => {
+          if (item.id !== itemId || !Number.isFinite(qty)) return item
+
+          const normalizedQty = Math.trunc(qty)
+          const nextQty = Math.max(1, Math.min(item.stock, normalizedQty))
+
+          return { ...item, qty: nextQty }
+        }),
+      })),
+
+    setDiscount: (itemId, discount) =>
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.id === itemId ? { ...item, discount } : item
+        ),
       })),
 
     clearCart: () => set({ items: [] }),

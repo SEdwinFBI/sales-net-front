@@ -10,9 +10,9 @@ export type AppRole = 'admin' | 'vendedor'
 
 
 export type AuthSession = {
-  access: string,
-  expiresIn: string,
-  user: User,
+  user: User
+  access: string
+  refresh: string
 }
 export type User = {
   fullName: string,

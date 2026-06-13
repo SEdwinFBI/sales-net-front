@@ -20,6 +20,16 @@ export const salesRoutes: AppRoute[] = [
           lazy: () => import('./pages/PosPage'),
         },
       },
+      {
+        path: 'historial',
+        meta: {
+          name: 'Historial',
+          description: 'Historial de ventas',
+          icon: Store,
+          permissions: ['admin', 'vendedor'],
+          lazy: () => import('./pages/HistorialVentasPage'),
+        },
+      },
     ],
   },
 

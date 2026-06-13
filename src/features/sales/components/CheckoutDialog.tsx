@@ -14,6 +14,7 @@ import { useCustomers } from '@/features/usuarios/hooks/useCustomers'
 import { useCreateSale } from '../hooks/useCreateSale'
 import { formatCurrency } from '@/helpers/money'
 import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 import { useState } from 'react'
 import type { PaymentMethod } from '../types/sales'
@@ -34,7 +35,7 @@ const CheckoutDialog = () => {
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
-  const { data: customers } = useCustomers()
+  const { data: customers, isLoading } = useCustomers()
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
@@ -57,8 +58,8 @@ const CheckoutDialog = () => {
       closeDialog()
       closeCart()
       toast.success(result.message)
-    } catch {
-      toast.error('Error al registrar la venta')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))
     }
   }
 
@@ -87,6 +88,7 @@ const CheckoutDialog = () => {
               customers={customers}
               value={selectedCustomerId}
               onChange={setSelectedCustomerId}
+              loading={isLoading}
             />
           </div>
 

@@ -1,14 +1,26 @@
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
+import { Card } from '@/components/ui/card'
+import ArticlesGrid from '../components/ArticlesGrid'
+import { useArticleVariants } from '../hooks/useArticleVariants'
+import { useArticles } from '../hooks/useArticles'
 
 export default function ProductsList() {
+  const { data, isLoading } = useArticles()
+  const { data: variants, isLoading: isLoadingVariants } = useArticleVariants()
+
   return (
     <PageTemplateSimple
-      title="Productos"
-      description="Listado de productos del catálogo."
+      title="Articulos"
+      description="Listado de articulos del catalogo."
     >
-      <div className="rounded-2xl border border-secondary/80 bg-secondary/20 p-4">
-        <p className="text-sm font-semibold text-primary">Listado de productos</p>
-      </div>
+
+      <Card className="mt-2 bg-white p-3.5 sm:mt-3 sm:p-5">
+        <ArticlesGrid
+          data={data}
+          variants={variants}
+          isLoading={isLoading || isLoadingVariants}
+        />
+      </Card>
     </PageTemplateSimple>
   )
 }

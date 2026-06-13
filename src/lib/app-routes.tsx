@@ -263,7 +263,6 @@ function buildRouteObject(route: AppRoute): RouteObject {
       },
     }
   }
-
   return {
     path: route.path,
     element: hasPermissions ? (
@@ -314,7 +313,7 @@ type RoleConfig = {
 
 export const ROLE_CONFIG: Record<AppRole, RoleConfig> = {
   admin: {
-    homeRoute: '/catalogo/productos',
+    homeRoute: '/reportes/ventas',
 
   },
   vendedor: {

@@ -1,33 +1,33 @@
-import { Package, Tags } from 'lucide-react'
+import { Boxes, Package } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const catalogRoutes: AppRoute[] = [
   {
     path: 'catalogo',
     meta: {
-      name: 'Catálogo',
-      description: 'Opciones de catálogo',
+      name: 'Catalogo',
+      description: 'Opciones de catalogo',
       icon: Package,
     },
     children: [
       {
         path: 'productos',
         meta: {
-          name: 'Productos',
-          description: 'Configuración de productos',
+          name: 'Articulos',
+          description: 'Configuracion de articulos',
           icon: Package,
           permissions: ['admin'],
           lazy: () => import('./pages/ProductsList'),
         },
       },
       {
-        path: 'categorias',
+        path: 'stock',
         meta: {
-          name: 'Categorías',
-          description: 'Clasificación de productos',
-          icon: Tags,
+          name: 'Stock',
+          description: 'Gestion de stock por vendedor',
+          icon: Boxes,
           permissions: ['admin'],
-          lazy: () => import('./pages/ProductsCategories'),
+          lazy: () => import('./pages/StockPage'),
         },
       },
     ],

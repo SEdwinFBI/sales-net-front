@@ -1,0 +1,18 @@
+import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
+import UsuariosTable from '../components/UsuariosTable'
+import { useUsuarios } from '../hooks/useUsuarios'
+
+export default function UsuariosPage() {
+  const { data, isLoading } = useUsuarios()
+
+  return (
+    <PageTemplateSimple
+      title="Usuarios"
+      description="Gestión de usuarios del sistema."
+    >
+      <div className="mt-4">
+        <UsuariosTable data={data} isLoading={isLoading} />
+      </div>
+    </PageTemplateSimple>
+  )
+}

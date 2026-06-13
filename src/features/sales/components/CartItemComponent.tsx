@@ -1,6 +1,7 @@
 import type { FC } from "react"
 import type { CartItem } from "../types/sales"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { formatCurrency } from "@/helpers/money"
 
@@ -10,9 +11,22 @@ type CartItemProps = {
     onRemove: (id: string) => void,
     onIncrease: (id: string) => void,
     onDecrease: (id: string) => void,
+    onSetQty: (id: string, qty: number) => void,
 }
 
-const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDecrease }) => {
+const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDecrease, onSetQty }) => {
+    const precioFinal = item.discount > 0
+        ? item.price - item.discount
+        : item.price
+    const subtotal = precioFinal * item.qty
+    const handleQtyChange = (value: string) => {
+        const nextQty = Number(value)
+
+        if (!Number.isFinite(nextQty)) return
+
+        onSetQty(item.id, nextQty)
+    }
+
     return (
         <div
             key={item.id}
@@ -35,7 +49,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                 </Button>
             </div>
 
-            <div className="flex items-center justify-between gap-1">
+            <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                 <div className="flex items-center gap-2">
                     <Button
                         size="icon-sm"
@@ -44,24 +58,44 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                     >
                         <Minus />
                     </Button>
-                    <span className="min-w-8 text-center font-medium">
-                        {item.qty}
-                    </span>
+                    <Input
+                        aria-label={`Cantidad de ${item.name}`}
+                        className="h-8 w-16 rounded-lg px-2 text-center font-medium"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={item.stock}
+                        step={1}
+                        value={item.qty}
+                        onChange={(event) => handleQtyChange(event.target.value)}
+                    />
                     <Button
                         size="icon-sm"
                         variant="outline"
                         onClick={() => onIncrease(item.id)}
+                        disabled={item.qty >= item.stock}
                     >
                         <Plus />
                     </Button>
                 </div>
 
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">
-                        {formatCurrency(item.price)} c/u
-                    </p>
+                <div className="text-left min-[420px]:text-right">
+                    {item.discount > 0 ? (
+                        <>
+                            <p className="text-sm text-muted-foreground line-through">
+                                {formatCurrency(item.price)} c/u
+                            </p>
+                            <p className="text-xs text-green-600 font-medium">
+                                {formatCurrency(precioFinal)} c/u (-{formatCurrency(item.discount)} desc)
+                            </p>
+                        </>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">
+                            {formatCurrency(item.price)} c/u
+                        </p>
+                    )}
                     <p className="font-semibold text-primary">
-                        {formatCurrency(item.price * item.qty)}
+                        {formatCurrency(subtotal)}
                     </p>
                 </div>
             </div>
