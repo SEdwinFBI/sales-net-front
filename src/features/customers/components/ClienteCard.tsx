@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, Eye } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
 
 type Props = {
@@ -19,6 +20,10 @@ const initials = (name?: string) =>
     .toUpperCase() || '?'
 
 export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
+
   return (
     <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-successful' : 'border-l-border'} bg-white p-4 transition-shadow hover:shadow-md`}>
       <div className="flex items-start gap-3">
@@ -42,7 +47,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
             <span className="text-xs text-primary">balance</span>
           </div>
 
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className={cn('mt-1 text-xs text-muted-foreground', isNotificationPast && 'text-danger')}>
             Notificación: {cliente.fecha_notificacion}
           </p>
         </div>
