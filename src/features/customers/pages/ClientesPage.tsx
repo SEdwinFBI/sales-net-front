@@ -11,8 +11,10 @@ import { Select } from '@/components/ui/select'
 import { Search, Plus } from 'lucide-react'
 import type { Cliente } from '../types/clientes'
 import { Card } from '@/components/ui/card'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 export default function ClientesPage() {
+  const user = useAuthStore(s => s.user)
   const { data: clientes, isLoading } = useClientes()
   const [search, setSearch] = useState('')
   const [filterActivo, setFilterActivo] = useState('todos')
@@ -57,7 +59,7 @@ export default function ClientesPage() {
                 <option value="inactivo">Inactivos</option>
               </Select>
             </div>
-            <Button className="w-full sm:w-auto" onClick={() => { setSelectedCliente(null); setDialogOpen(true) }}>
+            <Button className="w-full sm:w-auto" onClick={() => { setSelectedCliente(null); setDialogOpen(true) }} disabled={user?.role !== 'admin'}>
               <Plus />
               Nuevo cliente
             </Button>

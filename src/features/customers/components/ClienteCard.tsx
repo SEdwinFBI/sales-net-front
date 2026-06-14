@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 type Props = {
   cliente: Cliente
@@ -20,6 +21,8 @@ const initials = (name?: string) =>
     .toUpperCase() || '?'
 
 export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
+  const user = useAuthStore(s => s.user)
+  const isNotAdmin = user?.role !== 'admin'
   const now = new Date()
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
   const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
@@ -63,10 +66,10 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
         </Link>
 
         <div className="flex gap-1">
-          <Button size="icon-xs" variant="ghost" onClick={onEdit} aria-label={`Editar ${cliente.nombre_completo}`}>
+          <Button size="icon-xs" variant="ghost" onClick={onEdit} disabled={isNotAdmin} aria-label={`Editar ${cliente.nombre_completo}`}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="ghost" onClick={onDelete} className="text-danger hover:text-danger" aria-label={`Eliminar ${cliente.nombre_completo}`}>
+          <Button size="icon-xs" variant="ghost" onClick={onDelete} disabled={isNotAdmin} className="text-danger hover:text-danger" aria-label={`Eliminar ${cliente.nombre_completo}`}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>
