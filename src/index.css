@@ -14,13 +14,16 @@
   --app-secondary: #f4f7fb;
   --app-danger: #95002B;
   --app-successful: #006C49;
+  --app-warning: #b45309;
   --app-neutral: #3f4252;
   --color-primary: var(--app-primary);
   --color-primary-nav: var(--app-primary-nav);
   --color-secondary: var(--app-secondary);
   --color-danger: var(--app-danger);
   --color-successful: var(--app-successful);
+  --color-warning: var(--app-warning);
   --color-neutral: var(--app-neutral);
+  --warning: var(--app-warning);
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   background: var(--color-secondary);
   color: var(--color-neutral);
@@ -130,6 +133,7 @@ a {
   --color-neutral: var(--foreground);
   --color-danger: var(--destructive);
   --color-successful: var(--app-successful);
+  --color-warning: var(--warning);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

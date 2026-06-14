@@ -12,7 +12,7 @@ export function getStockStatus(quantity: number): StockStatus {
 export function getStockTextClass(quantity: number) {
   const status = getStockStatus(quantity)
 
-  if (status === 'out') return 'text-red-600'
+  if (status === 'out') return 'text-destructive'
   if (status === 'low') return 'text-yellow-700'
 
   return 'text-muted-foreground'
@@ -21,7 +21,7 @@ export function getStockTextClass(quantity: number) {
 export function getStockAccentBorderClass(quantity: number) {
   const status = getStockStatus(quantity)
 
-  if (status === 'out') return 'border-l-red-500'
+  if (status === 'out') return 'border-l-destructive'
   if (status === 'low') return 'border-l-yellow-400'
 
   return 'border-l-primary/70'
@@ -31,7 +31,7 @@ export function getStockBadgeClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') {
-    return 'bg-red-500/80 text-white hover:bg-red-500/80'
+    return 'bg-destructive/80 text-white hover:bg-destructive/80'
   }
 
   if (status === 'low') {
@@ -44,7 +44,7 @@ export function getStockBadgeClassDrawer(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') {
-    return 'bg-red-500/80 text-white hover:bg-red-500/80'
+    return 'bg-destructive/80 text-white hover:bg-destructive/80'
   }
 
   // if (status === 'low') {
@@ -57,7 +57,7 @@ export function getStockBadgeClassDrawer(quantity: number) {
 export function getStockInputClass(quantity: number) {
   const status = getStockStatus(quantity)
 
-  if (status === 'out') return 'border-red-300 text-red-700 focus-visible:border-red-500'
+  if (status === 'out') return 'border-destructive/40 text-destructive focus-visible:border-destructive'
   if (status === 'low') return 'border-yellow-400 text-yellow-800 focus-visible:border-yellow-500'
 
   return ''
