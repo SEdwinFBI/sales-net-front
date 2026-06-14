@@ -2,13 +2,11 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
+import { initials } from '@/helpers/string'
 
 type Props = {
   cliente: Cliente
 }
-
-const initials = (name?: string) =>
-  (name ?? '').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 
 export default function ClienteInfo({ cliente }: Props) {
   const now = new Date()
@@ -19,7 +17,7 @@ export default function ClienteInfo({ cliente }: Props) {
     <Card className="bg-white p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-          <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${cliente.activo ? 'bg-emerald-500' : 'bg-stone-400'}`}>
+          <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${cliente.activo ? 'bg-successful' : 'bg-muted-foreground/70'}`}>
             {initials(cliente.nombre_completo)}
           </div>
 

@@ -52,13 +52,23 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
       enableColumnFilter: false,
     },
     { accessorKey: 'articulo', header: 'Artículo' },
-    { accessorKey: 'talla', header: 'Talla' },
+    { accessorKey: 'talla', header: 'Ancho' },
     { accessorKey: 'unidades', header: 'Unidades' },
-    { accessorKey: 'precio_unitario', header: 'Precio base', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
-    { accessorKey: 'precio_promedio', header: 'Precio promedio', cell: ({ row }) => `Q${Number(row.original.precio_promedio).toFixed(2)}` },
-    { accessorKey: 'total', header: 'Total', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
-    { accessorKey: 'descuento_total', header: 'Descuento', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.descuento_total).toFixed(2)}</span> },
-    { accessorKey: 'total_neto', header: 'Total neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
+    { accessorKey: 'precio_unitario', header: 'Precio por Unidad', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
+   // { accessorKey: 'precio_promedio', header: 'Precio promedio', cell: ({ row }) => `Q${Number(row.original.precio_promedio).toFixed(2)}` },
+    {
+      id: 'total_sin_descuento',
+      header: 'Total sin Descuento',
+      accessorFn: (row) => Number(row.unidades) * Number(row.precio_unitario),
+      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
+    },
+    {
+      id: 'descuento_total',
+      header: 'Descuento Total',
+      accessorFn: (row) => Number(row.unidades) * Number(row.precio_unitario) - Number(row.total),
+      cell: ({ getValue }) => <span className="text-destructive">Q{Number(getValue()).toFixed(2)}</span>,
+    },
+    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
   ], [])
 
   const table = useReactTable({
@@ -101,7 +111,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                   <div className="space-y-0.5">
                     {header.column.id !== 'expander' && (
                       <button
-                        className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+                        className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
                         onClick={() => header.column.toggleSorting()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -113,7 +123,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                         value={(header.column.getFilterValue() ?? '') as string}
                         onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                         placeholder="Filtrar..."
-                        className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
+                        className="h-7 rounded-none border-0 border-b border-transparent px-0 text-xs placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
                       />
                     )}
                   </div>
@@ -144,38 +154,42 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                   <TableRow className="bg-muted/15">
                     <TableCell colSpan={columns.length} className="p-0">
                       <div className="border-t border-border/30 px-6 py-3">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Ventas de {row.original.articulo} ({row.original.talla})
                         </p>
                         <div className="overflow-x-auto rounded-lg border border-border/50">
                           <table className="w-full text-left">
                             <thead>
                               <tr className="border-b border-border/30 bg-muted/20">
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">ID Venta</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fecha</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cant.</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Precio u.</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Monto</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Descuento</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Estado</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">F. Pago</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Vendedor</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">ID Venta</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fecha</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cant.</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio U. sin Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio U. con Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total sin Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descuento U.</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Final</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Estado</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">F. Pago</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendedor</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
                               </tr>
                             </thead>
                             <tbody>
                               {row.original.ventas.map((v, vi) => (
                                 <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
-                                  <td className="px-2 py-1 text-[11px] font-mono text-muted-foreground">{v.id_venta}</td>
-                                  <td className="px-2 py-1 text-[11px]">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
-                                  <td className="px-2 py-1 text-[11px]">{v.cantidad}</td>
-                                  <td className="px-2 py-1 text-[11px]">Q{v.precio_unitario.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px] font-semibold">Q{v.monto.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px] text-red-600">Q{v.descuento.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px]">{v.estado}</td>
-                                  <td className="px-2 py-1 text-[11px]">{v.forma_pago}</td>
-                                  <td className="px-2 py-1 text-[11px]">{v.vendedor.full_name}</td>
-                                  <td className="px-2 py-1 text-[11px]">{v.cliente.nombre_completo}</td>
+                                  <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
+                                  <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
+                                  <td className="px-2 py-1 text-xs">{v.cantidad}</td>
+                                  <td className="px-2 py-1 text-xs">Q{(v.precio_unitario + v.descuento).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">Q{v.precio_unitario.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{(v.cantidad * (v.precio_unitario + v.descuento)).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">Q{v.descuento.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{v.monto.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">{v.estado}</td>
+                                  <td className="px-2 py-1 text-xs">{v.forma_pago}</td>
+                                  <td className="px-2 py-1 text-xs">{v.vendedor.full_name}</td>
+                                  <td className="px-2 py-1 text-xs">{v.cliente.nombre_completo}</td>
                                 </tr>
                               ))}
                             </tbody>

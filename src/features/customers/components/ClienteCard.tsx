@@ -5,20 +5,13 @@ import { Pencil, Trash2, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import { initials } from '@/helpers/string'
 
 type Props = {
   cliente: Cliente
   onEdit: () => void
   onDelete: () => void
 }
-
-const initials = (name?: string) =>
-  (name ?? '')
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || '?'
 
 export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
   const user = useAuthStore(s => s.user)
@@ -66,10 +59,10 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
         </Link>
 
         <div className="flex gap-1">
-          <Button size="icon-xs" variant="ghost" onClick={onEdit} disabled={isNotAdmin} aria-label={`Editar ${cliente.nombre_completo}`}>
+          <Button size="icon-sm" variant="ghost" onClick={onEdit} disabled={isNotAdmin} aria-label={`Editar ${cliente.nombre_completo}`}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="ghost" onClick={onDelete} disabled={isNotAdmin} className="text-danger hover:text-danger" aria-label={`Eliminar ${cliente.nombre_completo}`}>
+          <Button size="icon-sm" variant="ghost" onClick={onDelete} disabled={isNotAdmin} className="text-danger hover:text-danger" aria-label={`Eliminar ${cliente.nombre_completo}`}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>

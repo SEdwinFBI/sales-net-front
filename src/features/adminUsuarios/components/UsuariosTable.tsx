@@ -16,8 +16,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, Plus, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { Pencil, Trash2, Plus, ChevronLeft, ChevronRight, Search, X, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Usuario } from '../types/usuario-types'
 import UsuarioDialog from './UsuarioDialog'
 import DeleteUsuarioDialog from './DeleteUsuarioDialog'
@@ -49,7 +50,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
       cell: ({ row }) => (
         <Badge
           variant={row.original.role === 'admin' ? 'default' : 'secondary'}
-          className="px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+          className="px-2.5 py-0.5 font-semibold uppercase tracking-wide"
         >
           {row.original.role ?? 'Sin rol'}
         </Badge>
@@ -61,7 +62,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <Button
-            size="icon-xs"
+            size="icon-sm"
             variant="ghost"
             aria-label={`Editar ${row.original.fullName || row.original.username}`}
             onClick={() => {
@@ -72,9 +73,9 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             <Pencil />
           </Button>
           <Button
-            size="icon-xs"
+            size="icon-sm"
             variant="ghost"
-            className="text-red-500 hover:text-red-600"
+            className="text-destructive hover:text-destructive"
             aria-label={`Eliminar ${row.original.fullName || row.original.username}`}
             onClick={() => setUsuarioToDelete(row.original)}
           >
@@ -113,7 +114,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid w-full gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_auto] lg:min-w-[560px] lg:max-w-3xl">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar usuario..."
                 value={globalFilter}
@@ -157,13 +158,9 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         {/* Table */}
         <div className="grid gap-3 md:hidden">
           {isLoading ? (
-            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-              Cargando usuarios...
-            </div>
+            <EmptyState title="Cargando usuarios…" />
           ) : table.getRowModel().rows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">
-              No se encontraron usuarios.
-            </div>
+            <EmptyState icon={Users} title="No se encontraron usuarios." />
           ) : (
             table.getRowModel().rows.map((row) => {
               const usuario = row.original
@@ -184,7 +181,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                     </div>
                     <Badge
                       variant={usuario.role === 'admin' ? 'default' : 'secondary'}
-                      className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                      className="shrink-0 px-2.5 py-0.5 font-semibold uppercase tracking-wide"
                     >
                       {usuario.role ?? 'Sin rol'}
                     </Badge>
@@ -205,7 +202,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                     <Button
                       size="icon-sm"
                       variant="outline"
-                      className="text-red-500 hover:text-red-600"
+                      className="text-destructive hover:text-destructive"
                       aria-label={`Eliminar ${usuario.fullName || usuario.username}`}
                       onClick={() => setUsuarioToDelete(usuario)}
                     >
@@ -262,13 +259,13 @@ export default function UsuariosTable({ data, isLoading }: Props) {
         {/* Pagination */}
         <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {filteredCount} de {data.length} usuarios - Pagina {table.getState().pagination.pageIndex + 1} de {Math.max(table.getPageCount(), 1)}
+            {filteredCount} de {data.length} usuarios - Página {table.getState().pagination.pageIndex + 1} de {Math.max(table.getPageCount(), 1)}
           </span>
           <div className="flex items-center gap-2">
             <Button
               size="icon-sm"
               variant="outline"
-              aria-label="Pagina anterior"
+              aria-label="Página anterior"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -277,7 +274,7 @@ export default function UsuariosTable({ data, isLoading }: Props) {
             <Button
               size="icon-sm"
               variant="outline"
-              aria-label="Pagina siguiente"
+              aria-label="Página siguiente"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

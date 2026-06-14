@@ -32,8 +32,8 @@ export const getAbonosHistorial = async (idCliente: number): Promise<Abono[]> =>
   return data.data
 }
 
-export const abonarVenta = async (idVenta: number, payload: AbonarPayload): Promise<AbonarResponse> => {
-  const { data } = await api.post<AbonarResponse>(`/abonos/${idVenta}/abonar`, payload)
+export const abonarVenta = async (idVenta: number, idCliente: number, payload: AbonarPayload): Promise<AbonarResponse> => {
+  const { data } = await api.post<AbonarResponse>(`/abonos/${idVenta}/${idCliente}/abonar`, payload)
   return data
 }
 

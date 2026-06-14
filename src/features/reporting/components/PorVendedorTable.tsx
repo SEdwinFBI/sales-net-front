@@ -54,9 +54,19 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
     { accessorKey: 'nombre', header: 'Vendedor' },
     { accessorKey: 'cantidad_ventas', header: 'Cant. ventas' },
     { accessorKey: 'unidades', header: 'Unidades' },
-    { accessorKey: 'total', header: 'Total', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
-    { accessorKey: 'descuento_total', header: 'Descuento', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.descuento_total).toFixed(2)}</span> },
-    { accessorKey: 'total_neto', header: 'Total neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
+    {
+      id: 'total_sin_descuento',
+      header: 'Total sin Descuento',
+      accessorFn: (row) => row.articulos.reduce((s, a) => s + a.unidades * a.precio_unitario, 0),
+      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
+    },
+    {
+      id: 'descuento_total',
+      header: 'Descuento',
+      accessorFn: (row) => row.articulos.reduce((s, a) => s + a.unidades * a.precio_unitario, 0) - Number(row.total),
+      cell: ({ getValue }) => <span className="text-destructive">Q{Number(getValue()).toFixed(2)}</span>,
+    },
+    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
   ], [])
 
   const table = useReactTable({
@@ -99,7 +109,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                   <div className="space-y-0.5">
                     {header.column.id !== 'expander' && (
                       <button
-                        className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+                        className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
                         onClick={() => header.column.toggleSorting()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
@@ -111,7 +121,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                         value={(header.column.getFilterValue() ?? '') as string}
                         onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                         placeholder="Filtrar..."
-                        className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
+                        className="h-7 rounded-none border-0 border-b border-transparent px-0 text-xs placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
                       />
                     )}
                   </div>
@@ -142,34 +152,35 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                   <TableRow className="bg-muted/15">
                     <TableCell colSpan={columns.length} className="p-0">
                       <div className="border-t border-border/30 px-6 py-3">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Artículos vendidos por {row.original.nombre}
                         </p>
                         <div className="overflow-x-auto rounded-lg border border-border/50">
                           <table className="w-full text-left">
                             <thead>
                               <tr className="border-b border-border/30 bg-muted/20">
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Artículo</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Talla</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Precio base</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Precio promedio</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Unidades</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Total</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Descuento</th>
-                                <th className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Total neto</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Artículo</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ancho</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio por unidad</th>
+                                {/* <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio promedio</th> */}
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Unidades</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total sin Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Final</th>
+
                               </tr>
                             </thead>
                             <tbody>
                               {row.original.articulos.map((a, ai) => (
                                 <tr key={`${a.id_variante}-${a.id_talla}`} className={ai % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
-                                  <td className="px-2 py-1 text-[11px]">{a.articulo}</td>
-                                  <td className="px-2 py-1 text-[11px]">{a.talla}</td>
-                                  <td className="px-2 py-1 text-[11px]">Q{a.precio_unitario.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px]">Q{a.precio_promedio.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px]">{a.unidades}</td>
-                                  <td className="px-2 py-1 text-[11px] font-semibold">Q{a.total.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px] text-red-600">Q{a.descuento_total.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-[11px] font-semibold">Q{a.total_neto.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">{a.articulo}</td>
+                                  <td className="px-2 py-1 text-xs">{a.talla}</td>
+                                  <td className="px-2 py-1 text-xs">Q{a.precio_unitario.toFixed(2)}</td>
+                                  {/* <td className="px-2 py-1 text-xs">Q{a.precio_promedio.toFixed(2)}</td> */}
+                                  <td className="px-2 py-1 text-xs">{a.unidades}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.unidades * a.precio_unitario).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">Q{(a.unidades * a.precio_unitario - a.total).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{a.total.toFixed(2)}</td>
                                 </tr>
                               ))}
                             </tbody>

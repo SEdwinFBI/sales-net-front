@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { LoginFormValues } from '../types/form'
 import { loginSchema } from '../utils/schema'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Field,
   FieldDescription,
@@ -12,8 +11,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
-import { Eye, EyeOff, LockKeyhole, Mail, MoveRight } from 'lucide-react'
-import SlideVertical from '@/components/motion/SlideVertical'
+import { Eye, EyeOff, LockKeyhole, Loader2, Mail, MoveRight } from 'lucide-react'
 import RotateHover from '@/components/motion/RotateHover'
 
 
@@ -43,21 +41,16 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
 
   return (
     <>
+      <div className="space-y-1.5">
+        <h1 className="font-heading text-2xl font-semibold text-neutral">
+          Bienvenido de nuevo
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Ingresa con tus credenciales para acceder al sistema
+        </p>
+      </div>
 
-      <SlideVertical
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Iniciar sesion
-            </CardTitle>
-            <CardDescription>
-              Ingrese sus credenciales para acceder
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-
-            <form className="mt-8 space-y-5 " onSubmit={handleFormSubmit}>
+      <form className="mt-7 space-y-5" onSubmit={handleFormSubmit}>
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="username">Correo o usuario</FieldLabel>
@@ -74,7 +67,7 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
 
                   </InputGroup>
                   {errors.username ?
-                    <FieldDescription className="text-sm text-(--color-danger)">{errors.username.message}
+                    <FieldDescription className="text-sm text-destructive">{errors.username.message}
                     </FieldDescription> : null}
                 </Field>
                 <Field>
@@ -101,19 +94,16 @@ export default function LoginForm({ onSubmit }: LoginFormProps) {
                     </InputGroupAddon>
                   </InputGroup>
 
-                  {errors.password ? <FieldDescription className="text-sm text-(--color-danger)">{errors.password.message}</FieldDescription> : null}
+                  {errors.password ? <FieldDescription className="text-sm text-destructive">{errors.password.message}</FieldDescription> : null}
                 </Field>
               </FieldGroup>
               <RotateHover rotate={0.7}>
                 <Button className={"w-full font-bold!"} type='submit' size={'lg'} disabled={isSubmitting}>
-                  {isSubmitting ? 'Iniciando...' : 'Ingresar'} <MoveRight />
+                  {isSubmitting ? 'Iniciando…' : 'Ingresar'} {isSubmitting ? <Loader2 className="animate-spin" /> : <MoveRight />}
                 </Button>
               </RotateHover>
 
-            </form>
-          </CardContent>
-        </Card>
-      </SlideVertical>
+      </form>
     </>
   )
 }

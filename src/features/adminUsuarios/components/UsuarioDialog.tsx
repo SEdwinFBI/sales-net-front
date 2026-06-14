@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { TimeInput } from '@/components/ui/time-input'
+import { Loader2 } from 'lucide-react'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
@@ -135,13 +137,10 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
 
             <Field>
               <FieldLabel>Rol</FieldLabel>
-              <select
-                {...register('role')}
-                className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-              >
+              <Select {...register('role')}>
                 <option value="vendedor">Vendedor</option>
                 <option value="admin">Admin</option>
-              </select>
+              </Select>
               <FieldError errors={[errors.role]} />
             </Field>
 
@@ -163,7 +162,8 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
               Cancelar
             </Button>
             <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
-              {isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear usuario'}
+              {isPending && <Loader2 className="animate-spin" />}
+              {isPending ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear usuario'}
             </Button>
           </DialogFooter>
         </form>

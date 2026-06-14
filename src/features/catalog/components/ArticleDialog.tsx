@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { Loader2 } from 'lucide-react'
 import z from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,7 +29,7 @@ const defaultSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
 const showSizeSelectorOnCreate = false
 
 const articleSchema = z.object({
-  title: z.string().min(3, 'El titulo debe tener al menos 3 caracteres'),
+  title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   image: z.any().optional(),
 })
 
@@ -129,7 +130,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     try {
       const imageFile = selectedImage ?? undefined
       if (!isEdit && !imageFile) {
-        toast.error('Selecciona una imagen para el articulo')
+        toast.error('Selecciona una imagen para el artículo')
         return
       }
 
@@ -178,13 +179,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       }
 
       if (isEdit) {
-        toast.success('Articulo actualizado correctamente')
+        toast.success('Artículo actualizado correctamente')
       } else {
-        toast.success('Articulo creado correctamente')
+        toast.success('Artículo creado correctamente')
       }
       onClose()
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Error al guardar el articulo'))
+      toast.error(getApiErrorMessage(error, 'Error al guardar el artículo'))
     }
   }
 
@@ -192,13 +193,13 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Editar articulo' : 'Crear articulo'}</DialogTitle>
+          <DialogTitle>{isEdit ? 'Editar artículo' : 'Crear artículo'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
           <FieldGroup>
             <Field>
-              <FieldLabel>Titulo</FieldLabel>
+              <FieldLabel>Título</FieldLabel>
               <Input {...register('title')} placeholder="Faja cruceta, bordada..." />
               <FieldError errors={[errors.title]} />
             </Field>
@@ -274,7 +275,8 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
               Cancelar
             </Button>
             <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
-              {isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear articulo'}
+              {isPending && <Loader2 className="animate-spin" />}
+              {isPending ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear artículo'}
             </Button>
           </DialogFooter>
         </form>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { useDeleteCliente } from '../hooks/useDeleteCliente'
 import type { Cliente } from '../types/clientes'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
@@ -45,7 +46,8 @@ export default function DeleteClienteDialog({ cliente, onClose }: Props) {
             Cancelar
           </Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>
-            {isPending ? 'Eliminando...' : 'Eliminar'}
+            {isPending && <Loader2 className="animate-spin" />}
+            {isPending ? 'Eliminando…' : 'Eliminar'}
           </Button>
         </DialogFooter>
       </DialogContent>

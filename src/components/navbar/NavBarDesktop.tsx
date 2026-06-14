@@ -18,7 +18,7 @@ function buildFullPath(item: SidebarItem, parentPath?: string): string {
 }
 
 /** Verifica  */
-function isItemOrDescendantActive(item: SidebarItem, currentPathname: string, parentPath?: string): boolean {
+export function isItemOrDescendantActive(item: SidebarItem, currentPathname: string, parentPath?: string): boolean {
   const fullPath = buildFullPath(item, parentPath)
   if (currentPathname === fullPath || currentPathname.startsWith(`${fullPath}/`)) return true
   return item.children.some((child) => isItemOrDescendantActive(child, currentPathname, fullPath))
@@ -85,7 +85,7 @@ function SubItems({
 
           const lineClass = isActiveItem ? 'bg-primary' : 'bg-border'
           const dotClass = isActiveItem ? 'bg-primary' : 'bg-border'
-          const textClass = isActiveItem ? 'text-neutral font-semibold text-[0.73rem]' : 'text-neutral/65 group-hover:text-neutral text-[0.73rem]'
+          const textClass = isActiveItem ? 'text-neutral font-semibold text-xs' : 'text-neutral/65 group-hover:text-neutral text-xs'
           const iconClass = isActiveItem ? 'text-primary/90' : 'text-neutral/45 group-hover:text-neutral/70'
 
           if (isLeaf) {

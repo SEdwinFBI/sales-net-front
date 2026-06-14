@@ -39,7 +39,7 @@ export default function AbonosTable({ abonos }: Props) {
     },
     { accessorKey: 'id_venta', header: 'Venta ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id_venta}</span> },
     { accessorKey: 'venta_total', header: 'Total venta', cell: ({ row }) => `Q${Number(row.original.venta_total).toFixed(2)}` },
-    { accessorKey: 'saldo_restante', header: 'Saldo restante', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.saldo_restante).toFixed(2)}</span> },
+    { accessorKey: 'saldo_restante', header: 'Saldo restante', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.saldo_restante).toFixed(2)}</span> },
     { accessorKey: 'venta_estado', header: 'Estado venta' },
   ], [])
 

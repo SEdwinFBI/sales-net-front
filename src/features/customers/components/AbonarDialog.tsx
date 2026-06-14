@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
 import VentaSelect from './VentaSelect'
 import { useAbonarVenta } from '../hooks/useAbonarVenta'
 import type { Venta } from '@/features/sales/types/sales'
@@ -18,7 +19,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
-  idVenta: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona una venta')),
+  idVenta: z.preprocess((val) => Number(val), z.number().min(0)),
   monto: z.preprocess((val) => Number(val), z.number().positive('El monto debe ser mayor a 0')),
 })
 
@@ -27,10 +28,11 @@ type FormValues = z.infer<typeof schema>
 type Props = {
   open: boolean
   ventas: Venta[]
+  idCliente: number
   onClose: () => void
 }
 
-export default function AbonarDialog({ open, ventas, onClose }: Props) {
+export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props) {
   const { mutateAsync: abonar, isPending } = useAbonarVenta()
 
   const {
@@ -50,7 +52,7 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await abonar({ idVenta: values.idVenta, data: { monto: values.monto } })
+      await abonar({ idVenta: values.idVenta, idCliente, data: { monto: values.monto } })
       toast.success('Abono registrado correctamente')
       reset()
       onClose()
@@ -85,11 +87,11 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Abonado</span>
-                          <span className="text-amber-600">Q{Number(selectedVenta.abonado).toFixed(2)}</span>
+                          <span className="text-warning">Q{Number(selectedVenta.abonado).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Saldo</span>
-                          <span className="text-red-600 font-semibold">Q{Number(selectedVenta.saldo).toFixed(2)}</span>
+                          <span className="text-destructive font-semibold">Q{Number(selectedVenta.saldo).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Estado</span>
@@ -110,7 +112,8 @@ export default function AbonarDialog({ open, ventas, onClose }: Props) {
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Registrando...' : 'Registrar abono'}
+              {isPending && <Loader2 className="animate-spin" />}
+              {isPending ? 'Registrando…' : 'Registrar abono'}
             </Button>
           </DialogFooter>
         </form>

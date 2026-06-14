@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
+import { Breadcrumb } from '@/components/ui/breadcrumb'
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -48,7 +49,10 @@ export default function ClienteDetailPage() {
     <PageTemplateSimple title={cliente.nombre_completo} description="Detalle del cliente">
       <div className="space-y-6">
         <Card className="p-3.5 sm:p-5">
-
+          <Breadcrumb
+            className="mb-3"
+            items={[{ label: 'Clientes', href: '/clientes' }, { label: cliente.nombre_completo }]}
+          />
 
           <Button variant="ghost" onClick={() => navigate('/clientes')} className="w-fit">
             <ArrowLeft />
@@ -83,6 +87,7 @@ export default function ClienteDetailPage() {
       <AbonarDialog
         open={abonarOpen}
         ventas={ventas}
+        idCliente={clienteId}
         onClose={() => setAbonarOpen(false)}
       />
     </PageTemplateSimple>
