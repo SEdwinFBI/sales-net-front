@@ -58,16 +58,22 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
         return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
       }
     },
-    { accessorKey: 'total', header: 'Total', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
+    {
+      id: 'total_sin_descuento',
+      header: 'Total Sin Descuento',
+      accessorFn: (row) => Number(row.total) + Number(row.total_descuento),
+      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
+    },
+    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
     {
       accessorKey: 'total_descuento',
       header: 'Desc.',
       cell: ({ row }) => row.original.total_descuento > 0
-        ? <span className="text-green-600">-Q{Number(row.original.total_descuento).toFixed(2)}</span>
+        ? <span className="text-successful">-Q{Number(row.original.total_descuento).toFixed(2)}</span>
         : <span className="text-muted-foreground">—</span>,
     },
-    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-amber-600">Q{Number(row.original.abonado).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
-    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-red-600">Q{Number(row.original.saldo).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
+    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-warning">Q{Number(row.original.abonado).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
+    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-destructive">Q{Number(row.original.saldo).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
     {
       accessorKey: 'estado',
       header: 'Estado',
@@ -138,7 +144,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                     {header.column.id === 'expand' ? null : (
                       <div className="space-y-0.5">
                         <button
-                          className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+                          className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
                           onClick={() => header.column.toggleSorting()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
@@ -148,7 +154,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                           placeholder="Filtrar..."
-                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
+                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-xs placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
                         />
                       </div>
                     )}
@@ -179,36 +185,45 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                     <TableRow key={`${row.id}-detail`}>
                       <TableCell colSpan={columns.length} className="bg-gradient-to-br from-muted/30 to-white p-4">
                         <div className="space-y-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Detalle de la venta</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detalle de la venta</p>
                           <div className="overflow-x-auto rounded-lg border border-border bg-white">
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="border-b border-border bg-muted/20">
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Artículo</th>
-                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Talla</th>
+                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Ancho</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Cantidad</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio unit.</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc.</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Bruto</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Neto</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio Sin Descuento</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio con Descuento</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Por Unidad</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total sin Descuento</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Final</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {row.original.detalles.map((d) => (
+                                {row.original.detalles.map((d) => {
+                                  const descTotal = Number(d.descuento)
+                                  
+                                  
+                                  const precioSinDesc = Number(d.precio_unitario) + descTotal
+                                  return (
                                   <tr key={d.id} className="border-b border-border/50 last:border-0">
                                     <td className="px-3 py-2">{d.articulo}</td>
                                     <td className="px-3 py-2">{d.talla}</td>
                                     <td className="px-3 py-2 text-right">{d.cantidad}</td>
+                                    <td className="px-3 py-2 text-right">Q{precioSinDesc.toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right">Q{Number(d.precio_unitario).toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right text-red-600">Q{Number(d.descuento).toFixed(2)}</td>
+                                    
+                                    <td className="px-3 py-2 text-right text-destructive">Q{descTotal.toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right">Q{Number(d.total).toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right font-medium">Q{Number(d.total_neto).toFixed(2)}</td>
                                   </tr>
-                                ))}
+                                  )
+                                })}
                               </tbody>
                               <tfoot>
                                 <tr className="border-t-2 border-border bg-muted/30">
-                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={5}>Total</td>
+                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={6}>Total</td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
                                     Q{row.original.detalles.reduce((s, d) => s + Number(d.total), 0).toFixed(2)}
                                   </td>

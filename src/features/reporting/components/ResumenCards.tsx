@@ -23,7 +23,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
 
   const cards = [
     { label: 'Total general', value: `Q${Number(resumen.total_general).toFixed(2)}`, color: 'text-primary' },
-    { label: 'Cantidad total', value: resumen.cantidad_total, color: '' },
+    { label: 'Cantidad total de Unidades', value: resumen.cantidad_total, color: '' },
     { label: 'Total descuento', value: `Q${Number(resumen.total_descuento).toFixed(2)}`, color: 'text-danger' },
     { label: 'Total ventas', value: resumen.total_ventas, color: '' },
   ]

@@ -38,7 +38,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
     { accessorKey: 'cantidad', header: 'Cant.' },
     { accessorKey: 'precio_unitario', header: 'Precio u.', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
     { accessorKey: 'monto', header: 'Monto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.monto).toFixed(2)}</span> },
-    { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-red-600">Q{Number(row.original.descuento).toFixed(2)}</span> },
+    { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.descuento).toFixed(2)}</span> },
     { accessorKey: 'estado', header: 'Estado' },
     { accessorKey: 'forma_pago', header: 'Forma de pago' },
     { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
@@ -147,7 +147,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
                 <TableHead key={header.id}>
                   <div className="space-y-0.5">
                     <button
-                      className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+                      className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
                       onClick={() => header.column.toggleSorting()}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
@@ -157,7 +157,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
                       value={(header.column.getFilterValue() ?? '') as string}
                       onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                       placeholder="Filtrar..."
-                      className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
+                      className="h-7 rounded-none border-0 border-b border-transparent px-0 text-xs placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
                     />
                   </div>
                 </TableHead>
