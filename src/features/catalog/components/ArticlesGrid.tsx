@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
@@ -64,9 +65,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-white p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid w-full gap-2.5 sm:grid-cols-2 lg:min-w-[680px] lg:max-w-4xl lg:grid-cols-[minmax(220px,1fr)_150px_170px_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar articulo..."
+                placeholder="Buscar artículo..."
                 value={globalFilter}
                 onChange={(event) => {
                   setGlobalFilter(event.target.value)
@@ -118,18 +119,14 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
             onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}
           >
             <Plus />
-            Nuevo articulo
+            Nuevo artículo
           </Button>
         </div>
 
         {isLoading ? (
-          <div className="rounded-xl border border-dashed border-border bg-white p-8 text-center text-muted-foreground sm:p-12">
-            Cargando articulos...
-          </div>
+          <EmptyState title="Cargando artículos…" className="bg-white" />
         ) : filteredData.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-white p-8 text-center text-muted-foreground sm:p-12">
-            No hay articulos registrados.
-          </div>
+          <EmptyState icon={Package} title="No hay artículos registrados." className="bg-white" />
         ) : (
           <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedData.map((article) => {
@@ -162,7 +159,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                     />
                     <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/35 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       <Button
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
                         aria-label={`Editar ${article.title}`}
@@ -174,9 +171,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         <Pencil />
                       </Button>
                       <Button
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
-                        className="bg-white/95 text-red-500 shadow-sm hover:bg-white hover:text-red-600 focus-visible:ring-white/70"
+                        className="bg-white/95 text-destructive shadow-sm hover:bg-white hover:text-destructive/80 focus-visible:ring-white/70"
                         aria-label={`Eliminar ${article.title}`}
                         onClick={() => setArticleToDelete(article)}
                       >
@@ -203,13 +200,13 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         {filteredData.length > pageSize && (
           <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-white p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
-              {filteredData.length} articulos - Pagina {safePage} de {totalPages}
+              {filteredData.length} artículos - Página {safePage} de {totalPages}
             </span>
             <div className="flex items-center gap-2">
               <Button
                 size="icon-sm"
                 variant="outline"
-                aria-label="Pagina anterior"
+                aria-label="Página anterior"
                 onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                 disabled={safePage === 1}
               >
@@ -218,7 +215,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
               <Button
                 size="icon-sm"
                 variant="outline"
-                aria-label="Pagina siguiente"
+                aria-label="Página siguiente"
                 onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                 disabled={safePage === totalPages}
               >

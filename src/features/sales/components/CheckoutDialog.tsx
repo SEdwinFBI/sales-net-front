@@ -18,7 +18,7 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 import { useState } from 'react'
 import type { PaymentMethod } from '../types/sales'
-import { Wallet, CreditCard } from 'lucide-react'
+import { Wallet, CreditCard, Loader2 } from 'lucide-react'
 
 
 const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet }[] = [
@@ -117,7 +117,7 @@ const CheckoutDialog = () => {
           </div>
 
           {paymentMethod === 'credito' && !selectedCustomerId && (
-            <p className="text-xs text-amber-600 -mt-3">
+            <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito
             </p>
           )}
@@ -130,7 +130,8 @@ const CheckoutDialog = () => {
             Cancelar
           </Button>
           <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
-            {isPending ? 'Procesando...' : 'Confirmar'}
+            {isPending && <Loader2 className="animate-spin" />}
+            {isPending ? 'Procesando…' : 'Confirmar'}
           </Button>
         </DialogFooter>
       </DialogContent>

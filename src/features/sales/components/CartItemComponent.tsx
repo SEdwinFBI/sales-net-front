@@ -85,7 +85,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                             <p className="text-sm text-muted-foreground line-through">
                                 {formatCurrency(item.price)} c/u
                             </p>
-                            <p className="text-xs text-green-600 font-medium">
+                            <p className="text-xs text-successful font-medium">
                                 {formatCurrency(precioFinal)} c/u (-{formatCurrency(item.discount)} desc)
                             </p>
                         </>

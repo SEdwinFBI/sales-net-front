@@ -1,6 +1,8 @@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
 import type { ComprasData } from '../types/clientes'
 
@@ -24,23 +26,21 @@ export default function ComprasTable({ ventas, resumen }: Props) {
           </div>
           <div className="rounded-xl shadow-sm bg-white p-4">
             <p className="text-xs text-muted-foreground">Pagado</p>
-            <p className="text-xl font-bold text-emerald-600">Q{Number(resumen.total_pagado).toFixed(2)}</p>
+            <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
           </div>
           <div className="rounded-xl shadow-sm bg-white p-4">
             <p className="text-xs text-muted-foreground">Abonado</p>
-            <p className="text-xl font-bold text-amber-600">Q{Number(resumen.total_abonado).toFixed(2)}</p>
+            <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
           </div>
           <div className="rounded-xl shadow-sm bg-white p-4">
             <p className="text-xs text-muted-foreground">Balance (deuda)</p>
-            <p className="text-xl font-bold text-red-600">Q{Number(resumen.balance).toFixed(2)}</p>
+            <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
           </div>
         </div>
       )}
 
       {ventas.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          No hay compras registradas.
-        </div>
+        <EmptyState icon={Receipt} size="sm" title="No hay compras registradas." />
       ) : (
         <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
           <Table>
@@ -62,8 +62,8 @@ export default function ComprasTable({ ventas, resumen }: Props) {
                   <TableCell className="font-mono text-xs">{venta.id}</TableCell>
                   <TableCell>{(() => { const d = new Date(venta.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</TableCell>
                   <TableCell className="font-semibold">Q{Number(venta.total).toFixed(2)}</TableCell>
-                  <TableCell className="text-amber-600">Q{Number(venta.abonado).toFixed(2)}</TableCell>
-                  <TableCell className="text-red-600">Q{Number(venta.saldo).toFixed(2)}</TableCell>
+                  <TableCell className="text-warning">Q{Number(venta.abonado).toFixed(2)}</TableCell>
+                  <TableCell className="text-destructive">Q{Number(venta.saldo).toFixed(2)}</TableCell>
                   <TableCell>{venta.estado}</TableCell>
                   <TableCell className="capitalize">{venta.forma_pago}</TableCell>
                   <TableCell>{venta.vendedor.full_name}</TableCell>

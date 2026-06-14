@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Search, UserRound } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 
 type Props = {
@@ -29,25 +30,17 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
   const paginatedSellers = filteredSellers.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   if (isLoading) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-        Cargando vendedores...
-      </div>
-    )
+    return <EmptyState title="Cargando vendedores…" />
   }
 
   if (sellers.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-        No hay vendedores registrados.
-      </div>
-    )
+    return <EmptyState icon={UserRound} title="No hay vendedores registrados." />
   }
 
   return (
     <div className="space-y-4">
       <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
           placeholder="Buscar vendedor..."
@@ -60,9 +53,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
       </div>
 
       {filteredSellers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-          No se encontraron vendedores.
-        </div>
+        <EmptyState icon={UserRound} title="No se encontraron vendedores." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paginatedSellers.map((seller) => (
@@ -72,7 +63,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
             >
               <button
                 type="button"
-                className="flex w-full flex-col gap-3 p-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-row sm:items-center sm:justify-between"
+                className="flex w-full cursor-pointer flex-col gap-3 p-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:flex-row sm:items-center sm:justify-between"
                 onClick={() => onSelect(seller)}
               >
                 <div className="flex w-full min-w-0 items-center gap-3">
@@ -95,12 +86,13 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
       {filteredSellers.length > pageSize && (
         <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {filteredSellers.length} vendedores - Pagina {safePage} de {totalPages}
+            {filteredSellers.length} vendedores - Página {safePage} de {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <Button
               size="icon-sm"
               variant="outline"
+              aria-label="Página anterior"
               onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
               disabled={safePage === 1}
             >
@@ -109,6 +101,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
             <Button
               size="icon-sm"
               variant="outline"
+              aria-label="Página siguiente"
               onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
               disabled={safePage === totalPages}
             >

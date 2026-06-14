@@ -1,6 +1,8 @@
 
 
+import { ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Drawer,
   DrawerBody,
@@ -52,15 +54,13 @@ const CartDrawer = () => {
           <DrawerDescription>
             {totalItems > 0
               ? `${totalItems} item${totalItems === 1 ? '' : 's'} en la venta`
-              : 'El carrito esta vacio.'}
+              : 'El carrito está vacío.'}
           </DrawerDescription>
         </DrawerHeader>
 
-        <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100vh-15rem)]">
+        <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100dvh-16rem)] min-h-[6rem]">
           {items.length === 0 ? (
-            <div className="rounded-[1rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Agrega productos para empezar la venta.
-            </div>
+            <EmptyState icon={ShoppingCart} size="sm" title="Agrega productos para empezar la venta." />
           ) : (
             <div className="grid gap-2">
               {items.map((item) => (

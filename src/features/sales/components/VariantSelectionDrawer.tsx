@@ -64,7 +64,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                             <p className="text-xs text-yellow-700 font-medium mt-1">Últimas unidades</p>
                         )}
                         {selectedStockStatus === 'out' && (
-                            <p className="text-xs text-red-600 font-medium mt-1">Agotado</p>
+                            <p className="text-xs text-destructive font-medium mt-1">Agotado</p>
                         )}
                     </div>
                 </div>
@@ -89,7 +89,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     ))}
                 </div>
                 {item.variants.filter(v => v.stock > 0).length === 0 && (
-                    <p className="text-xs text-red-500 text-center mt-2">Ninguna variante disponible. Producto agotado.</p>
+                    <p className="text-xs text-destructive text-center mt-2">Ninguna variante disponible. Producto agotado.</p>
                 )}
                 {item.variants.filter(v => v.stock <= 0).length > 0 && (
                     <p className="text-xs text-stone-400 mt-2">Algunas variantes no tienen stock disponible.</p>

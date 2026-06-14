@@ -4,7 +4,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Loader2,
   Minus,
+  Package,
   Plus,
   Save,
   Search,
@@ -13,6 +15,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
 import { cn } from '@/lib/utils'
@@ -150,16 +153,16 @@ export default function SellerStockEditor({
         </div>
 
         <Button className="w-full sm:w-auto" onClick={handleSave} disabled={isPending || isLoading}>
-          <Save />
-          {isPending ? 'Guardando...' : 'Guardar'}
+          {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+          {isPending ? 'Guardando…' : 'Guardar'}
         </Button>
       </div>
 
       <div className="relative w-full max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Buscar articulo..."
+          placeholder="Buscar artículo..."
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -169,13 +172,9 @@ export default function SellerStockEditor({
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-          Cargando stock...
-        </div>
+        <EmptyState title="Cargando stock…" />
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-          No se encontraron articulos.
-        </div>
+        <EmptyState icon={Package} title="No se encontraron artículos." />
       ) : (
         <div className="space-y-4">
           {paginatedRows.map((row) => {
@@ -240,7 +239,7 @@ export default function SellerStockEditor({
 
                   {row.availableSizes.length === 0 ? (
                     <div className="flex min-h-16 items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 px-3 text-sm text-muted-foreground">
-                      Sin tallas configuradas para este articulo
+                      Sin tallas configuradas para este artículo
                     </div>
                   ) : (
                     isExpanded && (
@@ -304,13 +303,13 @@ export default function SellerStockEditor({
           {rows.length > pageSize && (
             <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
               <span>
-                {rows.length} articulos - Pagina {safePage} de {totalPages}
+                {rows.length} artículos - Página {safePage} de {totalPages}
               </span>
               <div className="flex items-center gap-2">
                 <Button
                   size="icon-sm"
                   variant="outline"
-                  aria-label="Pagina anterior"
+                  aria-label="Página anterior"
                   onClick={() => setCurrentPage((page) => Math.max(page - 1, 1))}
                   disabled={safePage === 1}
                 >
@@ -319,7 +318,7 @@ export default function SellerStockEditor({
                 <Button
                   size="icon-sm"
                   variant="outline"
-                  aria-label="Pagina siguiente"
+                  aria-label="Página siguiente"
                   onClick={() => setCurrentPage((page) => Math.min(page + 1, totalPages))}
                   disabled={safePage === totalPages}
                 >

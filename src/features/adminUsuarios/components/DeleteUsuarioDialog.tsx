@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { useDeleteUsuario } from '../hooks/useDeleteUsuario'
 import type { Usuario } from '../types/usuario-types'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
@@ -45,7 +46,8 @@ export default function DeleteUsuarioDialog({ usuario, onClose }: Props) {
             Cancelar
           </Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>
-            {isPending ? 'Eliminando...' : 'Eliminar'}
+            {isPending && <Loader2 className="animate-spin" />}
+            {isPending ? 'Eliminando…' : 'Eliminar'}
           </Button>
         </DialogFooter>
       </DialogContent>

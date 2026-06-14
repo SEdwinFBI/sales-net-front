@@ -27,7 +27,7 @@ const CartButton = () => {
         <div className="flex items-center gap-3">
           <span className="relative">
             <ShoppingCart className="font-bold" />
-            <span className="absolute -top-2 -right-2 rounded-full bg-green-700 px-1.5 text-xs text-white">
+            <span className="absolute -top-2 -right-2 rounded-full bg-successful px-1.5 text-xs text-white">
               {totalItems}
             </span>
           </span>
