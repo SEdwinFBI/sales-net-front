@@ -6,14 +6,16 @@ import { slideVertical } from "@/lib/motion";
 
 type props = {
     children: ReactNode
+    className?: string
 }
 
 /**
  * Para animar la entrada inicial al cargar un componente de forma vertical
  */
-const SlideVertical: FC<props> = ({ children }) => {
+const SlideVertical: FC<props> = ({ children, className }) => {
     return (
         <motion.div
+            className={className}
             variants={slideVertical}
             initial="hidden"
             animate="visible"
