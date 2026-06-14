@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { TimeInput } from '@/components/ui/time-input'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
@@ -50,7 +51,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
-    defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '', hora_salida: '' },
+    defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '04:00', hora_salida: '16:00' },
   })
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
       reset(
         usuario
           ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor', hora_entrada: usuario.hora_entrada?.slice(0, 5) ?? '', hora_salida: usuario.hora_salida?.slice(0, 5) ?? '' }
-          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '', hora_salida: '' }
+          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '04:00', hora_salida: '16:00' }
       )
     }
   }, [open, usuario, reset])
@@ -146,13 +147,13 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
 
             <Field>
               <FieldLabel>Hora de entrada</FieldLabel>
-              <Input {...register('hora_entrada')} type="time" />
+              <TimeInput {...register('hora_entrada')} />
               <FieldError errors={[errors.hora_entrada]} />
             </Field>
 
             <Field>
               <FieldLabel>Hora de salida</FieldLabel>
-              <Input {...register('hora_salida')} type="time" />
+              <TimeInput {...register('hora_salida')} />
               <FieldError errors={[errors.hora_salida]} />
             </Field>
           </FieldGroup>
