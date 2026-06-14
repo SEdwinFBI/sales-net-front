@@ -25,6 +25,8 @@ const schema = z.object({
   email: z.string().email('Email inválido').or(z.literal('')),
   role: z.enum(['admin', 'vendedor']),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').or(z.literal('')),
+  hora_entrada: z.string().regex(/^\d{2}:\d{2}$/, 'Formato requerido: HH:MM'),
+  hora_salida: z.string().regex(/^\d{2}:\d{2}$/, 'Formato requerido: HH:MM'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -48,15 +50,15 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
-    defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor' },
+    defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '', hora_salida: '' },
   })
 
   useEffect(() => {
     if (open) {
       reset(
         usuario
-          ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor' }
-          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor' }
+          ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor', hora_entrada: usuario.hora_entrada?.slice(0, 5) ?? '', hora_salida: usuario.hora_salida?.slice(0, 5) ?? '' }
+          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '', hora_salida: '' }
       )
     }
   }, [open, usuario, reset])
@@ -73,6 +75,8 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         last_name: values.last_name,
         username: values.username,
         role: values.role,
+        hora_entrada: values.hora_entrada,
+        hora_salida: values.hora_salida,
         ...(values.email ? { email: values.email } : {}),
         ...(values.password ? { password: values.password } : {}),
       }
@@ -138,6 +142,18 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
                 <option value="admin">Admin</option>
               </select>
               <FieldError errors={[errors.role]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Hora de entrada</FieldLabel>
+              <Input {...register('hora_entrada')} type="time" />
+              <FieldError errors={[errors.hora_entrada]} />
+            </Field>
+
+            <Field>
+              <FieldLabel>Hora de salida</FieldLabel>
+              <Input {...register('hora_salida')} type="time" />
+              <FieldError errors={[errors.hora_salida]} />
             </Field>
           </FieldGroup>
 

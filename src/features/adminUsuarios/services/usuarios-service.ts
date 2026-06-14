@@ -10,6 +10,8 @@ interface UserApi {
   role: string | null
   is_active: boolean
   created_at: string
+  hora_entrada: string | null
+  hora_salida: string | null
 }
 
 interface ApiResponse<T> {

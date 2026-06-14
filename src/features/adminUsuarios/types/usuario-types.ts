@@ -8,6 +8,8 @@ export type Usuario = {
   role: string | null
   is_active: boolean
   created_at: string
+  hora_entrada: string | null
+  hora_salida: string | null
 }
 
 export type CreateUsuarioPayload = {
@@ -17,6 +19,8 @@ export type CreateUsuarioPayload = {
   last_name: string
   email?: string
   role?: string
+  hora_entrada?: string
+  hora_salida?: string
 }
 
 export type UpdateUsuarioPayload = {
@@ -27,4 +31,6 @@ export type UpdateUsuarioPayload = {
   last_name?: string
   email?: string
   role?: string
+  hora_entrada?: string
+  hora_salida?: string
 }
