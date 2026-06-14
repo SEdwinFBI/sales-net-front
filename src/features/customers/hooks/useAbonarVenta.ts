@@ -5,6 +5,7 @@ import type { AbonarPayload, AbonarResponse } from '../types/clientes'
 
 interface AbonarVentaVariables {
   idVenta: number
+  idCliente: number
   data: AbonarPayload
 }
 
@@ -12,7 +13,7 @@ export const useAbonarVenta = () => {
   const queryClient = useQueryClient()
 
   return useMutation<AbonarResponse, Error, AbonarVentaVariables>({
-    mutationFn: ({ idVenta, data }) => abonarVenta(idVenta, data),
+    mutationFn: ({ idVenta, idCliente, data }) => abonarVenta(idVenta, idCliente, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
     },
