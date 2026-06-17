@@ -8,6 +8,7 @@ import ClienteInfo from '../components/ClienteInfo'
 import AbonosTable from '../components/AbonosTable'
 import ComprasTable from '../components/ComprasTable'
 import AbonarDialog from '../components/AbonarDialog'
+import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -22,6 +23,7 @@ export default function ClienteDetailPage() {
   const { abonos } = useAbonosHistorial(clienteId)
   const { ventas, resumen } = useComprasCliente(clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
+  const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -67,6 +69,10 @@ export default function ClienteDetailPage() {
                 <TabsTrigger value="abonos">Abonos</TabsTrigger>
                 <TabsTrigger value="compras">Compras</TabsTrigger>
               </TabsList>
+              <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
+                <Plus />
+                Registrar venta
+              </Button>
               <Button onClick={() => setAbonarOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar abono
@@ -83,6 +89,13 @@ export default function ClienteDetailPage() {
           </Tabs>
         </Card>
       </div>
+
+      <CrearVentaEncabezadoDialog
+        open={ventaDialogOpen}
+        idCliente={clienteId}
+        clienteNombre={cliente.nombre_completo}
+        onClose={() => setVentaDialogOpen(false)}
+      />
 
       <AbonarDialog
         open={abonarOpen}

@@ -41,6 +41,7 @@ export default function AbonosTable({ abonos }: Props) {
     { accessorKey: 'venta_total', header: 'Total venta', cell: ({ row }) => `Q${Number(row.original.venta_total).toFixed(2)}` },
     { accessorKey: 'saldo_restante', header: 'Saldo restante', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.saldo_restante).toFixed(2)}</span> },
     { accessorKey: 'venta_estado', header: 'Estado venta' },
+    { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
   ], [])
 
   const table = useReactTable({

@@ -50,6 +50,7 @@ export interface VentaEnVariante {
   cliente: ClienteInfo
   estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
   forma_pago: string
+  observacion?: string | null
 }
 
 export interface VendedorInfo {

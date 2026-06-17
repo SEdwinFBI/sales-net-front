@@ -173,6 +173,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">F. Pago</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendedor</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Observación</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -190,6 +191,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                   <td className="px-2 py-1 text-xs">{v.forma_pago}</td>
                                   <td className="px-2 py-1 text-xs">{v.vendedor.full_name}</td>
                                   <td className="px-2 py-1 text-xs">{v.cliente.nombre_completo}</td>
+                                  <td className="px-2 py-1 text-xs">{v.observacion || <span className="text-muted-foreground">—</span>}</td>
                                 </tr>
                               ))}
                             </tbody>

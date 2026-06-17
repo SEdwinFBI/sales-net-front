@@ -73,6 +73,7 @@ export interface Venta {
   forma_pago: string
   abonado: number
   saldo: number
+  observacion?: string | null
   vendedor: {
     id: number
     username: string

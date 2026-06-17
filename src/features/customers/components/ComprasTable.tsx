@@ -54,6 +54,7 @@ export default function ComprasTable({ ventas, resumen }: Props) {
                 <TableHead>Estado</TableHead>
                 <TableHead>Forma de pago</TableHead>
                 <TableHead>Vendedor</TableHead>
+                <TableHead>Observación</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -67,6 +68,7 @@ export default function ComprasTable({ ventas, resumen }: Props) {
                   <TableCell>{venta.estado}</TableCell>
                   <TableCell className="capitalize">{venta.forma_pago}</TableCell>
                   <TableCell>{venta.vendedor.full_name}</TableCell>
+                  <TableCell>{venta.observacion || <span className="text-muted-foreground">—</span>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -90,6 +90,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     },
     { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
     { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo },
+    { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
   ], [])
 
   const table = useReactTable({
@@ -198,6 +199,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Por Unidad</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total sin Descuento</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Final</th>
+                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Observación</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -217,13 +219,14 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                     <td className="px-3 py-2 text-right text-destructive">Q{descTotal.toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right">Q{Number(d.total).toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right font-medium">Q{Number(d.total_neto).toFixed(2)}</td>
+                                    <td className="px-3 py-2">{row.original.observacion || <span className="text-muted-foreground">—</span>}</td>
                                   </tr>
                                   )
                                 })}
                               </tbody>
                               <tfoot>
                                 <tr className="border-t-2 border-border bg-muted/30">
-                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={6}>Total</td>
+                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={7}>Total</td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
                                     Q{row.original.detalles.reduce((s, d) => s + Number(d.total), 0).toFixed(2)}
                                   </td>
