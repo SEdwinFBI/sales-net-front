@@ -25,7 +25,7 @@ export const useCreateVentaEncabezado = () => {
         id_cliente,
         id_forma_pago,
         estado,
-        monto,
+        total: monto,
         idempotencia_key: crypto.randomUUID(),
         observacion: observacion || null,
       }
