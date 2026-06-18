@@ -108,7 +108,7 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
               onChange={(e) => { setMonto(e.target.value); setMontoError('') }}
               placeholder="0.00"
             />
-            <FieldError errors={[montoError]} />
+            <FieldError errors={montoError ? [{ message: montoError }] : []} />
           </Field>
 
           <Field>
