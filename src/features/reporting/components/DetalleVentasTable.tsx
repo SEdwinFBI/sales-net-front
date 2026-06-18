@@ -43,6 +43,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
     { accessorKey: 'forma_pago', header: 'Forma de pago' },
     { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
     { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente.nombre_completo },
+    { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
   ], [])
 
   const uniqueValues = useMemo(() => ({

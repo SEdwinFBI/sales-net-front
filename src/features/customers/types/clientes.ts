@@ -42,6 +42,7 @@ export interface Abono {
   venta_total: number
   venta_estado: string
   saldo_restante: number
+  observacion?: string | null
   cliente: {
     id: number
     nombre_completo: string
@@ -59,6 +60,32 @@ export interface AbonarResponse {
     abono: { id: number; monto: number; fecha_abono: string; id_venta: number }
     balance_restante: number
     venta_estado: string
+  }
+}
+
+export interface VentaEncabezadoRequest {
+  id_usuario: number
+  id_cliente: number
+  id_forma_pago: number
+  estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
+  monto: number | string
+  idempotencia_key: string
+  observacion?: string | null
+}
+
+export interface VentaEncabezadoResponse {
+  status: string
+  message: string
+  data: {
+    id: number
+    id_usuario: number
+    id_cliente: number
+    id_forma_pago: number
+    fecha: string
+    total: string
+    estado: string
+    idempotencia_key: string | null
+    observacion: string | null
   }
 }
 

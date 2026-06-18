@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, ComprasData, ComprasFilters } from '../types/clientes'
+import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, ComprasData, ComprasFilters, VentaEncabezadoRequest, VentaEncabezadoResponse } from '../types/clientes'
 
 export const getClientes = async (): Promise<Cliente[]> => {
   const { data } = await api.get<ApiResponse<Cliente[] | { count: number; results: Cliente[] }>>('/admin/clientes/')
@@ -40,4 +40,9 @@ export const abonarVenta = async (idVenta: number, idCliente: number, payload: A
 export const getComprasCliente = async (idCliente: number, filters?: ComprasFilters): Promise<ComprasData> => {
   const { data } = await api.get<ApiResponse<ComprasData>>(`/abonos/${idCliente}/compras`, { params: filters })
   return data.data
+}
+
+export const createVentaEncabezado = async (payload: VentaEncabezadoRequest): Promise<VentaEncabezadoResponse> => {
+  const { data } = await api.post<VentaEncabezadoResponse>('/admin/venta/creacionEncabezado/', payload)
+  return data
 }
