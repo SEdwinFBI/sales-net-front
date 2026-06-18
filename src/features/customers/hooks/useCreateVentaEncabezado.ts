@@ -4,8 +4,6 @@ import { useAuthStore } from '@/features/core/store/auth-store'
 import { createVentaEncabezado } from '../services/clientes-service'
 import type { VentaEncabezadoResponse } from '../types/clientes'
 
-const PAGO_MAP: Record<string, number> = { efectivo: 1, credito: 2 }
-
 interface CreateVentaEncabezadoVariables {
   id_cliente: number
   id_forma_pago: number
