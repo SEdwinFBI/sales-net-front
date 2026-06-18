@@ -68,7 +68,7 @@ export interface VentaEncabezadoRequest {
   id_cliente: number
   id_forma_pago: number
   estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
-  monto: number | string
+  total: number | string
   idempotencia_key: string
   observacion?: string | null
 }
