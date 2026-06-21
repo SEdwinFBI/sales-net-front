@@ -67,6 +67,21 @@ export default function AbonosTable({ abonos }: Props) {
     },
     { accessorKey: 'venta_estado', header: 'Estado venta' },
     {
+      id: 'usuario',
+      accessorFn: (abono) => abono.usuario?.full_name || abono.usuario?.username || '',
+      header: 'Usuario',
+      cell: ({ row }) => row.original.usuario
+        ? (
+          <div className="whitespace-nowrap">
+            <p>{row.original.usuario.full_name || row.original.usuario.username}</p>
+            {row.original.usuario.full_name && (
+              <p className="text-xs text-muted-foreground">@{row.original.usuario.username}</p>
+            )}
+          </div>
+        )
+        : <span className="text-muted-foreground">—</span>,
+    },
+    {
       accessorKey: 'observacion',
       header: 'Observación',
       cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span>,

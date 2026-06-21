@@ -35,7 +35,7 @@ type MovimientoBase = {
   saldo: number
   estado: string
   formaPago: string | null
-  vendedor: string | null
+  responsable: string | null
   observacion: string | null
 }
 
@@ -79,7 +79,7 @@ const globalSearch: FilterFn<Movimiento> = (row, _columnId, filterValue) => {
     movimiento.saldo,
     movimiento.estado,
     movimiento.formaPago,
-    movimiento.vendedor,
+    movimiento.responsable,
     movimiento.observacion,
   ].join(' ').toLowerCase()
 
@@ -101,7 +101,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       saldo: Number(venta.saldo),
       estado: venta.estado,
       formaPago: venta.forma_pago,
-      vendedor: venta.vendedor.full_name,
+      responsable: venta.vendedor.full_name,
       observacion: venta.observacion ?? null,
       compra: venta,
     })),
@@ -115,7 +115,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       saldo: Number(abono.saldo_restante),
       estado: abono.venta_estado,
       formaPago: null,
-      vendedor: null,
+      responsable: abono.usuario?.full_name || abono.usuario?.username || null,
       observacion: abono.observacion ?? null,
       abono,
     })),
@@ -182,9 +182,9 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
         : <span className="text-muted-foreground">—</span>,
     },
     {
-      accessorKey: 'vendedor',
-      header: 'Vendedor',
-      cell: ({ row }) => row.original.vendedor || <span className="text-muted-foreground">—</span>,
+      accessorKey: 'responsable',
+      header: 'Responsable',
+      cell: ({ row }) => row.original.responsable || <span className="text-muted-foreground">—</span>,
     },
     {
       accessorKey: 'observacion',
@@ -350,10 +350,10 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
                           <dd className="capitalize">{movimiento.formaPago}</dd>
                         </div>
                       )}
-                      {movimiento.vendedor && (
+                      {movimiento.responsable && (
                         <div>
-                          <dt className="text-xs text-muted-foreground">Vendedor</dt>
-                          <dd>{movimiento.vendedor}</dd>
+                          <dt className="text-xs text-muted-foreground">Responsable</dt>
+                          <dd>{movimiento.responsable}</dd>
                         </div>
                       )}
                     </dl>
