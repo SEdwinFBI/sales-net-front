@@ -5,13 +5,11 @@ import { useCliente } from '../hooks/useCliente'
 import { useAbonosHistorial } from '../hooks/useAbonosHistorial'
 import { useComprasCliente } from '../hooks/useComprasCliente'
 import ClienteInfo from '../components/ClienteInfo'
-import AbonosTable from '../components/AbonosTable'
-import ComprasTable from '../components/ComprasTable'
+import MovimientosTable from '../components/MovimientosTable'
 import AbonarDialog from '../components/AbonarDialog'
 import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 
@@ -63,12 +61,8 @@ export default function ClienteDetailPage() {
 
           <ClienteInfo cliente={cliente} />
 
-          <Tabs defaultValue="abonos">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList className="w-full sm:w-fit">
-                <TabsTrigger value="abonos">Abonos</TabsTrigger>
-                <TabsTrigger value="compras">Compras</TabsTrigger>
-              </TabsList>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
@@ -79,14 +73,8 @@ export default function ClienteDetailPage() {
               </Button>
             </div>
 
-            <TabsContent value="abonos" className="mt-4">
-              <AbonosTable abonos={abonos} />
-            </TabsContent>
-
-            <TabsContent value="compras" className="mt-4">
-              <ComprasTable ventas={ventas} resumen={resumen} />
-            </TabsContent>
-          </Tabs>
+            <MovimientosTable ventas={ventas} abonos={abonos} resumen={resumen} />
+          </div>
         </Card>
       </div>
 
