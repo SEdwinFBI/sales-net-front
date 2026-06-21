@@ -252,9 +252,9 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
         <EmptyState icon={Receipt} size="sm" title="No hay movimientos registrados." />
       ) : (
         <>
-          <div className="hidden overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm lg:block">
-            <div className="overflow-x-auto">
-              <Table>
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+            <div className="overflow-x-auto overscroll-x-contain">
+              <Table className="min-w-[1250px]">
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
@@ -294,80 +294,6 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
                 </TableBody>
               </Table>
             </div>
-          </div>
-
-          <div className="space-y-3 lg:hidden">
-            {visibleRows.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                Sin resultados para la búsqueda
-              </div>
-            ) : (
-              visibleRows.map((row) => {
-                const movimiento = row.original
-
-                return (
-                  <article key={row.id} className="rounded-xl border border-border/70 bg-white p-4 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <Badge variant={movimiento.tipo === 'Compra' ? 'secondary' : 'default'}>
-                          {movimiento.tipo}
-                        </Badge>
-                        <p className="font-mono text-sm font-semibold">
-                          {movimiento.tipo} #{movimiento.idMovimiento}
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">Venta #{movimiento.idVenta}</p>
-                      </div>
-                      <time className="text-right text-xs text-muted-foreground" dateTime={movimiento.fecha}>
-                        {formatDate(movimiento.fecha)}
-                      </time>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <p className="text-[11px] text-muted-foreground">Total venta</p>
-                        <p className="font-semibold">{formatCurrency(movimiento.totalVenta)}</p>
-                      </div>
-                      <div className="rounded-lg bg-warning/10 p-3">
-                        <p className="text-[11px] text-muted-foreground">
-                          {movimiento.tipo === 'Compra' ? 'Abonado acumulado' : 'Este abono'}
-                        </p>
-                        <p className="font-semibold text-warning">{formatCurrency(movimiento.abonado)}</p>
-                      </div>
-                      <div className="rounded-lg bg-destructive/10 p-3">
-                        <p className="text-[11px] text-muted-foreground">Saldo</p>
-                        <p className="font-semibold text-destructive">{formatCurrency(movimiento.saldo)}</p>
-                      </div>
-                    </div>
-
-                    <dl className="mt-4 grid gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
-                      <div>
-                        <dt className="text-xs text-muted-foreground">Estado</dt>
-                        <dd>{movimiento.estado}</dd>
-                      </div>
-                      {movimiento.formaPago && (
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Forma de pago</dt>
-                          <dd className="capitalize">{movimiento.formaPago}</dd>
-                        </div>
-                      )}
-                      {movimiento.responsable && (
-                        <div>
-                          <dt className="text-xs text-muted-foreground">Responsable</dt>
-                          <dd>{movimiento.responsable}</dd>
-                        </div>
-                      )}
-                    </dl>
-
-                    {movimiento.observacion && (
-                      <div className="mt-4 border-t border-border/60 pt-3">
-                        <p className="text-xs text-muted-foreground">Observación</p>
-                        <p className="text-sm">{movimiento.observacion}</p>
-                      </div>
-                    )}
-                  </article>
-                )
-              })
-            )}
           </div>
 
           {globalFilter && (
