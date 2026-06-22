@@ -5,15 +5,17 @@ import { useCliente } from '../hooks/useCliente'
 import { useAbonosHistorial } from '../hooks/useAbonosHistorial'
 import { useComprasCliente } from '../hooks/useComprasCliente'
 import ClienteInfo from '../components/ClienteInfo'
+import MovimientosTable from '../components/MovimientosTable'
 import AbonosTable from '../components/AbonosTable'
 import ComprasTable from '../components/ComprasTable'
 import AbonarDialog from '../components/AbonarDialog'
 import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
+
+type DetailView = 'abonos' | 'compras' | null
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +26,7 @@ export default function ClienteDetailPage() {
   const { ventas, resumen } = useComprasCliente(clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
+  const [detailView, setDetailView] = useState<DetailView>(null)
 
   if (isLoading) {
     return (
@@ -63,12 +66,8 @@ export default function ClienteDetailPage() {
 
           <ClienteInfo cliente={cliente} />
 
-          <Tabs defaultValue="abonos">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList className="w-full sm:w-fit">
-                <TabsTrigger value="abonos">Abonos</TabsTrigger>
-                <TabsTrigger value="compras">Compras</TabsTrigger>
-              </TabsList>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
@@ -79,14 +78,39 @@ export default function ClienteDetailPage() {
               </Button>
             </div>
 
-            <TabsContent value="abonos" className="mt-4">
-              <AbonosTable abonos={abonos} />
-            </TabsContent>
+            <MovimientosTable ventas={ventas} abonos={abonos} resumen={resumen} />
 
-            <TabsContent value="compras" className="mt-4">
-              <ComprasTable ventas={ventas} resumen={resumen} />
-            </TabsContent>
-          </Tabs>
+            <div className="border-t border-border/60 pt-5">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">Detalle por tipo</p>
+                  <p className="text-sm text-muted-foreground">Consulta individual de compras y abonos.</p>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={detailView === 'abonos' ? 'default' : 'outline'}
+                    onClick={() => setDetailView('abonos')}
+                  >
+                    Ver abonos
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={detailView === 'compras' ? 'default' : 'outline'}
+                    onClick={() => setDetailView('compras')}
+                  >
+                    Ver compras
+                  </Button>
+                </div>
+              </div>
+
+              {detailView === 'abonos' && <AbonosTable abonos={abonos} />}
+              {detailView === 'compras' && <ComprasTable ventas={ventas} resumen={resumen} />}
+            </div>
+          </div>
         </Card>
       </div>
 

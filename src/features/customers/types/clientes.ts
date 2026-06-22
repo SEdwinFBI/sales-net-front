@@ -43,6 +43,11 @@ export interface Abono {
   venta_estado: string
   saldo_restante: number
   observacion?: string | null
+  usuario: {
+    id: number
+    username: string
+    full_name: string
+  } | null
   cliente: {
     id: number
     nombre_completo: string
