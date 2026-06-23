@@ -108,7 +108,7 @@ export default function ClienteDetailPage() {
               </div>
 
               {detailView === 'abonos' && <AbonosTable abonos={abonos} />}
-              {detailView === 'compras' && <ComprasTable ventas={ventas} resumen={resumen} />}
+              {detailView === 'compras' && <ComprasTable ventas={ventas} />}
             </div>
           </div>
         </Card>

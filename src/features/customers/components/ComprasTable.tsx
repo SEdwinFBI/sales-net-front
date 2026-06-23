@@ -1,6 +1,5 @@
 import { Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
-import type { ComprasData } from '../types/clientes'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   Table,
@@ -13,37 +12,11 @@ import {
 
 type Props = {
   ventas: Venta[]
-  resumen?: ComprasData['resumen']
 }
 
-export default function ComprasTable({ ventas, resumen }: Props) {
+export default function ComprasTable({ ventas }: Props) {
   return (
     <div className="space-y-4">
-      {resumen && (
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Total ventas</p>
-            <p className="text-xl font-bold">{resumen.total_ventas}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Total general</p>
-            <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Pagado</p>
-            <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Abonado</p>
-            <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Balance (deuda)</p>
-            <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
-          </div>
-        </div>
-      )}
-
       {ventas.length === 0 ? (
         <EmptyState icon={Receipt} size="sm" title="No hay compras registradas." />
       ) : (
