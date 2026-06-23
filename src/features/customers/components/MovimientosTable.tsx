@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Abono, ComprasData } from '../types/clientes'
+import type { Abono } from '../types/clientes'
 
 type MovimientoBase = {
   fecha: string
@@ -54,7 +54,6 @@ type Movimiento = MovimientoCompra | MovimientoAbono
 type Props = {
   ventas: Venta[]
   abonos: Abono[]
-  resumen?: ComprasData['resumen']
 }
 
 const formatCurrency = (value: number) => `Q${Number(value).toFixed(2)}`
@@ -67,7 +66,7 @@ const formatDate = (value: string) => {
   })}`
 }
 
-export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
+export default function MovimientosTable({ ventas, abonos }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'fecha', desc: true }])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
@@ -196,31 +195,6 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
         <h3 className="font-semibold">Movimientos generales</h3>
         <p className="text-sm text-muted-foreground">Compras y abonos ordenados del más reciente al más antiguo.</p>
       </div>
-
-      {resumen && (
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Total ventas</p>
-            <p className="text-xl font-bold">{resumen.total_ventas}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Total general</p>
-            <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Pagado</p>
-            <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Abonado</p>
-            <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <p className="text-xs text-muted-foreground">Balance (deuda)</p>
-            <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
-          </div>
-        </div>
-      )}
 
       {movimientos.length === 0 ? (
         <EmptyState icon={Receipt} size="sm" title="No hay movimientos registrados." />

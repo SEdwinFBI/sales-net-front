@@ -64,6 +64,31 @@ export default function ClienteDetailPage() {
 
           <ClienteInfo cliente={cliente} />
 
+          {resumen && (
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Total ventas</p>
+                <p className="text-xl font-bold">{resumen.total_ventas}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Total general</p>
+                <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Pagado</p>
+                <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Abonado</p>
+                <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Balance (deuda)</p>
+                <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
+              </div>
+            </div>
+          )}
+
           <Tabs defaultValue="movimientos">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">
@@ -82,7 +107,7 @@ export default function ClienteDetailPage() {
             </div>
 
             <TabsContent value="movimientos" className="mt-4">
-              <MovimientosTable ventas={ventas} abonos={abonos} resumen={resumen} />
+              <MovimientosTable ventas={ventas} abonos={abonos} />
             </TabsContent>
 
             <TabsContent value="abonos" className="mt-4">
