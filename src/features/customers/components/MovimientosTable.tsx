@@ -104,6 +104,12 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
 
   const columns = useMemo<ColumnDef<Movimiento>[]>(() => [
     {
+      accessorKey: 'fecha',
+      header: 'Fecha',
+      sortingFn: 'datetime',
+      cell: ({ row }) => <span className="whitespace-nowrap">{formatDate(row.original.fecha)}</span>,
+    },
+    {
       accessorKey: 'tipo',
       header: 'Tipo',
       cell: ({ row }) => (
@@ -113,14 +119,8 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       ),
     },
     {
-      accessorKey: 'fecha',
-      header: 'Fecha',
-      sortingFn: 'datetime',
-      cell: ({ row }) => <span className="whitespace-nowrap">{formatDate(row.original.fecha)}</span>,
-    },
-    {
       accessorKey: 'idMovimiento',
-      header: 'Movimiento',
+      header: 'ID movimiento',
       cell: ({ row }) => (
         <span className="whitespace-nowrap font-mono text-xs">
           {row.original.tipo} #{row.original.idMovimiento}
@@ -129,7 +129,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
     },
     {
       accessorKey: 'idVenta',
-      header: 'Venta',
+      header: 'Venta relacionada',
       cell: ({ row }) => <span className="whitespace-nowrap font-mono text-xs">Venta #{row.original.idVenta}</span>,
     },
     {
@@ -154,7 +154,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       header: 'Saldo',
       cell: ({ row }) => <span className="whitespace-nowrap text-destructive">{formatCurrency(row.original.saldo)}</span>,
     },
-    { accessorKey: 'estado', header: 'Estado' },
+    { accessorKey: 'estado', header: 'Estado venta' },
     {
       accessorKey: 'formaPago',
       header: 'Forma de pago',
@@ -193,10 +193,8 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <div>
-          <h3 className="font-semibold">Movimientos generales</h3>
-          <p className="text-sm text-muted-foreground">Compras y abonos ordenados del más reciente al más antiguo.</p>
-        </div>
+        <h3 className="font-semibold">Movimientos generales</h3>
+        <p className="text-sm text-muted-foreground">Compras y abonos ordenados del más reciente al más antiguo.</p>
       </div>
 
       {resumen && (
