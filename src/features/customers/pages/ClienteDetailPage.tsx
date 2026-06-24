@@ -12,10 +12,9 @@ import AbonarDialog from '../components/AbonarDialog'
 import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
-
-type DetailView = 'abonos' | 'compras' | null
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -26,7 +25,6 @@ export default function ClienteDetailPage() {
   const { ventas, resumen } = useComprasCliente(clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
-  const [detailView, setDetailView] = useState<DetailView>(null)
 
   if (isLoading) {
     return (
@@ -66,8 +64,38 @@ export default function ClienteDetailPage() {
 
           <ClienteInfo cliente={cliente} />
 
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          {resumen && (
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Total ventas</p>
+                <p className="text-xl font-bold">{resumen.total_ventas}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Total general</p>
+                <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Pagado</p>
+                <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Abonado</p>
+                <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-4 shadow-sm">
+                <p className="text-xs text-muted-foreground">Balance (deuda)</p>
+                <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
+              </div>
+            </div>
+          )}
+
+          <Tabs defaultValue="movimientos">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <TabsList className="w-full sm:w-fit">
+                <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>
+                <TabsTrigger value="abonos">Abonos</TabsTrigger>
+                <TabsTrigger value="compras">Compras</TabsTrigger>
+              </TabsList>
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
@@ -78,39 +106,18 @@ export default function ClienteDetailPage() {
               </Button>
             </div>
 
-            <MovimientosTable ventas={ventas} abonos={abonos} resumen={resumen} />
+            <TabsContent value="movimientos" className="mt-4">
+              <MovimientosTable ventas={ventas} abonos={abonos} />
+            </TabsContent>
 
-            <div className="border-t border-border/60 pt-5">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium">Detalle por tipo</p>
-                  <p className="text-sm text-muted-foreground">Consulta individual de compras y abonos.</p>
-                </div>
+            <TabsContent value="abonos" className="mt-4">
+              <AbonosTable abonos={abonos} />
+            </TabsContent>
 
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={detailView === 'abonos' ? 'default' : 'outline'}
-                    onClick={() => setDetailView('abonos')}
-                  >
-                    Ver abonos
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={detailView === 'compras' ? 'default' : 'outline'}
-                    onClick={() => setDetailView('compras')}
-                  >
-                    Ver compras
-                  </Button>
-                </div>
-              </div>
-
-              {detailView === 'abonos' && <AbonosTable abonos={abonos} />}
-              {detailView === 'compras' && <ComprasTable ventas={ventas} resumen={resumen} />}
-            </div>
-          </div>
+            <TabsContent value="compras" className="mt-4">
+              <ComprasTable ventas={ventas} />
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
 

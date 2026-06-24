@@ -7,10 +7,10 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
-  type FilterFn,
+  type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, Receipt, Search } from 'lucide-react'
+import { ArrowUpDown, Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Abono, ComprasData } from '../types/clientes'
+import type { Abono } from '../types/clientes'
 
 type MovimientoBase = {
   fecha: string
@@ -54,7 +54,6 @@ type Movimiento = MovimientoCompra | MovimientoAbono
 type Props = {
   ventas: Venta[]
   abonos: Abono[]
-  resumen?: ComprasData['resumen']
 }
 
 const formatCurrency = (value: number) => `Q${Number(value).toFixed(2)}`
@@ -67,28 +66,9 @@ const formatDate = (value: string) => {
   })}`
 }
 
-const globalSearch: FilterFn<Movimiento> = (row, _columnId, filterValue) => {
-  const movimiento = row.original
-  const searchableText = [
-    movimiento.tipo,
-    formatDate(movimiento.fecha),
-    movimiento.idMovimiento,
-    movimiento.idVenta,
-    movimiento.totalVenta,
-    movimiento.abonado,
-    movimiento.saldo,
-    movimiento.estado,
-    movimiento.formaPago,
-    movimiento.responsable,
-    movimiento.observacion,
-  ].join(' ').toLowerCase()
-
-  return searchableText.includes(String(filterValue).trim().toLowerCase())
-}
-
-export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
+export default function MovimientosTable({ ventas, abonos }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'fecha', desc: true }])
-  const [globalFilter, setGlobalFilter] = useState('')
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const movimientos = useMemo<Movimiento[]>(() => [
     ...ventas.map<MovimientoCompra>((venta) => ({
@@ -123,6 +103,12 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
 
   const columns = useMemo<ColumnDef<Movimiento>[]>(() => [
     {
+      accessorKey: 'fecha',
+      header: 'Fecha',
+      sortingFn: 'datetime',
+      cell: ({ row }) => <span className="whitespace-nowrap">{formatDate(row.original.fecha)}</span>,
+    },
+    {
       accessorKey: 'tipo',
       header: 'Tipo',
       cell: ({ row }) => (
@@ -132,14 +118,8 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       ),
     },
     {
-      accessorKey: 'fecha',
-      header: 'Fecha',
-      sortingFn: 'datetime',
-      cell: ({ row }) => <span className="whitespace-nowrap">{formatDate(row.original.fecha)}</span>,
-    },
-    {
       accessorKey: 'idMovimiento',
-      header: 'Movimiento',
+      header: 'ID movimiento',
       cell: ({ row }) => (
         <span className="whitespace-nowrap font-mono text-xs">
           {row.original.tipo} #{row.original.idMovimiento}
@@ -148,7 +128,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
     },
     {
       accessorKey: 'idVenta',
-      header: 'Venta',
+      header: 'Venta relacionada',
       cell: ({ row }) => <span className="whitespace-nowrap font-mono text-xs">Venta #{row.original.idVenta}</span>,
     },
     {
@@ -173,7 +153,7 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
       header: 'Saldo',
       cell: ({ row }) => <span className="whitespace-nowrap text-destructive">{formatCurrency(row.original.saldo)}</span>,
     },
-    { accessorKey: 'estado', header: 'Estado' },
+    { accessorKey: 'estado', header: 'Estado venta' },
     {
       accessorKey: 'formaPago',
       header: 'Forma de pago',
@@ -196,10 +176,9 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
   const table = useReactTable({
     data: movimientos,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, columnFilters },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: globalSearch,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -208,45 +187,14 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
   })
 
   const visibleRows = table.getRowModel().rows
+  const hasFilters = columnFilters.length > 0
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h3 className="font-semibold">Movimientos generales</h3>
-          <p className="text-sm text-muted-foreground">Compras y abonos ordenados del más reciente al más antiguo.</p>
-        </div>
-
-        {movimientos.length > 0 && (
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={globalFilter}
-              onChange={(event) => setGlobalFilter(event.target.value)}
-              placeholder="Buscar movimiento..."
-              aria-label="Buscar movimientos"
-              className="pl-9"
-            />
-          </div>
-        )}
+      <div>
+        <h3 className="font-semibold">Movimientos generales</h3>
+        <p className="text-sm text-muted-foreground">Compras y abonos ordenados del más reciente al más antiguo.</p>
       </div>
-
-      {resumen && (
-        <div className="grid overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm sm:grid-cols-3">
-          <div className="p-4">
-            <p className="text-xs text-muted-foreground">Total comprado</p>
-            <p className="text-lg font-bold text-primary">{formatCurrency(resumen.total_general)}</p>
-          </div>
-          <div className="border-t border-border/70 p-4 sm:border-l sm:border-t-0">
-            <p className="text-xs text-muted-foreground">Total abonado</p>
-            <p className="text-lg font-bold text-warning">{formatCurrency(resumen.total_abonado)}</p>
-          </div>
-          <div className="border-t border-border/70 p-4 sm:border-l sm:border-t-0">
-            <p className="text-xs text-muted-foreground">Deuda</p>
-            <p className="text-lg font-bold text-destructive">{formatCurrency(resumen.balance)}</p>
-          </div>
-        </div>
-      )}
 
       {movimientos.length === 0 ? (
         <EmptyState icon={Receipt} size="sm" title="No hay movimientos registrados." />
@@ -260,14 +208,22 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
                         <TableHead key={header.id}>
-                          <button
-                            type="button"
-                            className="flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider"
-                            onClick={() => header.column.toggleSorting()}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                            <ArrowUpDown className="size-3 opacity-40" />
-                          </button>
+                          <div className="space-y-0.5">
+                            <button
+                              type="button"
+                              className="flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider"
+                              onClick={() => header.column.toggleSorting()}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <ArrowUpDown className="size-3 opacity-40" />
+                            </button>
+                            <Input
+                              value={(header.column.getFilterValue() ?? '') as string}
+                              onChange={(event) => header.column.setFilterValue(event.target.value || undefined)}
+                              placeholder="Filtrar..."
+                              className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
+                            />
+                          </div>
                         </TableHead>
                       ))}
                     </TableRow>
@@ -294,13 +250,13 @@ export default function MovimientosTable({ ventas, abonos, resumen }: Props) {
                 </TableBody>
               </Table>
             </div>
-          </div>
 
-          {globalFilter && (
-            <p className="text-xs text-muted-foreground">
-              {table.getFilteredRowModel().rows.length} de {movimientos.length} movimientos
-            </p>
-          )}
+            {hasFilters && (
+              <div className="border-t border-border/50 bg-primary/5 px-4 py-1.5 text-xs text-muted-foreground">
+                {table.getFilteredRowModel().rows.length} de {movimientos.length} resultados
+              </div>
+            )}
+          </div>
 
           <TablePagination table={table} />
         </>
