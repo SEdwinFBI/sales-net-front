@@ -1,27 +1,43 @@
 import { api } from '@/lib/api'
-import type { ReporteVentas, ReporteVentasFilters, ReporteDeudores } from '../types/reportes'
+import type { ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters } from '../types/reportes'
 
-function cleanParams(filters?: ReporteVentasFilters): Record<string, unknown> {
+function setParam(params: Record<string, unknown>, key: string, value: unknown) {
+  if (value !== undefined && value !== null && value !== '') params[key] = value
+}
+
+function cleanReporteVentasParams(filters?: ReporteVentasFilters): Record<string, unknown> {
   const params: Record<string, unknown> = {}
-  if (filters?.fecha_desde) params.fecha_desde = filters.fecha_desde
-  if (filters?.fecha_hasta) params.fecha_hasta = filters.fecha_hasta
-  if (filters?.id_variante !== undefined && filters?.id_variante !== null) params.id_variante = filters.id_variante
-  if (filters?.id_vendedor !== undefined && filters?.id_vendedor !== null) params.id_vendedor = filters.id_vendedor
-  if (filters?.id_articulo !== undefined && filters?.id_articulo !== null) params.id_articulo = filters.id_articulo
-  if (filters?.id_talla !== undefined && filters?.id_talla !== null) params.id_talla = filters.id_talla
+  setParam(params, 'fecha_desde', filters?.fecha_desde)
+  setParam(params, 'fecha_hasta', filters?.fecha_hasta)
+  setParam(params, 'id_variante', filters?.id_variante)
+  setParam(params, 'id_vendedor', filters?.id_vendedor)
+  setParam(params, 'id_articulo', filters?.id_articulo)
+  setParam(params, 'id_talla', filters?.id_talla)
+  return params
+}
+
+function cleanReporteDeudoresParams(filters?: ReporteDeudoresFilters): Record<string, unknown> {
+  const params: Record<string, unknown> = {}
+  setParam(params, 'fecha_desde', filters?.fecha_desde)
+  setParam(params, 'fecha_hasta', filters?.fecha_hasta)
+  setParam(params, 'id_vendedor', filters?.id_vendedor)
+  setParam(params, 'id_cliente', filters?.id_cliente)
+  setParam(params, 'search', filters?.search)
+  setParam(params, 'saldo_min', filters?.saldo_min)
+  setParam(params, 'saldo_max', filters?.saldo_max)
   return params
 }
 
 export const getReporteVentas = async (filters?: ReporteVentasFilters): Promise<ReporteVentas['data']> => {
   const { data } = await api.get<ReporteVentas>('/reportes/ventas', {
-    params: cleanParams(filters),
+    params: cleanReporteVentasParams(filters),
   })
   return data.data
 }
 
-async function downloadPdf(url: string, filename: string, filters?: ReporteVentasFilters) {
+async function downloadPdf(url: string, filename: string, params?: Record<string, unknown>) {
   const response = await api.get(url, {
-    params: { ...cleanParams(filters), output: 'pdf' },
+    params: { ...params, output: 'pdf' },
     responseType: 'blob',
   })
   const blob = new Blob([response.data], { type: 'application/pdf' })
@@ -36,14 +52,16 @@ async function downloadPdf(url: string, filename: string, filters?: ReporteVenta
 }
 
 export const downloadReporteVentasPdf = async (filters?: ReporteVentasFilters) => {
-  await downloadPdf('/reportes/ventas', `reporte_ventas_${new Date().toISOString().slice(0, 10)}.pdf`, filters)
+  await downloadPdf('/reportes/ventas', `reporte_ventas_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteVentasParams(filters))
 }
 
-export const downloadReporteDeudoresPdf = async () => {
-  await downloadPdf('/reportes/deudores', `reporte_deudores_${new Date().toISOString().slice(0, 10)}.pdf`)
+export const downloadReporteDeudoresPdf = async (filters?: ReporteDeudoresFilters) => {
+  await downloadPdf('/reportes/deudores', `reporte_deudores_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteDeudoresParams(filters))
 }
 
-export const getReporteDeudores = async (): Promise<ReporteDeudores['data']> => {
-  const { data } = await api.get<ReporteDeudores>('/reportes/deudores')
+export const getReporteDeudores = async (filters?: ReporteDeudoresFilters): Promise<ReporteDeudores['data']> => {
+  const { data } = await api.get<ReporteDeudores>('/reportes/deudores', {
+    params: cleanReporteDeudoresParams(filters),
+  })
   return data.data
 }

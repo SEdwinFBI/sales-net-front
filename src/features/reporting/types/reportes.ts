@@ -8,6 +8,17 @@ export interface ReporteVentasFilters {
   output?: 'json' | 'pdf'
 }
 
+export interface ReporteDeudoresFilters {
+  fecha_desde?: string
+  fecha_hasta?: string
+  id_vendedor?: number
+  id_cliente?: number
+  search?: string
+  saldo_min?: number
+  saldo_max?: number
+  output?: 'json' | 'pdf'
+}
+
 export interface ReporteVentas {
   status: 'success'
   data: {
