@@ -39,7 +39,7 @@ export default function ReporteDeudoresPage() {
 
       <Card className="p-3.5 sm:p-5">
 
-        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-8 shadow-sm">
+        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6 shadow-sm">
           <div className="min-w-0">
             <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
             <Input
@@ -59,26 +59,16 @@ export default function ReporteDeudoresPage() {
             />
           </div>
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Vendedor</label>
-            <Input
-              type="number"
-              min="1"
-              value={filters.id_vendedor ?? ''}
-              onChange={(e) => setFilter('id_vendedor', e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="ID"
-              className="w-full"
-            />
-          </div>
-          <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Cliente</label>
-            <Input
-              type="number"
-              min="1"
-              value={filters.id_cliente ?? ''}
-              onChange={(e) => setFilter('id_cliente', e.target.value ? Number(e.target.value) : undefined)}
-              placeholder="ID"
-              className="w-full"
-            />
+            <label className="mb-1 block text-xs text-muted-foreground">Buscar</label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filters.search ?? ''}
+                onChange={(e) => setFilter('search', e.target.value)}
+                placeholder="Nombre, telefono o ID..."
+                className="w-full pl-9"
+              />
+            </div>
           </div>
           <div className="min-w-0">
             <label className="mb-1 block text-xs text-muted-foreground">Saldo min.</label>
@@ -101,18 +91,6 @@ export default function ReporteDeudoresPage() {
               onChange={(e) => setFilter('saldo_max', e.target.value ? Number(e.target.value) : undefined)}
               className="w-full"
             />
-          </div>
-          <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Buscar</label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={filters.search ?? ''}
-                onChange={(e) => setFilter('search', e.target.value)}
-                placeholder="Nombre, telefono o ID..."
-                className="w-full pl-9"
-              />
-            </div>
           </div>
           <div className="flex min-w-0 gap-2 self-end">
             {hasFilters && (
