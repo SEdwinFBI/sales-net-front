@@ -41,7 +41,7 @@ export default function ReporteDeudoresPage() {
 
         <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6 shadow-sm">
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
+            <label className="mb-1 block text-xs text-muted-foreground">Notificación desde</label>
             <Input
               type="date"
               value={filters.fecha_desde ?? ''}
@@ -50,7 +50,7 @@ export default function ReporteDeudoresPage() {
             />
           </div>
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Fecha hasta</label>
+            <label className="mb-1 block text-xs text-muted-foreground">Notificación hasta</label>
             <Input
               type="date"
               value={filters.fecha_hasta ?? ''}

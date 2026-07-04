@@ -39,6 +39,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
     { accessorKey: 'balance', header: 'Balance', cell: ({ row }) => <span className="font-semibold text-primary">Q{Number(row.original.balance).toFixed(2)}</span> },
     { accessorKey: 'total_ventas_pendientes', header: 'Pendiente de cancelar', cell: ({ row }) => `Q${Number(row.original.total_ventas_pendientes).toFixed(2)}` },
     { accessorKey: 'total_abonado', header: 'Total abonado', cell: ({ row }) => `Q${Number(row.original.total_abonado).toFixed(2)}` },
+    { accessorKey: 'fecha_notificacion', header: 'Fecha notificación', cell: ({ row }) => row.original.fecha_notificacion || 'N/A' },
     { accessorKey: 'ultima_compra', header: 'Última compra', cell: ({ row }) => {
       if (!row.original.ultima_compra) return '—'
       const d = new Date(row.original.ultima_compra)

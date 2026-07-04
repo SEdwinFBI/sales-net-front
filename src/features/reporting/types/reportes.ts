@@ -107,6 +107,7 @@ export interface ReporteDeudores {
       nombre_completo: string
       telefono: string
       balance: number
+      fecha_notificacion: string | null
       ultima_compra: string | null
       total_ventas_pendientes: number
       total_abonado: number
