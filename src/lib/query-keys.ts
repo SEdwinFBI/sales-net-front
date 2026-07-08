@@ -62,6 +62,12 @@ export const queryKeys = {
       [...queryKeys.adminVentas.all, 'list', filters] as const,
     detail: (id: number) => [...queryKeys.adminVentas.all, 'detail', id] as const,
   },
+  pricing: {
+    all: ['pricing'] as const,
+    user: (userId: number) => [...queryKeys.pricing.all, 'user', userId] as const,
+    tiers: (userId: number) => [...queryKeys.pricing.all, 'tiers', userId] as const,
+    effective: (userId: number) => [...queryKeys.pricing.all, 'effective', userId] as const,
+  },
   adminCatalog: {
     all: ['adminCatalog'] as const,
     articles: {
@@ -80,10 +86,6 @@ export const queryKeys = {
     stock: {
       all: () => [...queryKeys.adminCatalog.all, 'stock'] as const,
       list: () => [...queryKeys.adminCatalog.stock.all(), 'list'] as const,
-    },
-    reglasPrecio: {
-      all: () => [...queryKeys.adminCatalog.all, 'reglas-precio'] as const,
-      list: () => [...queryKeys.adminCatalog.reglasPrecio.all(), 'list'] as const,
     },
     formaPago: {
       all: () => [...queryKeys.adminCatalog.all, 'forma-pago'] as const,
