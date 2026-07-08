@@ -62,25 +62,6 @@ export interface UpdateStockPayload {
   cantidad: number
 }
 
-export interface ReglaPrecio {
-  id: number
-  cantidad_min: number
-  cantidad_max: number
-  descuento: string
-}
-
-export interface CreateReglaPrecioPayload {
-  cantidad_min: number
-  cantidad_max: number
-  descuento: number
-}
-
-export interface UpdateReglaPrecioPayload {
-  cantidad_min?: number
-  cantidad_max?: number
-  descuento?: number
-}
-
 export interface FormaPago {
   id: number
   nombre: string
