@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { CartItem, Product, SalesDialog } from '../types/sales';
+import type { LineDiscount } from '../utils/pricing-engine';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface SalesState {
@@ -11,7 +12,7 @@ export interface SalesState {
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
   setQty: (itemId: string, qty: number) => void;
-  setDiscount: (itemId: string, discount: number) => void;
+  applyPricing: (lines: Record<string, LineDiscount>) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -68,6 +69,7 @@ export const useSalesStore = create<SalesState>()(
           stock: variant.stock,
           qty: 1,
           discount: 0,
+          discountType: 'NINGUNO',
         }
         return { items: [...state.items, newItem] }
       }),
@@ -110,11 +112,27 @@ export const useSalesStore = create<SalesState>()(
         }),
       })),
 
-    setDiscount: (itemId, discount) =>
+    // Aplica el resultado del motor de precios a todo el carrito en un solo
+    // set (precio efectivo, descuento y tipo por línea).
+    applyPricing: (lines) =>
       set((state) => ({
-        items: state.items.map((item) =>
-          item.id === itemId ? { ...item, discount } : item
-        ),
+        items: state.items.map((item) => {
+          const line = lines[item.id]
+          if (!line) return item
+          if (
+            item.discount === line.descuentoUnitario &&
+            item.discountType === line.tipo &&
+            item.price === line.precioUnitario
+          ) {
+            return item
+          }
+          return {
+            ...item,
+            price: line.precioUnitario,
+            discount: line.descuentoUnitario,
+            discountType: line.tipo,
+          }
+        }),
       })),
 
     clearCart: () => set({ items: [] }),

@@ -1,5 +1,6 @@
 import type { FC } from "react"
 import type { CartItem } from "../types/sales"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Minus, Plus, Trash2 } from "lucide-react"
@@ -82,11 +83,23 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                 <div className="text-left min-[420px]:text-right">
                     {item.discount > 0 ? (
                         <>
-                            <p className="text-sm text-muted-foreground line-through">
-                                {formatCurrency(item.price)} c/u
-                            </p>
+                            <div className="flex items-center gap-1.5 min-[420px]:justify-end">
+                                {item.discountType === 'INDIVIDUAL' && (
+                                    <Badge className="border-transparent bg-primary/10 text-primary">
+                                        Individual −{formatCurrency(item.discount)} c/u
+                                    </Badge>
+                                )}
+                                {item.discountType === 'MAYORISTA' && (
+                                    <Badge className="border-transparent bg-warning/10 text-warning">
+                                        Mayorista −{formatCurrency(item.discount)} c/u
+                                    </Badge>
+                                )}
+                                <p className="text-sm text-muted-foreground line-through">
+                                    {formatCurrency(item.price)}
+                                </p>
+                            </div>
                             <p className="text-xs text-successful font-medium">
-                                {formatCurrency(precioFinal)} c/u (-{formatCurrency(item.discount)} desc)
+                                {formatCurrency(precioFinal)} c/u
                             </p>
                         </>
                     ) : (

@@ -1,3 +1,5 @@
+import type { DiscountType } from '@/features/catalog/types/pricing-types'
+
 export type SalesDialog = 'checkout' | 'clear-cart' | null
 
 export type ProductVariant = {
@@ -27,6 +29,7 @@ export type CartItem = {
   stock: number
   qty: number
   discount: number
+  discountType: DiscountType
 }
 
 export type PaymentMethod = 'efectivo' | 'credito'
@@ -95,6 +98,7 @@ export interface DetalleVenta {
   precio_unitario: number
   cantidad: number
   descuento: number
+  tipo_descuento?: DiscountType
   total: number
   total_neto: number
   articulo: string
