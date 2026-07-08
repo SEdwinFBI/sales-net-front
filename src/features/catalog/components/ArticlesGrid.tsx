@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Package, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { useNavigate } from 'react-router'
+import { ChevronLeft, ChevronRight, Package, Pencil, Plus, Search, Tags, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,6 +23,7 @@ const formatPrice = (value: number) => `Q${value.toFixed(2)}`
 const pageSize = 12
 
 export default function ArticlesGrid({ data, variants = [], isLoading }: Props) {
+  const navigate = useNavigate()
   const [globalFilter, setGlobalFilter] = useState('')
   const [sizeFilter, setSizeFilter] = useState<'all' | ArticleSize>('all')
   const [sizesStateFilter, setSizesStateFilter] = useState<'all' | 'with-sizes' | 'without-sizes'>('all')
@@ -169,6 +171,16 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         }}
                       >
                         <Pencil />
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
+                        aria-label={`Precios por usuario de ${article.title}`}
+                        title="Precios por usuario"
+                        onClick={() => navigate(`/catalogo/precios?articulo=${article.id}`)}
+                      >
+                        <Tags />
                       </Button>
                       <Button
                         size="icon-sm"
