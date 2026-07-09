@@ -17,6 +17,8 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
 import { Wallet, CreditCard, Loader2 } from 'lucide-react'
 
@@ -30,13 +32,26 @@ const CheckoutDialog = () => {
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const items = useSalesStore((state) => state.items)
   const clearCart = useSalesStore((state) => state.clearCart)
-  const closeCart = useSalesStore((state) => state.closeCart)
   const closeDialog = useSalesStore((state) => state.closeDialog)
+  const openDialog = useSalesStore((state) => state.openDialog)
+  const setLastSale = useSalesStore((state) => state.setLastSale)
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
   const { data: customers, isLoading } = useCustomers()
   const { mutateAsync: createSale, isPending } = useCreateSale()
+
+  // Cotización del servidor (autoridad final) para confirmar el total antes
+  // de cobrar; si difiere del cálculo local, se muestra el del servidor.
+  const detalles = items.map((item) => ({ id_variante: item.variantId, cantidad: item.qty }))
+  const { data: cotizacion } = useQuery({
+    queryKey: ['pricing', 'cotizar', detalles],
+    queryFn: () => cotizarCarrito(detalles),
+    enabled: activeDialog === 'checkout' && items.length > 0,
+    staleTime: 0,
+  })
+  const serverTotal = cotizacion?.total
+  const totalsDiffer = serverTotal !== undefined && Math.abs(serverTotal - total) >= 0.01
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
@@ -54,10 +69,20 @@ const CheckoutDialog = () => {
         customerId: selectedCustomerId || undefined,
         total,
       })
+      // Snapshot ANTES de limpiar el carrito, para el resumen de venta.
+      const customerName =
+        customers?.find((c) => String(c.id) === selectedCustomerId)?.name ?? null
+      setLastSale({
+        idVenta: result.data.id_venta,
+        total: Number(result.data.total),
+        estado: result.data.estado,
+        fecha: new Date().toISOString(),
+        items: [...items],
+        paymentMethod,
+        customerName,
+      })
       clearCart()
-      closeDialog()
-      closeCart()
-      toast.success(result.message)
+      openDialog('summary')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))
     }
@@ -76,9 +101,14 @@ const CheckoutDialog = () => {
         <DialogHeader>
           <DialogTitle>Confirmar venta</DialogTitle>
           <DialogDescription>
-            {totalItems} item{totalItems === 1 ? '' : 's'} por{' '}
-            {formatCurrency(total)}
+            {totalItems} unidad{totalItems === 1 ? '' : 'es'} por{' '}
+            {formatCurrency(serverTotal ?? total)}
           </DialogDescription>
+          {totalsDiffer && (
+            <p className="text-xs text-warning">
+              El total fue verificado por el servidor ({formatCurrency(serverTotal)}).
+            </p>
+          )}
         </DialogHeader>
 
         <div className="space-y-5 px-6">

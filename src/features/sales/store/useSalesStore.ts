@@ -1,22 +1,27 @@
 import { create } from 'zustand';
-import type { CartItem, Product, SalesDialog } from '../types/sales';
+import type { CartItem, LastSale, Product, SalesDialog } from '../types/sales';
+import type { LineDiscount } from '../utils/pricing-engine';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 export interface SalesState {
   items: CartItem[];
   cartOpen: boolean;
   activeDialog: SalesDialog;
+  lastSale: LastSale | null;
   addItem: (product: Product, variantId: number) => void;
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
   decreaseQty: (itemId: string) => void;
   setQty: (itemId: string, qty: number) => void;
-  setDiscount: (itemId: string, discount: number) => void;
+  applyPricing: (lines: Record<string, LineDiscount>) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
   openDialog: (dialog: Exclude<SalesDialog, null>) => void;
   closeDialog: () => void;
+  setLastSale: (sale: LastSale) => void;
+  /** Cierra el resumen de venta SIN reabrir el drawer del carrito. */
+  closeSummary: () => void;
 }
 
 function buildCartItemId(productId: number, variantId: number): string {
@@ -28,6 +33,7 @@ export const useSalesStore = create<SalesState>()(
     items: [],
     cartOpen: false,
     activeDialog: null,
+    lastSale: null,
 
     addItem: (product, variantId) =>
       set((state) => {
@@ -68,6 +74,7 @@ export const useSalesStore = create<SalesState>()(
           stock: variant.stock,
           qty: 1,
           discount: 0,
+          discountType: 'NINGUNO',
         }
         return { items: [...state.items, newItem] }
       }),
@@ -110,12 +117,33 @@ export const useSalesStore = create<SalesState>()(
         }),
       })),
 
-    setDiscount: (itemId, discount) =>
-      set((state) => ({
-        items: state.items.map((item) =>
-          item.id === itemId ? { ...item, discount } : item
-        ),
-      })),
+    // Aplica el resultado del motor de precios a todo el carrito en un solo
+    // set (precio efectivo, descuento y tipo por línea). Si ninguna línea
+    // cambió, conserva el mismo array para no disparar re-renders ni writes
+    // a localStorage.
+    applyPricing: (lines) =>
+      set((state) => {
+        let changed = false
+        const nextItems = state.items.map((item) => {
+          const line = lines[item.id]
+          if (!line) return item
+          if (
+            item.discount === line.descuentoUnitario &&
+            item.discountType === line.tipo &&
+            item.price === line.precioUnitario
+          ) {
+            return item
+          }
+          changed = true
+          return {
+            ...item,
+            price: line.precioUnitario,
+            discount: line.descuentoUnitario,
+            discountType: line.tipo,
+          }
+        })
+        return changed ? { items: nextItems } : state
+      }),
 
     clearCart: () => set({ items: [] }),
 
@@ -133,6 +161,14 @@ export const useSalesStore = create<SalesState>()(
       set({
         cartOpen: true,
         activeDialog: null,
+      }),
+
+    setLastSale: (sale) => set({ lastSale: sale }),
+
+    closeSummary: () =>
+      set({
+        activeDialog: null,
+        cartOpen: false,
       }),
   }),
     {

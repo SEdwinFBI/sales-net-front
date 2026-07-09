@@ -1,4 +1,17 @@
-export type SalesDialog = 'checkout' | 'clear-cart' | null
+import type { DiscountType } from '@/features/catalog/types/pricing-types'
+
+export type SalesDialog = 'checkout' | 'clear-cart' | 'summary' | null
+
+/** Snapshot de la última venta registrada, para el diálogo de resumen. */
+export type LastSale = {
+  idVenta: number
+  total: number
+  estado: string
+  fecha: string
+  items: CartItem[]
+  paymentMethod: 'efectivo' | 'credito'
+  customerName: string | null
+}
 
 export type ProductVariant = {
   id: number
@@ -27,6 +40,7 @@ export type CartItem = {
   stock: number
   qty: number
   discount: number
+  discountType: DiscountType
 }
 
 export type PaymentMethod = 'efectivo' | 'credito'
@@ -95,6 +109,7 @@ export interface DetalleVenta {
   precio_unitario: number
   cantidad: number
   descuento: number
+  tipo_descuento?: DiscountType
   total: number
   total_neto: number
   articulo: string

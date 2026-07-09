@@ -11,6 +11,15 @@ export const reportingRoutes: AppRoute[] = [
     },
     children: [
       {
+        path: 'dashboard',
+        meta: {
+          name: 'Dashboard',
+          description: 'Panel de control',
+          permissions: ['admin'],
+          lazy: () => import('./pages/DashboardPage'),
+        },
+      },
+      {
         path: 'ventas',
         meta: {
           name: 'Ventas',

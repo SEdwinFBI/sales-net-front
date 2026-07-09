@@ -1,4 +1,4 @@
-import { Boxes, Package } from 'lucide-react'
+import { Boxes, Package, Tags } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const catalogRoutes: AppRoute[] = [
@@ -28,6 +28,16 @@ export const catalogRoutes: AppRoute[] = [
           icon: Boxes,
           permissions: ['admin'],
           lazy: () => import('./pages/StockPage'),
+        },
+      },
+      {
+        path: 'precios',
+        meta: {
+          name: 'Precios y descuentos',
+          description: 'Precios y reglas de descuento por usuario',
+          icon: Tags,
+          permissions: ['admin'],
+          lazy: () => import('./pages/PreciosPage'),
         },
       },
     ],

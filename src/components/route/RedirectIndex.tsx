@@ -10,9 +10,10 @@ import { getHomeRoute } from '@/lib/app-routes'
 export default function RedirectIndex() {
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
-  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
+  const refreshExpiresAt = useAuthStore((state) => state.refreshExpiresAt)
 
-  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
+  // Solo expulsa si el REFRESH expiró; un access vencido se renueva solo.
+  if (!user || !token || isTokenExpired(refreshExpiresAt)) {
     return <Navigate to="/login" replace />
   }
 
