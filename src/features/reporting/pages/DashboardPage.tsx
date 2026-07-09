@@ -99,7 +99,7 @@ function ChartCard({ title, children, className }: { title: string; children: Re
 
 export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const def = useMemo(getDefaultDateRange, [])
+  const def = useMemo(() => getDefaultDateRange(), [])
 
   // ─── Filtros desde searchParams (SSR: el backend filtra todo) ───
   const filters = useMemo<DashboardFilters>(() => ({

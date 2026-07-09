@@ -8,6 +8,17 @@ export interface ReporteVentasFilters {
   output?: 'json' | 'pdf'
 }
 
+export interface ReporteDeudoresFilters {
+  fecha_desde?: string
+  fecha_hasta?: string
+  id_vendedor?: number
+  id_cliente?: number
+  search?: string
+  saldo_min?: number
+  saldo_max?: number
+  output?: 'json' | 'pdf'
+}
+
 export interface ReporteVentas {
   status: 'success'
   data: {
@@ -196,6 +207,7 @@ export interface ReporteDeudores {
       nombre_completo: string
       telefono: string
       balance: number
+      fecha_notificacion: string | null
       ultima_compra: string | null
       total_ventas_pendientes: number
       total_abonado: number

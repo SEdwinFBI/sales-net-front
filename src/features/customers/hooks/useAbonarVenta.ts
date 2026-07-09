@@ -16,6 +16,7 @@ export const useAbonarVenta = () => {
     mutationFn: ({ idVenta, idCliente, data }) => abonarVenta(idVenta, idCliente, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.reporting.all, 'deudores'] })
     },
   })
 }
