@@ -10,10 +10,11 @@ type ProtectedRouteProps = PropsWithChildren<{
 export default function ProtectedRoute({ allowedPermissions, children }: ProtectedRouteProps) {
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
-  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
+  const refreshExpiresAt = useAuthStore((state) => state.refreshExpiresAt)
   const location = useLocation()
 
-  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
+  // Solo expulsa si el REFRESH expiró; un access vencido se renueva solo.
+  if (!user || !token || isTokenExpired(refreshExpiresAt)) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 
