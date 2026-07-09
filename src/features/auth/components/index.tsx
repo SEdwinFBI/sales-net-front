@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import LoginForm from '@/features/auth/components/LoginForm'
-import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
+import { isSessionExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { useLoginMutation } from '../hooks/useLoginMutation'
 import type { LoginFormValues } from '../types/form'
 import { queryKeys } from '@/lib/query-keys'
@@ -17,7 +17,7 @@ export default function LoginFeature() {
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
-  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
+  const refreshExpiresAt = useAuthStore((state) => state.refreshExpiresAt)
   const applySession = useAuthStore((state) => state.login)
   const logout = useAuthStore((state) => state.logout)
   const { mutateAsync: login, isPending } = useLoginMutation()
@@ -48,13 +48,13 @@ export default function LoginFeature() {
   useEffect(() => {
     if (!user) return
 
-    if (!token || isTokenExpired(tokenExpiresAt)) {
+    if (isSessionExpired({ user, token, refreshExpiresAt })) {
       logout()
       return
     }
 
     navigate('/', { replace: true })
-  }, [logout, navigate, token, tokenExpiresAt, user])
+  }, [logout, navigate, token, refreshExpiresAt, user])
 
   return (
     <LoginForm onSubmit={performLogin} />
