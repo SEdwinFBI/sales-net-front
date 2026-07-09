@@ -395,7 +395,7 @@ export default function UserPricingEditor({
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-primary">{seller.fullName}</p>
             <p className="text-sm text-muted-foreground">
-              Precio y descuentos por variante (en quetzales)
+              Precio y descuentos por talla
             </p>
           </div>
         </div>

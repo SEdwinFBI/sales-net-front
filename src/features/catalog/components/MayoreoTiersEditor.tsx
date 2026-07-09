@@ -121,7 +121,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold">
-            Rangos por total de unidades del carrito
+            Rangos para descuentos por mayoreo
             {esDefault && !isDirty && (
               <Badge className="ml-2" variant="outline">
                 Default
@@ -129,8 +129,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
             )}
           </p>
           <p className="text-sm text-muted-foreground">
-            Cuando el carrito alcanza un rango, las líneas que no logran su descuento
-            individual reciben el descuento mayorista.
+            Descuento por mayoreo para cada talla
           </p>
         </div>
         <Button variant="outline" onClick={handleRestoreDefaults}>
