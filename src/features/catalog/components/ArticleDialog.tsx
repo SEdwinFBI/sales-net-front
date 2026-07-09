@@ -267,6 +267,10 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
                     </div>
                   ))}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Este es el precio base. Puedes personalizar precios y descuentos por
+                usuario en la sección "Precios y descuentos".
+              </p>
             </Field>
           </FieldGroup>
 

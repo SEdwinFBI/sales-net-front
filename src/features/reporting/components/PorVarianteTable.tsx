@@ -1,3 +1,4 @@
+'use no memo';
 import { Fragment, useMemo } from 'react'
 import {
   useReactTable,
@@ -54,21 +55,9 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
     { accessorKey: 'articulo', header: 'Artículo' },
     { accessorKey: 'talla', header: 'Ancho' },
     { accessorKey: 'unidades', header: 'Unidades' },
-    { accessorKey: 'precio_unitario', header: 'Precio por Unidad', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
-   // { accessorKey: 'precio_promedio', header: 'Precio promedio', cell: ({ row }) => `Q${Number(row.original.precio_promedio).toFixed(2)}` },
-    {
-      id: 'total_sin_descuento',
-      header: 'Total sin Descuento',
-      accessorFn: (row) => Number(row.unidades) * Number(row.precio_unitario),
-      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
-    },
-    {
-      id: 'descuento_total',
-      header: 'Descuento Total',
-      accessorFn: (row) => Number(row.unidades) * Number(row.precio_unitario) - Number(row.total),
-      cell: ({ getValue }) => <span className="text-destructive">Q{Number(getValue()).toFixed(2)}</span>,
-    },
-    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
+    { accessorKey: 'total_bruto', header: 'Total Bruto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_bruto).toFixed(2)}</span> },
+    { accessorKey: 'descuento_total', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.descuento_total).toFixed(2)}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
   ], [])
 
   const table = useReactTable({
@@ -164,11 +153,11 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">ID Venta</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fecha</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cant.</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio U. sin Descuento</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio U. con Descuento</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total sin Descuento</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descuento U.</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Final</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio Bruto</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Desc. U.</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipo</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Bruto</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Neto</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Estado</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">F. Pago</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendedor</th>
@@ -177,23 +166,27 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                               </tr>
                             </thead>
                             <tbody>
-                              {row.original.ventas.map((v, vi) => (
+                              {row.original.ventas.map((v, vi) => {
+                                          const precioBrutoU = v.cantidad > 0 ? ((v.monto ?? 0) / v.cantidad + (v.descuento ?? 0)) : 0
+                                          const totalBruto = (v.monto ?? 0) + (v.descuento ?? 0) * v.cantidad
+                                          const tipo = v.tipo_descuento ?? 'NINGUNO'
+                                          return (
                                 <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
                                   <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
                                   <td className="px-2 py-1 text-xs">{v.cantidad}</td>
-                                  <td className="px-2 py-1 text-xs">Q{(v.precio_unitario + v.descuento).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs">Q{v.precio_unitario.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{(v.cantidad * (v.precio_unitario + v.descuento)).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs text-destructive">Q{v.descuento.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{v.monto.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">Q{precioBrutoU.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">Q{(v.descuento ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">{tipo !== 'NINGUNO' ? <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${tipo === 'INDIVIDUAL' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{tipo === 'INDIVIDUAL' ? 'Individual' : 'Mayorista'}</span> : <span className="text-muted-foreground">—</span>}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{totalBruto.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{(v.monto ?? 0).toFixed(2)}</td>
                                   <td className="px-2 py-1 text-xs">{v.estado}</td>
                                   <td className="px-2 py-1 text-xs">{v.forma_pago}</td>
                                   <td className="px-2 py-1 text-xs">{v.vendedor.full_name}</td>
                                   <td className="px-2 py-1 text-xs">{v.cliente.nombre_completo}</td>
                                   <td className="px-2 py-1 text-xs">{v.observacion || <span className="text-muted-foreground">—</span>}</td>
                                 </tr>
-                              ))}
+                                          )})}
                             </tbody>
                           </table>
                         </div>

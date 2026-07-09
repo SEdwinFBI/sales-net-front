@@ -1,3 +1,4 @@
+'use no memo';
 import { Fragment, useMemo } from 'react'
 import {
   useReactTable,
@@ -55,18 +56,18 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
     { accessorKey: 'cantidad_ventas', header: 'Cant. ventas' },
     { accessorKey: 'unidades', header: 'Unidades' },
     {
-      id: 'total_sin_descuento',
-      header: 'Total sin Descuento',
-      accessorFn: (row) => row.articulos.reduce((s, a) => s + a.unidades * a.precio_unitario, 0),
+      id: 'total_bruto',
+      header: 'Total Bruto',
+      accessorFn: (row) => Number(row.total_bruto),
       cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
     },
     {
       id: 'descuento_total',
       header: 'Descuento',
-      accessorFn: (row) => row.articulos.reduce((s, a) => s + a.unidades * a.precio_unitario, 0) - Number(row.total),
+      accessorFn: (row) => Number(row.descuento_total),
       cell: ({ getValue }) => <span className="text-destructive">Q{Number(getValue()).toFixed(2)}</span>,
     },
-    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
   ], [])
 
   const table = useReactTable({
@@ -161,12 +162,10 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                               <tr className="border-b border-border/30 bg-muted/20">
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Artículo</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ancho</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio por unidad</th>
-                                {/* <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Precio promedio</th> */}
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Unidades</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total sin Descuento</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Bruto</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descuento</th>
-                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Final</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Neto</th>
 
                               </tr>
                             </thead>
@@ -175,12 +174,10 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                                 <tr key={`${a.id_variante}-${a.id_talla}`} className={ai % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs">{a.articulo}</td>
                                   <td className="px-2 py-1 text-xs">{a.talla}</td>
-                                  <td className="px-2 py-1 text-xs">Q{a.precio_unitario.toFixed(2)}</td>
-                                  {/* <td className="px-2 py-1 text-xs">Q{a.precio_promedio.toFixed(2)}</td> */}
                                   <td className="px-2 py-1 text-xs">{a.unidades}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.unidades * a.precio_unitario).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs text-destructive">Q{(a.unidades * a.precio_unitario - a.total).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{a.total.toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.total_bruto ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">Q{(a.descuento_total ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.total_neto ?? 0).toFixed(2)}</td>
                                 </tr>
                               ))}
                             </tbody>
