@@ -1,5 +1,6 @@
 import { api } from '@/lib/api'
-import type { ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters } from '../types/reportes'
+import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores ,ReporteDeudoresFilters} from '../types/reportes'
+
 
 function setParam(params: Record<string, unknown>, key: string, value: unknown) {
   if (value !== undefined && value !== null && value !== '') params[key] = value
@@ -65,3 +66,23 @@ export const getReporteDeudores = async (filters?: ReporteDeudoresFilters): Prom
   })
   return data.data
 }
+
+export interface DashboardFilters {
+  fecha_desde?: string
+  fecha_hasta?: string
+  id_vendedor?: number
+  id_articulo?: number
+  id_talla?: number
+}
+
+export const getDashboardData = async (filters?: DashboardFilters): Promise<DashboardData> => {
+  const params: Record<string, unknown> = {}
+  if (filters?.fecha_desde) params.fecha_desde = filters.fecha_desde
+  if (filters?.fecha_hasta) params.fecha_hasta = filters.fecha_hasta
+  if (filters?.id_vendedor) params.id_vendedor = filters.id_vendedor
+  if (filters?.id_articulo) params.id_articulo = filters.id_articulo
+  if (filters?.id_talla) params.id_talla = filters.id_talla
+  const { data } = await api.get<{ status: string; data: DashboardData }>('/reportes/dashboard', { params })
+  return data.data
+}
+

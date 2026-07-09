@@ -37,6 +37,8 @@ export default function ArticleImage({
       className={className}
       src={src}
       alt={alt}
+      loading="lazy"
+      decoding="async"
       onError={() => setHasError(true)}
     />
   )

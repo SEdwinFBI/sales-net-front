@@ -6,14 +6,7 @@ import ProductItem from '@/features/sales/components/ProductItem'
 import SkeletonProductCard from '@/components/shared/product/SkeletonProductCard'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Select } from '@/components/ui/select'
-import {
-  Pagination as PaginationNav,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from '@/components/ui/pagination'
+import Paginator from '@/components/shared/table/Paginator'
 
 
 type ListProductProps = {
@@ -63,43 +56,11 @@ const ListProduct = ({ data, isLoading, page, totalPages, pageSize, onPageChange
           </Select>
         </Field>
 
-        <PaginationNav className="mx-0 w-full sm:w-auto">
-          <PaginationContent className="flex-wrap justify-center sm:justify-end">
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => { e.preventDefault(); onPageChange?.((page ?? 1) - 1) }}
-                className={!page || page <= 1 ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-
-            {totalPages && Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const start = Math.max(1, (page ?? 1) - 2)
-              const p = start + i
-              if (p > totalPages) return null
-              return (
-                <PaginationItem key={p}>
-                  <PaginationLink
-                    isActive={p === (page ?? 1)}
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); onPageChange?.(p) }}
-                    size="default"
-                  >
-                    {p}
-                  </PaginationLink>
-                </PaginationItem>
-              )
-            })}
-
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => { e.preventDefault(); onPageChange?.((page ?? 1) + 1) }}
-                className={!!page && !!totalPages && page >= totalPages ? 'pointer-events-none opacity-50' : ''}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </PaginationNav>
+        <Paginator
+          page={page ?? 1}
+          totalPages={totalPages ?? 1}
+          onPageChange={(p) => onPageChange?.(p)}
+        />
       </div>
     </>
   )

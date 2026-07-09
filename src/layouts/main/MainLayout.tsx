@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
+import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
@@ -25,8 +26,8 @@ const allFeatureRoutes = [
 export default function MainLayout() {
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
-  const tokenExpiresAt = useAuthStore((state) => state.tokenExpiresAt)
-  const logout = useAuthStore((state) => state.logout)
+  const refreshExpiresAt = useAuthStore((state) => state.refreshExpiresAt)
+  const { mutate: logoutServer } = useLogoutMutation()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -39,7 +40,11 @@ export default function MainLayout() {
 
   const hasSidebarNavigation = true
 
-  const isDesktopSidebarExpanded = isSidebarPinned || isSidebarHovered
+  // Expansión automática del sidebar al pasar el mouse: DESACTIVADA
+  // temporalmente. Poner en true para reactivarla.
+  const SIDEBAR_HOVER_EXPAND = false
+
+  const isDesktopSidebarExpanded = isSidebarPinned || (SIDEBAR_HOVER_EXPAND && isSidebarHovered)
 
   const sidebarItems = useMemo(
     () => (user ? buildSidebarItems(allFeatureRoutes, user.permissions) : []),
@@ -54,9 +59,11 @@ export default function MainLayout() {
   }, [])
 
   const handleLogout = useCallback(() => {
-    logout()
+    // Invalida el refresh token en el servidor y limpia el estado local
+    // (onSettled del mutation hace el logout local aunque el server falle).
+    logoutServer()
     navigate('/login', { replace: true })
-  }, [logout, navigate])
+  }, [logoutServer, navigate])
 
   const handleSidebarToggle = useCallback(() => {
     if (!hasSidebarNavigation) return
@@ -72,6 +79,7 @@ export default function MainLayout() {
   }, [])
 
   const handleDesktopSidebarMouseEnter = useCallback(() => {
+    if (!SIDEBAR_HOVER_EXPAND) return
     clearSidebarHoverTimer()
     sidebarHoverTimer.current = setTimeout(() => {
       setIsSidebarHovered(true)
@@ -79,6 +87,7 @@ export default function MainLayout() {
   }, [clearSidebarHoverTimer])
 
   const handleDesktopSidebarMouseLeave = useCallback(() => {
+    if (!SIDEBAR_HOVER_EXPAND) return
     clearSidebarHoverTimer()
     sidebarHoverTimer.current = setTimeout(() => {
       setIsSidebarHovered(false)
@@ -87,7 +96,9 @@ export default function MainLayout() {
 
   useEffect(() => clearSidebarHoverTimer, [clearSidebarHoverTimer])
 
-  if (!user || !token || isTokenExpired(tokenExpiresAt)) {
+  // Solo expulsa cuando el REFRESH token (la sesión real) expiró; un access
+  // vencido se renueva automáticamente en la siguiente petición.
+  if (!user || !token || isTokenExpired(refreshExpiresAt)) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />
   }
 

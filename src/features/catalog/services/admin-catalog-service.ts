@@ -4,7 +4,6 @@ import type {
   Talla, CreateTallaPayload, UpdateTallaPayload,
   Variante, CreateVariantePayload,
   StockItem, CreateStockPayload, UpdateStockPayload,
-  ReglaPrecio, CreateReglaPrecioPayload, UpdateReglaPrecioPayload,
   FormaPago, CreateFormaPagoPayload, UpdateFormaPagoPayload,
 } from '../types/admin-catalog-types'
 
@@ -147,21 +146,6 @@ export const createStock = async (payload: CreateStockPayload): Promise<StockIte
 
 export const updateStock = async (id: number, payload: UpdateStockPayload): Promise<StockItem> => {
   const { data } = await api.put<ApiResponse<StockItem>>(`/admin/stock/${id}/`, payload)
-  return data.data
-}
-
-// Reglas Precio
-export const getReglasPrecio = async (): Promise<ReglaPrecio[]> => {
-  return getAllPages<ReglaPrecio>('/admin/reglas_precio/')
-}
-
-export const createReglaPrecio = async (payload: CreateReglaPrecioPayload): Promise<ReglaPrecio> => {
-  const { data } = await api.post<ApiResponse<ReglaPrecio>>('/admin/reglas_precio/', payload)
-  return data.data
-}
-
-export const updateReglaPrecio = async (id: number, payload: UpdateReglaPrecioPayload): Promise<ReglaPrecio> => {
-  const { data } = await api.put<ApiResponse<ReglaPrecio>>(`/admin/reglas_precio/${id}/`, payload)
   return data.data
 }
 

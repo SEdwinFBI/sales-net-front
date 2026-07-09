@@ -39,6 +39,8 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                                 src={item.image ?? imageUrl}
                                 className="w-full h-full object-cover blur-md opacity-90 transform scale-105 "
                                 alt=""
+                                loading="lazy"
+                                decoding="async"
                                 onError={handleImageError}
                             />
                         </div>
@@ -46,6 +48,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                             src={item.image ?? imageUrl}
                             className="relative z-10 h-[97%] w-[90%] rounded-3xl object-cover drop-shadow-md"
                             alt="imagen del producto"
+                            decoding="async"
                             onError={handleImageError}
                         />
                     </div>

@@ -1,25 +1,21 @@
 
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
 import { useArticles } from "../hooks/useArticles"
-import { useReglasPrecio } from '@/features/catalog/hooks/useReglasPrecio'
+import { useEffectivePricing } from '../hooks/useEffectivePricing'
 import { useSalesStore } from '../store/useSalesStore'
-import type { ReglaPrecio } from '@/features/catalog/types/admin-catalog-types'
+import { computeCartPricing } from '../utils/pricing-engine'
 import CartButton from "./CartButton"
 import CartDrawer from "./CartDrawer"
 import CheckoutDialog from "./CheckoutDialog"
 import ClearCartDialog from "./ClearCartDialog"
+import SaleSummaryDialog from "./SaleSummaryDialog"
 import ListProduct from "./ListProduct"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import { useAuthStore } from '@/features/core/store/auth-store'
-
-function getDiscountFromRules(qty: number, rules: ReglaPrecio[]): number {
-    const sorted = [...rules].sort((a, b) => a.cantidad_min - b.cantidad_min)
-    const rule = sorted.find(r => qty >= r.cantidad_min && qty <= r.cantidad_max)
-    return rule ? Number(rule.descuento) : 0
-}
 
 const Sales = () => {
     const user = useAuthStore(state => state.user)
@@ -28,19 +24,39 @@ const Sales = () => {
     const [searchInput, setSearchInput] = useState('')
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch, String(user?.id))
-    const { data: rules = [] } = useReglasPrecio()
+    const { config: pricingConfig, isError: pricingError } = useEffectivePricing()
 
     const items = useSalesStore((state) => state.items)
-    const setDiscount = useSalesStore((state) => state.setDiscount)
+    const applyPricing = useSalesStore((state) => state.applyPricing)
+
+    // Motor de precios: decide por línea (individual > mayorista > nada)
+    // usando el total de unidades del carrito. Preview en cliente; el
+    // servidor recalcula al registrar la venta.
+    const pricing = useMemo(
+        () => computeCartPricing(items, pricingConfig),
+        [items, pricingConfig]
+    )
 
     useEffect(() => {
-        for (const item of items) {
-            const discount = getDiscountFromRules(item.qty, rules)
-            if (item.discount !== discount) {
-                setDiscount(item.id, discount)
-            }
+        const needsUpdate = items.some((item) => {
+            const line = pricing.lines[item.id]
+            if (!line) return false
+            return (
+                item.discount !== line.descuentoUnitario ||
+                item.discountType !== line.tipo ||
+                item.price !== line.precioUnitario
+            )
+        })
+        if (needsUpdate) {
+            applyPricing(pricing.lines)
         }
-    }, [items, rules, setDiscount])
+    }, [items, pricing, applyPricing])
+
+    useEffect(() => {
+        if (pricingError) {
+            toast.error('No se pudo cargar la configuración de precios; se venderá sin descuentos.')
+        }
+    }, [pricingError])
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -81,13 +97,13 @@ const Sales = () => {
                     onPageSizeChange={handlePageSizeChange}
                 />
                 <CartButton />
-                <CartDrawer />
+                <CartDrawer pricing={pricing} />
                 <CheckoutDialog />
                 <ClearCartDialog />
+                <SaleSummaryDialog />
             </Card>
         </>
     )
 }
 
 export default Sales
-

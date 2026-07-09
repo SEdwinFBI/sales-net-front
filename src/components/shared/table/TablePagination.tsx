@@ -1,14 +1,8 @@
+'use no memo';
 import type { Table } from '@tanstack/react-table'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Select } from '@/components/ui/select'
-import {
-  Pagination as PaginationNav,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from '@/components/ui/pagination'
+import Paginator from './Paginator'
 
 type Props<TData> = {
   table: Table<TData>
@@ -36,49 +30,11 @@ export default function TablePagination<TData>({ table }: Props<TData>) {
         </Select>
       </Field>
 
-      <PaginationNav className="mx-0 w-full sm:w-auto">
-        <PaginationContent className="flex-wrap justify-center sm:justify-end">
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              onClick={(e) => {
-                e.preventDefault()
-                if (table.getCanPreviousPage()) table.previousPage()
-              }}
-              className={!table.getCanPreviousPage() ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-
-          {Array.from({ length: Math.min(pageCount, 5) }, (_, i) => {
-            const start = Math.max(0, pageIndex - 2)
-            const p = start + i
-            if (p >= pageCount) return null
-            return (
-              <PaginationItem key={p}>
-                <PaginationLink
-                  isActive={p === pageIndex}
-                  href="#"
-                  onClick={(e) => { e.preventDefault(); table.setPageIndex(p) }}
-                  size="default"
-                >
-                  {p + 1}
-                </PaginationLink>
-              </PaginationItem>
-            )
-          })}
-
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              onClick={(e) => {
-                e.preventDefault()
-                if (table.getCanNextPage()) table.nextPage()
-              }}
-              className={!table.getCanNextPage() ? 'pointer-events-none opacity-50' : ''}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </PaginationNav>
+      <Paginator
+        page={pageIndex + 1}
+        totalPages={pageCount}
+        onPageChange={(page) => table.setPageIndex(page - 1)}
+      />
     </div>
   )
 }

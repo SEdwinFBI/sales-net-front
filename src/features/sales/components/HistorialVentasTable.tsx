@@ -1,3 +1,4 @@
+'use no memo';
 import { useMemo } from 'react'
 import {
   useReactTable,
@@ -60,11 +61,11 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     },
     {
       id: 'total_sin_descuento',
-      header: 'Total Sin Descuento',
-      accessorFn: (row) => Number(row.total) + Number(row.total_descuento),
+      header: 'Total Bruto',
+      accessorFn: (row) => Number(row.total),
       cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
     },
-    { accessorKey: 'total', header: 'Total Final', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
     {
       accessorKey: 'total_descuento',
       header: 'Desc.',
@@ -194,29 +195,34 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Artículo</th>
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Ancho</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Cantidad</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio Sin Descuento</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio con Descuento</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Por Unidad</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total sin Descuento</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Final</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio Bruto</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Unidad</th>
+                                  <th className="text-center px-3 py-2 font-medium text-muted-foreground">Tipo</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Bruto</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Neto</th>
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Observación</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {row.original.detalles.map((d) => {
-                                  const descTotal = Number(d.descuento)
-                                  
-                                  
-                                  const precioSinDesc = Number(d.precio_unitario) + descTotal
+                                  const cant = d.cantidad || 1
+                                  const totalBrutoU = Number(d.total) / cant
+                                  const descU = Number(d.descuento)
+                                  const tipo = d.tipo_descuento ?? 'NINGUNO'
                                   return (
                                   <tr key={d.id} className="border-b border-border/50 last:border-0">
                                     <td className="px-3 py-2">{d.articulo}</td>
                                     <td className="px-3 py-2">{d.talla}</td>
                                     <td className="px-3 py-2 text-right">{d.cantidad}</td>
-                                    <td className="px-3 py-2 text-right">Q{precioSinDesc.toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right">Q{Number(d.precio_unitario).toFixed(2)}</td>
-                                    
-                                    <td className="px-3 py-2 text-right text-destructive">Q{descTotal.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right">Q{totalBrutoU.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right text-destructive">Q{descU.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-center">
+                                      {tipo !== 'NINGUNO' ? (
+                                        <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${tipo === 'INDIVIDUAL' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                                          {tipo === 'INDIVIDUAL' ? 'Individual' : 'Mayorista'}
+                                        </span>
+                                      ) : <span className="text-muted-foreground text-xs">—</span>}
+                                    </td>
                                     <td className="px-3 py-2 text-right">Q{Number(d.total).toFixed(2)}</td>
                                     <td className="px-3 py-2 text-right font-medium">Q{Number(d.total_neto).toFixed(2)}</td>
                                     <td className="px-3 py-2">{row.original.observacion || <span className="text-muted-foreground">—</span>}</td>
@@ -226,7 +232,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                               </tbody>
                               <tfoot>
                                 <tr className="border-t-2 border-border bg-muted/30">
-                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={7}>Total</td>
+                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={6}>Total</td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
                                     Q{row.original.detalles.reduce((s, d) => s + Number(d.total), 0).toFixed(2)}
                                   </td>
