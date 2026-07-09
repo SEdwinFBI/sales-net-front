@@ -32,8 +32,9 @@ const CheckoutDialog = () => {
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const items = useSalesStore((state) => state.items)
   const clearCart = useSalesStore((state) => state.clearCart)
-  const closeCart = useSalesStore((state) => state.closeCart)
   const closeDialog = useSalesStore((state) => state.closeDialog)
+  const openDialog = useSalesStore((state) => state.openDialog)
+  const setLastSale = useSalesStore((state) => state.setLastSale)
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
@@ -68,10 +69,20 @@ const CheckoutDialog = () => {
         customerId: selectedCustomerId || undefined,
         total,
       })
+      // Snapshot ANTES de limpiar el carrito, para el resumen de venta.
+      const customerName =
+        customers?.find((c) => String(c.id) === selectedCustomerId)?.name ?? null
+      setLastSale({
+        idVenta: result.data.id_venta,
+        total: Number(result.data.total),
+        estado: result.data.estado,
+        fecha: new Date().toISOString(),
+        items: [...items],
+        paymentMethod,
+        customerName,
+      })
       clearCart()
-      closeDialog()
-      closeCart()
-      toast.success(result.message)
+      openDialog('summary')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))
     }

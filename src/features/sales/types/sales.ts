@@ -1,6 +1,17 @@
 import type { DiscountType } from '@/features/catalog/types/pricing-types'
 
-export type SalesDialog = 'checkout' | 'clear-cart' | null
+export type SalesDialog = 'checkout' | 'clear-cart' | 'summary' | null
+
+/** Snapshot de la última venta registrada, para el diálogo de resumen. */
+export type LastSale = {
+  idVenta: number
+  total: number
+  estado: string
+  fecha: string
+  items: CartItem[]
+  paymentMethod: 'efectivo' | 'credito'
+  customerName: string | null
+}
 
 export type ProductVariant = {
   id: number

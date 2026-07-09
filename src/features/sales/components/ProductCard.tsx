@@ -25,7 +25,7 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
 
     return (
         <Card size="sm" className="h-full w-full cursor-pointer bg-white py-0 transition-shadow hover:shadow-md" onClick={onClick}>
-            <img className="aspect-[4/3] w-full object-cover object-center" src={item.image ?? imageUrl} onError={handleImageError} />
+            <img className="aspect-[4/3] w-full object-cover object-center" src={item.image ?? imageUrl} loading="lazy" decoding="async" onError={handleImageError} />
             <CardHeader className="gap-1.5 px-3 pb-3">
                 <Badge variant="secondary" className="max-w-full truncate text-xs">{item.category}</Badge>
                 <CardTitle className="line-clamp-2 text-sm leading-tight sm:text-[0.95rem]">{item.name}</CardTitle>

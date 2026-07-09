@@ -10,6 +10,7 @@ import CartButton from "./CartButton"
 import CartDrawer from "./CartDrawer"
 import CheckoutDialog from "./CheckoutDialog"
 import ClearCartDialog from "./ClearCartDialog"
+import SaleSummaryDialog from "./SaleSummaryDialog"
 import ListProduct from "./ListProduct"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -99,6 +100,7 @@ const Sales = () => {
                 <CartDrawer pricing={pricing} />
                 <CheckoutDialog />
                 <ClearCartDialog />
+                <SaleSummaryDialog />
             </Card>
         </>
     )
