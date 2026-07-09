@@ -51,6 +51,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
 
   useEffect(() => {
     // Carga inicial (y recarga tras guardar): refleja lo que hay en el server.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isLoading) setRows(toRows(tiers))
   }, [tiers, isLoading])
 

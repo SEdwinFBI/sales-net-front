@@ -55,23 +55,22 @@ const mapStock = (item: StockApi): StockAssignment => ({
   quantity: item.cantidad,
 })
 
-const getAllStock = async (): Promise<StockApi[]> => {
-  return getAllPages<StockApi>('/admin/stock/')
+/** Stock de UN vendedor filtrado en el servidor (no descarga toda la tabla). */
+const getStockDeVendedor = async (sellerId: number): Promise<StockApi[]> => {
+  return getAllPages<StockApi>(`/admin/stock/?id_usuario=${sellerId}`)
 }
 
 export const getSellerStock = async (sellerId: number): Promise<StockAssignment[]> => {
-  const stock = await getAllStock()
-  return stock.filter((item) => item.id_usuario === sellerId).map(mapStock)
+  const stock = await getStockDeVendedor(sellerId)
+  return stock.map(mapStock)
 }
 
 export const saveSellerStock = async (
   payload: SaveSellerStockPayload
 ): Promise<StockAssignment[]> => {
-  const currentStock = await getAllStock()
+  const currentStock = await getStockDeVendedor(payload.sellerId)
   const currentByVariant = new Map(
-    currentStock
-      .filter((item) => item.id_usuario === payload.sellerId)
-      .map((item) => [item.id_variante, item])
+    currentStock.map((item) => [item.id_variante, item])
   )
 
   const saved = await Promise.all(
