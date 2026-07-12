@@ -361,7 +361,7 @@ export default function UserPricingEditor({
     error?: string
   ) => (
     <div>
-      <InputGroup className={cn('h-9 bg-white', error && 'border-destructive')}>
+      <InputGroup className={cn('h-9 bg-card', error && 'border-destructive')}>
         <InputGroupAddon>Q</InputGroupAddon>
         <InputGroupInput
           aria-invalid={!!error}
@@ -434,7 +434,7 @@ export default function UserPricingEditor({
                 key={article.id}
                 size="sm"
                 className={cn(
-                  'border-l-4 bg-white p-0 shadow-sm transition-shadow hover:shadow-md',
+                  'border-l-4 bg-card p-0 shadow-sm transition-shadow hover:shadow-md',
                   customized > 0 ? 'border-l-primary' : 'border-l-border'
                 )}
               >
@@ -460,7 +460,7 @@ export default function UserPricingEditor({
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-4 overflow-hidden rounded-lg border border-border bg-white">
+                    <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
                       <div className="hidden gap-2 bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[4.5rem_5.5rem_minmax(6rem,1fr)_minmax(12rem,1fr)_minmax(6rem,1fr)_2.5rem]">
                         <span>Talla</span>
                         <span>Base</span>
@@ -531,7 +531,7 @@ export default function UserPricingEditor({
                                               <p className="mb-0.5 text-[10px] text-muted-foreground">Desde</p>
                                               <Input
                                                 aria-invalid={!!tierErr?.desde}
-                                                className={cn('h-8 bg-white', tierErr?.desde && 'border-destructive')}
+                                                className={cn('h-8 bg-card', tierErr?.desde && 'border-destructive')}
                                                 inputMode="numeric"
                                                 placeholder="3"
                                                 value={tier.desde}
@@ -547,7 +547,7 @@ export default function UserPricingEditor({
                                               <p className="mb-0.5 text-[10px] text-muted-foreground">Hasta</p>
                                               <Input
                                                 aria-invalid={!!tierErr?.hasta}
-                                                className={cn('h-8 bg-white', tierErr?.hasta && 'border-destructive')}
+                                                className={cn('h-8 bg-card', tierErr?.hasta && 'border-destructive')}
                                                 inputMode="numeric"
                                                 placeholder="∞"
                                                 value={tier.hasta}
@@ -561,7 +561,7 @@ export default function UserPricingEditor({
                                             </div>
                                             <div className="min-w-0 max-w-28 flex-[2]">
                                               <p className="mb-0.5 text-[10px] text-muted-foreground">Q desc</p>
-                                              <InputGroup className={cn('h-8 bg-white', tierErr?.descuento && 'border-destructive')}>
+                                              <InputGroup className={cn('h-8 bg-card', tierErr?.descuento && 'border-destructive')}>
                                                 <InputGroupAddon className="text-xs">Q</InputGroupAddon>
                                                 <InputGroupInput
                                                   aria-invalid={!!tierErr?.descuento}
@@ -675,7 +675,7 @@ export default function UserPricingEditor({
 
       {dirtyIds.length > 0 && (
         <div className="sticky bottom-2 z-10">
-          <div className="flex flex-col items-stretch gap-2 rounded-xl border border-border bg-white/95 p-3 shadow-lg backdrop-blur-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-stretch gap-2 rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur-xs sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm font-medium">
               {dirtyIds.length} cambio{dirtyIds.length === 1 ? '' : 's'} sin guardar
             </p>

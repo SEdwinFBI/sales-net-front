@@ -27,7 +27,7 @@ export default function StockPage() {
       description="Gestion de stock por vendedor."
     >
 
-      <Card className="mt-2 bg-white p-3.5 sm:mt-3 sm:p-5">
+      <Card className="mt-2 bg-card p-3.5 sm:mt-3 sm:p-5">
         {selectedSeller ? (
           <SellerStockEditor
             articles={articles}

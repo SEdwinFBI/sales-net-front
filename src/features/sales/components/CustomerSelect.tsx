@@ -65,15 +65,15 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
             {/* Trigger */}
             <div
                 className={cn(
-                    "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-white",
+                    "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
                     open
                         ? "border-primary/50 shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
-                        : "border-stone-200 hover:border-stone-300"
+                        : "border-border hover:border-ring"
                 )}
                 onClick={toggle}
             >
                 {/* Icon */}
-                <Search className="size-5 text-stone-400 shrink-0" />
+                <Search className="size-5 text-muted-foreground shrink-0" />
 
                 {/* Input */}
                 <input
@@ -94,7 +94,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
                             e.stopPropagation()
                             onChange("")
                         }}
-                        className="text-stone-400 hover:text-stone-600"
+                        className="text-muted-foreground hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
@@ -107,7 +107,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
                         e.stopPropagation()
                         toggle()
                     }}
-                    className="text-stone-400"
+                    className="text-muted-foreground"
                 >
                     <ChevronDown
                         className={cn(
@@ -120,17 +120,17 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-white shadow-lg">
+                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg">
                     {loading ? (
-                        <div className="p-6 text-center text-sm text-stone-400">
+                        <div className="p-6 text-center text-sm text-muted-foreground">
                             Cargando clientes...
                         </div>
                     ) : customers.length === 0 ? (
-                        <div className="p-6 text-center text-sm text-stone-400">
+                        <div className="p-6 text-center text-sm text-muted-foreground">
                             No hay clientes disponibles
                         </div>
                     ) : filtered.length === 0 ? (
-                        <div className="p-6 text-center text-sm text-stone-400">
+                        <div className="p-6 text-center text-sm text-muted-foreground">
                             Sin coincidencias
                         </div>
                     ) : (
@@ -163,7 +163,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
 
                                         <div className="flex-1 text-sm min-w-0">
                                             <div className="truncate">{c.name ?? 'Sin nombre'}</div>
-                                            <div className="text-xs text-stone-400 truncate">
+                                            <div className="text-xs text-muted-foreground truncate">
                                                 {c.phone ?? 'Sin teléfono'} · Saldo: Q{(c.balance ?? 0).toFixed(2)}
                                             </div>
                                         </div>

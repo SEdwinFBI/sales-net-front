@@ -191,7 +191,7 @@ export default function SellerStockEditor({
                 key={row.article.id}
                 size="sm"
                 className={cn(
-                  "border-l-4 bg-white p-0 shadow-sm transition-shadow hover:shadow-md",
+                  "border-l-4 bg-card p-0 shadow-sm transition-shadow hover:shadow-md",
                   getStockAccentBorderClass(row.total)
                 )}
               >
@@ -243,7 +243,7 @@ export default function SellerStockEditor({
                     </div>
                   ) : (
                     isExpanded && (
-                      <div className="mt-4 overflow-hidden rounded-lg border border-border bg-white">
+                      <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
                         <div className="hidden grid-cols-[minmax(6rem,1fr)_12rem] bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
                           <span>Talla</span>
                           <span className="text-center">Cantidad</span>

@@ -10,28 +10,30 @@
   color-scheme: light;
   --app-primary: #4f8fc9;
   --app-primary-complement: #3578b5;
-  --app-primary-nav: #eef4fb;
-  --app-secondary: #f4f7fb;
+  --app-primary-nav: #dbe7f4;
+  --app-secondary: #dce6f1;
   --app-danger: #95002B;
   --app-successful: #006C49;
   --app-warning: #b45309;
   --app-neutral: #3f4252;
-  --color-primary: var(--app-primary);
-  --color-primary-nav: var(--app-primary-nav);
-  --color-secondary: var(--app-secondary);
-  --color-danger: var(--app-danger);
+  /* Alias legacy: apuntan a los tokens tematizables para que también
+     cambien al activar .dark (antes quedaban fijos al valor claro). */
+  --color-primary: var(--primary);
+  --color-primary-nav: var(--accent);
+  --color-secondary: var(--secondary);
+  --color-danger: var(--destructive);
   --color-successful: var(--app-successful);
-  --color-warning: var(--app-warning);
-  --color-neutral: var(--app-neutral);
+  --color-warning: var(--warning);
+  --color-neutral: var(--foreground);
   --warning: var(--app-warning);
   font-family: 'Roboto', 'Segoe UI', sans-serif;
   background: var(--color-secondary);
   color: var(--color-neutral);
-  --background: #ffffff;
+  --background: #f6f9fc;
   --foreground: var(--app-neutral);
-  --card: #ffffff;
+  --card: #f6f9fc;
   --card-foreground: var(--app-neutral);
-  --popover: #ffffff;
+  --popover: #f6f9fc;
   --popover-foreground: var(--app-neutral);
   --primary: var(--app-primary);
   --primary-complement: var(--app-primary-complement);
@@ -43,8 +45,8 @@
   --accent: var(--app-primary-nav);
   --accent-foreground: var(--app-primary);
   --destructive: var(--app-danger);
-  --border: #d5dce8;
-  --input: #d9e1ec;
+  --border: #bccddf;
+  --input: #c4d3e3;
   --ring: rgb(79 143 201 / 28%);
   --chart-1: var(--app-primary);
   --chart-2: #21a08b;
@@ -52,13 +54,13 @@
   --chart-4: #7a8294;
   --chart-5: #b24a65;
   --radius: 0.5rem;
-  --sidebar: #ffffff;
+  --sidebar: #f6f9fc;
   --sidebar-foreground: var(--app-neutral);
   --sidebar-primary: var(--app-primary);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: var(--app-primary-nav);
   --sidebar-accent-foreground: var(--app-primary);
-  --sidebar-border: #ccd4ea;
+  --sidebar-border: #b6c7dc;
   --sidebar-ring: rgb(79 143 201 / 28%);
 }
 
@@ -143,38 +145,43 @@ a {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Paleta oscura armonizada al celeste de marca (#4f8fc9): mismos matices
+   azules que el modo claro, aclarando el primario para contraste. */
 .dark {
-  --background: #161822;
-  --foreground: #eef1ff;
-  --card: #1f2230;
-  --card-foreground: #eef1ff;
-  --popover: #1f2230;
-  --popover-foreground: #eef1ff;
-  --primary: #8f82ff;
-  --primary-foreground: #11131a;
-  --secondary: #2b3144;
-  --secondary-foreground: #eef1ff;
-  --muted: #2b3144;
-  --muted-foreground: #b1b7d1;
-  --accent: #2b3144;
-  --accent-foreground: #eef1ff;
+  color-scheme: dark;
+  --background: #131a23;
+  --foreground: #dce4ee;
+  --card: #1a2330;
+  --card-foreground: #dce4ee;
+  --popover: #1a2330;
+  --popover-foreground: #dce4ee;
+  --primary: #6ba6d9;
+  --primary-foreground: #0e1620;
+  --secondary: #0f151d;
+  --secondary-foreground: #dce4ee;
+  --muted: #223041;
+  --muted-foreground: #93a5bb;
+  --accent: #223041;
+  --accent-foreground: #9cc4e8;
   --destructive: #ff8aa3;
+  --app-successful: #48bf91;
+  --warning: #e8a23f;
   --border: rgb(255 255 255 / 12%);
   --input: rgb(255 255 255 / 16%);
-  --ring: rgb(143 130 255 / 36%);
-  --chart-1: #8f82ff;
-  --chart-2: #6e8dff;
-  --chart-3: #60d4c8;
-  --chart-4: #ffb86f;
-  --chart-5: #ff8aa3;
-  --sidebar: #1b1f2b;
-  --sidebar-foreground: #eef1ff;
-  --sidebar-primary: #8f82ff;
-  --sidebar-primary-foreground: #11131a;
-  --sidebar-accent: #2b3144;
-  --sidebar-accent-foreground: #eef1ff;
+  --ring: rgb(107 166 217 / 36%);
+  --chart-1: #6ba6d9;
+  --chart-2: #4fc2ad;
+  --chart-3: #e0a458;
+  --chart-4: #93a0b4;
+  --chart-5: #d97a92;
+  --sidebar: #161e29;
+  --sidebar-foreground: #dce4ee;
+  --sidebar-primary: #6ba6d9;
+  --sidebar-primary-foreground: #0e1620;
+  --sidebar-accent: #223041;
+  --sidebar-accent-foreground: #9cc4e8;
   --sidebar-border: rgb(255 255 255 / 12%);
-  --sidebar-ring: rgb(143 130 255 / 36%);
+  --sidebar-ring: rgb(107 166 217 / 36%);
 }
 
 @layer base {

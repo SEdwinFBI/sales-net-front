@@ -61,14 +61,14 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
     <div ref={ref} className="relative">
       <div
         className={cn(
-          "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-white",
+          "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
           open
             ? "border-primary/50 shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
-            : "border-stone-200 hover:border-stone-300",
+            : "border-border hover:border-ring",
         )}
         onClick={toggle}
       >
-        <Search className="size-5 text-stone-400 shrink-0" />
+        <Search className="size-5 text-muted-foreground shrink-0" />
 
         <input
           ref={inputRef}
@@ -87,7 +87,7 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
               e.stopPropagation()
               onChange(0)
             }}
-            className="text-stone-400 hover:text-stone-600"
+            className="text-muted-foreground hover:text-foreground"
           >
             <X className="size-4" />
           </button>
@@ -99,7 +99,7 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
             e.stopPropagation()
             toggle()
           }}
-          className="text-stone-400"
+          className="text-muted-foreground"
         >
           <ChevronDown
             className={cn("size-4 transition-transform", open && "rotate-180 text-primary")}
@@ -108,9 +108,9 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
       </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-white shadow-lg">
+        <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg">
           {filtered.length === 0 ? (
-            <div className="p-6 text-center text-sm text-stone-400">Sin coincidencias</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">Sin coincidencias</div>
           ) : (
             <ul className="max-h-56 overflow-y-auto py-1">
               {filtered.map((v, i) => {
@@ -138,7 +138,7 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
                       <div className="font-medium">
                         Q{Number(v.total).toFixed(2)} — {v.estado}
                       </div>
-                      <div className="text-xs text-stone-400">
+                      <div className="text-xs text-muted-foreground">
                         Abonado Q{Number(v.abonado).toFixed(2)} | Saldo Q{Number(v.saldo).toFixed(2)}
                       </div>
                     </div>
