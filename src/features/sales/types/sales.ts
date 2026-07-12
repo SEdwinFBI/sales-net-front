@@ -28,6 +28,29 @@ export type Product = {
   image: string | null
 }
 
+export type BranchAvailabilitySize = {
+  id_variante: number
+  id_talla: number
+  talla: string
+  precio: number
+}
+
+export type BranchAvailabilityStore = {
+  id_usuario: number
+  username: string
+  nombre: string
+  es_propia: boolean
+  /** Mapa id_variante (string) → cantidad. Solo incluye variantes con stock > 0. */
+  existencias: Record<string, number>
+  total: number
+}
+
+export type BranchAvailability = {
+  articulo: { id: number; nombre: string; imagen: string | null }
+  tallas: BranchAvailabilitySize[]
+  sucursales: BranchAvailabilityStore[]
+}
+
 export type CartItem = {
   id: string
   productId: number

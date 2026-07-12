@@ -11,10 +11,12 @@ import CartDrawer from "./CartDrawer"
 import CheckoutDialog from "./CheckoutDialog"
 import ClearCartDialog from "./ClearCartDialog"
 import SaleSummaryDialog from "./SaleSummaryDialog"
+import BranchAvailabilityDialog from "./BranchAvailabilityDialog"
 import ListProduct from "./ListProduct"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, Store } from "lucide-react"
 import { useAuthStore } from '@/features/core/store/auth-store'
 
 const Sales = () => {
@@ -28,6 +30,7 @@ const Sales = () => {
 
     const items = useSalesStore((state) => state.items)
     const applyPricing = useSalesStore((state) => state.applyPricing)
+    const openBranchAvailability = useSalesStore((state) => state.openBranchAvailability)
 
     // Motor de precios: decide por línea (individual > mayorista > nada)
     // usando el total de unidades del carrito. Preview en cliente; el
@@ -78,14 +81,24 @@ const Sales = () => {
     return (
         <>
             <Card className="flex-1 p-3.5 sm:p-5">
-                <div className="relative mb-4 sm:mb-5">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                    <Input
-                        value={searchInput}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                        placeholder="Buscar producto por nombre..."
-                        className="pl-9"
-                    />
+                <div className="mb-4 flex items-center gap-2 sm:mb-5">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                            value={searchInput}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            placeholder="Buscar producto por nombre..."
+                            className="pl-9"
+                        />
+                    </div>
+                    <Button
+                        variant="outline"
+                        title="Consultar existencias en otras tiendas"
+                        onClick={() => openBranchAvailability(null)}
+                    >
+                        <Store className="size-4" />
+                        <span className="hidden sm:inline">Existencias en tiendas</span>
+                    </Button>
                 </div>
                 <ListProduct
                     data={articles}
@@ -101,6 +114,7 @@ const Sales = () => {
                 <CheckoutDialog />
                 <ClearCartDialog />
                 <SaleSummaryDialog />
+                <BranchAvailabilityDialog />
             </Card>
         </>
     )

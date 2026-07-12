@@ -43,6 +43,8 @@ export const queryKeys = {
       [...queryKeys.sales.all, 'articles', page, pageSize, search, idUser] as const,
     historial: (filters?: Record<string, unknown>, idUser?: string) =>
       [...queryKeys.sales.all, 'historial', filters, idUser] as const,
+    availability: (articleId: number) =>
+      [...queryKeys.sales.all, 'availability', articleId] as const,
   },
   reporting: {
     all: ['reporting'] as const,
