@@ -80,7 +80,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6 shadow-sm">
+      <div className="animate-pulse rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-8 rounded-lg bg-muted" />)}
         </div>
@@ -90,7 +90,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
 
   return (
     <>
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -134,7 +134,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
           ) : (
             table.getRowModel().rows.map((row, i) => (
               <Fragment key={row.id}>
-                <TableRow className={i % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
+                <TableRow className={i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
@@ -171,7 +171,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                           const totalBruto = (v.monto ?? 0) + (v.descuento ?? 0) * v.cantidad
                                           const tipo = v.tipo_descuento ?? 'NINGUNO'
                                           return (
-                                <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
+                                <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-card' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
                                   <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
                                   <td className="px-2 py-1 text-xs">{v.cantidad}</td>

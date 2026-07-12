@@ -95,7 +95,7 @@ export default function SearchableSelect({ value, onChange, options, placeholder
         <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
       </div>
       {open && (
-        <div id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-border bg-white shadow-lg">
+        <div id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-border bg-card shadow-lg">
           {filtered.length === 0 ? (
             <div className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</div>
           ) : (

@@ -61,7 +61,7 @@ function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
   }
   const a = accents[accent] ?? accents.blue
   return (
-    <div className={cn('rounded-lg border border-l-[3px] border-border/60 bg-white px-3 py-2.5 shadow-sm', a.border)}>
+    <div className={cn('rounded-lg border border-l-[3px] border-border/60 bg-card px-3 py-2.5 shadow-sm', a.border)}>
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
         <div className={cn('flex size-6 shrink-0 items-center justify-center rounded-md', a.chip)}>
@@ -88,7 +88,7 @@ function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
 // ─── Card de gráfico uniforme ───
 function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('overflow-hidden rounded-lg border border-border/60 bg-white shadow-sm', className)}>
+    <div className={cn('overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm', className)}>
       <div className="border-b border-border/40 bg-muted/20 px-3 py-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-foreground/80">{title}</h3>
       </div>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
   return (
     <div className={cn('space-y-3 transition-opacity', isFetching && 'opacity-70')}>
       {/* ─── Header + Filtros siempre visibles ─── */}
-      <div className="rounded-lg border border-border/60 bg-white px-3 py-2.5 shadow-sm">
+      <div className="rounded-lg border border-border/60 bg-card px-3 py-2.5 shadow-sm">
         <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
           <div className="mr-auto">
             <h2 className="text-sm font-bold leading-tight">Dashboard</h2>
@@ -200,7 +200,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Vendedor</label>
-            <select className="h-8 w-[150px] rounded-md border border-input bg-white px-2 text-xs"
+            <select className="h-8 w-[150px] rounded-md border border-input bg-card px-2 text-xs"
               value={searchParams.get('vendedor') ?? ''}
               onChange={e => setFilter('vendedor', e.target.value)}>
               <option value="">Todos</option>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Artículo</label>
-            <select className="h-8 w-[170px] rounded-md border border-input bg-white px-2 text-xs"
+            <select className="h-8 w-[170px] rounded-md border border-input bg-card px-2 text-xs"
               value={searchParams.get('articulo') ?? ''}
               onChange={e => setFilter('articulo', e.target.value)}>
               <option value="">Todos</option>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Talla</label>
-            <select className="h-8 w-[110px] rounded-md border border-input bg-white px-2 text-xs disabled:opacity-50"
+            <select className="h-8 w-[110px] rounded-md border border-input bg-card px-2 text-xs disabled:opacity-50"
               value={searchParams.get('talla') ?? ''}
               onChange={e => setFilter('talla', e.target.value)}
               disabled={!filters.id_articulo}>
@@ -373,7 +373,7 @@ export default function DashboardPage() {
               {(d.stock_bajo?.length ?? 0) > 0 ? (
                 <div className="max-h-[210px] overflow-y-auto">
                   <table className="w-full text-[11px]">
-                    <thead className="sticky top-0 bg-white">
+                    <thead className="sticky top-0 bg-card">
                       <tr className="border-b text-muted-foreground">
                         <th className="px-2 py-1.5 text-left font-medium">Artículo</th>
                         <th className="px-2 py-1.5 text-center font-medium">Talla</th>
@@ -411,7 +411,7 @@ export default function DashboardPage() {
               {(d.top_deudores?.length ?? 0) > 0 ? (
                 <div className="max-h-[210px] overflow-y-auto">
                   <table className="w-full text-[11px]">
-                    <thead className="sticky top-0 bg-white">
+                    <thead className="sticky top-0 bg-card">
                       <tr className="border-b text-muted-foreground">
                         <th className="px-2 py-1.5 text-left font-medium">Cliente</th>
                         <th className="px-2 py-1.5 text-left font-medium">Teléfono</th>

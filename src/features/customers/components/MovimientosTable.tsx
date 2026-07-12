@@ -201,7 +201,7 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
         <EmptyState icon={Receipt} size="sm" title="No hay movimientos registrados." />
       ) : (
         <>
-          <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
             <div className="overflow-x-auto overscroll-x-contain">
               <Table className="min-w-[1250px]">
                 <TableHeader>

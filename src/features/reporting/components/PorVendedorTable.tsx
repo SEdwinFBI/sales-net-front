@@ -90,7 +90,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6 shadow-sm">
+      <div className="animate-pulse rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 rounded-lg bg-muted" />)}
         </div>
@@ -100,7 +100,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
 
   return (
     <>
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -144,7 +144,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
           ) : (
             table.getRowModel().rows.map((row, i) => (
               <Fragment key={row.id}>
-                <TableRow className={i % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
+                <TableRow className={i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
@@ -171,7 +171,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                             </thead>
                             <tbody>
                               {row.original.articulos.map((a, ai) => (
-                                <tr key={`${a.id_variante}-${a.id_talla}`} className={ai % 2 === 0 ? 'bg-white' : 'bg-muted/10'}>
+                                <tr key={`${a.id_variante}-${a.id_talla}`} className={ai % 2 === 0 ? 'bg-card' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs">{a.articulo}</td>
                                   <td className="px-2 py-1 text-xs">{a.talla}</td>
                                   <td className="px-2 py-1 text-xs">{a.unidades}</td>

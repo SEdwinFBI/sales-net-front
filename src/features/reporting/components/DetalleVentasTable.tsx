@@ -70,7 +70,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6 shadow-sm">
+      <div className="animate-pulse rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 rounded-lg bg-muted" />)}
         </div>
@@ -80,8 +80,8 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
 
   return (
     <>
-    <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center gap-3 border-b border-border/50 bg-gradient-to-b from-muted/10 to-white px-5 py-2.5">
+    <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+      <div className="flex flex-wrap items-center gap-3 border-b border-border/50 bg-gradient-to-b from-muted/10 to-card px-5 py-2.5">
         <Select
           value={(columnFilters.find((f) => f.id === 'estado')?.value as string) ?? ''}
           onChange={(e) => {
@@ -90,7 +90,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
               return e.target.value ? [...rest, { id: 'estado', value: e.target.value }] : rest
             })
           }}
-          className="h-8 w-40 rounded-lg border border-input bg-white px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
+          className="h-8 w-40 rounded-lg border border-input bg-card px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
         >
           <option value="">Todos los estados</option>
           {uniqueValues.estado.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -103,7 +103,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
               return e.target.value ? [...rest, { id: 'forma_pago', value: e.target.value }] : rest
             })
           }}
-          className="h-8 w-44 rounded-lg border border-input bg-white px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
+          className="h-8 w-44 rounded-lg border border-input bg-card px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
         >
           <option value="">Todas las formas de pago</option>
           {uniqueValues.forma_pago.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -116,7 +116,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
               return e.target.value ? [...rest, { id: 'vendedor', value: e.target.value }] : rest
             })
           }}
-          className="h-8 w-44 rounded-lg border border-input bg-white px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
+          className="h-8 w-44 rounded-lg border border-input bg-card px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
         >
           <option value="">Todos los vendedores</option>
           {uniqueValues.vendedor.map((v) => <option key={v} value={v}>{v}</option>)}
@@ -130,7 +130,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
             })
           }}
           placeholder="Buscar cliente..."
-          className="h-8 w-48 rounded-lg border border-input bg-white px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors placeholder:text-muted-foreground/50"
+          className="h-8 w-48 rounded-lg border border-input bg-card px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors placeholder:text-muted-foreground/50"
         />
         {hasFilters && (
           <button
@@ -179,7 +179,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
             </TableRow>
           ) : (
             table.getRowModel().rows.map((row, i) => (
-              <TableRow key={row.id} className={i % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
+              <TableRow key={row.id} className={i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                 ))}

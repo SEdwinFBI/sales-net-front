@@ -59,7 +59,7 @@ export default function SellersStockList({ isLoading, sellers, onSelect }: Props
           {paginatedSellers.map((seller) => (
             <Card
               key={seller.id}
-              className="group border-l-4 border-l-primary bg-white p-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
+              className="group border-l-4 border-l-primary bg-card p-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
             >
               <button
                 type="button"

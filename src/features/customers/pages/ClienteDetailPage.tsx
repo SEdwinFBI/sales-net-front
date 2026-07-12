@@ -29,7 +29,7 @@ export default function ClienteDetailPage() {
   if (isLoading) {
     return (
       <PageTemplateSimple title="Cargando..." description="">
-        <div className="animate-pulse space-y-4 rounded-2xl bg-white p-6">
+        <div className="animate-pulse space-y-4 rounded-2xl bg-card p-6">
           <div className="h-8 w-48 rounded bg-muted" />
           <div className="h-4 w-96 rounded bg-muted" />
           <div className="h-20 rounded bg-muted" />
@@ -66,23 +66,23 @@ export default function ClienteDetailPage() {
 
           {resumen && (
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total ventas</p>
                 <p className="text-xl font-bold">{resumen.total_ventas}</p>
               </div>
-              <div className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total general</p>
                 <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
               </div>
-              <div className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Pagado</p>
                 <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
               </div>
-              <div className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Abonado</p>
                 <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
               </div>
-              <div className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Balance (deuda)</p>
                 <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
               </div>

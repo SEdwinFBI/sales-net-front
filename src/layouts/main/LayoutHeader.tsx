@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils"
-import { LogOut, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
+import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from "lucide-react"
 import type { User } from "@/features/auth/types/auth"
+import { useThemeStore } from "@/features/core/store/theme-store"
 
 type LayoutHeaderProps = {
     hasSidebarNavigation: boolean
@@ -25,6 +26,8 @@ function LayoutHeader({
     onSidebarToggle,
 }: LayoutHeaderProps) {
     const displayName = user.fullName?.trim() || user.username
+    const theme = useThemeStore((state) => state.theme)
+    const toggleTheme = useThemeStore((state) => state.toggleTheme)
 
     const sidebarLabel = isDesktop
         ? isSidebarPinned
@@ -35,7 +38,7 @@ function LayoutHeader({
             : 'Abrir menu lateral'
 
     return (
-        <header className="sticky top-0 z-10 rounded-2xl border border-border/70 bg-white/95 px-3.5 py-3 shadow-sm backdrop-blur sm:px-5">
+        <header className="sticky top-0 z-10 rounded-2xl border border-border/70 bg-card/95 px-3.5 py-3 shadow-sm backdrop-blur sm:px-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <button
@@ -83,9 +86,18 @@ function LayoutHeader({
                     </div>
                     <button
                         type="button"
+                        onClick={toggleTheme}
+                        aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                        title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-neutral transition hover:bg-primary-nav"
+                    >
+                        {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                    </button>
+                    <button
+                        type="button"
                         onClick={onLogout}
                         aria-label="Cerrar sesión"
-                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-white text-neutral transition hover:bg-primary-nav"
+                        className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-neutral transition hover:bg-primary-nav"
                     >
                         <LogOut className="size-4 text-[--color-danger]" />
                     </button>

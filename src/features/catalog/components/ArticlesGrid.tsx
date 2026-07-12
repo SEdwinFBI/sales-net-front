@@ -64,7 +64,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-white p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid w-full gap-2.5 sm:grid-cols-2 lg:min-w-[680px] lg:max-w-4xl lg:grid-cols-[minmax(220px,1fr)_150px_170px_auto]">
             <div className="relative">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -126,9 +126,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         </div>
 
         {isLoading ? (
-          <EmptyState title="Cargando artículos…" className="bg-white" />
+          <EmptyState title="Cargando artículos…" className="bg-card" />
         ) : filteredData.length === 0 ? (
-          <EmptyState icon={Package} title="No hay artículos registrados." className="bg-white" />
+          <EmptyState icon={Package} title="No hay artículos registrados." className="bg-card" />
         ) : (
           <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {paginatedData.map((article) => {
@@ -151,7 +151,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                 <Card
                   key={article.id}
                   size="sm"
-                  className="group overflow-hidden bg-white py-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
+                  className="group overflow-hidden bg-card py-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
                 >
                   <div className="relative overflow-hidden">
                     <ArticleImage
@@ -210,7 +210,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
           </div>
         )}
         {filteredData.length > pageSize && (
-          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-white p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <span>
               {filteredData.length} artículos - Página {safePage} de {totalPages}
             </span>

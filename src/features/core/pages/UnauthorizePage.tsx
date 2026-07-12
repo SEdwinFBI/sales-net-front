@@ -3,8 +3,8 @@ import { Link } from 'react-router'
 
 export default function UnauthorizePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,var(--color-secondary)_0%,#ffffff_100%)] px-4 py-6">
-      <div className="max-w-xl rounded-2xl border border-border/70 bg-white/95 p-8 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,var(--color-secondary)_0%,var(--color-background)_100%)] px-4 py-6">
+      <div className="max-w-xl rounded-2xl border border-border/70 bg-card/95 p-8 text-center shadow-sm">
         <ShieldAlert className="mx-auto size-12 text-danger" />
         <h1 className="mt-6 text-5xl font-semibold text-neutral">
           Acceso denegado
