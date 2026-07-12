@@ -1,10 +1,15 @@
 import { api } from '@/lib/api'
-import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse } from '../types/sales'
+import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse, BranchAvailability } from '../types/sales'
 
 export const getArticles = async (page = 1, pageSize = 10, search?: string): Promise<SalesArticlesResponse> => {
   const { data } = await api.get<SalesArticlesResponse>('/sales/articles', {
     params: { page, page_size: pageSize, ...(search ? { search } : {}) },
   })
+  return data
+}
+
+export const getArticleAvailability = async (articleId: number): Promise<ApiResponse<BranchAvailability>> => {
+  const { data } = await api.get<ApiResponse<BranchAvailability>>(`/sales/articles/${articleId}/existencias`)
   return data
 }
 

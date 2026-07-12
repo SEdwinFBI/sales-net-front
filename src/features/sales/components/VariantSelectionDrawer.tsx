@@ -3,7 +3,7 @@ import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Store } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
@@ -14,9 +14,10 @@ type Props = {
     variantSelected: ProductVariant | null
     onVariantChange: (variant: ProductVariant) => void
     onAddToCart: () => void
+    onCheckOtherStores: () => void
 }
 
-const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart }) => {
+const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart, onCheckOtherStores }) => {
     const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.src = imageUrl
     }, [])
@@ -97,6 +98,14 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 {item.variants.filter(v => v.stock <= 0).length > 0 && (
                     <p className="text-xs text-stone-400 mt-2">Algunas variantes no tienen stock disponible.</p>
                 )}
+                <Button
+                    variant="outline"
+                    className="mt-3 w-full"
+                    onClick={onCheckOtherStores}
+                >
+                    <Store className="size-4" />
+                    Ver en otras tiendas
+                </Button>
             </DrawerBody>
             <DrawerFooter className="mx-2 flex flex-col items-center justify-center sm:mx-5">
                 <Button
