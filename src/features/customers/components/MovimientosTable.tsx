@@ -10,7 +10,7 @@ import {
   type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table'
-import { Banknote, Receipt, ShoppingBag } from 'lucide-react'
+import { Banknote, Receipt, Search, ShoppingBag } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -149,100 +149,107 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h3 className="font-semibold">Movimientos generales</h3>
-          <p className="text-sm text-muted-foreground">Compras y abonos ordenados del mas reciente al mas antiguo.</p>
-        </div>
-        {movimientos.length > 0 && (
-          <Input
-            value={searchValue}
-            onChange={(event) => table.getColumn('busqueda')?.setFilterValue(event.target.value || undefined)}
-            placeholder="Buscar movimiento..."
-            className="h-9 w-full sm:w-72"
-          />
-        )}
+      <div>
+        <h3 className="font-semibold">Movimientos generales</h3>
+        <p className="text-sm text-muted-foreground">Compras y abonos ordenados del mas reciente al mas antiguo.</p>
       </div>
 
       {movimientos.length === 0 ? (
         <EmptyState icon={Receipt} size="sm" title="No hay movimientos registrados." />
       ) : (
         <>
-          <div className="space-y-2">
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+            <div className="border-b border-border/50 bg-muted/20 px-3 py-3 sm:px-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-xs text-muted-foreground">
+                  {table.getFilteredRowModel().rows.length} de {movimientos.length} movimientos
+                </div>
+                <div className="relative w-full sm:w-80">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60" />
+                  <Input
+                    value={searchValue}
+                    onChange={(event) => table.getColumn('busqueda')?.setFilterValue(event.target.value || undefined)}
+                    placeholder="Buscar movimiento..."
+                    className="h-9 w-full pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+
             {visibleRows.length === 0 ? (
-              <div className="rounded-lg border border-border/70 bg-white px-4 py-8 text-center text-sm text-muted-foreground shadow-sm">
+              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 Sin resultados para la busqueda
               </div>
             ) : (
-              <>
+              <div className="divide-y divide-border/60">
                 {visibleRows.map((row) => {
                   const movimiento = row.original
                   const isCompra = movimiento.tipo === 'Compra'
                   const MovimientoIcon = isCompra ? ShoppingBag : Banknote
                   const mainAmount = isCompra ? movimiento.totalVenta : movimiento.abonado
-                  const title = isCompra
-                    ? `Compra por ${formatCurrency(mainAmount)}`
-                    : `Abono de ${formatCurrency(mainAmount)}`
+                  const title = formatCurrency(mainAmount)
                   const iconClassName = isCompra
                     ? 'bg-secondary text-secondary-foreground'
                     : 'bg-primary/10 text-primary'
                   const saldoClassName = movimiento.saldo > 0
                     ? 'bg-destructive/10 text-destructive'
                     : 'bg-successful/10 text-successful'
+                  const actionLabel = isCompra ? 'Compra' : 'Abono'
+                  const details = [
+                    movimiento.estado,
+                    isCompra && movimiento.formaPago ? movimiento.formaPago : null,
+                    isCompra && movimiento.abonado > 0 ? `Abonado ${formatCurrency(movimiento.abonado)}` : null,
+                  ].filter(Boolean)
 
                   return (
-                    <article key={row.id} className="rounded-lg border border-border/70 bg-white px-3 py-3 shadow-sm transition-colors hover:bg-muted/20 sm:px-4">
-                      <div className="flex gap-3">
-                        <div className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}>
-                          <MovimientoIcon className="size-4" />
+                    <article key={row.id} className="px-3 py-3 transition-colors hover:bg-muted/20 sm:px-4">
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                        <div className="flex min-w-0 gap-3">
+                          <div className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full ${iconClassName}`}>
+                            <MovimientoIcon className="size-4" />
+                          </div>
+
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                {actionLabel}
+                              </span>
+                              <p className="text-sm font-semibold text-foreground">{title}</p>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Venta #{movimiento.idVenta} - {formatDate(movimiento.fecha)}
+                              {movimiento.responsable ? ` - ${movimiento.responsable}` : ''}
+                            </p>
+                          </div>
                         </div>
 
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="min-w-0 space-y-1">
-                              <p className="text-sm font-semibold text-foreground">{title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Venta #{movimiento.idVenta} - {formatDate(movimiento.fecha)}
-                                {movimiento.responsable ? ` - ${movimiento.responsable}` : ''}
-                              </p>
-                            </div>
-
-                            <span className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${saldoClassName}`}>
-                              Saldo {formatCurrency(movimiento.saldo)}
+                        <div className="flex flex-wrap items-center gap-2 pl-12 sm:justify-end sm:pl-0">
+                          {details.map((detail) => (
+                            <span key={String(detail)} className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground capitalize">
+                              {detail}
                             </span>
-                          </div>
+                          ))}
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${saldoClassName}`}>
+                            Saldo {formatCurrency(movimiento.saldo)}
+                          </span>
+                        </div>
 
-                          <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
-                              {movimiento.estado}
-                            </span>
-                            {isCompra && movimiento.formaPago && (
-                              <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
-                                {movimiento.formaPago}
-                              </span>
-                            )}
-                            {isCompra && movimiento.abonado > 0 && (
-                              <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
-                                Abonado: {formatCurrency(movimiento.abonado)}
-                              </span>
-                            )}
-                          </div>
-
-                          {movimiento.observacion && (
+                        {movimiento.observacion && (
+                          <div className="pl-12 sm:col-span-2">
                             <p className="line-clamp-2 rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
                               {movimiento.observacion}
                             </p>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </article>
                   )
                 })}
-              </>
+              </div>
             )}
 
             {hasFilters && (
-              <div className="rounded-lg border border-border/50 bg-primary/5 px-4 py-1.5 text-xs text-muted-foreground">
+              <div className="border-t border-border/50 bg-primary/5 px-4 py-1.5 text-xs text-muted-foreground">
                 {table.getFilteredRowModel().rows.length} de {movimientos.length} resultados
               </div>
             )}
