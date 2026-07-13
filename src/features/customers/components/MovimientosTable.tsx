@@ -25,6 +25,8 @@ type MovimientoBase = {
   abonado: number
   saldo: number
   estado: string
+  formaPago: string | null
+  responsable: string | null
   observacion: string | null
 }
 
@@ -71,6 +73,8 @@ const getMovimientoSearchText = (movimiento: Movimiento) => [
   movimiento.idVenta,
   movimiento.fecha,
   movimiento.estado,
+  movimiento.formaPago,
+  movimiento.responsable,
   movimiento.observacion,
   movimiento.totalVenta,
   movimiento.abonado,
@@ -91,6 +95,8 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
       abonado: Number(venta.abonado),
       saldo: Number(venta.saldo),
       estado: venta.estado,
+      formaPago: venta.forma_pago,
+      responsable: venta.vendedor.full_name,
       observacion: venta.observacion ?? null,
       compra: venta,
     })),
@@ -103,6 +109,8 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
       abonado: Number(abono.monto),
       saldo: Number(abono.saldo_restante),
       estado: abono.venta_estado,
+      formaPago: null,
+      responsable: abono.usuario?.full_name || abono.usuario?.username || null,
       observacion: abono.observacion ?? null,
       abono,
     })),
@@ -195,6 +203,7 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
                               <p className="text-sm font-semibold text-foreground">{title}</p>
                               <p className="text-xs text-muted-foreground">
                                 Venta #{movimiento.idVenta} - {formatDate(movimiento.fecha)}
+                                {movimiento.responsable ? ` - ${movimiento.responsable}` : ''}
                               </p>
                             </div>
 
@@ -207,6 +216,11 @@ export default function MovimientosTable({ ventas, abonos }: Props) {
                             <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
                               {movimiento.estado}
                             </span>
+                            {isCompra && movimiento.formaPago && (
+                              <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
+                                {movimiento.formaPago}
+                              </span>
+                            )}
                             {isCompra && movimiento.abonado > 0 && (
                               <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground capitalize">
                                 Abonado: {formatCurrency(movimiento.abonado)}
