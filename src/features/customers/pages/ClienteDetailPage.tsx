@@ -4,6 +4,7 @@ import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { useCliente } from '../hooks/useCliente'
 import { useAbonosHistorial } from '../hooks/useAbonosHistorial'
 import { useComprasCliente } from '../hooks/useComprasCliente'
+import { useMovimientosCliente } from '../hooks/useMovimientosCliente'
 import ClienteInfo from '../components/ClienteInfo'
 import MovimientosTable from '../components/MovimientosTable'
 import AbonosTable from '../components/AbonosTable'
@@ -23,6 +24,7 @@ export default function ClienteDetailPage() {
   const { data: cliente, isLoading, isError } = useCliente(clienteId)
   const { abonos } = useAbonosHistorial(clienteId)
   const { ventas, resumen } = useComprasCliente(clienteId)
+  const { movimientos } = useMovimientosCliente(clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
 
@@ -107,7 +109,7 @@ export default function ClienteDetailPage() {
             </div>
 
             <TabsContent value="movimientos" className="mt-4">
-              <MovimientosTable ventas={ventas} abonos={abonos} />
+              <MovimientosTable movimientos={movimientos} />
             </TabsContent>
 
             <TabsContent value="abonos" className="mt-4">

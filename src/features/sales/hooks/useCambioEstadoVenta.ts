@@ -9,6 +9,8 @@ export const useCambioEstadoVenta = () => {
     mutationFn: ({ id, estado }) => patchEstadoVenta(id, estado),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminVentas.all })
+      // Cancelar una venta al crédito afecta el balance y los movimientos del cliente
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
     },
   })
 }

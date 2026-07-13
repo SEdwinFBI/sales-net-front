@@ -32,6 +32,8 @@ export const queryKeys = {
     abonos: (idCliente: number) => [...queryKeys.customers.all, 'abonos', idCliente] as const,
     compras: (idCliente: number, filters?: Record<string, unknown>) =>
       [...queryKeys.customers.all, 'compras', idCliente, filters] as const,
+    movimientos: (idCliente: number, filters?: Record<string, unknown>) =>
+      [...queryKeys.customers.all, 'movimientos', idCliente, filters] as const,
   },
   sales: {
     all: ['sales'] as const,
