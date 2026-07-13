@@ -102,7 +102,7 @@ export default function ComprasTable({ ventas }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

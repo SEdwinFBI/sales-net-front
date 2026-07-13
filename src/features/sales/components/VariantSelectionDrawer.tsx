@@ -3,7 +3,7 @@ import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Store } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
@@ -14,16 +14,17 @@ type Props = {
     variantSelected: ProductVariant | null
     onVariantChange: (variant: ProductVariant) => void
     onAddToCart: () => void
+    onCheckOtherStores: () => void
 }
 
-const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart }) => {
+const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart, onCheckOtherStores }) => {
     const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.src = imageUrl
     }, [])
     const selectedStockStatus = variantSelected ? getStockStatus(variantSelected.stock) : null
 
     return (
-        <DrawerContent className="w-full bg-white sm:max-w-md">
+        <DrawerContent className="w-full bg-card sm:max-w-md">
             <DrawerHeader className="mx-auto w-full max-w-md">
                 <DrawerTitle>Elige la variante</DrawerTitle>
                 <DrawerDescription className="text-center">
@@ -31,9 +32,9 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 </DrawerDescription>
             </DrawerHeader>
 
-            <DrawerBody className="mx-2 flex-1 rounded-t-[20px] bg-white pt-2 sm:mx-5">
+            <DrawerBody className="mx-2 flex-1 rounded-t-[20px] bg-card pt-2 sm:mx-5">
                 <div className='grid flex-1 grid-cols-1 gap-4 min-[430px]:grid-cols-2'>
-                    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl bg-white min-[430px]:aspect-auto">
+                    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl bg-card min-[430px]:aspect-auto">
                         <div className="absolute inset-0 ">
                             <img
                                 src={item.image ?? imageUrl}
@@ -55,12 +56,12 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <div>
                         <Badge variant="secondary" className="mb-2">{item.category}</Badge>
                         <p className="mb-1 text-lg font-medium leading-tight sm:text-xl">{item.name}</p>
-                        <div className="h-px bg-stone-200 my-2" />
+                        <div className="h-px bg-border my-2" />
                         <p className="text-2xl font-medium text-primary">Q{variantSelected?.price}</p>
-                        <p className="text-sm text-stone-500">
+                        <p className="text-sm text-muted-foreground">
                             {variantSelected ? `Talla: ${variantSelected.size}` : 'Selecciona una talla'}
                         </p>
-                        <p className={cn("text-sm", variantSelected ? getStockTextClass(variantSelected.stock) : "text-stone-500")}>
+                        <p className={cn("text-sm", variantSelected ? getStockTextClass(variantSelected.stock) : "text-muted-foreground")}>
                             Stock disponible: {variantSelected?.stock ?? '-'} unidades
                         </p>
                         {selectedStockStatus === 'low' && (
@@ -95,8 +96,16 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <p className="text-xs text-destructive text-center mt-2">Ninguna variante disponible. Producto agotado.</p>
                 )}
                 {item.variants.filter(v => v.stock <= 0).length > 0 && (
-                    <p className="text-xs text-stone-400 mt-2">Algunas variantes no tienen stock disponible.</p>
+                    <p className="text-xs text-muted-foreground mt-2">Algunas variantes no tienen stock disponible.</p>
                 )}
+                <Button
+                    variant="outline"
+                    className="mt-3 w-full"
+                    onClick={onCheckOtherStores}
+                >
+                    <Store className="size-4" />
+                    Ver en otras tiendas
+                </Button>
             </DrawerBody>
             <DrawerFooter className="mx-2 flex flex-col items-center justify-center sm:mx-5">
                 <Button
@@ -108,7 +117,7 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <ShoppingCart className="w-5! h-10!" size={30} strokeWidth={3} />
                     <p className="font-bold">Agregar al carrito</p>
                 </Button>
-                <p className="text-xs text-stone-400 text-center mt-2">Revisa la variante y cantidad antes de confirmar</p>
+                <p className="text-xs text-muted-foreground text-center mt-2">Revisa la variante y cantidad antes de confirmar</p>
             </DrawerFooter>
         </DrawerContent>
     )

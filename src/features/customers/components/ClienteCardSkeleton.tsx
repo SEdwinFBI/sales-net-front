@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card'
 
 export default function ClienteCardSkeleton() {
   return (
-    <Card className="animate-pulse bg-white p-4">
+    <Card className="animate-pulse bg-card p-4">
       <div className="flex items-start gap-3">
         <div className="size-12 rounded-full bg-muted" />
         <div className="flex-1 space-y-2">

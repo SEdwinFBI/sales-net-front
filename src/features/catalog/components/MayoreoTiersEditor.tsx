@@ -121,7 +121,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold">
-            Rangos por total de unidades del carrito
+            Rangos para descuentos por mayoreo
             {esDefault && !isDirty && (
               <Badge className="ml-2" variant="outline">
                 Default
@@ -129,8 +129,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
             )}
           </p>
           <p className="text-sm text-muted-foreground">
-            Cuando el carrito alcanza un rango, las líneas que no logran su descuento
-            individual reciben el descuento mayorista.
+            Descuento por mayoreo para cada talla
           </p>
         </div>
         <Button variant="outline" onClick={handleRestoreDefaults}>
@@ -141,18 +140,18 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
 
       <div className="space-y-3">
         {currentRows.map((row, index) => (
-          <Card key={index} size="sm" className="bg-white p-4">
+          <Card key={index} size="sm" className="bg-card p-4">
             <div className="grid gap-3 lg:grid-cols-[auto_5rem_5rem_auto_minmax(12rem,1fr)_5.5rem_2.5rem] lg:items-center">
               <span className="text-sm font-medium text-muted-foreground">De</span>
               <Input
-                className="h-9 bg-white"
+                className="h-9 bg-card"
                 inputMode="numeric"
                 aria-label="Unidades mínimas"
                 value={row.min}
                 onChange={(event) => setRow(index, { min: event.target.value })}
               />
               <Input
-                className="h-9 bg-white"
+                className="h-9 bg-card"
                 inputMode="numeric"
                 aria-label="Unidades máximas"
                 placeholder="∞"
@@ -179,7 +178,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
               </Select>
               {row.modo === 'DERIVADO' ? (
                 <Input
-                  className="h-9 bg-white"
+                  className="h-9 bg-card"
                   inputMode="decimal"
                   aria-label="Factor sobre el descuento individual"
                   placeholder="0.5"

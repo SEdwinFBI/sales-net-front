@@ -112,7 +112,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6 shadow-sm">
+      <div className="animate-pulse rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 rounded-lg " />)}
         </div>
@@ -122,7 +122,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         {columnFilters.length > 0 && (
           <div className="flex items-center gap-2 border-b border-border/50 bg-primary/5 px-4 py-1.5">
             <SearchX className="size-3.5 text-primary" />
@@ -178,17 +178,17 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
             ) : (
               table.getRowModel().rows.map((row, i) => (
                 <React.Fragment key={row.id}>
-                  <TableRow className={i % 2 === 0 ? 'bg-white' : 'bg-muted/20'}>
+                  <TableRow className={i % 2 === 0 ? 'bg-card' : 'bg-muted/20'}>
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                     ))}
                   </TableRow>
                   {row.getIsExpanded() && (
                     <TableRow key={`${row.id}-detail`}>
-                      <TableCell colSpan={columns.length} className="bg-gradient-to-br from-muted/30 to-white p-4">
+                      <TableCell colSpan={columns.length} className="bg-gradient-to-br from-muted/30 to-card p-4">
                         <div className="space-y-2">
                           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detalle de la venta</p>
-                          <div className="overflow-x-auto rounded-lg border border-border bg-white">
+                          <div className="overflow-x-auto rounded-lg border border-border bg-card">
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="border-b border-border bg-muted/20">

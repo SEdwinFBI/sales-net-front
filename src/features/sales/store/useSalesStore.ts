@@ -3,11 +3,26 @@ import type { CartItem, LastSale, Product, SalesDialog } from '../types/sales';
 import type { LineDiscount } from '../utils/pricing-engine';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+export interface BranchAvailabilityDialogState {
+  open: boolean;
+  articleId: number | null;
+  highlightVariantId: number | null;
+}
+
 export interface SalesState {
   items: CartItem[];
   cartOpen: boolean;
   activeDialog: SalesDialog;
   lastSale: LastSale | null;
+  /**
+   * Dialog de existencias en otras tiendas. Slice propio (no usa
+   * activeDialog) porque openDialog/closeDialog manipulan cartOpen y aquí
+   * no debe tocarse el carrito.
+   */
+  branchAvailability: BranchAvailabilityDialogState;
+  openBranchAvailability: (articleId: number | null, highlightVariantId?: number | null) => void;
+  setBranchAvailabilityArticle: (articleId: number | null) => void;
+  closeBranchAvailability: () => void;
   addItem: (product: Product, variantId: number) => void;
   removeItem: (itemId: string) => void;
   increaseQty: (itemId: string) => void;
@@ -34,6 +49,16 @@ export const useSalesStore = create<SalesState>()(
     cartOpen: false,
     activeDialog: null,
     lastSale: null,
+    branchAvailability: { open: false, articleId: null, highlightVariantId: null },
+
+    openBranchAvailability: (articleId, highlightVariantId = null) =>
+      set({ branchAvailability: { open: true, articleId, highlightVariantId } }),
+
+    setBranchAvailabilityArticle: (articleId) =>
+      set({ branchAvailability: { open: true, articleId, highlightVariantId: null } }),
+
+    closeBranchAvailability: () =>
+      set({ branchAvailability: { open: false, articleId: null, highlightVariantId: null } }),
 
     addItem: (product, variantId) =>
       set((state) => {

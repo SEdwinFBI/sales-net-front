@@ -49,7 +49,7 @@ export default function PreciosPage() {
       title="Precios y descuentos"
       description="Precio, regla individual y regla mayorista por usuario."
     >
-      <Card className="mt-2 bg-white p-3.5 sm:mt-3 sm:p-5">
+      <Card className="mt-2 bg-card p-3.5 sm:mt-3 sm:p-5">
         {selectedSeller ? (
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(String(value))}>
             <TabsList>

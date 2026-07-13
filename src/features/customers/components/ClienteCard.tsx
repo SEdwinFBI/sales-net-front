@@ -21,7 +21,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
   const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
 
   return (
-    <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-successful' : 'border-l-border'} bg-white p-4 transition-shadow hover:shadow-md`}>
+    <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-successful' : 'border-l-border'} bg-card p-4 transition-shadow hover:shadow-md`}>
       <div className="flex items-start gap-3">
         <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${cliente.activo ? 'bg-successful' : 'bg-muted-foreground/70'}`}>
           {initials(cliente.nombre_completo)}

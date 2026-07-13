@@ -13,7 +13,7 @@ export function getStockTextClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') return 'text-destructive'
-  if (status === 'low') return 'text-yellow-700'
+  if (status === 'low') return 'text-yellow-700 dark:text-yellow-500'
 
   return 'text-muted-foreground'
 }
@@ -58,7 +58,7 @@ export function getStockInputClass(quantity: number) {
   const status = getStockStatus(quantity)
 
   if (status === 'out') return 'border-destructive/40 text-destructive focus-visible:border-destructive'
-  if (status === 'low') return 'border-yellow-400 text-yellow-800 focus-visible:border-yellow-500'
+  if (status === 'low') return 'border-yellow-400 text-yellow-800 dark:text-yellow-400 focus-visible:border-yellow-500'
 
   return ''
 }

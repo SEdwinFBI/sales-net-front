@@ -97,7 +97,7 @@ function SubItems({
                 className={({ isActive }) =>
                   cn(
                     'group relative flex items-center gap-1 rounded-lg border border-border/60 px-5 py-0.5 transition-[background-color,border-color,color] duration-150 ease-out',
-                    'bg-white/40',
+                    'bg-card/40',
                     isActive && 'bg-primary/8', textClass
 
                   )
@@ -128,7 +128,7 @@ function SubItems({
                     {item.name}
                   </span>
                   {/* {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-stone-400 mt-0.5">
+                    <span className="block truncate text-[0.63rem] text-muted-foreground mt-0.5">
                       {item.description}
                     </span>
                   )} */}
@@ -175,7 +175,7 @@ function SubItems({
                     {item.name}
                   </span>
                   {/* {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-stone-400 mt-0.5">
+                    <span className="block truncate text-[0.63rem] text-muted-foreground mt-0.5">
                       {item.description}
                     </span>
                   )} */}

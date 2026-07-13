@@ -75,7 +75,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-2xl border border-border bg-white p-6">
+      <div className="animate-pulse rounded-2xl border border-border bg-card p-6">
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-6 rounded bg-muted" />)}
         </div>
@@ -96,7 +96,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/70 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

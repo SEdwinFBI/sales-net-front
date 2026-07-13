@@ -4,6 +4,7 @@ import type { Product, ProductVariant } from "@/features/sales/types/sales"
 import { toast } from "sonner"
 import ProductCard from "./ProductCard"
 import VariantSelectionDrawer from "./VariantSelectionDrawer"
+import { useSalesStore } from "../store/useSalesStore"
 
 type Props = {
     onClick: (product: Product, variantId: number) => void
@@ -24,11 +25,20 @@ const ProductItem: FC<Props> = ({ onClick, item }) => {
         })
     }, [item.variants])
 
+    const openBranchAvailability = useSalesStore((state) => state.openBranchAvailability)
+
     const handleAddVariant = () => {
         if (!variantSelected || variantSelected.stock <= 0) return
         onClick(item, variantSelected.id)
         setIsOpen(false)
         toast.info(`se agrego al carrito ${item.name} - ${variantSelected.size}`)
+    }
+
+    // Cierra el drawer antes de abrir el dialog: vaul aplica scroll-lock al
+    // body que dejaría inerte el dialog si quedaran ambos abiertos.
+    const handleCheckOtherStores = () => {
+        setIsOpen(false)
+        openBranchAvailability(item.id, variantSelected?.id ?? null)
     }
 
     return (
@@ -41,6 +51,7 @@ const ProductItem: FC<Props> = ({ onClick, item }) => {
                 variantSelected={variantSelected}
                 onVariantChange={setVariantSelected}
                 onAddToCart={handleAddVariant}
+                onCheckOtherStores={handleCheckOtherStores}
             />
         </Drawer>
     )

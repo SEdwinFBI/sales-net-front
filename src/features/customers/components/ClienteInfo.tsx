@@ -14,7 +14,7 @@ export default function ClienteInfo({ cliente }: Props) {
   const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
 
   return (
-    <Card className="bg-white p-4 sm:p-5">
+    <Card className="bg-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
           <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${cliente.activo ? 'bg-successful' : 'bg-muted-foreground/70'}`}>
