@@ -243,55 +243,69 @@ export default function SellerStockEditor({
                     </div>
                   ) : (
                     isExpanded && (
-                      <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
-                        <div className="hidden grid-cols-[minmax(6rem,1fr)_12rem] bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
-                          <span>Talla</span>
-                          <span className="text-center">Cantidad</span>
+                      <div className="mt-4 grid gap-3 lg:grid-cols-[11rem_minmax(0,1fr)]">
+                        <div className="rounded-lg border border-border bg-muted/20 p-3">
+                          <ArticleImage
+                            className="aspect-square w-full rounded-md object-cover shadow-sm"
+                            src={row.article.image}
+                            alt={row.article.title}
+                          />
+                          <p className="mt-2 line-clamp-2 text-sm font-semibold">{row.article.title}</p>
+                          <p className={cn("mt-0.5 text-xs", getStockTextClass(row.total))}>
+                            {stockSummary}
+                          </p>
                         </div>
-                        <div className="divide-y divide-border">
-                          {row.availableSizes.map(({ quantity, size, variant }) => (
-                            <div
-                              key={variant.id}
-                              className="grid gap-3 p-3 transition-colors focus-within:bg-primary/5 sm:grid-cols-[minmax(6rem,1fr)_12rem] sm:items-center sm:px-4"
-                            >
-                              <div className="flex items-center justify-between gap-2 sm:block">
-                                <span className="text-sm font-semibold">Talla {size}</span>
-                                <span className={cn("text-xs sm:hidden", getStockTextClass(quantity))}>
-                                  {quantity} unidades
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2">
+
+                        <div className="overflow-hidden rounded-lg border border-border bg-card">
+                          <div className="hidden grid-cols-[minmax(6rem,1fr)_12rem] bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
+                            <span>Talla</span>
+                            <span className="text-center">Cantidad</span>
+                          </div>
+                          <div className="divide-y divide-border">
+                            {row.availableSizes.map(({ quantity, size, variant }) => (
+                              <div
+                                key={variant.id}
+                                className="grid gap-3 p-3 transition-colors focus-within:bg-primary/5 sm:grid-cols-[minmax(6rem,1fr)_12rem] sm:items-center sm:px-4"
+                              >
+                                <div className="flex items-center justify-between gap-2 sm:block">
+                                  <span className="text-sm font-semibold">Talla {size}</span>
+                                  <span className={cn("text-xs sm:hidden", getStockTextClass(quantity))}>
+                                    {quantity} unidades
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-[2.25rem_1fr_2.25rem] items-center gap-2">
                                   <Button
                                     type="button"
                                     size="icon-sm"
                                     variant="outline"
                                     aria-label={`Restar una unidad de talla ${size}`}
                                     disabled={quantity === 0}
-                                  onClick={() => adjustQuantity(variant.id, -1)}
-                                >
-                                  <Minus />
-                                </Button>
-                                <Input
-                                  className={cn("h-9 text-center font-semibold", getStockInputClass(quantity))}
-                                  min={0}
-                                  type="number"
-                                  value={quantity}
-                                  onChange={(event) =>
-                                    handleQuantityChange(variant.id, event.target.value)
-                                  }
-                                />
-                                <Button
-                                  type="button"
-                                  size="icon-sm"
-                                  variant="outline"
-                                  aria-label={`Sumar una unidad de talla ${size}`}
-                                  onClick={() => adjustQuantity(variant.id, 1)}
-                                >
-                                  <Plus />
-                                </Button>
+                                    onClick={() => adjustQuantity(variant.id, -1)}
+                                  >
+                                    <Minus />
+                                  </Button>
+                                  <Input
+                                    className={cn("h-9 text-center font-semibold", getStockInputClass(quantity))}
+                                    min={0}
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(event) =>
+                                      handleQuantityChange(variant.id, event.target.value)
+                                    }
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="outline"
+                                    aria-label={`Sumar una unidad de talla ${size}`}
+                                    onClick={() => adjustQuantity(variant.id, 1)}
+                                  >
+                                    <Plus />
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )
