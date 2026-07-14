@@ -243,19 +243,7 @@ export default function SellerStockEditor({
                     </div>
                   ) : (
                     isExpanded && (
-                      <div className="mt-4 grid gap-3 lg:grid-cols-[11rem_minmax(0,1fr)]">
-                        <div className="rounded-lg border border-border bg-muted/20 p-3">
-                          <ArticleImage
-                            className="aspect-square w-full rounded-md object-cover shadow-sm"
-                            src={row.article.image}
-                            alt={row.article.title}
-                          />
-                          <p className="mt-2 line-clamp-2 text-sm font-semibold">{row.article.title}</p>
-                          <p className={cn("mt-0.5 text-xs", getStockTextClass(row.total))}>
-                            {stockSummary}
-                          </p>
-                        </div>
-
+                      <div className="mt-4">
                         <div className="overflow-hidden rounded-lg border border-border bg-card">
                           <div className="hidden grid-cols-[minmax(6rem,1fr)_12rem] bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground sm:grid">
                             <span>Talla</span>
