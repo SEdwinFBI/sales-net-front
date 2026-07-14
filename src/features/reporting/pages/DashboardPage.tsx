@@ -88,11 +88,11 @@ function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
 // ─── Card de gráfico uniforme ───
 function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm', className)}>
+    <div className={cn('min-w-0 overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm', className)}>
       <div className="border-b border-border/40 bg-muted/20 px-3 py-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-foreground/80">{title}</h3>
       </div>
-      <div className="p-2">{children}</div>
+      <div className="min-w-0 overflow-hidden p-2">{children}</div>
     </div>
   )
 }
