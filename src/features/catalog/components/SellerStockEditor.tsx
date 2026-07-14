@@ -244,16 +244,18 @@ export default function SellerStockEditor({
                   ) : (
                     isExpanded && (
                       <div className="mt-4 grid gap-3 lg:grid-cols-[11rem_minmax(0,1fr)]">
-                        <div className="rounded-lg border border-border bg-muted/20 p-3">
+                        <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 p-3 lg:block">
                           <ArticleImage
-                            className="aspect-square w-full rounded-md object-cover shadow-sm"
+                            className="size-14 shrink-0 rounded-md object-cover shadow-sm lg:aspect-square lg:size-auto lg:w-full"
                             src={row.article.image}
                             alt={row.article.title}
                           />
-                          <p className="mt-2 line-clamp-2 text-sm font-semibold">{row.article.title}</p>
-                          <p className={cn("mt-0.5 text-xs", getStockTextClass(row.total))}>
-                            {stockSummary}
-                          </p>
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-sm font-semibold lg:mt-2">{row.article.title}</p>
+                            <p className={cn("mt-0.5 text-xs", getStockTextClass(row.total))}>
+                              {stockSummary}
+                            </p>
+                          </div>
                         </div>
 
                         <div className="overflow-hidden rounded-lg border border-border bg-card">

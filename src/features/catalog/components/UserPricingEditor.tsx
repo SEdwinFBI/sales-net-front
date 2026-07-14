@@ -479,18 +479,20 @@ export default function UserPricingEditor({
 
                   {isExpanded && (
                     <div className="mt-4 grid gap-3 xl:grid-cols-[11rem_minmax(0,1fr)]">
-                      <div className="rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/20 p-3 xl:block">
                         <ArticleImage
-                          className="aspect-square w-full rounded-md object-cover shadow-sm"
+                          className="size-14 shrink-0 rounded-md object-cover shadow-sm xl:aspect-square xl:size-auto xl:w-full"
                           src={article.image}
                           alt={article.title}
                         />
-                        <p className="mt-2 line-clamp-2 text-sm font-semibold">{article.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {customized > 0
-                            ? `${customized} talla${customized === 1 ? '' : 's'} personalizada${customized === 1 ? '' : 's'}`
-                            : 'Sin precios personalizados'}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-sm font-semibold xl:mt-2">{article.title}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {customized > 0
+                              ? `${customized} talla${customized === 1 ? '' : 's'} personalizada${customized === 1 ? '' : 's'}`
+                              : 'Sin precios personalizados'}
+                          </p>
+                        </div>
                       </div>
                       <div className="overflow-hidden rounded-lg border border-border bg-card">
                         <div className="hidden gap-2 bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[4.5rem_5.5rem_minmax(6rem,1fr)_minmax(12rem,1fr)_minmax(6rem,1fr)_2.5rem]">
