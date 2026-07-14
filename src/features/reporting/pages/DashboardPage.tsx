@@ -376,6 +376,7 @@ export default function DashboardPage() {
                     <thead className="sticky top-0 bg-card">
                       <tr className="border-b text-muted-foreground">
                         <th className="px-2 py-1.5 text-left font-medium">Artículo</th>
+                        <th className="px-2 py-1.5 text-left font-medium">Sucursal</th>
                         <th className="px-2 py-1.5 text-center font-medium">Talla</th>
                         <th className="px-2 py-1.5 text-right font-medium">Precio</th>
                         <th className="px-2 py-1.5 text-right font-medium">Stock</th>
@@ -386,6 +387,9 @@ export default function DashboardPage() {
                       {(d.stock_bajo ?? []).map((s, i) => (
                         <tr key={s.id_variante} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
                           <td className="px-2 py-1.5">{s.articulo}</td>
+                          <td className="px-2 py-1.5 text-muted-foreground">
+                            {String('sucursal' in s ? s.sucursal ?? '-' : '-')}
+                          </td>
                           <td className="px-2 py-1.5 text-center text-muted-foreground">{s.talla}</td>
                           <td className="px-2 py-1.5 text-right">{Q(s.precio)}</td>
                           <td className="px-2 py-1.5 text-right font-bold">{s.total_stock}</td>
