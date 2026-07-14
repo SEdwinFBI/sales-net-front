@@ -17,8 +17,8 @@ import { mayoreoTiersSchema } from '../utils/pricing-schema'
 
 /** Defaults del negocio: 2 unidades → 50% del individual, 3+ → 100%. */
 const DEFAULT_TIER_ROWS: TierRow[] = [
-  { min: '2', max: '2', sinLimite: false, modo: 'DERIVADO', factor: '0.5' },
-  { min: '3', max: '', sinLimite: true, modo: 'DERIVADO', factor: '1' },
+  { min: '2', max: '2', sinLimite: false, modo: 'DERIVADO', factor: '50' },
+  { min: '3', max: '', sinLimite: true, modo: 'DERIVADO', factor: '100' },
 ]
 
 type TierRow = {
@@ -40,9 +40,11 @@ function toRows(tiers: MayoreoTier[]): TierRow[] {
     max: tier.unidades_max !== null ? String(tier.unidades_max) : '',
     sinLimite: tier.unidades_max === null,
     modo: tier.usar_descuento_articulo ? 'MONTO_ARTICULO' : 'DERIVADO',
-    factor: String(Number(tier.factor_individual)),
+    factor: String(Number(tier.factor_individual) * 100),
   }))
 }
+
+const percentToFactor = (value: string) => value === '' ? '1' : String(Number(value) / 100)
 
 export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
   const { tiers, esDefault, isLoading } = useMayoreoTiers(seller.id)
@@ -71,7 +73,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
     const nextMin = last ? String((Number(last.max || last.min) || 0) + 1) : '2'
     setRows([
       ...currentRows.map((row) => ({ ...row, sinLimite: false, max: row.sinLimite ? row.min : row.max })),
-      { min: nextMin, max: '', sinLimite: true, modo: 'DERIVADO', factor: '1' },
+      { min: nextMin, max: '', sinLimite: true, modo: 'DERIVADO', factor: '100' },
     ])
   }
 
@@ -87,7 +89,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
     const parsedTiers: MayoreoTier[] = currentRows.map((row) => ({
       unidades_min: Number(row.min),
       unidades_max: row.sinLimite || row.max === '' ? null : Number(row.max),
-      factor_individual: row.factor === '' ? '1' : row.factor,
+      factor_individual: percentToFactor(row.factor),
       usar_descuento_articulo: row.modo === 'MONTO_ARTICULO',
     }))
 
@@ -177,14 +179,19 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
                 <option value="MONTO_ARTICULO">Monto configurado en el artículo</option>
               </Select>
               {row.modo === 'DERIVADO' ? (
-                <Input
-                  className="h-9 bg-card"
-                  inputMode="decimal"
-                  aria-label="Factor sobre el descuento individual"
-                  placeholder="0.5"
-                  value={row.factor}
-                  onChange={(event) => setRow(index, { factor: event.target.value })}
-                />
+                <div className="relative">
+                  <Input
+                    className="h-9 bg-card pr-7"
+                    inputMode="decimal"
+                    aria-label="Factor sobre el descuento individual"
+                    placeholder="50"
+                    value={row.factor}
+                    onChange={(event) => setRow(index, { factor: event.target.value })}
+                  />
+                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    %
+                  </span>
+                </div>
               ) : (
                 <span />
               )}
@@ -206,8 +213,8 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
               {row.modo === 'DERIVADO' ? (
                 <span>
                   Calculo partir del descuento individual de
-                  cada variante (factor {row.factor || '1'}: individual Q30.00 → este rango Q
-                  {(30 * Number(row.factor || 1)).toFixed(2)}). Nunca se muestra porcentaje al vender.
+                  cada variante ({row.factor || '100'}%: individual Q30.00 a este rango Q
+                  {(30 * (Number(row.factor || 100) / 100)).toFixed(2)}). Nunca se muestra porcentaje al vender.
                 </span>
               ) : (
                 <span>
