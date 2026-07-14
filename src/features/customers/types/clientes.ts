@@ -101,6 +101,42 @@ export interface ComprasFilters {
   fecha_hasta?: string
 }
 
+export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE'
+
+export interface MovimientoCliente {
+  id: number
+  tipo: TipoMovimiento
+  tipo_display: string
+  monto: string
+  saldo_anterior: string
+  saldo_resultante: string
+  fecha: string
+  id_venta: number | null
+  venta_info: {
+    id: number
+    total: number
+    estado: string
+    forma_pago: string
+  } | null
+  descripcion: string | null
+  usuario: {
+    id: number
+    username: string
+    full_name: string
+  } | null
+}
+
+export interface MovimientosData {
+  movimientos: MovimientoCliente[]
+  balance_actual: number
+}
+
+export interface MovimientosFilters {
+  tipo?: TipoMovimiento
+  fecha_desde?: string
+  fecha_hasta?: string
+}
+
 export interface ComprasData {
   ventas: Venta[]
   resumen: {

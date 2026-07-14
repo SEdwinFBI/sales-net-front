@@ -16,6 +16,7 @@ import type { Venta } from '@/features/sales/types/sales'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { getVentaTotal } from '../utils/venta-total'
 import {
   Table,
   TableBody,
@@ -48,9 +49,10 @@ export default function ComprasTable({ ventas }: Props) {
       },
     },
     {
-      accessorKey: 'total',
+      id: 'total',
+      accessorFn: (venta) => getVentaTotal(venta),
       header: 'Total',
-      cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="font-semibold">Q{getVentaTotal(row.original).toFixed(2)}</span>,
     },
     {
       accessorKey: 'abonado',
