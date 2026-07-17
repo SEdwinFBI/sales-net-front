@@ -21,6 +21,7 @@ import { useArticulos } from '@/features/catalog/hooks/useArticulos'
 import { useTallas } from '@/features/catalog/hooks/useTallas'
 import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
 import { useVariantes } from '@/features/catalog/hooks/useVariantes'
+import { useMediaQuery } from '@/features/core/hooks/useMediaQuery'
 import { getDashboardData, type DashboardFilters } from '../services/reportes-service'
 import type { DashboardData } from '../types/reportes'
 
@@ -31,6 +32,20 @@ const money = (v: unknown) => `Q${Number(v ?? 0).toFixed(2)}`
 
 const CHART_AXIS = { fontSize: 10, fill: '#94a3b8' }
 const CHART_HEIGHT = 230
+
+const truncateLabel = (value: unknown, maxLength: number) => {
+  const text = String(value ?? '')
+  return text.length > maxLength ? `${text.slice(0, Math.max(0, maxLength - 3))}...` : text
+}
+
+const formatAxisMoney = (value: unknown, compact = false) => {
+  const n = Number(value ?? 0)
+  if (!compact) return `Q${n}`
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) return `Q${(n / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1).replace(/\.0$/, '')}M`
+  if (abs >= 1_000) return `Q${(n / 1_000).toFixed(abs >= 10_000 ? 0 : 1).replace(/\.0$/, '')}k`
+  return `Q${n}`
+}
 
 /** Rango por defecto: lo que va del mes (del 1 al día de hoy). */
 function getDefaultDateRange() {
@@ -100,6 +115,7 @@ function ChartCard({ title, children, className }: { title: string; children: Re
 export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const def = useMemo(() => getDefaultDateRange(), [])
+  const isMobile = useMediaQuery('(max-width: 640px)')
 
   // ─── Filtros desde searchParams (SSR: el backend filtra todo) ───
   const filters = useMemo<DashboardFilters>(() => ({
@@ -160,6 +176,20 @@ export default function DashboardPage() {
   const r = d.resumen ?? ({} as DashboardData['resumen'])
   const cmp = d.comparacion ?? ({} as DashboardData['comparacion'])
   const vhoy = d.ventas_hoy ?? ({} as DashboardData['ventas_hoy'])
+  const chartHeight = isMobile ? 198 : CHART_HEIGHT
+  const chartAxis = isMobile ? { ...CHART_AXIS, fontSize: 8 } : CHART_AXIS
+  const chartMargin = isMobile
+    ? { top: 6, right: 4, bottom: 6, left: -16 }
+    : { right: 8 }
+  const verticalChartMargin = isMobile
+    ? { top: 6, right: 4, bottom: 6, left: -20 }
+    : { left: 0, right: 8 }
+  const xAxisHeight = isMobile ? 28 : undefined
+  const axisMoney = (v: unknown) => formatAxisMoney(v, isMobile)
+  const pieLabel = (p: { name?: string; percent?: number }) => {
+    const percent = `${((p.percent ?? 0) * 100).toFixed(0)}%`
+    return isMobile ? percent : `${truncateLabel(p.name, 16)} ${percent}`
+  }
 
   const sinDatos = !isLoading && !(d.top_articulos?.length) && !(d.ventas_por_dia?.length)
 
@@ -267,13 +297,20 @@ export default function DashboardPage() {
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {(d.top_articulos?.length ?? 0) > 0 && (
               <ChartCard title="Top artículos por venta">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <BarChart data={d.top_articulos} layout="vertical" margin={{ left: 0, right: 8 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={d.top_articulos} layout="vertical" margin={verticalChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" horizontal={false} />
-                    <XAxis type="number" tick={CHART_AXIS} stroke="#e2e8f0" tickFormatter={v => `Q${v}`} />
-                    <YAxis type="category" dataKey="articulo" tick={CHART_AXIS} stroke="#e2e8f0" width={105} />
+                    <XAxis type="number" tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <YAxis
+                      type="category"
+                      dataKey="articulo"
+                      tick={chartAxis}
+                      stroke="#e2e8f0"
+                      width={isMobile ? 72 : 105}
+                      tickFormatter={v => truncateLabel(v, isMobile ? 11 : 18)}
+                    />
                     <Tooltip formatter={v => [money(v), 'Neto']} />
-                    <Bar dataKey="total_neto" radius={[0, 3, 3, 0]} barSize={14}>
+                    <Bar dataKey="total_neto" radius={[0, 3, 3, 0]} barSize={isMobile ? 10 : 14}>
                       {(d.top_articulos ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Bar>
                   </BarChart>
@@ -283,15 +320,15 @@ export default function DashboardPage() {
 
             {(d.top_tallas?.length ?? 0) > 0 && (
               <ChartCard title="Ventas por talla">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <BarChart data={d.top_tallas} margin={{ right: 8 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={d.top_tallas} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="talla" tick={CHART_AXIS} stroke="#e2e8f0" />
-                    <YAxis tick={CHART_AXIS} stroke="#e2e8f0" tickFormatter={v => `Q${v}`} />
+                    <XAxis dataKey="talla" tick={chartAxis} stroke="#e2e8f0" height={xAxisHeight} tickMargin={isMobile ? 6 : 3} />
+                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
                     <Tooltip formatter={(v, name) => name === 'Unidades' ? [v, name] : [money(v), name]} />
-                    <Legend wrapperStyle={{ fontSize: '10px' }} />
-                    <Bar dataKey="total_neto" name="Neto" fill="#8b5cf6" radius={[3, 3, 0, 0]} barSize={18} />
-                    <Bar dataKey="unidades" name="Unidades" fill="#c4b5fd" radius={[3, 3, 0, 0]} barSize={18} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
+                    <Bar dataKey="total_neto" name="Neto" fill="#8b5cf6" radius={[3, 3, 0, 0]} barSize={isMobile ? 10 : 18} />
+                    <Bar dataKey="unidades" name="Unidades" fill="#c4b5fd" radius={[3, 3, 0, 0]} barSize={isMobile ? 10 : 18} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -299,13 +336,20 @@ export default function DashboardPage() {
 
             {(d.ventas_por_dia_semana?.length ?? 0) > 0 && (
               <ChartCard title="Ventas por día de la semana">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <BarChart data={d.ventas_por_dia_semana} margin={{ right: 8 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={d.ventas_por_dia_semana} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="dia" tick={{ ...CHART_AXIS, fontSize: 9 }} stroke="#e2e8f0" />
-                    <YAxis tick={CHART_AXIS} stroke="#e2e8f0" tickFormatter={v => `Q${v}`} />
+                    <XAxis
+                      dataKey="dia"
+                      tick={{ ...chartAxis, fontSize: isMobile ? 8 : 9 }}
+                      stroke="#e2e8f0"
+                      height={xAxisHeight}
+                      tickMargin={isMobile ? 6 : 3}
+                      tickFormatter={v => truncateLabel(v, isMobile ? 3 : 12)}
+                    />
+                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
                     <Tooltip formatter={v => [money(v), 'Neto']} />
-                    <Bar dataKey="total_neto" radius={[3, 3, 0, 0]} barSize={22}>
+                    <Bar dataKey="total_neto" radius={[3, 3, 0, 0]} barSize={isMobile ? 14 : 22}>
                       {(d.ventas_por_dia_semana ?? []).map((row, i) => (
                         <Cell key={i} fill={row.total_neto === Math.max(...(d.ventas_por_dia_semana ?? []).map(x => x.total_neto)) ? '#f59e0b' : '#06b6d4'} />
                       ))}
@@ -320,15 +364,22 @@ export default function DashboardPage() {
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {(d.top_vendedores?.length ?? 0) > 0 && (
               <ChartCard title="Vendedores — bruto vs neto">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <BarChart data={d.top_vendedores} margin={{ right: 8 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <BarChart data={d.top_vendedores} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="nombre" tick={{ ...CHART_AXIS, fontSize: 9 }} stroke="#e2e8f0" />
-                    <YAxis tick={CHART_AXIS} stroke="#e2e8f0" tickFormatter={v => `Q${v}`} />
+                    <XAxis
+                      dataKey="nombre"
+                      tick={{ ...chartAxis, fontSize: isMobile ? 8 : 9 }}
+                      stroke="#e2e8f0"
+                      height={xAxisHeight}
+                      tickMargin={isMobile ? 6 : 3}
+                      tickFormatter={v => truncateLabel(v, isMobile ? 6 : 12)}
+                    />
+                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
                     <Tooltip formatter={v => [money(v), '']} />
-                    <Legend wrapperStyle={{ fontSize: '10px' }} />
-                    <Bar dataKey="total_bruto" name="Bruto" fill="#3b82f6" radius={[3, 3, 0, 0]} barSize={14} />
-                    <Bar dataKey="total_neto" name="Neto" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={14} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
+                    <Bar dataKey="total_bruto" name="Bruto" fill="#3b82f6" radius={[3, 3, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    <Bar dataKey="total_neto" name="Neto" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={isMobile ? 9 : 14} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -336,14 +387,19 @@ export default function DashboardPage() {
 
             {(d.formas_pago?.length ?? 0) > 0 && (
               <ChartCard title="Forma de pago">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <PieChart margin={isMobile ? { top: 2, right: 4, bottom: 18, left: 4 } : { top: 4, right: 8, bottom: 4, left: 8 }}>
                     <Pie data={d.formas_pago} dataKey="total_neto" nameKey="nombre"
-                      cx="50%" cy="50%" outerRadius={80} innerRadius={48} paddingAngle={2}
-                      label={(p: { name?: string; percent?: number }) => `${p.name ?? ''} ${((p.percent ?? 0) * 100).toFixed(0)}%`}>
+                      cx="50%" cy={isMobile ? '43%' : '50%'} outerRadius={isMobile ? 56 : 80} innerRadius={isMobile ? 34 : 48} paddingAngle={2}
+                      label={pieLabel}
+                      labelLine={!isMobile}>
                       {(d.formas_pago ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip formatter={v => [money(v), '']} />
+                    <Legend
+                      verticalAlign="bottom"
+                      wrapperStyle={{ fontSize: isMobile ? '9px' : '10px', lineHeight: isMobile ? '12px' : '14px' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -351,14 +407,17 @@ export default function DashboardPage() {
 
             {(d.ventas_acumuladas_mes?.length ?? 0) > 0 && (
               <ChartCard title="Acumulado del mes vs mes anterior">
-                <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-                  <LineChart data={d.ventas_acumuladas_mes} margin={{ right: 8 }}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
+                  <LineChart data={d.ventas_acumuladas_mes} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="fecha" tick={{ ...CHART_AXIS, fontSize: 8 }} stroke="#e2e8f0"
+                    <XAxis dataKey="fecha" tick={{ ...chartAxis, fontSize: 8 }} stroke="#e2e8f0"
+                      height={xAxisHeight}
+                      tickMargin={isMobile ? 6 : 3}
+                      minTickGap={isMobile ? 12 : 5}
                       tickFormatter={v => String(v).slice(8)} />
-                    <YAxis tick={CHART_AXIS} stroke="#e2e8f0" tickFormatter={v => `Q${v}`} />
+                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
                     <Tooltip formatter={v => [money(v), '']} />
-                    <Legend wrapperStyle={{ fontSize: '10px' }} />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
                     <Line type="monotone" dataKey="acumulado" name="Este mes" stroke="#3b82f6" strokeWidth={2} dot={false} />
                     <Line type="monotone" dataKey="acumulado_mes_anterior" name="Mes anterior" stroke="#cbd5e1" strokeWidth={2} strokeDasharray="4 4" dot={false} />
                   </LineChart>
@@ -385,10 +444,10 @@ export default function DashboardPage() {
                     </thead>
                     <tbody>
                       {(d.stock_bajo ?? []).map((s, i) => (
-                        <tr key={s.id_variante} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
+                        <tr key={`${s.id_variante}-${s.id_sucursal}`} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
                           <td className="px-2 py-1.5">{s.articulo}</td>
                           <td className="px-2 py-1.5 text-muted-foreground">
-                            {String('sucursal' in s ? s.sucursal ?? '-' : '-')}
+                            {s.sucursal || '-'}
                           </td>
                           <td className="px-2 py-1.5 text-center text-muted-foreground">{s.talla}</td>
                           <td className="px-2 py-1.5 text-right">{Q(s.precio)}</td>
