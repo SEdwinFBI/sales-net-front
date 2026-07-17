@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { invalidateDebtReports } from '@/lib/query-invalidation'
 import { patchEstadoVenta } from '../services/products-service'
 
 export const useCambioEstadoVenta = () => {
@@ -11,6 +12,7 @@ export const useCambioEstadoVenta = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminVentas.all })
       // Cancelar una venta al crédito afecta el balance y los movimientos del cliente
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+      invalidateDebtReports(queryClient)
     },
   })
 }

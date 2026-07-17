@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { invalidateDebtReports } from '@/lib/query-invalidation'
 import { abonarVenta } from '../services/clientes-service'
 import type { AbonarPayload, AbonarResponse } from '../types/clientes'
 
@@ -16,7 +17,7 @@ export const useAbonarVenta = () => {
     mutationFn: ({ idVenta, idCliente, data }) => abonarVenta(idVenta, idCliente, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
-      queryClient.invalidateQueries({ queryKey: [...queryKeys.reporting.all, 'deudores'] })
+      invalidateDebtReports(queryClient)
     },
   })
 }
