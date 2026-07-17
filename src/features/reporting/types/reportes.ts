@@ -16,6 +16,13 @@ export interface ReporteDeudoresFilters {
   output?: 'json' | 'pdf'
 }
 
+export interface ReporteCobrosFilters {
+  nombre?: string
+  fecha?: string
+  id_usuario?: number
+  output?: 'json' | 'pdf'
+}
+
 export interface ReporteVentas {
   status: 'success'
   data: {
@@ -215,5 +222,52 @@ export interface ReporteDeudores {
       total_deudores: number
       total_adeudado: number
     }
+  }
+}
+
+export interface ReporteCobros {
+  status: 'success'
+  data: {
+    resumen: {
+      total_usuarios: number
+      total_cobros: number
+      total_abonado: number
+      total_restante: number
+    }
+    por_usuario: ReporteCobrosUsuario[]
+  }
+}
+
+export interface ReporteCobrosUsuario {
+  id_usuario: number | null
+  nombre: string
+  username?: string
+  cantidad_cobros: number
+  total_abonado: number
+  total_restante: number
+  clientes?: ReporteCobroCliente[]
+  cobros?: ReporteCobroItem[]
+}
+
+export interface ReporteCobroCliente {
+  id_cliente: number
+  nombre_completo: string
+  total_cobrado: number
+  saldo_restante?: number
+  balance?: number
+  cantidad_cobros?: number
+  ventas_afectadas?: number
+}
+
+export interface ReporteCobroItem {
+  id_abono: number
+  fecha_abono: string
+  id_venta: number
+  monto: number
+  saldo_restante: number
+  cliente: {
+    id: number
+    nombre_completo: string
+    balance?: number
   }
 }
