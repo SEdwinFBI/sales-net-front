@@ -444,10 +444,10 @@ export default function DashboardPage() {
                     </thead>
                     <tbody>
                       {(d.stock_bajo ?? []).map((s, i) => (
-                        <tr key={s.id_variante} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
+                        <tr key={`${s.id_variante}-${s.id_sucursal}`} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
                           <td className="px-2 py-1.5">{s.articulo}</td>
                           <td className="px-2 py-1.5 text-muted-foreground">
-                            {String('sucursal' in s ? s.sucursal ?? '-' : '-')}
+                            {s.sucursal || '-'}
                           </td>
                           <td className="px-2 py-1.5 text-center text-muted-foreground">{s.talla}</td>
                           <td className="px-2 py-1.5 text-right">{Q(s.precio)}</td>

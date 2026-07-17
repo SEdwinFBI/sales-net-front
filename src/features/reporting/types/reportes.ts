@@ -176,7 +176,8 @@ export interface DashboardData {
     talla: string
     precio: number
     total_stock: number
-    vendedores_afectados: number
+    id_sucursal: number
+    sucursal: string
   }[]
   ventas_recientes: {
     id_venta: number
