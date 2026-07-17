@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { invalidateDebtReports } from '@/lib/query-invalidation'
 import { createAdminVenta } from '../services/products-service'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import type { SubmitSalePayload, CreateVentaResponse } from '../types/sales'
@@ -34,6 +35,7 @@ export const useCreateSale = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminVentas.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.historial() })
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.all })
+      invalidateDebtReports(queryClient)
     },
   })
 }

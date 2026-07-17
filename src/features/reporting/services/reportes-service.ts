@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores ,ReporteDeudoresFilters} from '../types/reportes'
+import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters } from '../types/reportes'
 
 
 function setParam(params: Record<string, unknown>, key: string, value: unknown) {
@@ -21,11 +21,9 @@ function cleanReporteDeudoresParams(filters?: ReporteDeudoresFilters): Record<st
   const params: Record<string, unknown> = {}
   setParam(params, 'fecha_desde', filters?.fecha_desde)
   setParam(params, 'fecha_hasta', filters?.fecha_hasta)
-  setParam(params, 'id_vendedor', filters?.id_vendedor)
-  setParam(params, 'id_cliente', filters?.id_cliente)
-  setParam(params, 'search', filters?.search)
-  setParam(params, 'saldo_min', filters?.saldo_min)
-  setParam(params, 'saldo_max', filters?.saldo_max)
+  setParam(params, 'nombre', filters?.nombre)
+  setParam(params, 'lugar', filters?.lugar)
+  setParam(params, 'search', filters?.nombre)
   return params
 }
 
