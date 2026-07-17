@@ -11,11 +11,8 @@ export interface ReporteVentasFilters {
 export interface ReporteDeudoresFilters {
   fecha_desde?: string
   fecha_hasta?: string
-  id_vendedor?: number
-  id_cliente?: number
-  search?: string
-  saldo_min?: number
-  saldo_max?: number
+  nombre?: string
+  lugar?: string
   output?: 'json' | 'pdf'
 }
 
@@ -205,6 +202,7 @@ export interface ReporteDeudores {
     clientes: {
       id: number
       nombre_completo: string
+      direccion?: string | null
       telefono: string
       balance: number
       fecha_notificacion: string | null
