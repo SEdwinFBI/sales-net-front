@@ -37,6 +37,15 @@ export const reportingRoutes: AppRoute[] = [
           lazy: () => import('./pages/ReporteDeudoresPage'),
         },
       },
+      {
+        path: 'cobros',
+        meta: {
+          name: 'Cobros',
+          description: 'Reporte de cobros',
+          permissions: ['admin'],
+          lazy: () => import('./pages/ReporteCobrosPage'),
+        },
+      },
     ],
   },
 ]

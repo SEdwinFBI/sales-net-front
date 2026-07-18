@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters } from '../types/reportes'
+import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters, ReporteCobros, ReporteCobrosFilters } from '../types/reportes'
 
 
 function setParam(params: Record<string, unknown>, key: string, value: unknown) {
@@ -24,6 +24,14 @@ function cleanReporteDeudoresParams(filters?: ReporteDeudoresFilters): Record<st
   setParam(params, 'nombre', filters?.nombre)
   setParam(params, 'lugar', filters?.lugar)
   setParam(params, 'search', filters?.nombre)
+  return params
+}
+
+function cleanReporteCobrosParams(filters?: ReporteCobrosFilters): Record<string, unknown> {
+  const params: Record<string, unknown> = {}
+  setParam(params, 'nombre', filters?.nombre)
+  setParam(params, 'fecha', filters?.fecha)
+  setParam(params, 'id_usuario', filters?.id_usuario)
   return params
 }
 
@@ -56,6 +64,18 @@ export const downloadReporteVentasPdf = async (filters?: ReporteVentasFilters) =
 
 export const downloadReporteDeudoresPdf = async (filters?: ReporteDeudoresFilters) => {
   await downloadPdf('/reportes/deudores', `reporte_deudores_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteDeudoresParams(filters))
+}
+
+export const getReporteCobros = async (filters?: ReporteCobrosFilters): Promise<ReporteCobros['data']> => {
+  const { data } = await api.get<ReporteCobros>('/reportes/cobros', {
+    params: cleanReporteCobrosParams(filters),
+  })
+  return data.data
+}
+
+export const downloadReporteCobrosPdf = async (filters?: ReporteCobrosFilters) => {
+  const userSuffix = filters?.id_usuario ? `_usuario_${filters.id_usuario}` : ''
+  await downloadPdf('/reportes/cobros', `reporte_cobros${userSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteCobrosParams(filters))
 }
 
 export const getReporteDeudores = async (filters?: ReporteDeudoresFilters): Promise<ReporteDeudores['data']> => {

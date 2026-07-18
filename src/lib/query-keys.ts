@@ -54,6 +54,8 @@ export const queryKeys = {
       [...queryKeys.reporting.all, 'ventas', filters] as const,
     deudores: (filters?: Record<string, unknown>) =>
       [...queryKeys.reporting.all, 'deudores', filters] as const,
+    cobros: (filters?: Record<string, unknown>) =>
+      [...queryKeys.reporting.all, 'cobros', filters] as const,
     dashboard: (filters?: Record<string, unknown>) => [...queryKeys.reporting.all, 'dashboard', filters] as const,
   },
   adminUsuarios: {
