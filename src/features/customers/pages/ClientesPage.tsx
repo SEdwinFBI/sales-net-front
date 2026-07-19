@@ -12,10 +12,12 @@ import { Search, Plus } from 'lucide-react'
 import type { Cliente } from '../types/clientes'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import Paginator from '@/components/shared/table/Paginator'
 
 export default function ClientesPage() {
   const user = useAuthStore(s => s.user)
-  const { data: clientes, isLoading } = useClientes()
+  const [page, setPage] = useState(1)
+  const { data: clientes, count, isLoading } = useClientes(page)
   const [search, setSearch] = useState('')
   const [filterActivo, setFilterActivo] = useState('todos')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -45,13 +47,13 @@ export default function ClientesPage() {
                 <Input
                   placeholder="Buscar por nombre o teléfono..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   className="pl-9"
                 />
               </div>
               <Select
                 value={filterActivo}
-                onChange={(e) => setFilterActivo(e.target.value)}
+                onChange={(e) => { setFilterActivo(e.target.value); setPage(1) }}
                 className="w-full sm:w-32"
               >
                 <option value="todos">Todos</option>
@@ -83,6 +85,14 @@ export default function ClientesPage() {
                   onDelete={() => setClienteToDelete(cliente)}
                 />
               ))}
+            </div>
+          )}
+          {count > 0 && (
+            <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-center text-sm text-muted-foreground sm:text-left">
+                Mostrando {(page - 1) * 10 + 1}-{Math.min(page * 10, count)} de {count} clientes
+              </p>
+              <Paginator page={page} totalPages={Math.ceil(count / 10)} onPageChange={setPage} />
             </div>
           )}
         </Card>
