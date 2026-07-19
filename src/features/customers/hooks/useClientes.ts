@@ -3,10 +3,10 @@ import { useQuery } from '@tanstack/react-query'
 import { getClientes } from '../services/clientes-service'
 import type { Cliente } from '../types/clientes'
 
-export const useClientes = (page = 1) => {
+export const useClientes = (page = 1, pageSize = 10, search = '') => {
   const { data, isLoading, isError, isFetching } = useQuery<{ count: number; results: Cliente[] }>({
-    queryKey: [...queryKeys.customers.list(), page],
-    queryFn: () => getClientes(page),
+    queryKey: [...queryKeys.customers.list(), page, pageSize, search],
+    queryFn: () => getClientes(page, pageSize, search),
     staleTime: 1000 * 60 * 5,
     retry: 1,
     refetchOnMount: true,

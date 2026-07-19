@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { useClientes } from '../hooks/useClientes'
 import ClienteCard from '../components/ClienteCard'
@@ -17,21 +17,26 @@ import Paginator from '@/components/shared/table/Paginator'
 export default function ClientesPage() {
   const user = useAuthStore(s => s.user)
   const [page, setPage] = useState(1)
-  const { data: clientes, count, isLoading } = useClientes(page)
+  const [pageSize, setPageSize] = useState(10)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch)
   const [filterActivo, setFilterActivo] = useState('todos')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 300)
+    return () => window.clearTimeout(timeout)
+  }, [search])
 
   const clientesList = Array.isArray(clientes) ? clientes : []
   const filtered = clientesList.filter((c) => {
-    const q = search.toLowerCase()
-    const nombre = (c.nombre_completo || '').toLowerCase()
-    const telefono = c.telefono || ''
-    const matchesSearch = !q || nombre.includes(q) || telefono.includes(q)
     const matchesActivo = filterActivo === 'todos' || (filterActivo === 'activo' && c.activo) || (filterActivo === 'inactivo' && !c.activo)
-    return matchesSearch && matchesActivo
+    return matchesActivo
   })
 
   return (
@@ -47,7 +52,7 @@ export default function ClientesPage() {
                 <Input
                   placeholder="Buscar por nombre o teléfono..."
                   value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
                 />
               </div>
@@ -90,9 +95,27 @@ export default function ClientesPage() {
           {count > 0 && (
             <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-center text-sm text-muted-foreground sm:text-left">
-                Mostrando {(page - 1) * 10 + 1}-{Math.min(page * 10, count)} de {count} clientes
+                Mostrando {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, count)} de {count} clientes
               </p>
-              <Paginator page={page} totalPages={Math.ceil(count / 10)} onPageChange={setPage} />
+              <div className="flex flex-col items-center gap-3 sm:flex-row">
+                <label className="flex items-center gap-2 whitespace-nowrap text-sm text-muted-foreground" htmlFor="clientes-page-size">
+                  Filas por página
+                  <Select
+                    id="clientes-page-size"
+                    className="w-20"
+                    value={String(pageSize)}
+                    onChange={(event) => {
+                      setPageSize(Number(event.target.value))
+                      setPage(1)
+                    }}
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                  </Select>
+                </label>
+                <Paginator page={page} totalPages={Math.ceil(count / pageSize)} onPageChange={setPage} />
+              </div>
             </div>
           )}
         </Card>
