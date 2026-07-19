@@ -1,9 +1,9 @@
 import { api } from '@/lib/api'
 import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, ComprasData, ComprasFilters, MovimientosData, MovimientosFilters, VentaEncabezadoRequest, VentaEncabezadoResponse } from '../types/clientes'
 
-export const getClientes = async (page = 1): Promise<{ count: number; results: Cliente[] }> => {
+export const getClientes = async (page = 1, pageSize = 10, search = ''): Promise<{ count: number; results: Cliente[] }> => {
   const { data } = await api.get<ApiResponse<Cliente[] | { count: number; results: Cliente[] }>>('/admin/clientes/', {
-    params: { page },
+    params: { page, page_size: pageSize, ...(search ? { search } : {}) },
   })
   if (Array.isArray(data.data)) return { count: data.data.length, results: data.data }
   return data.data
