@@ -11,3 +11,6 @@ export const getVentaTotal = (venta: Venta) => {
   if (total > 0) return total
   return totalDesdeSaldo
 }
+
+export const formatCurrency = (value: number | string) =>
+  `Q${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`

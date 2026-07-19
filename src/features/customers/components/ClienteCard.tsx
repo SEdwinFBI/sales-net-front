@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { formatCurrency } from '../utils/venta-total'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, Eye } from 'lucide-react'
@@ -39,7 +40,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
           </div>
 
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-lg font-bold text-primary">Q{Number(cliente.balance).toFixed(2)}</span>
+            <span className="text-lg font-bold text-primary">{formatCurrency(cliente.balance)}</span>
             <span className="text-xs text-primary">balance</span>
           </div>
 
