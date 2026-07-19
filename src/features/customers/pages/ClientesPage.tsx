@@ -20,8 +20,9 @@ export default function ClientesPage() {
   const [pageSize, setPageSize] = useState(10)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch)
   const [filterActivo, setFilterActivo] = useState('todos')
+  const activo = filterActivo === 'todos' ? undefined : filterActivo === 'activo'
+  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch, activo)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
@@ -34,10 +35,7 @@ export default function ClientesPage() {
   }, [search])
 
   const clientesList = Array.isArray(clientes) ? clientes : []
-  const filtered = clientesList.filter((c) => {
-    const matchesActivo = filterActivo === 'todos' || (filterActivo === 'activo' && c.activo) || (filterActivo === 'inactivo' && !c.activo)
-    return matchesActivo
-  })
+  const filtered = clientesList
 
   return (
     <PageTemplateSimple title="Clientes" description="Gestión de clientes del sistema.">
@@ -52,7 +50,7 @@ export default function ClientesPage() {
                 <Input
                   placeholder="Buscar por nombre o teléfono..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   className="pl-9"
                 />
               </div>
