@@ -15,12 +15,12 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import type { MovimientoCliente, TipoMovimiento } from '../types/clientes'
+import { formatCurrency } from '../utils/venta-total'
 
 type Props = {
   movimientos: MovimientoCliente[]
 }
 
-const formatCurrency = (value: number) => `Q${Number(value).toFixed(2)}`
 
 const formatDate = (value: string) => {
   const date = new Date(value)

@@ -1,4 +1,5 @@
 "use client"
+import { formatCurrency } from '../utils/venta-total'
 
 import { useState, useRef, useEffect, type FC } from "react"
 import { Search, X, ChevronDown, Check } from "lucide-react"
@@ -74,7 +75,7 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
           ref={inputRef}
           className="flex-1 bg-transparent outline-none text-sm"
           placeholder="Buscar venta por ID o estado..."
-          value={open ? query : selected ? `#${selected.id} — Q${Number(selected.total).toFixed(2)}` : ""}
+          value={open ? query : selected ? `#${selected.id} — ${formatCurrency(selected.total)}` : ""}
           onChange={(e) => {
             setQuery(e.target.value)
             setHighlighted(0)
@@ -136,10 +137,10 @@ const VentaSelect: FC<Props> = ({ ventas = [], value, onChange }) => {
 
                     <div className="flex-1 text-sm">
                       <div className="font-medium">
-                        Q{Number(v.total).toFixed(2)} — {v.estado}
+                        {formatCurrency(v.total)} — {v.estado}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Abonado Q{Number(v.abonado).toFixed(2)} | Saldo Q{Number(v.saldo).toFixed(2)}
+                        Abonado {formatCurrency(v.abonado)} | Saldo {formatCurrency(v.saldo)}
                       </div>
                     </div>
 

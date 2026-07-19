@@ -16,7 +16,7 @@ import type { Venta } from '@/features/sales/types/sales'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
-import { getVentaTotal } from '../utils/venta-total'
+import { formatCurrency, getVentaTotal } from '../utils/venta-total'
 import {
   Table,
   TableBody,
@@ -52,17 +52,17 @@ export default function ComprasTable({ ventas }: Props) {
       id: 'total',
       accessorFn: (venta) => getVentaTotal(venta),
       header: 'Total',
-      cell: ({ row }) => <span className="font-semibold">Q{getVentaTotal(row.original).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="font-semibold">{formatCurrency(getVentaTotal(row.original))}</span>,
     },
     {
       accessorKey: 'abonado',
       header: 'Abonado',
-      cell: ({ row }) => <span className="text-warning">Q{Number(row.original.abonado).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="text-warning">{formatCurrency(row.original.abonado)}</span>,
     },
     {
       accessorKey: 'saldo',
       header: 'Saldo',
-      cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.saldo).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="text-destructive">{formatCurrency(row.original.saldo)}</span>,
     },
     { accessorKey: 'estado', header: 'Estado' },
     {

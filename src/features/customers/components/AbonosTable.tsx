@@ -1,4 +1,5 @@
 'use no memo';
+import { formatCurrency } from '../utils/venta-total'
 import { useMemo, useState } from 'react'
 import {
   flexRender,
@@ -41,7 +42,7 @@ export default function AbonosTable({ abonos }: Props) {
     {
       accessorKey: 'monto',
       header: 'Monto',
-      cell: ({ row }) => <span className="font-semibold text-primary">Q{Number(row.original.monto).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="font-semibold text-primary">{formatCurrency(row.original.monto)}</span>,
     },
     {
       accessorKey: 'fecha_abono',
@@ -59,12 +60,12 @@ export default function AbonosTable({ abonos }: Props) {
     {
       accessorKey: 'venta_total',
       header: 'Total venta',
-      cell: ({ row }) => `Q${Number(row.original.venta_total).toFixed(2)}`,
+      cell: ({ row }) => formatCurrency(row.original.venta_total),
     },
     {
       accessorKey: 'saldo_restante',
       header: 'Saldo restante',
-      cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.saldo_restante).toFixed(2)}</span>,
+      cell: ({ row }) => <span className="text-destructive">{formatCurrency(row.original.saldo_restante)}</span>,
     },
     { accessorKey: 'venta_estado', header: 'Estado venta' },
     {
