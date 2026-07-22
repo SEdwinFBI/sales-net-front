@@ -1,5 +1,6 @@
 
 
+import { useEffect } from 'react'
 import { PackageOpen, ShoppingCart, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,8 +16,10 @@ import {
 } from '@/components/ui/drawer'
 
 import { useSalesStore } from '../store/useSalesStore'
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import { formatCurrency } from '@/helpers/money'
 import CartItemComponent from './CartItemComponent'
+import SpeechTranscriptBox from './SpeechTranscriptBox'
 import { selectTotal, selectTotalDiscount, selectTotalItems } from '../utils/utilsSales'
 import type { CartPricingResult } from '../utils/pricing-engine'
 
@@ -34,6 +37,8 @@ const CartDrawer = ({ pricing }: Props) => {
   const decreaseQty = useSalesStore((state) => state.decreaseQty)
   const setQty = useSalesStore((state) => state.setQty)
   const removeItem = useSalesStore((state) => state.removeItem)
+  const setVoiceTranscript = useSalesStore((state) => state.setVoiceTranscript)
+  const registerVoiceReset = useSalesStore((state) => state.registerVoiceReset)
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
@@ -41,6 +46,17 @@ const CartDrawer = ({ pricing }: Props) => {
 
   const activeTier = pricing?.activeTier ?? null
   const nextTierHint = pricing?.nextTierHint ?? null
+
+  const speech = useSpeechRecognition({ enabled: cartOpen })
+
+  useEffect(() => {
+    setVoiceTranscript(speech.transcript)
+  }, [speech.transcript, setVoiceTranscript])
+
+  useEffect(() => {
+    registerVoiceReset(speech.resetTranscript)
+    return () => registerVoiceReset(null)
+  }, [speech.resetTranscript, registerVoiceReset])
 
   return (
     <Drawer
@@ -75,6 +91,23 @@ const CartDrawer = ({ pricing }: Props) => {
             </Badge>
           )}
         </DrawerHeader>
+
+        {/* Transcripción  */}
+        {/* {speech.isSupported && (
+          <div className="mx-auto w-full max-w-2xl px-4 pb-1">
+            <SpeechTranscriptBox
+              transcript={speech.transcript}
+              interimTranscript={speech.interimTranscript}
+              isListening={speech.isListening}
+              error={speech.error}
+              isSupported={speech.isSupported}
+              audioLevel={speech.audioLevel}
+              isAtLimit={speech.isAtLimit}
+              onReset={speech.resetTranscript}
+              onStart={speech.startListening}
+            />
+          </div>
+        )} */}
 
         <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100dvh-16rem)] min-h-[6rem]">
           {items.length === 0 ? (
