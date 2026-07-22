@@ -11,11 +11,15 @@ export interface ReporteVentasFilters {
 export interface ReporteDeudoresFilters {
   fecha_desde?: string
   fecha_hasta?: string
-  id_vendedor?: number
-  id_cliente?: number
-  search?: string
-  saldo_min?: number
-  saldo_max?: number
+  nombre?: string
+  lugar?: string
+  output?: 'json' | 'pdf'
+}
+
+export interface ReporteCobrosFilters {
+  nombre?: string
+  fecha?: string
+  id_usuario?: number
   output?: 'json' | 'pdf'
 }
 
@@ -179,7 +183,8 @@ export interface DashboardData {
     talla: string
     precio: number
     total_stock: number
-    vendedores_afectados: number
+    id_sucursal: number
+    sucursal: string
   }[]
   ventas_recientes: {
     id_venta: number
@@ -205,6 +210,7 @@ export interface ReporteDeudores {
     clientes: {
       id: number
       nombre_completo: string
+      direccion?: string | null
       telefono: string
       balance: number
       fecha_notificacion: string | null
@@ -216,5 +222,52 @@ export interface ReporteDeudores {
       total_deudores: number
       total_adeudado: number
     }
+  }
+}
+
+export interface ReporteCobros {
+  status: 'success'
+  data: {
+    resumen: {
+      total_usuarios: number
+      total_cobros: number
+      total_abonado: number
+      total_restante: number
+    }
+    por_usuario: ReporteCobrosUsuario[]
+  }
+}
+
+export interface ReporteCobrosUsuario {
+  id_usuario: number | null
+  nombre: string
+  username?: string
+  cantidad_cobros: number
+  total_abonado: number
+  total_restante: number
+  clientes?: ReporteCobroCliente[]
+  cobros?: ReporteCobroItem[]
+}
+
+export interface ReporteCobroCliente {
+  id_cliente: number
+  nombre_completo: string
+  total_cobrado: number
+  saldo_restante?: number
+  balance?: number
+  cantidad_cobros?: number
+  ventas_afectadas?: number
+}
+
+export interface ReporteCobroItem {
+  id_abono: number
+  fecha_abono: string
+  id_venta: number
+  monto: number
+  saldo_restante: number
+  cliente: {
+    id: number
+    nombre_completo: string
+    balance?: number
   }
 }

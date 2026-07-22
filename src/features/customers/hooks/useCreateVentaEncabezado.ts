@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { invalidateDebtReports } from '@/lib/query-invalidation'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { createVentaEncabezado } from '../services/clientes-service'
 import type { VentaEncabezadoResponse } from '../types/clientes'
@@ -34,6 +35,7 @@ export const useCreateVentaEncabezado = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.all })
+      invalidateDebtReports(queryClient)
     },
   })
 }

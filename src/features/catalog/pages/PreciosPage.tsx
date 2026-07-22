@@ -8,6 +8,7 @@ import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
 import MayoreoTiersEditor from '../components/MayoreoTiersEditor'
 import SellersStockList from '../components/SellersStockList'
 import UserPricingEditor from '../components/UserPricingEditor'
+import { useArticles } from '../hooks/useArticles'
 import { useMayoreoTiers } from '../hooks/useMayoreoTiers'
 import { useUserPricing } from '../hooks/useUserPricing'
 
@@ -16,6 +17,7 @@ export default function PreciosPage() {
   const [selectedSeller, setSelectedSeller] = useState<Usuario | null>(null)
   const [activeTab, setActiveTab] = useState('precios')
   const { data: users, isLoading: isLoadingUsers } = useUsuarios()
+  const { data: articles } = useArticles()
   const { data: pricing, isLoading: isLoadingPricing } = useUserPricing(selectedSeller?.id)
   const { tiers } = useMayoreoTiers(selectedSeller?.id)
 
@@ -58,6 +60,7 @@ export default function PreciosPage() {
             </TabsList>
             <TabsContent value="precios">
               <UserPricingEditor
+                articles={articles}
                 seller={selectedSeller}
                 pricing={pricing}
                 tiers={tiers}

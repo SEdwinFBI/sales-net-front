@@ -26,8 +26,10 @@ import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/helpers/money'
 import { useDeleteUserPricing } from '../hooks/useDeleteUserPricing'
 import { useSaveUserPricing } from '../hooks/useSaveUserPricing'
+import type { Article } from '../types/article-types'
 import type { MayoreoTier, SaveUserPricingItem, UserVariantPricing } from '../types/pricing-types'
 import { validateTiers, variantPricingRowSchema } from '../utils/pricing-schema'
+import ArticleImage from './ArticleImage'
 
 const pageSize = 8
 
@@ -47,6 +49,7 @@ type RowErrors = Partial<Record<'precio' | 'descuentoMayorista', string>> & {
 }
 
 type Props = {
+  articles: Article[]
   seller: Usuario
   pricing: UserVariantPricing[]
   tiers: MayoreoTier[]
@@ -93,6 +96,7 @@ function rowsEqual(a: DraftRow, b: DraftRow): boolean {
 const EMPTY_TIER: TierDraft = { desde: '', hasta: '', descuento: '' }
 
 export default function UserPricingEditor({
+  articles: catalogArticles,
   seller,
   pricing,
   tiers,
@@ -107,6 +111,11 @@ export default function UserPricingEditor({
   const [drafts, setDrafts] = useState<Record<number, DraftRow>>({})
   const [errors, setErrors] = useState<Record<number, RowErrors>>({})
   const [expandedArticles, setExpandedArticles] = useState<Record<number, boolean>>({})
+
+  const articleImages = useMemo(
+    () => new Map(catalogArticles.map((article) => [article.id, article.image])),
+    [catalogArticles]
+  )
 
   const serverRows = useMemo(() => {
     const map: Record<number, DraftRow> = {}
@@ -152,20 +161,22 @@ export default function UserPricingEditor({
   )
 
   const articles = useMemo(() => {
-    const grouped = new Map<number, { id: number; title: string; variants: UserVariantPricing[] }>()
+    const grouped = new Map<number, { id: number; title: string; image: string | null; variants: UserVariantPricing[] }>()
     for (const variant of pricing) {
       const entry = grouped.get(variant.id_articulo) ?? {
         id: variant.id_articulo,
         title: variant.articulo,
+        image: articleImages.get(variant.id_articulo) ?? null,
         variants: [],
       }
+      if (!entry.image) entry.image = articleImages.get(variant.id_articulo) ?? null
       entry.variants.push(variant)
       grouped.set(variant.id_articulo, entry)
     }
     return [...grouped.values()]
       .filter((article) => article.title.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => a.title.localeCompare(b.title))
-  }, [pricing, search])
+  }, [articleImages, pricing, search])
 
   const totalPages = Math.max(Math.ceil(articles.length / pageSize), 1)
   const safePage = Math.min(currentPage, totalPages)
@@ -440,13 +451,20 @@ export default function UserPricingEditor({
               >
                 <div className="p-4">
                   <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold sm:text-base">{article.title}</p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {customized > 0
-                          ? `${customized} de ${article.variants.length} tallas personalizadas`
-                          : 'Hereda precios base'}
-                      </p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ArticleImage
+                        className="size-14 shrink-0 rounded-lg object-cover shadow-sm sm:size-16"
+                        src={article.image}
+                        alt={article.title}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold sm:text-base">{article.title}</p>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          {customized > 0
+                            ? `${customized} de ${article.variants.length} tallas personalizadas`
+                            : 'Hereda precios base'}
+                        </p>
+                      </div>
                     </div>
                     <Button
                       type="button"
@@ -460,20 +478,21 @@ export default function UserPricingEditor({
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-4 overflow-hidden rounded-lg border border-border bg-card">
-                      <div className="hidden gap-2 bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[4.5rem_5.5rem_minmax(6rem,1fr)_minmax(12rem,1fr)_minmax(6rem,1fr)_2.5rem]">
-                        <span>Talla</span>
-                        <span>Base</span>
-                        <span>Precio propio</span>
-                        <span>Descuentos individuales</span>
-                        <span>Desc. mayorista</span>
-                        <span />
-                      </div>
-                      <div className="divide-y divide-border">
-                        {article.variants
-                          .slice()
-                          .sort((a, b) => a.talla.localeCompare(b.talla, undefined, { numeric: true }))
-                          .map((variant) => {
+                    <div className="mt-4">
+                      <div className="overflow-hidden rounded-lg border border-border bg-card">
+                        <div className="hidden gap-2 bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[4.5rem_5.5rem_minmax(6rem,1fr)_minmax(12rem,1fr)_minmax(6rem,1fr)_2.5rem]">
+                          <span>Talla</span>
+                          <span>Base</span>
+                          <span>Precio propio</span>
+                          <span>Descuentos individuales</span>
+                          <span>Desc. mayorista</span>
+                          <span />
+                        </div>
+                        <div className="divide-y divide-border">
+                          {article.variants
+                            .slice()
+                            .sort((a, b) => a.talla.localeCompare(b.talla, undefined, { numeric: true }))
+                            .map((variant) => {
                             const row = getRow(variant.id_variante)
                             const rowErrors = errors[variant.id_variante] ?? {}
                             const isCustomized =
@@ -632,9 +651,10 @@ export default function UserPricingEditor({
                                     </Button>
                                   </div>
                                 </div>
-                              </div>
-                            )
-                          })}
+                                </div>
+                              )
+                            })}
+                        </div>
                       </div>
                     </div>
                   )}

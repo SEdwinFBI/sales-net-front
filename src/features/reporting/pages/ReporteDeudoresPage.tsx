@@ -5,7 +5,7 @@ import DeudoresResumenCards from '../components/DeudoresResumenCards'
 import DeudoresTable from '../components/DeudoresTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { FileDown, RotateCcw, Search } from 'lucide-react'
+import { FileDown, MapPin, RotateCcw, Search } from 'lucide-react'
 import { downloadReporteDeudoresPdf } from '../services/reportes-service'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
@@ -18,7 +18,7 @@ export default function ReporteDeudoresPage() {
   const { clientes, resumen, isLoading } = useReporteDeudores(activeFilters)
   const [pdfLoading, setPdfLoading] = useState(false)
 
-  const setFilter = (key: keyof ReporteDeudoresFilters, value: string | number | undefined) => {
+  const setFilter = (key: keyof ReporteDeudoresFilters, value: string | undefined) => {
     setFilters((prev) => ({ ...prev, [key]: value !== undefined && value !== '' ? value : undefined }))
   }
 
@@ -39,7 +39,7 @@ export default function ReporteDeudoresPage() {
 
       <Card className="p-3.5 sm:p-5">
 
-        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6 shadow-sm">
+        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto] shadow-sm">
           <div className="min-w-0">
             <label className="mb-1 block text-xs text-muted-foreground">Notificación desde</label>
             <Input
@@ -59,38 +59,28 @@ export default function ReporteDeudoresPage() {
             />
           </div>
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Buscar</label>
+            <label className="mb-1 block text-xs text-muted-foreground">Nombre</label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                value={filters.search ?? ''}
-                onChange={(e) => setFilter('search', e.target.value)}
-                placeholder="Nombre, telefono o ID..."
+                value={filters.nombre ?? ''}
+                onChange={(e) => setFilter('nombre', e.target.value)}
+                placeholder="Nombre del cliente..."
                 className="w-full pl-9"
               />
             </div>
           </div>
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Saldo min.</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.saldo_min ?? ''}
-              onChange={(e) => setFilter('saldo_min', e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full"
-            />
-          </div>
-          <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Saldo max.</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={filters.saldo_max ?? ''}
-              onChange={(e) => setFilter('saldo_max', e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full"
-            />
+            <label className="mb-1 block text-xs text-muted-foreground">Lugar</label>
+            <div className="relative">
+              <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={filters.lugar ?? ''}
+                onChange={(e) => setFilter('lugar', e.target.value)}
+                placeholder="Direccion o lugar..."
+                className="w-full pl-9"
+              />
+            </div>
           </div>
           <div className="flex min-w-0 gap-2 self-end">
             {hasFilters && (

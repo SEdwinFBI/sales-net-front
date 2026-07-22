@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card'
+import { formatCurrency } from '../utils/venta-total'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
@@ -50,7 +51,7 @@ export default function ClienteInfo({ cliente }: Props) {
         <div className="shrink-0 text-right">
           <p className="text-xs text-muted-foreground">Balance</p>
           <p className="text-xl font-bold text-primary sm:text-2xl">
-            Q{Number(cliente.balance).toFixed(2)}
+            {formatCurrency(cliente.balance)}
           </p>
         </div>
       </div>

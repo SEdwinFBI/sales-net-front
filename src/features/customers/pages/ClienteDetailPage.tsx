@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatCurrency } from '../utils/venta-total'
 import { useParams, useNavigate } from 'react-router'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { useCliente } from '../hooks/useCliente'
@@ -74,19 +75,19 @@ export default function ClienteDetailPage() {
               </div>
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total general</p>
-                <p className="text-xl font-bold text-primary">Q{Number(resumen.total_general).toFixed(2)}</p>
+                <p className="text-xl font-bold text-primary">{formatCurrency(resumen.total_general)}</p>
               </div>
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Pagado</p>
-                <p className="text-xl font-bold text-successful">Q{Number(resumen.total_pagado).toFixed(2)}</p>
+                <p className="text-xl font-bold text-successful">{formatCurrency(resumen.total_pagado)}</p>
               </div>
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Abonado</p>
-                <p className="text-xl font-bold text-warning">Q{Number(resumen.total_abonado).toFixed(2)}</p>
+                <p className="text-xl font-bold text-warning">{formatCurrency(resumen.total_abonado)}</p>
               </div>
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Balance (deuda)</p>
-                <p className="text-xl font-bold text-destructive">Q{Number(resumen.balance).toFixed(2)}</p>
+                <p className="text-xl font-bold text-destructive">{formatCurrency(resumen.balance)}</p>
               </div>
             </div>
           )}

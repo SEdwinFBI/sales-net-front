@@ -5,20 +5,17 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
-  type ColumnFiltersState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Search, Eye } from 'lucide-react'
+import { ArrowUpDown, Eye } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import type { ReporteDeudores } from '../types/reportes'
 
@@ -31,11 +28,10 @@ type Props = {
 
 export default function DeudoresTable({ data, isLoading }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = useState('')
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columns = useMemo<ColumnDef<Row>[]>(() => [
     { accessorKey: 'nombre_completo', header: 'Cliente' },
+    { accessorKey: 'direccion', header: 'Lugar', cell: ({ row }) => row.original.direccion || 'N/A' },
     { accessorKey: 'telefono', header: 'Teléfono' },
     { accessorKey: 'balance', header: 'Balance', cell: ({ row }) => <span className="font-semibold text-primary">Q{Number(row.original.balance).toFixed(2)}</span> },
     { accessorKey: 'total_ventas_pendientes', header: 'Pendiente de cancelar', cell: ({ row }) => `Q${Number(row.original.total_ventas_pendientes).toFixed(2)}` },
@@ -62,13 +58,10 @@ export default function DeudoresTable({ data, isLoading }: Props) {
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter, columnFilters },
+    state: { sorting },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   })
@@ -86,16 +79,6 @@ export default function DeudoresTable({ data, isLoading }: Props) {
   return (
     <>
     <div className="space-y-4">
-      <div className="relative max-w-xs">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar deudor..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
       <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         <Table>
           <TableHeader>
@@ -112,14 +95,6 @@ export default function DeudoresTable({ data, isLoading }: Props) {
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           <ArrowUpDown className="size-3 opacity-40" />
                         </button>
-                      )}
-                      {header.column.id !== 'actions' && (
-                        <Input
-                          value={(header.column.getFilterValue() ?? '') as string}
-                          onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
-                          placeholder="Filtrar..."
-                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
-                        />
                       )}
                     </div>
                   </TableHead>

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/query-keys'
+import { invalidateDebtReports } from '@/lib/query-invalidation'
 import { updateCliente } from '../services/clientes-service'
 import type { ApiResponse, Cliente, UpdateClientePayload } from '../types/clientes'
 
@@ -16,6 +17,7 @@ export const useUpdateCliente = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.list() })
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.detail(variables.id) })
+      invalidateDebtReports(queryClient)
     },
   })
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { useClientes } from '../hooks/useClientes'
 import ClienteCard from '../components/ClienteCard'
@@ -12,25 +12,30 @@ import { Search, Plus } from 'lucide-react'
 import type { Cliente } from '../types/clientes'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import Paginator from '@/components/shared/table/Paginator'
 
 export default function ClientesPage() {
   const user = useAuthStore(s => s.user)
-  const { data: clientes, isLoading } = useClientes()
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterActivo, setFilterActivo] = useState('todos')
+  const activo = filterActivo === 'todos' ? undefined : filterActivo === 'activo'
+  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch, activo)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 300)
+    return () => window.clearTimeout(timeout)
+  }, [search])
 
   const clientesList = Array.isArray(clientes) ? clientes : []
-  const filtered = clientesList.filter((c) => {
-    const q = search.toLowerCase()
-    const nombre = (c.nombre_completo || '').toLowerCase()
-    const telefono = c.telefono || ''
-    const matchesSearch = !q || nombre.includes(q) || telefono.includes(q)
-    const matchesActivo = filterActivo === 'todos' || (filterActivo === 'activo' && c.activo) || (filterActivo === 'inactivo' && !c.activo)
-    return matchesSearch && matchesActivo
-  })
+  const filtered = clientesList
 
   return (
     <PageTemplateSimple title="Clientes" description="Gestión de clientes del sistema.">
@@ -45,13 +50,13 @@ export default function ClientesPage() {
                 <Input
                   placeholder="Buscar por nombre o teléfono..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
                   className="pl-9"
                 />
               </div>
               <Select
                 value={filterActivo}
-                onChange={(e) => setFilterActivo(e.target.value)}
+                onChange={(e) => { setFilterActivo(e.target.value); setPage(1) }}
                 className="w-full sm:w-32"
               >
                 <option value="todos">Todos</option>
@@ -83,6 +88,32 @@ export default function ClientesPage() {
                   onDelete={() => setClienteToDelete(cliente)}
                 />
               ))}
+            </div>
+          )}
+          {count > 0 && (
+            <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-center text-sm text-muted-foreground sm:text-left">
+                Mostrando {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, count)} de {count} clientes
+              </p>
+              <div className="flex flex-col items-center gap-3 sm:flex-row">
+                <label className="flex items-center gap-2 whitespace-nowrap text-sm text-muted-foreground" htmlFor="clientes-page-size">
+                  Filas por página
+                  <Select
+                    id="clientes-page-size"
+                    className="w-20"
+                    value={String(pageSize)}
+                    onChange={(event) => {
+                      setPageSize(Number(event.target.value))
+                      setPage(1)
+                    }}
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                  </Select>
+                </label>
+                <Paginator page={page} totalPages={Math.ceil(count / pageSize)} onPageChange={setPage} />
+              </div>
             </div>
           )}
         </Card>

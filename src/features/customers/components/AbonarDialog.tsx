@@ -1,4 +1,5 @@
 import { useForm, type Resolver } from 'react-hook-form'
+import { formatCurrency } from '../utils/venta-total'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -83,15 +84,15 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
                       <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Total</span>
-                          <span className="font-semibold">Q{Number(selectedVenta.total).toFixed(2)}</span>
+                          <span className="font-semibold">{formatCurrency(selectedVenta.total)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Abonado</span>
-                          <span className="text-warning">Q{Number(selectedVenta.abonado).toFixed(2)}</span>
+                          <span className="text-warning">{formatCurrency(selectedVenta.abonado)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Saldo</span>
-                          <span className="text-destructive font-semibold">Q{Number(selectedVenta.saldo).toFixed(2)}</span>
+                          <span className="text-destructive font-semibold">{formatCurrency(selectedVenta.saldo)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Estado</span>
