@@ -93,7 +93,7 @@ const CartDrawer = ({ pricing }: Props) => {
         </DrawerHeader>
 
         {/* Transcripción  */}
-        {/* {speech.isSupported && (
+        {speech.isSupported && (
           <div className="mx-auto w-full max-w-2xl px-4 pb-1">
             <SpeechTranscriptBox
               transcript={speech.transcript}
@@ -107,7 +107,7 @@ const CartDrawer = ({ pricing }: Props) => {
               onStart={speech.startListening}
             />
           </div>
-        )} */}
+        )}
 
         <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100dvh-16rem)] min-h-[6rem]">
           {items.length === 0 ? (
