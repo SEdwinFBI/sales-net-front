@@ -1,3 +1,4 @@
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteResumen } from '../types/reportes'
 
 type Props = {
@@ -22,10 +23,10 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
   if (!resumen) return null
 
   const cards = [
-    { label: 'Total bruto', value: `Q${Number(resumen.total_bruto).toFixed(2)}`, color: 'text-primary' },
-    { label: 'Total neto', value: `Q${Number(resumen.total_neto).toFixed(2)}`, color: 'text-emerald-600' },
-    { label: 'Cantidad total de Unidades', value: resumen.cantidad_total, color: '' },
-    { label: 'Total descuento', value: `Q${Number(resumen.total_descuento).toFixed(2)}`, color: 'text-destructive' },
+    { label: 'Total bruto', value: formatCurrency(Number(resumen.total_bruto)), color: 'text-primary' },
+    { label: 'Total neto', value: formatCurrency(Number(resumen.total_neto)), color: 'text-emerald-600' },
+    { label: 'Cantidad total de Unidades', value: formatNumber(resumen.cantidad_total), color: '' },
+    { label: 'Total descuento', value: formatCurrency(Number(resumen.total_descuento)), color: 'text-destructive' },
   ]
 
   return (

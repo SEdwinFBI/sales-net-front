@@ -1,4 +1,5 @@
 import { api } from '@/lib/api'
+import { formatCurrency } from '@/helpers/money'
 import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse, BranchAvailability } from '../types/sales'
 
 export const getArticles = async (page = 1, pageSize = 10, search?: string): Promise<SalesArticlesResponse> => {
@@ -28,7 +29,7 @@ export const submitSale = async (payload: SubmitSalePayload): Promise<SubmitSale
   return {
     success: true,
     saleId: `VEN-${Date.now()}`,
-    message: `Venta por Q${payload.total.toFixed(2)} registrada exitosamente`,
+    message: `Venta por ${formatCurrency(payload.total)} registrada exitosamente`,
   }
 }
 

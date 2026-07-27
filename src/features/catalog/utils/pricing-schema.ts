@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { formatCurrency } from '@/helpers/money'
 
 const optionalMoney = z
   .string()
@@ -37,7 +38,7 @@ export const variantPricingRowSchema = z
         ctx.addIssue({
           code: 'custom',
           path: ['tiers', index, 'descuento'],
-          message: `El descuento (Q${desc.toFixed(2)}) no puede superar el precio (Q${precioEfectivo.toFixed(2)})`,
+          message: `El descuento (${formatCurrency(desc)}) no puede superar el precio (${formatCurrency(precioEfectivo)})`,
         })
       }
     }
@@ -48,7 +49,7 @@ export const variantPricingRowSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['descuentoMayorista'],
-        message: `El descuento no puede superar el precio (Q${precioEfectivo.toFixed(2)})`,
+        message: `El descuento no puede superar el precio (${formatCurrency(precioEfectivo)})`,
       })
     }
   })

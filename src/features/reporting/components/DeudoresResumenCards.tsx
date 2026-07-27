@@ -1,3 +1,4 @@
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteDeudores } from '../types/reportes'
 
 type Props = {
@@ -25,11 +26,11 @@ export default function DeudoresResumenCards({ resumen, isLoading }: Props) {
     <div className="grid gap-4 sm:grid-cols-2">
       <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm">
         <p className="text-xs text-muted-foreground">Total deudores</p>
-        <p className="text-2xl font-bold mt-1">{resumen.total_deudores}</p>
+        <p className="text-2xl font-bold mt-1">{formatNumber(resumen.total_deudores)}</p>
       </div>
       <div className="rounded-xl border border-border/70 bg-card p-4 shadow-sm">
         <p className="text-xs text-muted-foreground">Total adeudado</p>
-        <p className="mt-1 text-2xl font-bold text-danger">Q{Number(resumen.total_adeudado).toFixed(2)}</p>
+        <p className="mt-1 text-2xl font-bold text-danger">{formatCurrency(Number(resumen.total_adeudado))}</p>
       </div>
     </div>
   )

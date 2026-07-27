@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ChevronDown, ChevronRight, ArrowUpDown, SearchX } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 import React from 'react'
 
@@ -63,18 +64,18 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
       id: 'total_sin_descuento',
       header: 'Total Bruto',
       accessorFn: (row) => Number(row.total),
-      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
+      cell: ({ getValue }) => <span className="font-semibold">{formatCurrency(Number(getValue()))}</span>,
     },
-    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_neto))}</span> },
     {
       accessorKey: 'total_descuento',
       header: 'Desc.',
       cell: ({ row }) => row.original.total_descuento > 0
-        ? <span className="text-successful">-Q{Number(row.original.total_descuento).toFixed(2)}</span>
+        ? <span className="text-successful">-{formatCurrency(Number(row.original.total_descuento))}</span>
         : <span className="text-muted-foreground">—</span>,
     },
-    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-warning">Q{Number(row.original.abonado).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
-    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-destructive">Q{Number(row.original.saldo).toFixed(2)}</span> : <span className="text-muted-foreground">—</span> },
+    { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-warning">{formatCurrency(Number(row.original.abonado))}</span> : <span className="text-muted-foreground">—</span> },
+    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-destructive">{formatCurrency(Number(row.original.saldo))}</span> : <span className="text-muted-foreground">—</span> },
     {
       accessorKey: 'estado',
       header: 'Estado',
@@ -213,9 +214,9 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                   <tr key={d.id} className="border-b border-border/50 last:border-0">
                                     <td className="px-3 py-2">{d.articulo}</td>
                                     <td className="px-3 py-2">{d.talla}</td>
-                                    <td className="px-3 py-2 text-right">{d.cantidad}</td>
-                                    <td className="px-3 py-2 text-right">Q{totalBrutoU.toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right text-destructive">Q{descU.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right">{formatNumber(d.cantidad)}</td>
+                                    <td className="px-3 py-2 text-right">{formatCurrency(totalBrutoU)}</td>
+                                    <td className="px-3 py-2 text-right text-destructive">{formatCurrency(descU)}</td>
                                     <td className="px-3 py-2 text-center">
                                       {tipo !== 'NINGUNO' ? (
                                         <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${tipo === 'INDIVIDUAL' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -223,8 +224,8 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                         </span>
                                       ) : <span className="text-muted-foreground text-xs">—</span>}
                                     </td>
-                                    <td className="px-3 py-2 text-right">Q{Number(d.total).toFixed(2)}</td>
-                                    <td className="px-3 py-2 text-right font-medium">Q{Number(d.total_neto).toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right">{formatCurrency(Number(d.total))}</td>
+                                    <td className="px-3 py-2 text-right font-medium">{formatCurrency(Number(d.total_neto))}</td>
                                     <td className="px-3 py-2">{row.original.observacion || <span className="text-muted-foreground">—</span>}</td>
                                   </tr>
                                   )
@@ -234,10 +235,10 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                 <tr className="border-t-2 border-border bg-muted/30">
                                   <td className="px-3 py-2 font-semibold text-xs" colSpan={6}>Total</td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
-                                    Q{row.original.detalles.reduce((s, d) => s + Number(d.total), 0).toFixed(2)}
+                                    {formatCurrency(row.original.detalles.reduce((s, d) => s + Number(d.total), 0))}
                                   </td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
-                                    Q{row.original.detalles.reduce((s, d) => s + Number(d.total_neto), 0).toFixed(2)}
+                                    {formatCurrency(row.original.detalles.reduce((s, d) => s + Number(d.total_neto), 0))}
                                   </td>
                                 </tr>
                               </tfoot>
