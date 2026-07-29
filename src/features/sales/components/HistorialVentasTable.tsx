@@ -1,5 +1,5 @@
 'use no memo';
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -29,9 +29,11 @@ import React from 'react'
 type Props = {
   data: Venta[]
   isLoading: boolean
+  /** Emite las ventas que quedan tras aplicar TODOS los filtros de la tabla (incluye filtros por columna), sin paginar. */
+  onFilteredChange?: (ventas: Venta[]) => void
 }
 
-export default function HistorialVentasTable({ data, isLoading }: Props) {
+export default function HistorialVentasTable({ data, isLoading, onFilteredChange }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -110,6 +112,15 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     initialState: { pagination: { pageSize: 10 } },
     getRowCanExpand: () => true,
   })
+
+  // Reporta al padre las ventas visibles tras todos los filtros (pre-paginación).
+  // Se keyea sobre la lista de IDs para no re-disparar en cada render.
+  const filteredRows = table.getFilteredRowModel().rows
+  const filteredIdsKey = filteredRows.map((r) => r.original.id).join(',')
+  useEffect(() => {
+    onFilteredChange?.(filteredRows.map((r) => r.original))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredIdsKey])
 
   if (isLoading) {
     return (
