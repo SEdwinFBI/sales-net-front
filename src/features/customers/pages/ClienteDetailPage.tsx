@@ -11,6 +11,7 @@ import MovimientosTable from '../components/MovimientosTable'
 import AbonosTable from '../components/AbonosTable'
 import ComprasTable from '../components/ComprasTable'
 import AbonarDialog from '../components/AbonarDialog'
+import AjusteClienteDialog from '../components/AjusteClienteDialog'
 import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Plus } from 'lucide-react'
@@ -27,6 +28,7 @@ export default function ClienteDetailPage() {
   const { ventas, resumen } = useComprasCliente(clienteId)
   const { movimientos } = useMovimientosCliente(clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
+  const [ajusteOpen, setAjusteOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
 
   if (isLoading) {
@@ -107,6 +109,10 @@ export default function ClienteDetailPage() {
                 <Plus />
                 Registrar abono
               </Button>
+              <Button onClick={() => setAjusteOpen(true)} size="sm" className="w-full sm:w-auto">
+                <Plus />
+                Registrar ajuste
+              </Button>
             </div>
 
             <TabsContent value="movimientos" className="mt-4">
@@ -136,6 +142,12 @@ export default function ClienteDetailPage() {
         ventas={ventas}
         idCliente={clienteId}
         onClose={() => setAbonarOpen(false)}
+      />
+
+      <AjusteClienteDialog
+        open={ajusteOpen}
+        idCliente={clienteId}
+        onClose={() => setAjusteOpen(false)}
       />
     </PageTemplateSimple>
   )

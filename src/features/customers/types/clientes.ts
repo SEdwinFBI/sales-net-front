@@ -131,6 +131,19 @@ export interface MovimientosData {
   balance_actual: number
 }
 
+export interface AjusteClientePayload {
+  monto: string
+  descripcion: string
+}
+
+export interface AjusteClienteResponse {
+  status: 'success'
+  data: {
+    movimiento: MovimientoCliente
+    balance_actual: number
+  }
+}
+
 export interface MovimientosFilters {
   tipo?: TipoMovimiento
   fecha_desde?: string
