@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { queryKeys } from '@/lib/query-keys'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import { useArticulos } from '@/features/catalog/hooks/useArticulos'
 import { useTallas } from '@/features/catalog/hooks/useTallas'
 import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
@@ -26,9 +27,9 @@ import { getDashboardData, type DashboardFilters } from '../services/reportes-se
 import type { DashboardData } from '../types/reportes'
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6']
-const Q = (v: number) => `Q${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const Q = (v: number) => formatCurrency(v)
 const P = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`
-const money = (v: unknown) => `Q${Number(v ?? 0).toFixed(2)}`
+const money = (v: unknown) => formatCurrency(Number(v ?? 0))
 
 const CHART_AXIS = { fontSize: 10, fill: '#94a3b8' }
 const CHART_HEIGHT = 230
@@ -275,17 +276,17 @@ export default function DashboardPage() {
         <Kpi label="Total Neto del Mes" value={Q(r.total_neto ?? 0)} accent="blue" icon={ShoppingCart}
           trend={cmp.ven_mes_anterior} trendLabel="vs mes anterior"
           sub={`Bruto ${Q(r.total_bruto ?? 0)} · Desc ${Q(r.total_descuento ?? 0)}`} />
-        <Kpi label="Ventas" value={String(r.cantidad_ventas ?? 0)} accent="green" icon={BarChart3}
-          sub={`${r.cantidad_unidades ?? 0} unidades · Prom ${Q(r.promedio_por_venta ?? 0)}`} />
+        <Kpi label="Ventas" value={formatNumber(r.cantidad_ventas ?? 0)} accent="green" icon={BarChart3}
+          sub={`${formatNumber(r.cantidad_unidades ?? 0)} unidades · Prom ${Q(r.promedio_por_venta ?? 0)}`} />
         <Kpi label="Hoy" value={Q(vhoy.total_neto ?? 0)} accent="cyan" icon={CalendarDays}
           trend={vhoy.variacion_ayer} trendLabel="vs ayer"
-          sub={`${vhoy.cantidad_ventas ?? 0} ventas hoy`} />
+          sub={`${formatNumber(vhoy.cantidad_ventas ?? 0)} ventas hoy`} />
         <Kpi label="Por Cobrar" value={Q(r.total_adeudado ?? 0)} accent="amber" icon={Wallet}
-          sub={`${r.total_deudores ?? 0} deudores`} />
-        <Kpi label="Stock Bajo" value={String(r.stock_bajo ?? 0)} accent="red" icon={AlertTriangle}
+          sub={`${formatNumber(r.total_deudores ?? 0)} deudores`} />
+        <Kpi label="Stock Bajo" value={formatNumber(r.stock_bajo ?? 0)} accent="red" icon={AlertTriangle}
           sub="Tallas con menos de 5 uds" />
-        <Kpi label="Negocio" value={`${r.total_clientes ?? 0}`} accent="purple" icon={Users}
-          sub={`clientes · ${r.total_articulos ?? 0} artículos · ${r.total_vendedores ?? 0} vendedores`} />
+        <Kpi label="Negocio" value={formatNumber(r.total_clientes ?? 0)} accent="purple" icon={Users}
+          sub={`clientes · ${formatNumber(r.total_articulos ?? 0)} artículos · ${formatNumber(r.total_vendedores ?? 0)} vendedores`} />
       </div>
 
       {sinDatos ? (
@@ -428,7 +429,7 @@ export default function DashboardPage() {
 
           {/* ─── Fila 3: Stock bajo + Deudores ─── */}
           <div className="grid gap-3 lg:grid-cols-2">
-            <ChartCard title={`Stock bajo (${r.stock_bajo ?? 0} tallas)`}>
+            <ChartCard title={`Stock bajo (${formatNumber(r.stock_bajo ?? 0)} tallas)`}>
               {(d.stock_bajo?.length ?? 0) > 0 ? (
                 <div className="max-h-[210px] overflow-y-auto">
                   <table className="w-full text-[11px]">
@@ -451,7 +452,7 @@ export default function DashboardPage() {
                           </td>
                           <td className="px-2 py-1.5 text-center text-muted-foreground">{s.talla}</td>
                           <td className="px-2 py-1.5 text-right">{Q(s.precio)}</td>
-                          <td className="px-2 py-1.5 text-right font-bold">{s.total_stock}</td>
+                          <td className="px-2 py-1.5 text-right font-bold">{formatNumber(s.total_stock)}</td>
                           <td className="px-2 py-1.5 text-center">
                             <span className={cn(
                               'inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold',

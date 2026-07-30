@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaVendedor } from '../types/reportes'
 
 type Row = ReporteVentaVendedor
@@ -53,21 +54,21 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
       enableColumnFilter: false,
     },
     { accessorKey: 'nombre', header: 'Vendedor' },
-    { accessorKey: 'cantidad_ventas', header: 'Cant. ventas' },
-    { accessorKey: 'unidades', header: 'Unidades' },
+    { accessorKey: 'cantidad_ventas', header: 'Cant. ventas', cell: ({ row }) => formatNumber(row.original.cantidad_ventas) },
+    { accessorKey: 'unidades', header: 'Unidades', cell: ({ row }) => formatNumber(row.original.unidades) },
     {
       id: 'total_bruto',
       header: 'Total Bruto',
       accessorFn: (row) => Number(row.total_bruto),
-      cell: ({ getValue }) => <span className="font-semibold">Q{Number(getValue()).toFixed(2)}</span>,
+      cell: ({ getValue }) => <span className="font-semibold">{formatCurrency(Number(getValue()))}</span>,
     },
     {
       id: 'descuento_total',
       header: 'Descuento',
       accessorFn: (row) => Number(row.descuento_total),
-      cell: ({ getValue }) => <span className="text-destructive">Q{Number(getValue()).toFixed(2)}</span>,
+      cell: ({ getValue }) => <span className="text-destructive">{formatCurrency(Number(getValue()))}</span>,
     },
-    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_neto))}</span> },
   ], [])
 
   const table = useReactTable({
@@ -175,9 +176,9 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                                   <td className="px-2 py-1 text-xs">{a.articulo}</td>
                                   <td className="px-2 py-1 text-xs">{a.talla}</td>
                                   <td className="px-2 py-1 text-xs">{a.unidades}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.total_bruto ?? 0).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs text-destructive">Q{(a.descuento_total ?? 0).toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{(a.total_neto ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(a.total_bruto ?? 0)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">{formatCurrency(a.descuento_total ?? 0)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(a.total_neto ?? 0)}</td>
                                 </tr>
                               ))}
                             </tbody>

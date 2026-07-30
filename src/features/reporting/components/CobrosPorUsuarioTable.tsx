@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown, Eye, FileDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteCobrosUsuario, ReporteCobrosFilters, ReporteCobroCliente } from '../types/reportes'
 
 type Row = ReporteCobrosUsuario
@@ -31,10 +32,6 @@ type Props = {
   onDownloadUserPdf: (filters: ReporteCobrosFilters) => void
   pdfUserLoading?: number | null
   fecha?: string
-}
-
-function formatCurrency(value: number) {
-  return `Q${Number(value ?? 0).toFixed(2)}`
 }
 
 function getDebtValue(row: ReporteCobroCliente) {
@@ -105,7 +102,7 @@ export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserP
       enableColumnFilter: false,
     },
     { accessorKey: 'nombre', header: 'Usuario' },
-    { accessorKey: 'cantidad_cobros', header: 'Cant. cobros' },
+    { accessorKey: 'cantidad_cobros', header: 'Cant. cobros', cell: ({ row }) => formatNumber(row.original.cantidad_cobros) },
     {
       id: 'total_abonado',
       header: 'Total abonado',
@@ -248,7 +245,7 @@ export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserP
                                     <td className="px-2 py-1 text-xs">{cliente.nombre_completo}</td>
                                     <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(cliente.total_cobrado)}</td>
                                     <td className="px-2 py-1 text-xs font-semibold text-primary">{formatCurrency(getDebtValue(cliente))}</td>
-                                    <td className="px-2 py-1 text-xs">{cliente.cantidad_cobros ?? 1}</td>
+                                    <td className="px-2 py-1 text-xs">{formatNumber(cliente.cantidad_cobros ?? 1)}</td>
                                     <td className="px-2 py-1 text-xs">{cliente.ventas_afectadas ?? 1}</td>
                                     <td className="px-2 py-1 text-xs">
                                       <Link to={`/clientes/listado/${cliente.id_cliente}`}>

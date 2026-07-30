@@ -20,6 +20,15 @@ export interface SalesState {
    * no debe tocarse el carrito.
    */
   branchAvailability: BranchAvailabilityDialogState;
+  /**
+   * Espejo del texto dictado por voz durante la venta actual.
+   * Es ephemeral — nunca se persiste a localStorage (ver partialize). El
+   * dueño real del estado es el hook useSpeechRecognition dentro de
+   * CartDrawer; este campo solo existe para que CheckoutDialog pueda leer
+   * la transcripción al confirmar el pago.
+   */
+  voiceTranscript: string;
+  voiceResetFn: (() => void) | null;
   openBranchAvailability: (articleId: number | null, highlightVariantId?: number | null) => void;
   setBranchAvailabilityArticle: (articleId: number | null) => void;
   closeBranchAvailability: () => void;
@@ -37,6 +46,8 @@ export interface SalesState {
   setLastSale: (sale: LastSale) => void;
   /** Cierra el resumen de venta SIN reabrir el drawer del carrito. */
   closeSummary: () => void;
+  setVoiceTranscript: (text: string) => void;
+  registerVoiceReset: (fn: (() => void) | null) => void;
 }
 
 function buildCartItemId(productId: number, variantId: number): string {
@@ -50,6 +61,8 @@ export const useSalesStore = create<SalesState>()(
     activeDialog: null,
     lastSale: null,
     branchAvailability: { open: false, articleId: null, highlightVariantId: null },
+    voiceTranscript: '',
+    voiceResetFn: null,
 
     openBranchAvailability: (articleId, highlightVariantId = null) =>
       set({ branchAvailability: { open: true, articleId, highlightVariantId } }),
@@ -195,6 +208,10 @@ export const useSalesStore = create<SalesState>()(
         activeDialog: null,
         cartOpen: false,
       }),
+
+    setVoiceTranscript: (text) => set({ voiceTranscript: text }),
+
+    registerVoiceReset: (fn) => set({ voiceResetFn: fn }),
   }),
     {
       name: 'sales-store',

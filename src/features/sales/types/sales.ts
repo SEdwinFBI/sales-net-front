@@ -74,6 +74,7 @@ export type SubmitSalePayload = {
   paymentMethod: PaymentMethod
   customerId?: string
   total: number
+  observacion?: string
 }
 
 export type SubmitSaleResponse = {
@@ -152,6 +153,7 @@ export interface CreateVentaPayload {
   id_forma_pago: number
   estado: string
   idempotencia_key: string
+  observacion?: string
   detalles: {
     id_variante: number
     cantidad: number

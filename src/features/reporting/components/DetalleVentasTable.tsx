@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { VentaEnVariante } from '../types/reportes'
 
 type Props = {
@@ -36,10 +37,10 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
       const d = new Date(row.original.fecha)
       return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
     } },
-    { accessorKey: 'cantidad', header: 'Cant.' },
-    { accessorKey: 'precio_unitario', header: 'Precio u.', cell: ({ row }) => `Q${Number(row.original.precio_unitario).toFixed(2)}` },
-    { accessorKey: 'monto', header: 'Monto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.monto).toFixed(2)}</span> },
-    { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.descuento).toFixed(2)}</span> },
+    { accessorKey: 'cantidad', header: 'Cant.', cell: ({ row }) => formatNumber(Number(row.original.cantidad)) },
+    { accessorKey: 'precio_unitario', header: 'Precio u.', cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario)) },
+    { accessorKey: 'monto', header: 'Monto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.monto))}</span> },
+    { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">{formatCurrency(Number(row.original.descuento))}</span> },
     { accessorKey: 'estado', header: 'Estado' },
     { accessorKey: 'forma_pago', header: 'Forma de pago' },
     { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },

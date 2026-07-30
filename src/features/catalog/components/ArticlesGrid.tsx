@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { EmptyState } from '@/components/ui/empty-state'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/helpers/money'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
 import ArticleImage from './ArticleImage'
@@ -19,7 +20,7 @@ type Props = {
   isLoading: boolean
 }
 
-const formatPrice = (value: number) => `Q${value.toFixed(2)}`
+const formatPrice = formatCurrency
 const pageSize = 12
 
 export default function ArticlesGrid({ data, variants = [], isLoading }: Props) {

@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
+import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaItem } from '../types/reportes'
 
 type Row = ReporteVentaItem
@@ -54,10 +55,10 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
     },
     { accessorKey: 'articulo', header: 'Artículo' },
     { accessorKey: 'talla', header: 'Ancho' },
-    { accessorKey: 'unidades', header: 'Unidades' },
-    { accessorKey: 'total_bruto', header: 'Total Bruto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_bruto).toFixed(2)}</span> },
-    { accessorKey: 'descuento_total', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">Q{Number(row.original.descuento_total).toFixed(2)}</span> },
-    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">Q{Number(row.original.total_neto).toFixed(2)}</span> },
+    { accessorKey: 'unidades', header: 'Unidades', cell: ({ row }) => formatNumber(row.original.unidades) },
+    { accessorKey: 'total_bruto', header: 'Total Bruto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_bruto))}</span> },
+    { accessorKey: 'descuento_total', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">{formatCurrency(Number(row.original.descuento_total))}</span> },
+    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_neto))}</span> },
   ], [])
 
   const table = useReactTable({
@@ -174,12 +175,12 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                 <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-card' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
                                   <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
-                                  <td className="px-2 py-1 text-xs">{v.cantidad}</td>
-                                  <td className="px-2 py-1 text-xs">Q{precioBrutoU.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs text-destructive">Q{(v.descuento ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs">{formatNumber(v.cantidad)}</td>
+                                  <td className="px-2 py-1 text-xs">{formatCurrency(precioBrutoU)}</td>
+                                  <td className="px-2 py-1 text-xs text-destructive">{formatCurrency(v.descuento ?? 0)}</td>
                                   <td className="px-2 py-1 text-xs">{tipo !== 'NINGUNO' ? <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${tipo === 'INDIVIDUAL' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{tipo === 'INDIVIDUAL' ? 'Individual' : 'Mayorista'}</span> : <span className="text-muted-foreground">—</span>}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{totalBruto.toFixed(2)}</td>
-                                  <td className="px-2 py-1 text-xs font-semibold">Q{(v.monto ?? 0).toFixed(2)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(totalBruto)}</td>
+                                  <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(v.monto ?? 0)}</td>
                                   <td className="px-2 py-1 text-xs">{v.estado}</td>
                                   <td className="px-2 py-1 text-xs">{v.forma_pago}</td>
                                   <td className="px-2 py-1 text-xs">{v.vendedor.full_name}</td>

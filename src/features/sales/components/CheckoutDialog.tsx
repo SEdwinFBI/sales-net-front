@@ -35,14 +35,16 @@ const CheckoutDialog = () => {
   const closeDialog = useSalesStore((state) => state.closeDialog)
   const openDialog = useSalesStore((state) => state.openDialog)
   const setLastSale = useSalesStore((state) => state.setLastSale)
+  const voiceTranscript = useSalesStore((state) => state.voiceTranscript)
+  const voiceResetFn = useSalesStore((state) => state.voiceResetFn)
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
   const { data: customers, isLoading } = useCustomers()
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
-  // Cotización del servidor (autoridad final) para confirmar el total antes
-  // de cobrar; si difiere del cálculo local, se muestra el del servidor.
+  // Cotización del servidor para confirmar el total antes
+  // de cobrar
   const detalles = items.map((item) => ({ id_variante: item.variantId, cantidad: item.qty }))
   const { data: cotizacion } = useQuery({
     queryKey: ['pricing', 'cotizar', detalles],
@@ -68,8 +70,9 @@ const CheckoutDialog = () => {
         paymentMethod,
         customerId: selectedCustomerId || undefined,
         total,
+        observacion: voiceTranscript.trim() || undefined,
       })
-      // Snapshot ANTES de limpiar el carrito, para el resumen de venta.
+      // Snapshot ANTES de limpiar el carrito
       const customerName =
         customers?.find((c) => String(c.id) === selectedCustomerId)?.name ?? null
       setLastSale({
@@ -82,6 +85,7 @@ const CheckoutDialog = () => {
         customerName,
       })
       clearCart()
+      voiceResetFn?.()
       openDialog('summary')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))

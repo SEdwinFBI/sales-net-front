@@ -14,6 +14,7 @@ const ClearCartDialog = () => {
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const clearCart = useSalesStore((state) => state.clearCart)
   const closeDialog = useSalesStore((state) => state.closeDialog)
+  const voiceResetFn = useSalesStore((state) => state.voiceResetFn)
 
   return (
     <Dialog
@@ -42,6 +43,7 @@ const ClearCartDialog = () => {
             variant="destructive"
             onClick={() => {
               clearCart()
+              voiceResetFn?.()
               closeDialog()
             }}
           >

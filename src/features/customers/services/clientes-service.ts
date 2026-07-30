@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, ComprasData, ComprasFilters, MovimientosData, MovimientosFilters, VentaEncabezadoRequest, VentaEncabezadoResponse } from '../types/clientes'
+import type { ApiResponse, Cliente, CreateClientePayload, UpdateClientePayload, Abono, AbonarPayload, AbonarResponse, AjusteClientePayload, AjusteClienteResponse, ComprasData, ComprasFilters, MovimientosData, MovimientosFilters, VentaEncabezadoRequest, VentaEncabezadoResponse } from '../types/clientes'
 
 export const getClientes = async (page = 1, pageSize = 10, search = '', activo?: boolean): Promise<{ count: number; results: Cliente[] }> => {
   const { data } = await api.get<ApiResponse<Cliente[] | { count: number; results: Cliente[] }>>('/admin/clientes/', {
@@ -47,6 +47,11 @@ export const getComprasCliente = async (idCliente: number, filters?: ComprasFilt
 export const getMovimientosCliente = async (idCliente: number, filters?: MovimientosFilters): Promise<MovimientosData> => {
   const { data } = await api.get<ApiResponse<MovimientosData>>(`/clientes/${idCliente}/movimientos`, { params: filters })
   return data.data
+}
+
+export const crearAjusteCliente = async (idCliente: number, payload: AjusteClientePayload): Promise<AjusteClienteResponse> => {
+  const { data } = await api.post<AjusteClienteResponse>(`/clientes/${idCliente}/movimientos`, payload)
+  return data
 }
 
 export const createVentaEncabezado = async (payload: VentaEncabezadoRequest): Promise<VentaEncabezadoResponse> => {

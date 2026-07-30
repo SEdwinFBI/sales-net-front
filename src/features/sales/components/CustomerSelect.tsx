@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type FC } from "react"
 import { Search, X, ChevronDown, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatCurrency } from "@/helpers/money"
 
 type Customer = { id: string; name: string; phone: string; balance: number }
 
@@ -164,7 +165,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
                                         <div className="flex-1 text-sm min-w-0">
                                             <div className="truncate">{c.name ?? 'Sin nombre'}</div>
                                             <div className="text-xs text-muted-foreground truncate">
-                                                {c.phone ?? 'Sin teléfono'} · Saldo: Q{(c.balance ?? 0).toFixed(2)}
+                                                {c.phone ?? 'Sin teléfono'} · Saldo: {formatCurrency(c.balance ?? 0)}
                                             </div>
                                         </div>
 
