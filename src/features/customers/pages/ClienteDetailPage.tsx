@@ -112,7 +112,7 @@ export default function ClienteDetailPage() {
               <Button
                 onClick={() => setAjusteOpen(true)}
                 size="sm"
-                className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
+                className="w-full bg-red-500 text-white hover:bg-red-600 sm:w-auto"
               >
                 <Plus />
                 Registrar ajuste

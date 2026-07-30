@@ -57,6 +57,7 @@ export interface Abono {
 
 export interface AbonarPayload {
   monto: number
+  observacion?: string
 }
 
 export interface AbonarResponse {
