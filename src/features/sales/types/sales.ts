@@ -138,6 +138,8 @@ export interface DetalleVenta {
   total_neto: number
   articulo: string
   talla: string
+  /** Stock del vendedor que quedó tras esta venta (snapshot persistido). Null en ventas antiguas. */
+  stock_restante?: number | null
 }
 
 export interface SalesHistoryFilters {

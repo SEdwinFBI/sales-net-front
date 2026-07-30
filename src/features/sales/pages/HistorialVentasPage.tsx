@@ -6,11 +6,13 @@ import HistorialVentasTable from '../components/HistorialVentasTable'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { RotateCcw, Search } from 'lucide-react'
+import { RotateCcw, Search, FileDown } from 'lucide-react'
 import { getDefaultDateRange } from '@/lib/dates'
-import type { SalesHistoryFilters } from '../types/sales'
+import type { SalesHistoryFilters, Venta } from '../types/sales'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import { downloadHistorialVentasPdf } from '../services/products-service'
+import { toast } from 'sonner'
 
 export default function HistorialVentasPage() {
 
@@ -28,6 +30,8 @@ export default function HistorialVentasPage() {
   const { ventas, isLoading } = useSalesHistory(filters, String(user?.id))
   const [estados, setEstados] = useState<string[]>([])
   const [formasPago, setFormasPago] = useState<string[]>([])
+  const [filteredVentas, setFilteredVentas] = useState<Venta[]>([])
+  const [pdfLoading, setPdfLoading] = useState(false)
 
 
 
@@ -93,6 +97,27 @@ export default function HistorialVentasPage() {
     })
     setFormaPagoFilter('')
     setSearchText('')
+  }
+
+  const handleExportPdf = async () => {
+    setPdfLoading(true)
+    try {
+      await downloadHistorialVentasPdf(
+        filteredVentas.map((v) => v.id),
+        {
+          fecha_desde: filters.fecha_desde,
+          fecha_hasta: filters.fecha_hasta,
+          estado: filters.estado,
+          forma_pago: formaPagoFilter || undefined,
+          busqueda: searchText || undefined,
+        },
+      )
+      toast.success('PDF descargado correctamente')
+    } catch {
+      toast.error('Error al descargar el PDF')
+    } finally {
+      setPdfLoading(false)
+    }
   }
 
   return (
@@ -162,7 +187,22 @@ export default function HistorialVentasPage() {
             )}
           </div>
 
-          <HistorialVentasTable data={filtered} isLoading={isLoading} />
+          <div className="mb-3 flex items-center justify-end gap-3">
+            <span className="text-xs text-muted-foreground">
+              {filteredVentas.length} {filteredVentas.length === 1 ? 'venta' : 'ventas'} para exportar
+            </span>
+            <Button
+              onClick={handleExportPdf}
+              disabled={pdfLoading || filteredVentas.length === 0}
+              size="sm"
+              className="h-9"
+            >
+              <FileDown />
+              {pdfLoading ? 'Descargando...' : 'Descargar PDF'}
+            </Button>
+          </div>
+
+          <HistorialVentasTable data={filtered} isLoading={isLoading} onFilteredChange={setFilteredVentas} />
         </Card>
       </div>
     </PageTemplateSimple>

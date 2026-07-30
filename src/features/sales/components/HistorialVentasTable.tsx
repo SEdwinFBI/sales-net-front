@@ -1,5 +1,5 @@
 'use no memo';
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -29,9 +29,11 @@ import React from 'react'
 type Props = {
   data: Venta[]
   isLoading: boolean
+  /** Emite las ventas que quedan tras aplicar TODOS los filtros de la tabla (incluye filtros por columna), sin paginar. */
+  onFilteredChange?: (ventas: Venta[]) => void
 }
 
-export default function HistorialVentasTable({ data, isLoading }: Props) {
+export default function HistorialVentasTable({ data, isLoading, onFilteredChange }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -110,6 +112,15 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
     initialState: { pagination: { pageSize: 10 } },
     getRowCanExpand: () => true,
   })
+
+  // Reporta al padre las ventas visibles tras todos los filtros (pre-paginación).
+  // Se keyea sobre la lista de IDs para no re-disparar en cada render.
+  const filteredRows = table.getFilteredRowModel().rows
+  const filteredIdsKey = filteredRows.map((r) => r.original.id).join(',')
+  useEffect(() => {
+    onFilteredChange?.(filteredRows.map((r) => r.original))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredIdsKey])
 
   if (isLoading) {
     return (
@@ -196,6 +207,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Artículo</th>
                                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Ancho</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Cantidad</th>
+                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Stock restante</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio Bruto</th>
                                   <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Unidad</th>
                                   <th className="text-center px-3 py-2 font-medium text-muted-foreground">Tipo</th>
@@ -215,6 +227,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                                     <td className="px-3 py-2">{d.articulo}</td>
                                     <td className="px-3 py-2">{d.talla}</td>
                                     <td className="px-3 py-2 text-right">{formatNumber(d.cantidad)}</td>
+                                    <td className="px-3 py-2 text-right">{d.stock_restante != null ? formatNumber(d.stock_restante) : <span className="text-muted-foreground">—</span>}</td>
                                     <td className="px-3 py-2 text-right">{formatCurrency(totalBrutoU)}</td>
                                     <td className="px-3 py-2 text-right text-destructive">{formatCurrency(descU)}</td>
                                     <td className="px-3 py-2 text-center">
@@ -233,7 +246,7 @@ export default function HistorialVentasTable({ data, isLoading }: Props) {
                               </tbody>
                               <tfoot>
                                 <tr className="border-t-2 border-border bg-muted/30">
-                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={6}>Total</td>
+                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={7}>Total</td>
                                   <td className="px-3 py-2 text-right font-semibold text-xs">
                                     {formatCurrency(row.original.detalles.reduce((s, d) => s + Number(d.total), 0))}
                                   </td>
