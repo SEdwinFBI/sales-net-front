@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 import VentaSelect from './VentaSelect'
 import { useAbonarVenta } from '../hooks/useAbonarVenta'
@@ -22,6 +23,7 @@ import { getApiErrorMessage } from '@/lib/api-error'
 const schema = z.object({
   idVenta: z.preprocess((val) => Number(val), z.number().min(0)),
   monto: z.preprocess((val) => Number(val), z.number().positive('El monto debe ser mayor a 0')),
+  observacion: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -45,7 +47,7 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
-    defaultValues: { idVenta: 0, monto: 0 },
+    defaultValues: { idVenta: 0, monto: 0, observacion: '' },
   })
 
   const idVentaValue = watch('idVenta')
@@ -53,7 +55,14 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await abonar({ idVenta: values.idVenta, idCliente, data: { monto: values.monto } })
+      await abonar({
+        idVenta: values.idVenta,
+        idCliente,
+        data: {
+          monto: values.monto,
+          observacion: values.observacion,
+        },
+      })
       toast.success('Abono registrado correctamente')
       reset()
       onClose()
@@ -106,6 +115,14 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
             <FieldLabel>Monto a abonar</FieldLabel>
             <Input {...register('monto')} type="number" step="0.01" placeholder="0.00" />
             <FieldError errors={[errors.monto]} />
+          </Field>
+
+          <Field>
+            <FieldLabel>Observación</FieldLabel>
+            <Textarea
+              {...register('observacion')}
+              placeholder="Nota adicional (opcional)"
+            />
           </Field>
 
           <DialogFooter>

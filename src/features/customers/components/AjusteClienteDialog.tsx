@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -35,6 +36,7 @@ type Props = {
 
 export default function AjusteClienteDialog({ open, idCliente, onClose }: Props) {
   const { mutateAsync: crearAjuste, isPending } = useCrearAjusteCliente()
+  const [isNegative, setIsNegative] = useState(false)
   const {
     register,
     handleSubmit,
@@ -48,20 +50,24 @@ export default function AjusteClienteDialog({ open, idCliente, onClose }: Props)
   const closeDialog = () => {
     if (isPending) return
     reset()
+    setIsNegative(false)
     onClose()
   }
 
   const onSubmit = async (values: FormValues) => {
+    const monto = isNegative ? -Math.abs(values.monto) : Math.abs(values.monto)
+
     try {
       await crearAjuste({
         idCliente,
         data: {
-          monto: values.monto.toFixed(2),
+          monto: monto.toFixed(2),
           descripcion: values.descripcion.trim(),
         },
       })
       toast.success('Ajuste registrado correctamente')
       reset()
+      setIsNegative(false)
       onClose()
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar el ajuste'))
@@ -78,15 +84,30 @@ export default function AjusteClienteDialog({ open, idCliente, onClose }: Props)
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Field>
             <FieldLabel>Monto del ajuste</FieldLabel>
-            <Input
-              {...register('monto')}
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <Input
+                {...register('monto')}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                autoFocus
+              />
+              <Button
+                type="button"
+                variant={isNegative ? 'destructive' : 'outline'}
+                className="min-w-10 text-lg"
+                aria-label={isNegative ? 'Quitar signo negativo' : 'Agregar signo negativo'}
+                aria-pressed={isNegative}
+                onClick={() => setIsNegative((current) => !current)}
+              >
+                −
+              </Button>
+            </div>
             <FieldDescription>
-              Usa un monto positivo para aumentar el balance o negativo para disminuirlo.
+              {isNegative
+                ? 'El ajuste disminuirá el balance.'
+                : 'El ajuste aumentará el balance. Presiona − para disminuirlo.'}
             </FieldDescription>
             <FieldError errors={[errors.monto]} />
           </Field>
