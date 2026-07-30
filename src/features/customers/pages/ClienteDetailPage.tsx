@@ -109,7 +109,11 @@ export default function ClienteDetailPage() {
                 <Plus />
                 Registrar abono
               </Button>
-              <Button onClick={() => setAjusteOpen(true)} size="sm" className="w-full sm:w-auto">
+              <Button
+                onClick={() => setAjusteOpen(true)}
+                size="sm"
+                className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
+              >
                 <Plus />
                 Registrar ajuste
               </Button>
