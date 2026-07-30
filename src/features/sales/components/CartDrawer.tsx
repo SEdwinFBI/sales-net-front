@@ -19,6 +19,7 @@ import { useSalesStore } from '../store/useSalesStore'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import { formatCurrency } from '@/helpers/money'
 import CartItemComponent from './CartItemComponent'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import SpeechTranscriptBox from './SpeechTranscriptBox'
 import { selectTotal, selectTotalDiscount, selectTotalItems } from '../utils/utilsSales'
 import type { CartPricingResult } from '../utils/pricing-engine'
