@@ -214,7 +214,8 @@ export interface ReporteDeudores {
       direccion?: string | null
       telefono: string
       balance: number
-      fecha_notificacion: string | null
+      dias_notificacion: DiaNotificacion[]
+      dias_notificacion_display: string[]
       ultima_compra: string | null
       total_ventas_pendientes: number
       total_abonado: number
