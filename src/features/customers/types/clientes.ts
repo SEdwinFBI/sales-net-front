@@ -1,12 +1,16 @@
 import type { Venta } from "@/features/sales/types/sales"
 
+export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
 export interface Cliente {
   id: number
   nombre_completo: string
   direccion: string
   telefono: string
   balance: number
-  fecha_notificacion: string
+  dias_notificacion: DiaNotificacion[]
+  /** Temporal hasta migrar la visualización del cliente en el siguiente paso. */
+  fecha_notificacion?: string | null
   fecha_creacion: string
   activo: boolean
 }
@@ -21,7 +25,7 @@ export interface CreateClientePayload {
   direccion: string
   telefono: string
   balance: number
-  fecha_notificacion?: string
+  dias_notificacion: DiaNotificacion[]
   activo?: boolean
 }
 
@@ -30,7 +34,7 @@ export interface UpdateClientePayload {
   direccion?: string
   telefono?: string
   balance?: number
-  fecha_notificacion?: string
+  dias_notificacion?: DiaNotificacion[]
   activo?: boolean
 }
 
