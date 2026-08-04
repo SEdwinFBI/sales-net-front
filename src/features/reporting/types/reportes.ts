@@ -1,3 +1,5 @@
+import type { DiaNotificacion } from '@/features/customers/types/clientes'
+
 export interface ReporteVentasFilters {
   fecha_desde?: string
   fecha_hasta?: string
@@ -9,8 +11,7 @@ export interface ReporteVentasFilters {
 }
 
 export interface ReporteDeudoresFilters {
-  fecha_desde?: string
-  fecha_hasta?: string
+  dia_notificacion?: DiaNotificacion
   nombre?: string
   lugar?: string
   output?: 'json' | 'pdf'
