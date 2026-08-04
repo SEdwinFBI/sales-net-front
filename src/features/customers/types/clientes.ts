@@ -9,8 +9,6 @@ export interface Cliente {
   telefono: string
   balance: number
   dias_notificacion: DiaNotificacion[]
-  /** Temporal hasta migrar la visualización del cliente en el siguiente paso. */
-  fecha_notificacion?: string | null
   fecha_creacion: string
   activo: boolean
 }

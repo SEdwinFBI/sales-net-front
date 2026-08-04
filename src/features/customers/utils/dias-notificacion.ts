@@ -12,3 +12,16 @@ export const DIAS_NOTIFICACION: ReadonlyArray<{
   { value: 6, label: 'Sábado' },
   { value: 7, label: 'Domingo' },
 ]
+
+const NOMBRE_DIA = new Map(
+  DIAS_NOTIFICACION.map((dia) => [dia.value, dia.label]),
+)
+
+export function mostrarDias(dias?: DiaNotificacion[]): string {
+  if (!dias?.length) return 'Sin asignar'
+
+  return dias
+    .map((dia) => NOMBRE_DIA.get(dia))
+    .filter((nombre): nombre is string => Boolean(nombre))
+    .join(', ')
+}
