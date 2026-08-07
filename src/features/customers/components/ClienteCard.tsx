@@ -3,10 +3,10 @@ import { formatCurrency } from '../utils/venta-total'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, Eye } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { initials } from '@/helpers/string'
+import { mostrarDias } from '../utils/dias-notificacion'
 
 type Props = {
   cliente: Cliente
@@ -17,9 +17,6 @@ type Props = {
 export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
   const user = useAuthStore(s => s.user)
   const isNotAdmin = user?.role !== 'admin'
-  const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
 
   return (
     <Card className={`relative overflow-hidden border-l-4 ${cliente.activo ? 'border-l-successful' : 'border-l-border'} bg-card p-4 transition-shadow hover:shadow-md`}>
@@ -44,8 +41,8 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
             <span className="text-xs text-primary">balance</span>
           </div>
 
-          <p className={cn('mt-1 text-xs text-muted-foreground', isNotificationPast && 'text-danger')}>
-            Notificación: {cliente.fecha_notificacion}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Notificación: {mostrarDias(cliente.dias_notificacion)}
           </p>
         </div>
       </div>
