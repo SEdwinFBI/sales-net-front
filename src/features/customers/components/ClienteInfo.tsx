@@ -1,19 +1,15 @@
 import { Card } from '@/components/ui/card'
 import { formatCurrency } from '../utils/venta-total'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import type { Cliente } from '../types/clientes'
 import { initials } from '@/helpers/string'
+import { mostrarDias } from '../utils/dias-notificacion'
 
 type Props = {
   cliente: Cliente
 }
 
 export default function ClienteInfo({ cliente }: Props) {
-  const now = new Date()
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const isNotificationPast = Boolean(cliente.fecha_notificacion && cliente.fecha_notificacion <= today)
-
   return (
     <Card className="bg-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
@@ -38,7 +34,7 @@ export default function ClienteInfo({ cliente }: Props) {
                 Direccion: <span className="font-medium text-foreground">{cliente.direccion}</span>
               </span>
               <span className="whitespace-nowrap text-muted-foreground">
-                Fecha Notificacion: <span className={cn('font-medium text-foreground', isNotificationPast && 'text-danger')}>{cliente.fecha_notificacion ?? "Sin fecha"}</span>
+                Días de notificación: <span className="font-medium text-foreground">{mostrarDias(cliente.dias_notificacion)}</span>
               </span>
             </div>
 
