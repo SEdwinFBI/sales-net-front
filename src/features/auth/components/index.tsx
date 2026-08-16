@@ -36,6 +36,7 @@ export default function LoginFeature() {
       })
 
       applySession(session)
+      // Evita que un vendedor herede en caché el carrito/historial del usuario anterior.
       queryClient.removeQueries({ queryKey: queryKeys.sales.all })
       toast.success('Sesion iniciada', { id: toastId })
       navigate('/', { replace: true })
