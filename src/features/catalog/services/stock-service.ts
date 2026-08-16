@@ -65,35 +65,24 @@ export const getSellerStock = async (sellerId: number): Promise<StockAssignment[
   return stock.map(mapStock)
 }
 
+/**
+ * Guarda el stock del vendedor en UNA sola llamada con cantidades absolutas.
+ *
+ * Antes mandaba un PUT/POST por variante en paralelo, lo que además de N+1
+ * peticiones dejaba un movimiento suelto en el ledger por cada variante. El
+ * servidor ahora calcula los deltas y registra un único movimiento con sus
+ * líneas (RESURTIDO si todo sube, AJUSTE si algo baja).
+ */
 export const saveSellerStock = async (
   payload: SaveSellerStockPayload
 ): Promise<StockAssignment[]> => {
-  const currentStock = await getStockDeVendedor(payload.sellerId)
-  const currentByVariant = new Map(
-    currentStock.map((item) => [item.id_variante, item])
-  )
+  const { data } = await api.post<ApiResponse<StockApi[]>>('/admin/stock/asignar/', {
+    id_usuario: payload.sellerId,
+    items: payload.items.map((item) => ({
+      id_variante: item.variantId,
+      cantidad: item.quantity,
+    })),
+  })
 
-  const saved = await Promise.all(
-    payload.items.map(async (item) => {
-      const existing = currentByVariant.get(item.variantId)
-
-      if (existing) {
-        const { data } = await api.put<ApiResponse<StockApi>>(`/admin/stock/${existing.id}/`, {
-          cantidad: item.quantity,
-        })
-        return data.data
-      }
-
-      if (item.quantity <= 0) return null
-
-      const { data } = await api.post<ApiResponse<StockApi>>('/admin/stock/', {
-        id_variante: item.variantId,
-        id_usuario: payload.sellerId,
-        cantidad: item.quantity,
-      })
-      return data.data
-    })
-  )
-
-  return saved.filter((item): item is StockApi => item !== null).map(mapStock)
+  return data.data.map(mapStock)
 }
