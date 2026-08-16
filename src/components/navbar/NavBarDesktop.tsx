@@ -11,20 +11,20 @@ type NavBarDesktopProps = {
   onToggleModule?: (moduleId: string) => void
 }
 
-/** Construye la ruta */
+/** Concatena el path del item con el de su padre para armar la ruta absoluta. */
 function buildFullPath(item: SidebarItem, parentPath?: string): string {
   const currentPath = parentPath ? `${parentPath}/${item.path}` : `/${item.path}`
   return currentPath
 }
 
-/** Verifica  */
+/** True si el item o alguno de sus descendientes corresponde a la ruta actual. */
 export function isItemOrDescendantActive(item: SidebarItem, currentPathname: string, parentPath?: string): boolean {
   const fullPath = buildFullPath(item, parentPath)
   if (currentPathname === fullPath || currentPathname.startsWith(`${fullPath}/`)) return true
   return item.children.some((child) => isItemOrDescendantActive(child, currentPathname, fullPath))
 }
 
-/** Renderiza los hijos*/
+/** Sub-items de un módulo expandido, con la línea guía que marca la jerarquía activa. */
 function SubItems({
   items,
   expanded,
