@@ -14,12 +14,14 @@ import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
 import { reportingRoutes } from '@/features/reporting'
 import { clientesRoutes } from '@/features/customers'
+import { inventarioRoutes } from '@/features/inventario'
 
 const allFeatureRoutes = [
   ...reportingRoutes,
   ...salesRoutes,
   ...clientesRoutes,
   ...catalogRoutes,
+  ...inventarioRoutes,
   ...adminUsuariosRoutes
 ]
 
