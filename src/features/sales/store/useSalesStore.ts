@@ -29,6 +29,12 @@ export interface SalesState {
    */
   voiceTranscript: string;
   voiceResetFn: (() => void) | null;
+  /**
+   * Foto de entrega de la venta en curso, como data URL ya comprimida.
+   * Ephemeral igual que voiceTranscript: NO se persiste (ver partialize), no
+   * tiene sentido arrastrar la foto de una venta al recargar la página.
+   */
+  ventaFoto: string | null;
   openBranchAvailability: (articleId: number | null, highlightVariantId?: number | null) => void;
   setBranchAvailabilityArticle: (articleId: number | null) => void;
   closeBranchAvailability: () => void;
@@ -48,6 +54,7 @@ export interface SalesState {
   closeSummary: () => void;
   setVoiceTranscript: (text: string) => void;
   registerVoiceReset: (fn: (() => void) | null) => void;
+  setVentaFoto: (foto: string | null) => void;
 }
 
 function buildCartItemId(productId: number, variantId: number): string {
@@ -63,6 +70,7 @@ export const useSalesStore = create<SalesState>()(
     branchAvailability: { open: false, articleId: null, highlightVariantId: null },
     voiceTranscript: '',
     voiceResetFn: null,
+    ventaFoto: null,
 
     openBranchAvailability: (articleId, highlightVariantId = null) =>
       set({ branchAvailability: { open: true, articleId, highlightVariantId } }),
@@ -212,6 +220,8 @@ export const useSalesStore = create<SalesState>()(
     setVoiceTranscript: (text) => set({ voiceTranscript: text }),
 
     registerVoiceReset: (fn) => set({ voiceResetFn: fn }),
+
+    setVentaFoto: (foto) => set({ ventaFoto: foto }),
   }),
     {
       name: 'sales-store',

@@ -10,6 +10,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { useSalesStore } from '../store/useSalesStore'
 import CustomerSelect from './CustomerSelect'
+import VentaFotoCapture from './VentaFotoCapture'
 import { useCustomers } from '@/features/usuarios/hooks/useCustomers'
 import { useCreateSale } from '../hooks/useCreateSale'
 import { formatCurrency } from '@/helpers/money'
@@ -37,6 +38,8 @@ const CheckoutDialog = () => {
   const setLastSale = useSalesStore((state) => state.setLastSale)
   const voiceTranscript = useSalesStore((state) => state.voiceTranscript)
   const voiceResetFn = useSalesStore((state) => state.voiceResetFn)
+  const ventaFoto = useSalesStore((state) => state.ventaFoto)
+  const setVentaFoto = useSalesStore((state) => state.setVentaFoto)
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
@@ -58,10 +61,12 @@ const CheckoutDialog = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
 
-  const canConfirm = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
+  // La foto de entrega es obligatoria: el backend rechaza la venta sin ella.
+  const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
+  const canConfirm = Boolean(pagoValido && ventaFoto)
 
   const handleConfirm = async () => {
-    if (!canConfirm) return
+    if (!canConfirm || !ventaFoto) return
 
     try {
       const result = await createSale({
@@ -71,6 +76,7 @@ const CheckoutDialog = () => {
         customerId: selectedCustomerId || undefined,
         total,
         observacion: voiceTranscript.trim() || undefined,
+        foto: ventaFoto,
       })
       // Snapshot ANTES de limpiar el carrito
       const customerName =
@@ -86,6 +92,7 @@ const CheckoutDialog = () => {
       })
       clearCart()
       voiceResetFn?.()
+      setVentaFoto(null)
       openDialog('summary')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))
@@ -153,6 +160,14 @@ const CheckoutDialog = () => {
           {paymentMethod === 'credito' && !selectedCustomerId && (
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito
+            </p>
+          )}
+
+          <VentaFotoCapture foto={ventaFoto} onChange={setVentaFoto} />
+
+          {pagoValido && !ventaFoto && (
+            <p className="text-xs text-warning -mt-3">
+              Toma la foto de entrega para confirmar la venta
             </p>
           )}
         </div>
