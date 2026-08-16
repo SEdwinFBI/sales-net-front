@@ -3,6 +3,7 @@ import { queryKeys } from '@/lib/query-keys'
 import { getReporteCobros } from '../services/reportes-service'
 import type { ReporteCobrosFilters } from '../types/reportes'
 
+/** Cobros agrupados por usuario, con el resumen agregado del rango filtrado. */
 export const useReporteCobros = (filters?: ReporteCobrosFilters) => {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKeys.reporting.cobros(filters as Record<string, unknown> | undefined),

@@ -22,6 +22,8 @@ function cleanReporteDeudoresParams(filters?: ReporteDeudoresFilters): Record<st
   setParam(params, 'dia_notificacion', filters?.dia_notificacion)
   setParam(params, 'nombre', filters?.nombre)
   setParam(params, 'lugar', filters?.lugar)
+  // El backend de este endpoint filtra por 'search', no por 'nombre'; se
+  // mandan ambos para no romper otros consumidores del mismo filtro.
   setParam(params, 'search', filters?.nombre)
   return params
 }
@@ -41,6 +43,7 @@ export const getReporteVentas = async (filters?: ReporteVentasFilters): Promise<
   return data.data
 }
 
+/** Descarga un PDF vía blob y dispara el guardado en el navegador. */
 async function downloadPdf(url: string, filename: string, params?: Record<string, unknown>) {
   const response = await api.get(url, {
     params: { ...params, output: 'pdf' },
