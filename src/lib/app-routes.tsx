@@ -22,94 +22,37 @@ export type AppRouteMeta = {
 
 /**
  * @example
- * 
- *export const salesRoutes: AppRoute[] = [
- *{ //Patron: seccion - pagina
- *    path: 'venta',
- *    meta: {
- *      name: 'Venta',
- *      description: 'Operacion de ventas',
- *      icon: Store,
- *      #hideFromSidebar: true, <- oculta toda la rama del sidebar
- *    },
- *    children: [
- *      {
- *        path: 'punto-de-venta',
- *        meta: {
- *          name: 'Punto de venta',
- *          description: 'Venta de productos',
- *          icon: Store,
- *          permissions: ['vendedor'],
- *          lazy: () => import('./pages/PosPage'),
- *        },
- *      },
- *    ],
- *  },
- *  { //Patron: pagina simple
- *    path: 'punto-de-venta2',
- *    meta: {
- *      name: 'Punto de venta2',
- *      description: 'Venta de productos',
- *      icon: Store,
- *      permissions: ['vendedor'],
- *      lazy: () => import('./pages/PosPage'),
- *    },
- *  },
- *  { //Patron: modulo - seccion - pagina
- *    path: 'venta2',
- *    meta: {
- *      name: 'Venta2',
- *      description: 'Operacion de ventas',
- *      icon: Store,
- *    }, //seccion
- *    children: [
- *      {
- *        path: 'punto-de-venta3',
- *        meta: {
- *          name: 'Punto de venta3',
- *          description: 'Venta de productos',
- *          icon: Store,
-
- *
- *        }, //pagina
- *        children: [
- *          {
- *            path: 'punto-de-venta3',
- *            meta: {
- *              name: 'Punto de venta3',
- *              description: 'Venta de productos',
- *              icon: Store,
- *              permissions: ['vendedor'],
- *              lazy: () => import('./pages/PosPage'),
- *            },
- *          },
- *        ],
- *      },
- *      { //seccion
- *        path: 'punto-de-venta5',
- *        meta: {
- *          name: 'Punto de venta3',
- *          description: 'Venta de productos',
- *          icon: Store,
- *
- *        },//pagina
- *        children: [
- *          {
- *            path: 'punto-de-venta3',
- *            meta: {
- *              name: 'Punto de venta3',
- *              description: 'Venta de productos',
- *              icon: Store,
- *              permissions: ['vendedor'],
- *              lazy: () => import('./pages/PosPage'),
- *            },
- *          },
- *        ],
- *      },
- *    ],
- *  },
- *]
- *
+ * ```ts
+ * export const salesRoutes: AppRoute[] = [
+ *   { // sección con una página hija
+ *     path: 'venta',
+ *     meta: { name: 'Venta', description: 'Operación de ventas', icon: Store },
+ *     children: [
+ *       {
+ *         path: 'punto-de-venta',
+ *         meta: {
+ *           name: 'Punto de venta',
+ *           description: 'Venta de productos',
+ *           icon: Store,
+ *           permissions: ['vendedor'],
+ *           lazy: () => import('./pages/PosPage'),
+ *         },
+ *       },
+ *     ],
+ *   },
+ *   { // página simple, sin hijos
+ *     path: 'punto-de-venta2',
+ *     meta: {
+ *       name: 'Punto de venta 2',
+ *       description: 'Venta de productos',
+ *       icon: Store,
+ *       permissions: ['vendedor'],
+ *       lazy: () => import('./pages/PosPage'),
+ *     },
+ *   },
+ * ]
+ * ```
+ * `hideFromSidebar: true` en el `meta` de una rama oculta esa rama completa del sidebar.
  */
 
 export type AppRoute = {
@@ -132,7 +75,7 @@ export type SidebarItem = {
 
 
 
-/** verifica permisos */
+/** Sin `required`, la ruta es pública. Con `required`, basta con que el usuario tenga uno de esos roles. */
 function hasAnyPermission(userPermissions: AppRole[], required?: AppRole[]): boolean {
   if (!required || required.length === 0) return true
   return userPermissions.some((p) => required.includes(p))
@@ -153,13 +96,13 @@ function collectLeaves(routes: AppRoute[]): AppRoute[] {
   return result
 }
 
-/** algo tiene permisos*/
+/** Un árbol de rutas es visible si el usuario tiene acceso a al menos una de sus hojas. */
 function treeHasPermission(routes: AppRoute[], userPermissions: AppRole[]): boolean {
   const leaves = collectLeaves(routes)
   return leaves.some((leaf) => hasAnyPermission(userPermissions, leaf.meta?.permissions))
 }
 
-/** Construye un SidebarItem  */
+/** Convierte una ruta a ítem de sidebar, o null si el usuario no tiene acceso a ella ni a ninguna de sus hijas. */
 function toSidebarItem(route: AppRoute, userPermissions: AppRole[]): SidebarItem | null {
   const isLeaf = !!route.meta?.lazy
   const leafVisible = isLeaf ? hasAnyPermission(userPermissions, route.meta?.permissions) : true
@@ -284,7 +227,7 @@ export function OutletWrapper() {
 /**
  * Genera los ítems del sidebar filtrados por permisos del usuario.
  *
- * @param userPermissions - Permisos del usuario  ['admin', 'vendedor']
+ * @param userPermissions - Permisos del usuario, ej. `['admin', 'vendedor']`
  */
 export function buildSidebarItems(routes: AppRoute[], userPermissions: AppRole[]): SidebarItem[] {
 
