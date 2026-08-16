@@ -31,6 +31,7 @@ const mapUser = (u: UserApi): Usuario => ({
   fullName: `${u.first_name} ${u.last_name}`.trim(),
 })
 
+/** Trae todas las páginas del listado; el sistema no maneja tantos usuarios como para paginar en pantalla. */
 export const getUsuarios = async (): Promise<Usuario[]> => {
   const { data } = await api.get<ApiResponse<PaginatedData<UserApi>>>('/auth/usuarios/')
   const firstPage = data.data
