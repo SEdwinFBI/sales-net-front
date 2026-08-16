@@ -1,10 +1,7 @@
 import { useMediaQuery } from "./useMediaQuery"
 
 
-/**
- * Para calcular el tamaño de pantalla segun dispositivos
- * @returns objetos para saber si esta en el rango > 
- */
+/** Indica si el viewport actual cae en los breakpoints de tablet (≥768px) y desktop (≥1024px). */
 export function useDesktopMediaQuery() {
     const isDesktop = useMediaQuery('(min-width: 1024px)')
     const isTablet = useMediaQuery('(min-width: 768px)')
