@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
+import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
 import { useCustomers } from '@/features/usuarios/hooks/useCustomers'
 import { getToday, getTodayRange } from '@/lib/dates'
 import BotonDescargarPdf from '../components/BotonDescargarPdf'
@@ -24,7 +24,7 @@ export default function ResumenExistenciasPage() {
   const [incluirDetalle, setIncluirDetalle] = useState(false)
 
   const { resumen, totales, isLoading } = useResumenExistencias(filters)
-  const { data: usuarios } = useUsuarios()
+  const { data: sucursales } = useSucursales()
   const { data: clientes } = useCustomers()
 
   const set = (key: keyof ResumenFilters, value: string | undefined) => {
@@ -73,16 +73,16 @@ export default function ResumenExistenciasPage() {
               />
             </div>
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Vendedor</label>
+              <label className="mb-1 block text-xs text-muted-foreground">Sucursal</label>
               <Select
-                value={String(filters.id_usuario ?? '')}
-                onChange={(e) => set('id_usuario', e.target.value)}
+                value={String(filters.id_sucursal ?? '')}
+                onChange={(e) => set('id_sucursal', e.target.value)}
                 className="w-full"
               >
-                <option value="">Todos</option>
-                {usuarios.map((usuario) => (
-                  <option key={usuario.id} value={usuario.id}>
-                    {usuario.fullName || usuario.username}
+                <option value="">Todas</option>
+                {sucursales.map((sucursal) => (
+                  <option key={sucursal.id} value={sucursal.id}>
+                    {sucursal.nombre}
                   </option>
                 ))}
               </Select>

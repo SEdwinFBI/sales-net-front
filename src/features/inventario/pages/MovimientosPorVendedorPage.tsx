@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select } from '@/components/ui/select'
 import { formatNumber } from '@/helpers/money'
-import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
+import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
 import { getTodayRange } from '@/lib/dates'
 import BotonDescargarPdf from '../components/BotonDescargarPdf'
 import MovimientosFilters from '../components/MovimientosFilters'
@@ -29,10 +29,8 @@ function agruparPorVendedor(movimientos: Movimiento[]): ResumenVendedor[] {
   const grupos = new Map<number | null, ResumenVendedor>()
 
   movimientos.forEach((movimiento) => {
-    const id = movimiento.usuario_afectado?.id ?? null
-    const nombre = movimiento.usuario_afectado?.full_name
-      || movimiento.usuario_afectado?.username
-      || 'Sin vendedor'
+    const id = movimiento.sucursal_afectada?.id ?? null
+    const nombre = movimiento.sucursal_afectada?.nombre || 'Sin sucursal'
 
     const grupo = grupos.get(id) ?? { id, nombre, movimientos: [], entradas: 0, salidas: 0 }
     grupo.movimientos.push(movimiento)
@@ -61,7 +59,7 @@ export default function MovimientosPorVendedorPage() {
     ...getTodayRange(),
   })
   const { movimientos, pagination, isLoading } = useMovimientos(filters)
-  const { data: usuarios } = useUsuarios()
+  const { data: sucursales } = useSucursales()
 
   const grupos = useMemo(() => agruparPorVendedor(movimientos), [movimientos])
 
@@ -75,22 +73,22 @@ export default function MovimientosPorVendedorPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
             <MovimientosFilters filters={filters} onChange={setFilters} />
             <div className="min-w-0 px-3 pb-3 sm:px-4 sm:pb-4">
-              <label className="mb-1 block text-xs text-muted-foreground">Vendedor</label>
+              <label className="mb-1 block text-xs text-muted-foreground">Sucursal</label>
               <Select
-                value={String(filters.id_usuario ?? '')}
+                value={String(filters.id_sucursal ?? '')}
                 onChange={(e) =>
                   setFilters((previo) => ({
                     ...previo,
                     page: 1,
-                    id_usuario: e.target.value || undefined,
+                    id_sucursal: e.target.value || undefined,
                   }))
                 }
                 className="w-full sm:w-56"
               >
-                <option value="">Todos los vendedores</option>
-                {usuarios.map((usuario) => (
-                  <option key={usuario.id} value={usuario.id}>
-                    {usuario.fullName || usuario.username}
+                <option value="">Todas las sucursales</option>
+                {sucursales.map((sucursal) => (
+                  <option key={sucursal.id} value={sucursal.id}>
+                    {sucursal.nombre}
                   </option>
                 ))}
               </Select>

@@ -43,7 +43,7 @@ export default function ResumenExistenciasTable({
   const columns: ColumnDef<ResumenFilaExistencias>[] = [
     { accessorKey: 'articulo', header: 'Artículo' },
     { accessorKey: 'talla', header: 'Talla' },
-    { accessorKey: 'vendedor', header: 'Vendedor' },
+    { accessorKey: 'sucursal', header: 'Sucursal' },
     {
       accessorKey: 'habia',
       header: 'Había',

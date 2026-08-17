@@ -22,6 +22,11 @@ export type UsuarioResumen = {
   full_name: string
 }
 
+export type SucursalResumen = {
+  id: number
+  nombre: string
+}
+
 export type DetalleMovimiento = {
   id: number
   id_variante: number | null
@@ -49,7 +54,7 @@ export type Movimiento = {
   referencia: string | null
   observacion: string | null
   id_venta: number | null
-  usuario_afectado: UsuarioResumen | null
+  sucursal_afectada: SucursalResumen | null
   usuario_registra: UsuarioResumen | null
   cliente: { id: number; nombre_completo: string } | null
   detalles: DetalleMovimiento[]
@@ -58,6 +63,7 @@ export type Movimiento = {
 export type MovimientosFilters = {
   fecha_desde?: string
   fecha_hasta?: string
+  id_sucursal?: number | string
   id_usuario?: number | string
   id_cliente?: number | string
   tipo?: string
@@ -87,8 +93,8 @@ export type ResumenFilaExistencias = {
   id_articulo: number
   articulo: string
   talla: string
-  id_usuario: number | null
-  vendedor: string
+  id_sucursal: number | null
+  sucursal: string
   /** Invariante: habia + entradas − salidas = hay. */
   habia: number
   entradas: number
@@ -111,7 +117,7 @@ export type ResumenExistencias = {
   filtros: {
     fecha_desde: string | null
     fecha_hasta: string | null
-    id_usuario: number | null
+    id_sucursal: number | null
     id_cliente: number | null
   }
 }
@@ -119,7 +125,7 @@ export type ResumenExistencias = {
 export type ResumenFilters = {
   fecha_desde?: string
   fecha_hasta?: string
-  id_usuario?: number | string
+  id_sucursal?: number | string
   id_cliente?: number | string
 }
 

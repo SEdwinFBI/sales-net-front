@@ -12,6 +12,7 @@ interface UserApi {
   created_at: string
   hora_entrada: string | null
   hora_salida: string | null
+  sucursales?: number[]
 }
 
 interface ApiResponse<T> {
@@ -29,6 +30,7 @@ interface PaginatedData<T> {
 const mapUser = (u: UserApi): Usuario => ({
   ...u,
   fullName: `${u.first_name} ${u.last_name}`.trim(),
+  sucursales: u.sucursales ?? [],
 })
 
 /** Trae todas las páginas del listado; el sistema no maneja tantos usuarios como para paginar en pantalla. */
