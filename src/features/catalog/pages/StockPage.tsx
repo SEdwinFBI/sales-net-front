@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Card } from '@/components/ui/card'
-import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
-import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
+import type { Sucursal } from '@/features/adminSucursales/types/sucursal-types'
+import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
 import SellerStockEditor from '../components/SellerStockEditor'
 import SellersStockList from '../components/SellersStockList'
 import { useArticles } from '../hooks/useArticles'
@@ -10,38 +10,33 @@ import { useArticleVariants } from '../hooks/useArticleVariants'
 import { useSellerStock } from '../hooks/useSellerStock'
 
 export default function StockPage() {
-  const [selectedSeller, setSelectedSeller] = useState<Usuario | null>(null)
-  const { data: users, isLoading: isLoadingUsers } = useUsuarios()
+  const [selectedSucursal, setSelectedSucursal] = useState<Sucursal | null>(null)
+  const { data: sucursales, isLoading: isLoadingSucursales } = useSucursales()
   const { data: articles, isLoading: isLoadingArticles } = useArticles()
   const { data: variants, isLoading: isLoadingVariants } = useArticleVariants()
-  const { data: stock, isLoading: isLoadingStock } = useSellerStock(selectedSeller?.id)
-
-  const sellers = useMemo(
-    () => users.filter((user) => user.role === 'vendedor'),
-    [users]
-  )
+  const { data: stock, isLoading: isLoadingStock } = useSellerStock(selectedSucursal?.id)
 
   return (
     <PageTemplateSimple
       title="Stock"
-      description="Gestion de stock por vendedor."
+      description="Gestion de stock por sucursal."
     >
 
       <Card className="mt-2 bg-card p-3.5 sm:mt-3 sm:p-5">
-        {selectedSeller ? (
+        {selectedSucursal ? (
           <SellerStockEditor
             articles={articles}
             isLoading={isLoadingArticles || isLoadingVariants || isLoadingStock}
-            seller={selectedSeller}
+            sucursal={selectedSucursal}
             stock={stock}
             variants={variants}
-            onBack={() => setSelectedSeller(null)}
+            onBack={() => setSelectedSucursal(null)}
           />
         ) : (
           <SellersStockList
-            isLoading={isLoadingUsers}
-            sellers={sellers}
-            onSelect={setSelectedSeller}
+            isLoading={isLoadingSucursales}
+            sucursales={sucursales}
+            onSelect={setSelectedSucursal}
           />
         )}
       </Card>

@@ -72,7 +72,7 @@ export interface AbonarResponse {
 }
 
 export interface VentaEncabezadoRequest {
-  id_usuario: number
+  id_sucursal?: number
   id_cliente: number
   id_forma_pago: number
   estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
@@ -86,7 +86,7 @@ export interface VentaEncabezadoResponse {
   message: string
   data: {
     id: number
-    id_usuario: number
+    id_sucursal: number
     id_cliente: number
     id_forma_pago: number
     fecha: string

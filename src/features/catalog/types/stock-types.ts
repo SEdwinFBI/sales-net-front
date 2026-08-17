@@ -2,7 +2,7 @@ import type { ArticleSize } from './article-variant-types'
 
 export type StockAssignment = {
   id: number
-  sellerId: number
+  sucursalId: number
   variantId: number
   quantity: number
 }
@@ -13,7 +13,7 @@ export type StockDraftItem = {
 }
 
 export type SaveSellerStockPayload = {
-  sellerId: number
+  sucursalId: number
   items: StockDraftItem[]
 }
 

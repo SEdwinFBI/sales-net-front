@@ -22,7 +22,7 @@ export const useCreateVentaEncabezado = () => {
       if (!user) throw new Error('Usuario no autenticado')
 
       const payload = {
-        id_usuario: user.id,
+        ...(user.sucursalActual ? { id_sucursal: user.sucursalActual.id } : {}),
         id_cliente,
         id_forma_pago,
         estado,

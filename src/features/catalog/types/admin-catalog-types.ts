@@ -48,13 +48,13 @@ export interface CreateVariantePayload {
 export interface StockItem {
   id: number
   id_variante: number
-  id_usuario: number
+  id_sucursal: number
   cantidad: number
 }
 
 export interface CreateStockPayload {
   id_variante: number
-  id_usuario: number
+  id_sucursal: number
   cantidad: number
 }
 

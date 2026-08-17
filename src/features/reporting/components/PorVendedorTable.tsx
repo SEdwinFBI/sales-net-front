@@ -21,9 +21,9 @@ import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
-import type { ReporteVentaVendedor } from '../types/reportes'
+import type { ReporteVentaSucursal } from '../types/reportes'
 
-type Row = ReporteVentaVendedor
+type Row = ReporteVentaSucursal
 
 type Props = {
   data: Row[]
@@ -42,7 +42,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
       cell: ({ row }) => (
         <button
           type="button"
-          aria-label={row.getIsExpanded() ? 'Ocultar articulos del vendedor' : 'Ver articulos del vendedor'}
+          aria-label={row.getIsExpanded() ? 'Ocultar articulos de la sucursal' : 'Ver articulos de la sucursal'}
           onClick={(e) => { e.stopPropagation(); row.toggleExpanded() }}
           className="p-0.5 hover:bg-muted/60 rounded"
         >
@@ -53,7 +53,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
       enableSorting: false,
       enableColumnFilter: false,
     },
-    { accessorKey: 'nombre', header: 'Vendedor' },
+    { accessorKey: 'nombre', header: 'Sucursal' },
     { accessorKey: 'cantidad_ventas', header: 'Cant. ventas', cell: ({ row }) => formatNumber(row.original.cantidad_ventas) },
     { accessorKey: 'unidades', header: 'Unidades', cell: ({ row }) => formatNumber(row.original.unidades) },
     {

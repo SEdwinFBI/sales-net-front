@@ -43,7 +43,8 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
     { accessorKey: 'descuento', header: 'Descuento', cell: ({ row }) => <span className="text-destructive">{formatCurrency(Number(row.original.descuento))}</span> },
     { accessorKey: 'estado', header: 'Estado' },
     { accessorKey: 'forma_pago', header: 'Forma de pago' },
-    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
+    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor?.full_name ?? 'Sin vendedor' },
+    { id: 'sucursal', header: 'Sucursal', accessorFn: (row) => row.sucursal.nombre },
     { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente.nombre_completo },
     { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
   ], [])
@@ -51,7 +52,8 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
   const uniqueValues = useMemo(() => ({
     estado: [...new Set(data.map((r) => r.estado))],
     forma_pago: [...new Set(data.map((r) => r.forma_pago))],
-    vendedor: [...new Set(data.map((r) => r.vendedor.full_name))],
+    vendedor: [...new Set(data.map((r) => r.vendedor?.full_name ?? 'Sin vendedor'))],
+    sucursal: [...new Set(data.map((r) => r.sucursal.nombre))],
   }), [data])
 
   const table = useReactTable({
@@ -121,6 +123,19 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
         >
           <option value="">Todos los vendedores</option>
           {uniqueValues.vendedor.map((v) => <option key={v} value={v}>{v}</option>)}
+        </Select>
+        <Select
+          value={(columnFilters.find((f) => f.id === 'sucursal')?.value as string) ?? ''}
+          onChange={(e) => {
+            setColumnFilters((prev) => {
+              const rest = prev.filter((f) => f.id !== 'sucursal')
+              return e.target.value ? [...rest, { id: 'sucursal', value: e.target.value }] : rest
+            })
+          }}
+          className="h-8 w-44 rounded-lg border border-input bg-card px-3 text-xs shadow-sm hover:border-primary/40 focus-visible:border-primary transition-colors cursor-pointer"
+        >
+          <option value="">Todas las sucursales</option>
+          {uniqueValues.sucursal.map((v) => <option key={v} value={v}>{v}</option>)}
         </Select>
         <Input
           value={(columnFilters.find((f) => f.id === 'cliente')?.value as string) ?? ''}

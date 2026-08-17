@@ -19,7 +19,7 @@ type PaginatedData<T> = {
 type StockApi = {
   id: number
   id_variante: number
-  id_usuario: number
+  id_sucursal: number
   cantidad: number
 }
 
@@ -50,23 +50,23 @@ const getAllPages = async <T>(url: string): Promise<T[]> => {
 
 const mapStock = (item: StockApi): StockAssignment => ({
   id: item.id,
-  sellerId: item.id_usuario,
+  sucursalId: item.id_sucursal,
   variantId: item.id_variante,
   quantity: item.cantidad,
 })
 
-/** Stock de UN vendedor filtrado en el servidor (no descarga toda la tabla). */
-const getStockDeVendedor = async (sellerId: number): Promise<StockApi[]> => {
-  return getAllPages<StockApi>(`/admin/stock/?id_usuario=${sellerId}`)
+/** Stock de UNA sucursal filtrado en el servidor (no descarga toda la tabla). */
+const getStockDeSucursal = async (sucursalId: number): Promise<StockApi[]> => {
+  return getAllPages<StockApi>(`/admin/stock/?id_sucursal=${sucursalId}`)
 }
 
-export const getSellerStock = async (sellerId: number): Promise<StockAssignment[]> => {
-  const stock = await getStockDeVendedor(sellerId)
+export const getSellerStock = async (sucursalId: number): Promise<StockAssignment[]> => {
+  const stock = await getStockDeSucursal(sucursalId)
   return stock.map(mapStock)
 }
 
 /**
- * Guarda el stock del vendedor en UNA sola llamada con cantidades absolutas.
+ * Guarda el stock de la sucursal en UNA sola llamada con cantidades absolutas.
  *
  * Antes mandaba un PUT/POST por variante en paralelo, lo que además de N+1
  * peticiones dejaba un movimiento suelto en el ledger por cada variante. El
@@ -77,7 +77,7 @@ export const saveSellerStock = async (
   payload: SaveSellerStockPayload
 ): Promise<StockAssignment[]> => {
   const { data } = await api.post<ApiResponse<StockApi[]>>('/admin/stock/asignar/', {
-    id_usuario: payload.sellerId,
+    id_sucursal: payload.sucursalId,
     items: payload.items.map((item) => ({
       id_variante: item.variantId,
       cantidad: item.quantity,

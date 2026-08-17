@@ -71,10 +71,16 @@ export default function ComprasTable({ ventas }: Props) {
       cell: ({ row }) => <span className="capitalize">{row.original.forma_pago}</span>,
     },
     {
+      id: 'sucursal',
+      accessorFn: (venta) => venta.sucursal.nombre,
+      header: 'Sucursal',
+      cell: ({ row }) => row.original.sucursal.nombre,
+    },
+    {
       id: 'vendedor',
-      accessorFn: (venta) => venta.vendedor.full_name,
+      accessorFn: (venta) => venta.vendedor?.full_name ?? 'Sin vendedor',
       header: 'Vendedor',
-      cell: ({ row }) => row.original.vendedor.full_name,
+      cell: ({ row }) => row.original.vendedor?.full_name ?? 'Sin vendedor',
     },
     {
       accessorKey: 'observacion',
