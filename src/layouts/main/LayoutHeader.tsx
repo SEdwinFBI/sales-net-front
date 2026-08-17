@@ -81,7 +81,7 @@ function LayoutHeader({
                             {displayName}
                         </p>
                         <p className="text-xs font-medium uppercase tracking-wide text-neutral/55">
-                            {user?.username}
+                            {user.sucursalActual?.nombre ?? user.username}
                         </p>
                     </div>
                     <button

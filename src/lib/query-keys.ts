@@ -69,6 +69,11 @@ export const queryKeys = {
     list: () => [...queryKeys.adminUsuarios.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.adminUsuarios.all, 'detail', id] as const,
   },
+  adminSucursales: {
+    all: ['adminSucursales'] as const,
+    list: () => [...queryKeys.adminSucursales.all, 'list'] as const,
+    detail: (id: number) => [...queryKeys.adminSucursales.all, 'detail', id] as const,
+  },
   adminVentas: {
     all: ['adminVentas'] as const,
     list: (filters?: Record<string, unknown>) =>

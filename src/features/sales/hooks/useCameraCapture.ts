@@ -50,12 +50,15 @@ export function useCameraCapture(): CameraCapture {
   const abrirCamara = useCallback(async () => {
     setError(null)
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError('Este navegador no permite usar la cámara.')
-      return
-    }
+    // En un origen inseguro (http:// por IP de LAN, no localhost) el propio
+    // navigator.mediaDevices no existe, así que este chequeo va primero: si no,
+    // el error genérico de abajo tapa la causa real (falta HTTPS/localhost).
     if (!window.isSecureContext && !esLocalhost()) {
       setError('La cámara requiere HTTPS o localhost.')
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Este navegador no permite usar la cámara.')
       return
     }
 
@@ -68,10 +71,10 @@ export function useCameraCapture(): CameraCapture {
       })
 
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play().catch(() => undefined)
-      }
+      // El <video> recién se monta cuando camaraActiva pasa a true (ver
+      // VentaFotoCapture), así que todavía no existe en este punto: conectar
+      // el stream acá no hace nada. El efecto de abajo lo conecta una vez que
+      // ya está en el DOM.
       setCamaraActiva(true)
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'NotAllowedError') {
@@ -110,6 +113,17 @@ export function useCameraCapture(): CameraCapture {
     setError(null)
     return comprimirArchivo(archivo)
   }, [])
+
+  // Conecta el stream al <video> apenas queda montado (recién se monta
+  // cuando camaraActiva pasa a true), no en abrirCamara donde todavía no existe.
+  useEffect(() => {
+    if (!camaraActiva) return
+    const video = videoRef.current
+    const stream = streamRef.current
+    if (!video || !stream) return
+    video.srcObject = stream
+    video.play().catch(() => undefined)
+  }, [camaraActiva])
 
   // Nunca dejar la cámara encendida al desmontar el diálogo.
   useEffect(() => cerrarCamara, [cerrarCamara])

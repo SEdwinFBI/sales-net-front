@@ -83,7 +83,8 @@ export default function HistorialVentasPage() {
     return (
       String(v.id).includes(q) ||
       v.cliente_info.nombre_completo.toLowerCase().includes(q) ||
-      v.vendedor.full_name.toLowerCase().includes(q)
+      v.sucursal.nombre.toLowerCase().includes(q) ||
+      (v.vendedor?.full_name.toLowerCase().includes(q) ?? false)
     )
   })
 

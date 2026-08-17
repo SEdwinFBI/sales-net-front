@@ -36,8 +36,7 @@ export type BranchAvailabilitySize = {
 }
 
 export type BranchAvailabilityStore = {
-  id_usuario: number
-  username: string
+  id_sucursal: number
   nombre: string
   es_propia: boolean
   /** Mapa id_variante (string) → cantidad. Solo incluye variantes con stock > 0. */
@@ -116,11 +115,15 @@ export interface Venta {
   observacion?: string | null
   /** Foto de entrega. Null si la venta es previa a la función o si ya se purgó. */
   foto_url?: string | null
+  sucursal: {
+    id: number
+    nombre: string
+  }
   vendedor: {
     id: number
     username: string
     full_name: string
-  }
+  } | null
   cliente_info: {
     id: number
     nombre_completo: string
@@ -154,7 +157,7 @@ export interface SalesHistoryFilters {
 }
 
 export interface CreateVentaPayload {
-  id_usuario: number
+  id_sucursal?: number
   id_cliente: number
   id_forma_pago: number
   estado: string

@@ -7,11 +7,10 @@ import { coreRoutes, ErrorPage } from '@/features/core'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
 
-import { adminUsuariosRoutes } from '@/features/adminUsuarios'
 import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
 import { reportingRoutes } from '@/features/reporting'
-
+import { administracionRoute } from './administracion-routes'
 
 const mainLayoutRoutes: RouteObject = {
   path: '/',
@@ -22,7 +21,7 @@ const mainLayoutRoutes: RouteObject = {
       index: true,
       element: <RedirectIndex />,
     },
-    ...buildReactRoutes([...adminUsuariosRoutes, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...catalogRoutes, ...inventarioRoutes]),
+    ...buildReactRoutes([administracionRoute, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...catalogRoutes, ...inventarioRoutes]),
   ],
 }
 

@@ -21,7 +21,7 @@ export const useCreateSale = () => {
       if (!user) throw new Error('Usuario no autenticado')
 
       const payloadBuild = {
-        id_usuario: user.id,
+        ...(user.sucursalActual ? { id_sucursal: user.sucursalActual.id } : {}),
         id_cliente: Number(payload.customerId) || 0,
         id_forma_pago: PAGO_MAP[payload.paymentMethod] || 1,
         estado: payload.paymentMethod === 'credito' ? 'PENDIENTE' : 'PAGADA',

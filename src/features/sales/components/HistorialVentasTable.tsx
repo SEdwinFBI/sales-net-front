@@ -96,7 +96,8 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
       header: 'Forma de pago',
       cell: ({ row }) => <span className="capitalize">{row.original.forma_pago}</span>,
     },
-    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
+    { id: 'sucursal', header: 'Sucursal', accessorFn: (row) => row.sucursal.nombre },
+    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor?.full_name ?? 'Sin vendedor' },
     { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo },
     { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
     {
@@ -300,7 +301,7 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
           <DialogHeader>
             <DialogTitle>Foto de entrega · Venta #{fotoAbierta?.id}</DialogTitle>
             <DialogDescription>
-              {fotoAbierta?.cliente_info.nombre_completo} · {fotoAbierta?.vendedor.full_name}
+              {fotoAbierta?.cliente_info.nombre_completo} · {fotoAbierta?.sucursal.nombre}
             </DialogDescription>
           </DialogHeader>
           {fotoAbierta?.foto_url && (

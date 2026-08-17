@@ -6,8 +6,6 @@ import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
 
-import { adminUsuariosRoutes } from '@/features/adminUsuarios'
-
 import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
@@ -15,6 +13,7 @@ import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery
 import { reportingRoutes } from '@/features/reporting'
 import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
+import { administracionRoute } from '@/routes/administracion-routes'
 
 const allFeatureRoutes = [
   ...reportingRoutes,
@@ -22,7 +21,7 @@ const allFeatureRoutes = [
   ...clientesRoutes,
   ...catalogRoutes,
   ...inventarioRoutes,
-  ...adminUsuariosRoutes
+  administracionRoute,
 ]
 
 export default function MainLayout() {
