@@ -1,9 +1,8 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * Para el calculo dinamico de pantalla
- * @param query texto tipo css 
- * @returns {boolean} si esta en el rango esperado
+ * Evalúa una media query y se re-renderiza cuando su resultado cambia.
+ *
  * @example const isDesktop = useMediaQuery('(min-width: 1024px)')
  */
 export function useMediaQuery(query: string) {

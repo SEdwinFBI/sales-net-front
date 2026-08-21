@@ -10,9 +10,11 @@ export const useSaveSellerStock = () => {
   return useMutation({
     mutationFn: (payload: SaveSellerStockPayload) => saveSellerStock(payload),
     onSuccess: (_data, payload) => {
-      queryClient.invalidateQueries({ queryKey: sellerStockQueryKey(payload.sellerId) })
+      queryClient.invalidateQueries({ queryKey: sellerStockQueryKey(payload.sucursalId) })
       queryClient.invalidateQueries({ queryKey: queryKeys.adminCatalog.stock.all() })
       queryClient.invalidateQueries({ queryKey: queryKeys.sales.all })
+      // Guardar el stock deja un movimiento en el ledger.
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventario.all })
     },
   })
 }

@@ -13,6 +13,10 @@ type DesktopSidebarProps = {
     onMouseLeave: () => void
 }
 
+/**
+ * Sidebar de escritorio. Los módulos expandidos se persisten en localStorage
+ * y, al montar, se auto-expanden los que contienen la ruta activa.
+ */
 function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave }: DesktopSidebarProps) {
     const location = useLocation()
     const [expandedModules, setExpandedModules] = useState<string[]>(() => {

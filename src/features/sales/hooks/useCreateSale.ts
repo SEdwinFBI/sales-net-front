@@ -7,6 +7,11 @@ import type { SubmitSalePayload, CreateVentaResponse } from '../types/sales'
 
 const PAGO_MAP: Record<string, number> = { efectivo: 1, credito: 2 }
 
+/**
+ * Registra la venta admin y refresca todo lo que depende de ella: listado de
+ * ventas, historial y reportes de deudores (una venta a crédito afecta el
+ * saldo del cliente).
+ */
 export const useCreateSale = () => {
   const queryClient = useQueryClient()
   const user = useAuthStore((state) => state.user)
@@ -16,11 +21,12 @@ export const useCreateSale = () => {
       if (!user) throw new Error('Usuario no autenticado')
 
       const payloadBuild = {
-        id_usuario: user.id,
+        ...(user.sucursalActual ? { id_sucursal: user.sucursalActual.id } : {}),
         id_cliente: Number(payload.customerId) || 0,
         id_forma_pago: PAGO_MAP[payload.paymentMethod] || 1,
         estado: payload.paymentMethod === 'credito' ? 'PENDIENTE' : 'PAGADA',
         idempotencia_key: crypto.randomUUID(),
+        foto: payload.foto,
         ...(payload.observacion ? { observacion: payload.observacion } : {}),
         detalles: payload.items.map((item) => ({
           id_variante: item.variantId,

@@ -146,6 +146,9 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         return
       }
 
+      // Reconcilia tallas contra las variantes existentes: las nuevas se
+      // crean, las que siguen seleccionadas se actualizan y las que se
+      // deseleccionaron se eliminan.
       const getSizePrice = (size: ArticleSize) => Number(pricesBySize[size])
       const currentVariants = articleVariants
       const selectedSet = new Set(effectiveSelectedSizes)

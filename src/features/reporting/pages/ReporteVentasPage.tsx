@@ -66,20 +66,20 @@ export default function ReporteVentasPage() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [idArticulo, setIdArticulo] = useState<number | undefined>()
   const [idTalla, setIdTalla] = useState<number | undefined>()
-  const [idVendedor, setIdVendedor] = useState<number | undefined>()
+  const [idSucursal, setIdSucursal] = useState<number | undefined>()
 
   const filters = useMemo<Filters>(() => {
     const d = getDefaultDateRange()
     return {
       fecha_desde: searchParams.get('fecha_desde') || d.fecha_desde,
       fecha_hasta: searchParams.get('fecha_hasta') || d.fecha_hasta,
-      id_vendedor: idVendedor,
+      id_sucursal: idSucursal,
       id_articulo: idArticulo,
       id_talla: idTalla,
     }
-  }, [searchParams, idArticulo, idTalla, idVendedor])
+  }, [searchParams, idArticulo, idTalla, idSucursal])
 
-  const { resumen, porVariante, porVendedor, isLoading } = useReporteVentas(filters)
+  const { resumen, porVariante, porSucursal, isLoading } = useReporteVentas(filters)
 
   const articuloOptions = useGrowingOptions(
     () => uniqueOptions(porVariante, (v) => v.articulo, (v) => v.id_articulo),
@@ -91,16 +91,16 @@ export default function ReporteVentasPage() {
     [porVariante],
   )
 
-  const vendedorOptions = useGrowingOptions(
-    () => uniqueOptions(porVendedor, (v) => v.nombre, (v) => v.id_vendedor),
-    [porVendedor],
+  const sucursalOptions = useGrowingOptions(
+    () => uniqueOptions(porSucursal, (v) => v.nombre, (v) => v.id_sucursal),
+    [porSucursal],
   )
 
   const handleFiltersChange = (next: Filters) => {
     setSearchParams(buildSearchParams(next), { replace: true })
     setIdArticulo(next.id_articulo)
     setIdTalla(next.id_talla)
-    setIdVendedor(next.id_vendedor)
+    setIdSucursal(next.id_sucursal)
   }
 
   const handleExportPdf = async () => {
@@ -125,7 +125,7 @@ export default function ReporteVentasPage() {
               onChange={handleFiltersChange}
               articuloOptions={articuloOptions}
               tallaOptions={tallaOptions}
-              vendedorOptions={vendedorOptions}
+              sucursalOptions={sucursalOptions}
             />
 
           </div>
@@ -137,7 +137,7 @@ export default function ReporteVentasPage() {
             <Tabs defaultValue="variante">
               <TabsList className="h-auto w-full flex-wrap justify-start gap-1 sm:w-fit">
                 <TabsTrigger value="variante">Variantes</TabsTrigger>
-                <TabsTrigger value="vendedor">Vendedores</TabsTrigger>
+                <TabsTrigger value="sucursal">Sucursales</TabsTrigger>
                 <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 w-full shrink-0 sm:w-auto">
                   <FileDown />
                   {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
@@ -148,8 +148,8 @@ export default function ReporteVentasPage() {
                 <PorVarianteTable data={porVariante} isLoading={isLoading} />
               </TabsContent>
 
-              <TabsContent value="vendedor" className="mt-4">
-                <PorVendedorTable data={porVendedor} isLoading={isLoading} />
+              <TabsContent value="sucursal" className="mt-4">
+                <PorVendedorTable data={porSucursal} isLoading={isLoading} />
               </TabsContent>
             </Tabs>
 

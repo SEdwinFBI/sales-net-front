@@ -4,7 +4,6 @@
  * Centraliza todas las claves de React Query para evitar colisiones
  * y mantener consistencia en todo el proyecto.
  *
-
  * Uso:
  *   queryKeys.products.all             → ['products']
  *   queryKeys.products.lists()         → ['products', 'list']
@@ -58,10 +57,22 @@ export const queryKeys = {
       [...queryKeys.reporting.all, 'cobros', filters] as const,
     dashboard: (filters?: Record<string, unknown>) => [...queryKeys.reporting.all, 'dashboard', filters] as const,
   },
+  inventario: {
+    all: ['inventario'] as const,
+    movimientos: (filters?: Record<string, unknown>) =>
+      [...queryKeys.inventario.all, 'movimientos', filters] as const,
+    resumen: (filters?: Record<string, unknown>) =>
+      [...queryKeys.inventario.all, 'resumen', filters] as const,
+  },
   adminUsuarios: {
     all: ['adminUsuarios'] as const,
     list: () => [...queryKeys.adminUsuarios.all, 'list'] as const,
     detail: (id: number) => [...queryKeys.adminUsuarios.all, 'detail', id] as const,
+  },
+  adminSucursales: {
+    all: ['adminSucursales'] as const,
+    list: () => [...queryKeys.adminSucursales.all, 'list'] as const,
+    detail: (id: number) => [...queryKeys.adminSucursales.all, 'detail', id] as const,
   },
   adminVentas: {
     all: ['adminVentas'] as const,

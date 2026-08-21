@@ -49,8 +49,8 @@ export const useAuthStore = create<AuthState>()(
       refreshExpiresAt: null,
       login: (session) => {
         const permissions = [session.user.role]
-        // El backend manda full_name (snake_case); el front usa fullName.
-        const rawUser = session.user as AuthUser & { full_name?: string }
+        // El backend manda full_name/sucursal_actual (snake_case); el front usa camelCase.
+        const rawUser = session.user as AuthUser & { full_name?: string; sucursal_actual?: AuthUser['sucursalActual'] }
 
         set({
           token: session.access,
@@ -58,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
           user: {
             ...rawUser,
             fullName: rawUser.fullName ?? rawUser.full_name ?? rawUser.username,
+            sucursalActual: rawUser.sucursalActual ?? rawUser.sucursal_actual ?? null,
             permissions,
           },
           tokenExpiresAt: decodeExpiry(session.access),

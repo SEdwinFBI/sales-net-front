@@ -10,6 +10,7 @@ export type Usuario = {
   created_at: string
   hora_entrada: string | null
   hora_salida: string | null
+  sucursales: number[]
 }
 
 export type CreateUsuarioPayload = {
@@ -21,6 +22,7 @@ export type CreateUsuarioPayload = {
   role?: string
   hora_entrada?: string
   hora_salida?: string
+  sucursales?: number[]
 }
 
 export type UpdateUsuarioPayload = {
@@ -33,4 +35,5 @@ export type UpdateUsuarioPayload = {
   role?: string
   hora_entrada?: string
   hora_salida?: string
+  sucursales?: number[]
 }

@@ -4,6 +4,7 @@ import type { Customer } from "../types/customers-types"
 
 const USUARIOS_CUSTOMERS_KEY = ['usuarios', 'customers', 'list'] as const
 
+/** Lista de clientes normalizada: id como string, balance coercido a número. */
 export const useCustomers = () => {
     const { data, isLoading, isError } = useQuery<CustomerRaw[], Error, Customer[]>(
         {

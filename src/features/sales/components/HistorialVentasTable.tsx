@@ -20,6 +20,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
 import { ChevronDown, ChevronRight, ArrowUpDown, SearchX } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
@@ -37,6 +40,7 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
   const [sorting, setSorting] = useState<SortingState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [fotoAbierta, setFotoAbierta] = useState<Venta | null>(null)
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
     {
@@ -92,9 +96,32 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
       header: 'Forma de pago',
       cell: ({ row }) => <span className="capitalize">{row.original.forma_pago}</span>,
     },
-    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor.full_name },
+    { id: 'sucursal', header: 'Sucursal', accessorFn: (row) => row.sucursal.nombre },
+    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor?.full_name ?? 'Sin vendedor' },
     { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo },
     { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
+    {
+      id: 'foto',
+      header: 'Foto',
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: ({ row }) => {
+        const url = row.original.foto_url
+        // Sin foto = venta anterior a la función, o su foto ya fue purgada
+        // por el tope global de fotos que conserva el sistema.
+        if (!url) return <span className="text-muted-foreground">—</span>
+        return (
+          <button
+            type="button"
+            aria-label={`Ver foto de la venta ${row.original.id}`}
+            onClick={(e) => { e.stopPropagation(); setFotoAbierta(row.original) }}
+            className="block size-10 overflow-hidden rounded-md border border-border transition-opacity hover:opacity-80"
+          >
+            <img src={url} alt="" loading="lazy" className="size-full object-cover" />
+          </button>
+        )
+      },
+    },
   ], [])
 
   const table = useReactTable({
@@ -268,6 +295,34 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
         </Table>
       </div>
       <TablePagination table={table} />
+
+      <Dialog open={fotoAbierta !== null} onOpenChange={(open) => { if (!open) setFotoAbierta(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Foto de entrega · Venta #{fotoAbierta?.id}</DialogTitle>
+            <DialogDescription>
+              {fotoAbierta?.cliente_info.nombre_completo} · {fotoAbierta?.sucursal.nombre}
+            </DialogDescription>
+          </DialogHeader>
+          {fotoAbierta?.foto_url && (
+            <div className="px-6 pb-6">
+              <img
+                src={fotoAbierta.foto_url}
+                alt={`Entrega de la venta ${fotoAbierta.id}`}
+                className="max-h-[65vh] w-full rounded-lg border border-border object-contain"
+              />
+              <a
+                href={fotoAbierta.foto_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-block text-xs text-primary hover:underline"
+              >
+                Abrir en tamaño completo
+              </a>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
