@@ -73,7 +73,7 @@ export default function MyCashPage() {
             </div>
             <Button className="w-full sm:w-auto" onClick={() => setOpen(true)} disabled={isLoading}>
               <Plus />
-              Registrar movimiento
+              Nuevo movimiento
             </Button>
           </div>
 
@@ -88,12 +88,9 @@ export default function MyCashPage() {
             </>
           ) : caja ? (
             <>
-              <CashSummary caja={caja} />
+              <CashSummary caja={caja} expectedLabel="Saldo esperado hoy" />
               <div className="space-y-3">
-                <div>
-                  <h2 className="font-heading text-base font-semibold">Movimientos del día</h2>
-                  <p className="text-xs text-muted-foreground">Entradas y gastos registrados en la caja actual.</p>
-                </div>
+                <h2 className="font-heading text-base font-semibold">Movimientos</h2>
                 <MovementsTable movimientos={caja.movimientos} />
               </div>
             </>
@@ -105,11 +102,11 @@ export default function MyCashPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Registrar movimiento</DialogTitle>
-            <DialogDescription>Registra una entrada o un gasto en la caja de hoy.</DialogDescription>
+            <DialogDescription>Entrada o gasto de la caja actual.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <Field>
-              <FieldLabel htmlFor="cash-type">Tipo de movimiento</FieldLabel>
+              <FieldLabel htmlFor="cash-type">Tipo</FieldLabel>
               <Select id="cash-type" value={tipo} onChange={(event) => setTipo(event.target.value as TipoMovimientoCaja)}>
                 <option value="ENTRADA">Entrada de efectivo</option>
                 <option value="SALIDA">Gasto / salida</option>
@@ -127,7 +124,7 @@ export default function MyCashPage() {
               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>Cancelar</Button>
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending && <Loader2 className="animate-spin" />}
-                {mutation.isPending ? 'Registrando…' : 'Registrar movimiento'}
+                {mutation.isPending ? 'Guardando…' : 'Guardar'}
               </Button>
             </DialogFooter>
           </form>

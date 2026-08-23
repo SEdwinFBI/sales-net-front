@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { WalletCards } from 'lucide-react'
 
 export function MovementsTable({ movimientos = [] }: { movimientos?: MovimientoCaja[] }) {
-  if (!movimientos.length) return <EmptyState icon={WalletCards} title="No hay movimientos registrados" description="Las entradas y gastos del día aparecerán aquí." />
+  if (!movimientos.length) return <EmptyState icon={WalletCards} title="Sin movimientos" />
   return <Table>
     <TableHeader><TableRow><TableHead>Hora</TableHead><TableHead>Tipo</TableHead><TableHead>Observación</TableHead><TableHead>Usuario</TableHead><TableHead className="text-right">Monto</TableHead></TableRow></TableHeader>
     <TableBody>{movimientos.map((m) => <TableRow key={m.id}>
