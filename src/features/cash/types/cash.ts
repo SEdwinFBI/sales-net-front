@@ -23,4 +23,9 @@ export type Caja = {
   movimientos?: MovimientoCaja[]
 }
 
-export type CajaFilters = { fecha_desde?: string; fecha_hasta?: string }
+export type CajaFilters = {
+  fecha_desde?: string
+  fecha_hasta?: string
+  id_sucursal?: number
+  id_usuario?: number
+}

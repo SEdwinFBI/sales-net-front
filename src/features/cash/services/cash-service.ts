@@ -1,5 +1,6 @@
 import { api } from '@/lib/api'
 import type { Caja, CajaFilters, TipoMovimientoCaja } from '../types/cash'
+import { triggerBlobDownload } from '@/lib/download-blob'
 
 type ApiResponse<T> = { status: string; data: T }
 
@@ -21,4 +22,9 @@ export async function getCajas(filters: CajaFilters) {
 export async function getCaja(id: number) {
   const { data } = await api.get<ApiResponse<Caja>>(`/cajas/${id}`)
   return data.data
+}
+
+export async function downloadCashReport(filters: CajaFilters) {
+  const response = await api.get('/cajas/reporte/pdf', { params: filters, responseType: 'blob' })
+  triggerBlobDownload(response.data, `arqueos_caja_${new Date().toISOString().slice(0, 10)}.pdf`)
 }

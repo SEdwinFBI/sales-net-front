@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeft, Eye, Store, UserRound, Users } from 'lucide-react'
+import { ArrowLeft, Eye, FileDown, Loader2, RotateCcw, Store, UserRound, Users } from 'lucide-react'
+import { toast } from 'sonner'
 
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +21,8 @@ import { CashSummary } from '../components/CashSummary'
 import { MovementsTable } from '../components/MovementsTable'
 import { useCaja, useCajas } from '../hooks/useCash'
 import type { Caja } from '../types/cash'
+import { downloadCashReport } from '../services/cash-service'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 type Totals = Pick<Caja, 'entradas' | 'salidas' | 'ventas_efectivo' | 'efectivo_esperado'>
 
@@ -41,6 +44,7 @@ export default function CashAuditsPage() {
   const [branchId, setBranchId] = useState<number | null>(null)
   const [userId, setUserId] = useState<number | null>(null)
   const [cashId, setCashId] = useState<number | null>(null)
+  const [downloading, setDownloading] = useState(false)
   const { data: sucursales, isLoading: loadingBranches } = useSucursales()
   const { data: branch, isLoading: loadingBranch } = useSucursalDetalle(branchId)
   const { data: cajas = [], isLoading: loadingCajas } = useCajas(filters)
@@ -70,30 +74,70 @@ export default function CashAuditsPage() {
     setUserId(null)
   }
 
+  const selectUser = (id: number) => {
+    setUserId(id)
+  }
+
   const back = () => {
     if (userId !== null) setUserId(null)
     else setBranchId(null)
+  }
+
+  const downloadReport = async () => {
+    setDownloading(true)
+    try {
+      await downloadCashReport({
+        ...filters,
+        id_sucursal: branchId ?? undefined,
+        id_usuario: userId ?? undefined,
+      })
+      toast.success('Reporte descargado correctamente')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo descargar el reporte'))
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const resetReportFilters = () => {
+    setFilters(getDefaultDateRange())
   }
 
   return (
     <PageTemplateSimple title="Arqueos de caja" description="Arqueos consolidados por sucursal e individuales por vendedor.">
       <Card className="mx-auto p-3.5 sm:p-5">
         <div className="space-y-5 sm:space-y-6">
-          <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-end gap-3">
-              {branchId !== null && <Button variant="outline" onClick={back}><ArrowLeft />{userId !== null ? 'Sucursal' : 'Sucursales'}</Button>}
-              <div>
-                <p className="text-sm font-medium">
-                  {selectedUser?.full_name || branch?.nombre || 'Sucursales'}
+          {branchId !== null && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" size="sm" onClick={back}>
+                <ArrowLeft />
+                Volver a {userId !== null ? 'la sucursal' : 'sucursales'}
+              </Button>
+              {selectedUser && (
+                <p className="text-sm font-semibold">
+                  {selectedUser.full_name || selectedUser.username}
+                  <span className="ml-2 font-normal text-muted-foreground">· {branch?.nombre}</span>
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {selectedUser ? branch?.nombre : branch ? 'Resumen de sucursal' : 'Elige una sucursal'}
+              )}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border/70 bg-card p-3 shadow-sm sm:p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">
+                  {userId !== null ? 'Reporte individual' : branchId !== null ? 'Reporte de sucursal' : 'Reporte general'}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {selectedUser?.full_name || branch?.nombre || 'Todas las sucursales'}
                 </p>
               </div>
-            </div>
-            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+              <div className="grid w-full gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_auto_auto]">
               <Field className="gap-1"><FieldLabel htmlFor="cash-from" className="text-xs">Fecha desde</FieldLabel><Input id="cash-from" type="date" value={filters.fecha_desde} onChange={(event) => setFilters((value) => ({ ...value, fecha_desde: event.target.value }))} /></Field>
               <Field className="gap-1"><FieldLabel htmlFor="cash-to" className="text-xs">Fecha hasta</FieldLabel><Input id="cash-to" type="date" value={filters.fecha_hasta} onChange={(event) => setFilters((value) => ({ ...value, fecha_hasta: event.target.value }))} /></Field>
+              <Button variant="outline" onClick={resetReportFilters} disabled={downloading}><RotateCcw /> Reiniciar</Button>
+              <Button onClick={downloadReport} disabled={downloading}>{downloading ? <Loader2 className="animate-spin" /> : <FileDown />}{downloading ? 'Generando…' : 'Descargar'}</Button>
+              </div>
             </div>
           </div>
 
@@ -110,7 +154,7 @@ export default function CashAuditsPage() {
               users={branch?.usuarios ?? []}
               cajas={branchTodayCajas}
               loading={loadingBranch || loadingToday}
-              onSelectUser={setUserId}
+              onSelectUser={selectUser}
             />
           ) : (
             <UserAudit cajas={userCajas} todayCajas={userTodayCajas} loading={loadingCajas || loadingToday} onDetail={setCashId} />
