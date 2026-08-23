@@ -11,10 +11,11 @@ type Props = {
     customers: Customer[]
     value: string
     onChange: (id: string) => void
+    onSearch?: (query: string) => void
     loading?: boolean
 }
 
-const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
+const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loading }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
     const [highlighted, setHighlighted] = useState(0)
@@ -84,6 +85,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, loading }) => {
                     value={open ? query : selected?.name ?? ""}
                     onChange={(e) => {
                         setQuery(e.target.value)
+                        onSearch?.(e.target.value)
                         setHighlighted(0)
                     }}
                 />
