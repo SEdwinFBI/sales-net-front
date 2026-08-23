@@ -17,6 +17,7 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { formatCurrency, getVentaTotal } from '../utils/venta-total'
+import { formatDisplayDateTime } from '@/lib/dates'
 import {
   Table,
   TableBody,
@@ -43,10 +44,7 @@ export default function ComprasTable({ ventas }: Props) {
     {
       accessorKey: 'fecha',
       header: 'Fecha',
-      cell: ({ row }) => {
-        const date = new Date(row.original.fecha)
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      },
+      cell: ({ row }) => formatDisplayDateTime(row.original.fecha),
     },
     {
       id: 'total',

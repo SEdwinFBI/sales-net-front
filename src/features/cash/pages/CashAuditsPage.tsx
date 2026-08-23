@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useSucursalDetalle } from '@/features/adminSucursales/hooks/useSucursalDetalle'
 import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
 import { formatCurrency } from '@/helpers/money'
-import { getDefaultDateRange, getTodayRange } from '@/lib/dates'
+import { formatDisplayDate, getDefaultDateRange, getTodayRange } from '@/lib/dates'
 
 import { CashSummary } from '../components/CashSummary'
 import { MovementsTable } from '../components/MovementsTable'
@@ -33,9 +33,7 @@ function sumCajas(cajas: Caja[]): Totals {
 }
 
 function formatDate(fecha: string) {
-  return new Date(`${fecha}T12:00:00`).toLocaleDateString('es-GT', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
+  return formatDisplayDate(fecha)
 }
 
 export default function CashAuditsPage() {

@@ -21,6 +21,7 @@ import { ArrowUpDown, SearchX } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { VentaEnVariante } from '../types/reportes'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
   data: VentaEnVariante[]
@@ -33,10 +34,7 @@ export default function DetalleVentasTable({ data, isLoading }: Props) {
 
   const columns = useMemo<ColumnDef<VentaEnVariante>[]>(() => [
     { accessorKey: 'id_venta', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id_venta}</span> },
-    { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => {
-      const d = new Date(row.original.fecha)
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-    } },
+    { accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => formatDisplayDateTime(row.original.fecha) },
     { accessorKey: 'cantidad', header: 'Cant.', cell: ({ row }) => formatNumber(Number(row.original.cantidad)) },
     { accessorKey: 'precio_unitario', header: 'Precio u.', cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario)) },
     { accessorKey: 'monto', header: 'Monto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.monto))}</span> },

@@ -19,6 +19,7 @@ import { ArrowUpDown, Eye } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency } from '@/helpers/money'
 import type { ReporteDeudores } from '../types/reportes'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Row = ReporteDeudores['data']['clientes'][number]
 
@@ -40,8 +41,7 @@ export default function DeudoresTable({ data, isLoading }: Props) {
     { accessorKey: 'dias_notificacion_display', header: 'Días de notificación', cell: ({ row }) => row.original.dias_notificacion_display?.join(', ') || 'Sin asignar' },
     { accessorKey: 'ultima_compra', header: 'Última compra', cell: ({ row }) => {
       if (!row.original.ultima_compra) return '—'
-      const d = new Date(row.original.ultima_compra)
-      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      return formatDisplayDateTime(row.original.ultima_compra)
     } },
     {
       id: 'actions',

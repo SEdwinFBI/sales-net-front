@@ -19,6 +19,7 @@ import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { formatDisplayDate } from '@/lib/dates'
 
 import { CashSummary } from '../components/CashSummary'
 import { MovementsTable } from '../components/MovementsTable'
@@ -60,11 +61,7 @@ export default function MyCashPage() {
                 <p className="font-medium">Caja de hoy</p>
                 {caja ? (
                   <p className="text-xs text-muted-foreground">
-                    {caja.sucursal.nombre} · {new Date(`${caja.fecha}T12:00:00`).toLocaleDateString('es-GT', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {caja.sucursal.nombre} · {formatDisplayDate(caja.fecha)}
                   </p>
                 ) : (
                   <Skeleton className="mt-1 h-3 w-44" />

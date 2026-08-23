@@ -28,6 +28,7 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 import React from 'react'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
   data: Venta[]
@@ -61,10 +62,7 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
     },
     { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span> },
     {
-      accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => {
-        const d = new Date(row.original.fecha)
-        return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      }
+      accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => formatDisplayDateTime(row.original.fecha)
     },
     {
       id: 'total_sin_descuento',

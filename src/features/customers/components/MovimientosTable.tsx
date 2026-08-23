@@ -16,6 +16,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import type { MovimientoCliente, TipoMovimiento } from '../types/clientes'
 import { formatCurrency } from '../utils/venta-total'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
   movimientos: MovimientoCliente[]
@@ -23,11 +24,7 @@ type Props = {
 
 
 const formatDate = (value: string) => {
-  const date = new Date(value)
-  return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })}`
+  return formatDisplayDateTime(value)
 }
 
 const TIPO_CONFIG: Record<TipoMovimiento, { icon: LucideIcon; iconClassName: string }> = {
