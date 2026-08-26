@@ -12,6 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/helpers/money'
 import { useSalesStore } from '../store/useSalesStore'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 const SaleSummaryDialog = () => {
   const activeDialog = useSalesStore((state) => state.activeDialog)
@@ -20,7 +21,6 @@ const SaleSummaryDialog = () => {
 
   if (!lastSale) return null
 
-  const fecha = new Date(lastSale.fecha)
   const totalDescuento = lastSale.items.reduce(
     (sum, item) => sum + item.discount * item.qty,
     0
@@ -43,8 +43,7 @@ const SaleSummaryDialog = () => {
             </div>
             <DialogTitle>¡Venta registrada!</DialogTitle>
             <DialogDescription>
-              Venta #{lastSale.idVenta} · {fecha.toLocaleDateString()}{' '}
-              {fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Venta #{lastSale.idVenta} · {formatDisplayDateTime(lastSale.fecha)}
             </DialogDescription>
           </div>
         </DialogHeader>

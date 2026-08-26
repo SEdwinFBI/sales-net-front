@@ -14,10 +14,12 @@ import { reportingRoutes } from '@/features/reporting'
 import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
 import { administracionRoute } from '@/routes/administracion-routes'
+import { cashRoutes } from '@/features/cash'
 
 const allFeatureRoutes = [
   ...reportingRoutes,
   ...salesRoutes,
+  ...cashRoutes,
   ...clientesRoutes,
   ...catalogRoutes,
   ...inventarioRoutes,

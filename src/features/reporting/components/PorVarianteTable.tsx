@@ -22,6 +22,7 @@ import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaItem } from '../types/reportes'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Row = ReporteVentaItem
 
@@ -175,7 +176,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                           return (
                                 <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-card' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
-                                  <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
+                                  <td className="px-2 py-1 text-xs">{formatDisplayDateTime(v.fecha)}</td>
                                   <td className="px-2 py-1 text-xs">{formatNumber(v.cantidad)}</td>
                                   <td className="px-2 py-1 text-xs">{formatCurrency(precioBrutoU)}</td>
                                   <td className="px-2 py-1 text-xs text-destructive">{formatCurrency(v.descuento ?? 0)}</td>

@@ -29,6 +29,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { formatNumber } from '@/helpers/money'
+import { formatDisplayDateTime } from '@/lib/dates'
 import type { Movimiento, TipoMovimiento } from '../types/inventario'
 
 type Props = {
@@ -52,8 +53,7 @@ const TIPO_CONFIG: Record<TipoMovimiento, { icon: LucideIcon; className: string 
 }
 
 function formatearFecha(iso: string) {
-  const fecha = new Date(iso)
-  return `${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+  return formatDisplayDateTime(iso)
 }
 
 /** Entero con signo explícito: el signo es la información principal. */

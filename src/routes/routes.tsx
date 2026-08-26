@@ -11,6 +11,7 @@ import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
 import { reportingRoutes } from '@/features/reporting'
 import { administracionRoute } from './administracion-routes'
+import { cashRoutes } from '@/features/cash'
 
 const mainLayoutRoutes: RouteObject = {
   path: '/',
@@ -21,7 +22,7 @@ const mainLayoutRoutes: RouteObject = {
       index: true,
       element: <RedirectIndex />,
     },
-    ...buildReactRoutes([administracionRoute, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...catalogRoutes, ...inventarioRoutes]),
+    ...buildReactRoutes([administracionRoute, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...cashRoutes, ...catalogRoutes, ...inventarioRoutes]),
   ],
 }
 

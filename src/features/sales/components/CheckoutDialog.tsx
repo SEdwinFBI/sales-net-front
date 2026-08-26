@@ -17,7 +17,7 @@ import { formatCurrency } from '@/helpers/money'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
-import { useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
@@ -43,7 +43,13 @@ const CheckoutDialog = () => {
 
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
-  const { data: customers, isLoading } = useCustomers()
+  const [customerSearch, setCustomerSearch] = useState('')
+  const deferredCustomerSearch = useDeferredValue(customerSearch.trim())
+  const { data: customers, isLoading } = useCustomers({
+    search: deferredCustomerSearch,
+    activeOnly: true,
+    pageSize: 50,
+  })
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
   // Cotización del servidor para confirmar el total antes
@@ -129,6 +135,7 @@ const CheckoutDialog = () => {
               customers={customers}
               value={selectedCustomerId}
               onChange={setSelectedCustomerId}
+              onSearch={setCustomerSearch}
               loading={isLoading}
             />
           </div>

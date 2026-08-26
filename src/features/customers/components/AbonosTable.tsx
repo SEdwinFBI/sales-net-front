@@ -24,6 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Abono } from '../types/clientes'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
   abonos: Abono[]
@@ -47,10 +48,7 @@ export default function AbonosTable({ abonos }: Props) {
     {
       accessorKey: 'fecha_abono',
       header: 'Fecha',
-      cell: ({ row }) => {
-        const date = new Date(row.original.fecha_abono)
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      },
+      cell: ({ row }) => formatDisplayDateTime(row.original.fecha_abono),
     },
     {
       accessorKey: 'id_venta',
