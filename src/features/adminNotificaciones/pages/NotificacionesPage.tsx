@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, MailPlus, Save } from 'lucide-react'
+import { Loader2, Mail, MailPlus, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Button } from '@/components/ui/button'
@@ -73,12 +73,17 @@ export default function NotificacionesPage() {
   return (
     <PageTemplateSimple title="Notificaciones" description="Configura quién recibe cada aviso del sistema.">
       <div className="mx-auto mt-4 max-w-5xl space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">Destinatarios de notificaciones</h1>
-            <p className="text-sm text-muted-foreground">Elige los avisos que recibirá cada persona.</p>
+        <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Mail className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-base font-semibold text-card-foreground">Destinatarios de notificaciones</h1>
+              <p className="text-sm text-muted-foreground">Elige los avisos que recibirá cada persona.</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={() => setDialogOpen(true)}><MailPlus />Agregar</Button>
+          <Button className="w-full sm:w-auto" onClick={() => setDialogOpen(true)}><MailPlus />Agregar destinatario</Button>
         </div>
 
         {isLoading && <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>}
@@ -88,7 +93,7 @@ export default function NotificacionesPage() {
         )}
 
         {destinatarios.map((destinatario) => (
-          <Card key={destinatario.id} size="sm">
+          <Card key={destinatario.id} size="sm" className="border-l-4 border-l-primary bg-card shadow-sm">
             <CardHeader>
               <CardTitle>{destinatario.nombre_persona_email}</CardTitle>
               <CardDescription>{destinatario.email}</CardDescription>
