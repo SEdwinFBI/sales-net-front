@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from "lucide-react"
+import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Settings, Sun, X } from "lucide-react"
 import type { User } from "@/features/auth/types/auth"
 import { useThemeStore } from "@/features/core/store/theme-store"
 
@@ -12,6 +12,7 @@ type LayoutHeaderProps = {
     user: User
     onLogout: () => void
     onSidebarToggle: () => void
+    onSettings: () => void
 }
 
 
@@ -24,6 +25,7 @@ function LayoutHeader({
     user,
     onLogout,
     onSidebarToggle,
+    onSettings,
 }: LayoutHeaderProps) {
     const displayName = user.fullName?.trim() || user.username
     const theme = useThemeStore((state) => state.theme)
@@ -84,6 +86,17 @@ function LayoutHeader({
                             {user.sucursalActual?.nombre ?? user.username}
                         </p>
                     </div>
+                    {user.permissions.includes('admin') && (
+                        <button
+                            type="button"
+                            onClick={onSettings}
+                            aria-label="Configurar notificaciones"
+                            title="Configurar notificaciones"
+                            className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-neutral transition hover:bg-primary-nav"
+                        >
+                            <Settings className="size-4" />
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={toggleTheme}
