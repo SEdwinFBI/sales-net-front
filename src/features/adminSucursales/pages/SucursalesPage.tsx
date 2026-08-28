@@ -1,4 +1,5 @@
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
+import { Card } from '@/components/ui/card'
 import SucursalesTable from '../components/SucursalesTable'
 import { useSucursales } from '../hooks/useSucursales'
 
@@ -10,9 +11,9 @@ export default function SucursalesPage() {
       title="Sucursales"
       description="Gestión de sucursales y de los usuarios con acceso a cada una."
     >
-      <div className="mt-4">
+      <Card className="mt-4 p-3.5 sm:p-5">
         <SucursalesTable data={data} isLoading={isLoading} />
-      </div>
+      </Card>
     </PageTemplateSimple>
   )
 }

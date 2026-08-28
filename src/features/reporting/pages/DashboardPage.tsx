@@ -298,7 +298,7 @@ export default function DashboardPage() {
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {(d.top_articulos?.length ?? 0) > 0 && (
               <ChartCard title="Top artículos por venta">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_articulos} layout="vertical" margin={verticalChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" horizontal={false} />
                     <XAxis type="number" tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
@@ -321,7 +321,7 @@ export default function DashboardPage() {
 
             {(d.top_tallas?.length ?? 0) > 0 && (
               <ChartCard title="Ventas por talla">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_tallas} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
                     <XAxis dataKey="talla" tick={chartAxis} stroke="#e2e8f0" height={xAxisHeight} tickMargin={isMobile ? 6 : 3} />
@@ -337,7 +337,7 @@ export default function DashboardPage() {
 
             {(d.ventas_por_dia_semana?.length ?? 0) > 0 && (
               <ChartCard title="Ventas por día de la semana">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.ventas_por_dia_semana} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
                     <XAxis
@@ -365,7 +365,7 @@ export default function DashboardPage() {
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {(d.top_sucursales?.length ?? 0) > 0 && (
               <ChartCard title="Sucursales — bruto vs neto">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_sucursales} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
                     <XAxis
@@ -388,7 +388,7 @@ export default function DashboardPage() {
 
             {(d.formas_pago?.length ?? 0) > 0 && (
               <ChartCard title="Forma de pago">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <PieChart margin={isMobile ? { top: 2, right: 4, bottom: 18, left: 4 } : { top: 4, right: 8, bottom: 4, left: 8 }}>
                     <Pie data={d.formas_pago} dataKey="total_neto" nameKey="nombre"
                       cx="50%" cy={isMobile ? '43%' : '50%'} outerRadius={isMobile ? 56 : 80} innerRadius={isMobile ? 34 : 48} paddingAngle={2}
@@ -408,7 +408,7 @@ export default function DashboardPage() {
 
             {(d.ventas_acumuladas_mes?.length ?? 0) > 0 && (
               <ChartCard title="Acumulado del mes vs mes anterior">
-                <ResponsiveContainer width="100%" height={chartHeight}>
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <LineChart data={d.ventas_acumuladas_mes} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
                     <XAxis dataKey="fecha" tick={{ ...chartAxis, fontSize: 8 }} stroke="#e2e8f0"

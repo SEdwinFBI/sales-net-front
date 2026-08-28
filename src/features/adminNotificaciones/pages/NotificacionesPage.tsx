@@ -72,7 +72,7 @@ export default function NotificacionesPage() {
 
   return (
     <PageTemplateSimple title="Notificaciones" description="Configura quién recibe cada aviso del sistema.">
-      <div className="mx-auto mt-4 max-w-5xl space-y-4">
+      <Card className="mx-auto mt-4 max-w-5xl space-y-4 p-3.5 sm:p-5">
         <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -114,7 +114,7 @@ export default function NotificacionesPage() {
             <Button onClick={save} disabled={isUpdating}>{isUpdating ? <Loader2 className="animate-spin" /> : <Save />}Guardar cambios</Button>
           </div>
         )}
-      </div>
+      </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">

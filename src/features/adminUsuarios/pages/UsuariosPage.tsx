@@ -1,4 +1,5 @@
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
+import { Card } from '@/components/ui/card'
 import UsuariosTable from '../components/UsuariosTable'
 import { useUsuarios } from '../hooks/useUsuarios'
 import useAdminPresence from '@/features/core/hooks/useAdminPresence';
@@ -16,7 +17,7 @@ export default function UsuariosPage() {
       title="Usuarios"
       description="Gestión de usuarios del sistema."
     >
-      <div className="mt-4 space-y-3">
+      <Card className="mt-4 space-y-3 p-3.5 sm:p-5">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="relative flex size-2">
             {hasOnline && (
@@ -31,7 +32,7 @@ export default function UsuariosPage() {
         </div>
 
         <UsuariosTable data={data} isLoading={isLoading} online={online} />
-      </div>
+      </Card>
     </PageTemplateSimple>
   )
 }
