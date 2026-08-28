@@ -27,9 +27,35 @@ import DeleteUsuarioDialog from './DeleteUsuarioDialog'
 type Props = {
   data: Usuario[]
   isLoading: boolean
+  online: Map<string, number>
 }
 
-export default function UsuariosTable({ data, isLoading }: Props) {
+function presenceLabel(sessions: number) {
+  if (sessions <= 0) return 'Desconectado'
+  return sessions > 1 ? `En línea · ${sessions} sesiones` : 'En línea'
+}
+
+function PresenceDot({ sessions }: { sessions: number }) {
+  const isOnline = sessions > 0
+  return (
+    <span
+      className="relative flex size-2 shrink-0"
+      title={presenceLabel(sessions)}
+    >
+      {isOnline && (
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+      )}
+      <span
+        className={cn(
+          'relative inline-flex size-2 rounded-full',
+          isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/30',
+        )}
+      />
+    </span>
+  )
+}
+
+export default function UsuariosTable({ data, isLoading, online }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -37,6 +63,27 @@ export default function UsuariosTable({ data, isLoading }: Props) {
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null)
 
   const columns: ColumnDef<Usuario>[] = [
+    {
+      id: 'presence',
+      header: 'Estado',
+      cell: ({ row }) => {
+        const sessions = online.get(String(row.original.id)) ?? 0
+        const isOnline = sessions > 0
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            <PresenceDot sessions={sessions} />
+            <span
+              className={cn(
+                'text-xs font-medium',
+                isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
+              )}
+            >
+              {presenceLabel(sessions)}
+            </span>
+          </span>
+        )
+      },
+    },
     {
       accessorKey: 'fullName',
       header: 'Nombre completo',
@@ -173,9 +220,12 @@ export default function UsuariosTable({ data, isLoading }: Props) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="break-words text-sm font-semibold text-primary">
-                        {usuario.fullName || usuario.username}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <PresenceDot sessions={online.get(String(usuario.id)) ?? 0} />
+                        <p className="break-words text-sm font-semibold text-primary">
+                          {usuario.fullName || usuario.username}
+                        </p>
+                      </div>
                       <p className="mt-0.5 break-words text-sm text-muted-foreground">
                         {usuario.username}
                       </p>

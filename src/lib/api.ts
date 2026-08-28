@@ -11,6 +11,19 @@ export const api = axios.create({
   },
 })
 
+/** Deriva el origen ws(s):// a partir de VITE_API_URL para  websockets. */
+function getWsOrigin(): string {
+  const url = new URL(import.meta.env.VITE_API_URL, window.location.origin)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.pathname = '/'
+  url.search = ''
+  return url.toString().replace(/\/$/, '')
+}
+
+export function buildWsUrl(path: string, token: string): string {
+  return `${getWsOrigin()}${path}?token=${encodeURIComponent(token)}`
+}
+
 let isRefreshing = false
 /** Peticiones que esperan un refresh de token ya en curso, para no disparar varios refresh en paralelo. */
 let pendingQueue: Array<{
