@@ -28,3 +28,7 @@ export async function createDestinatario(payload: CrearDestinatarioPayload): Pro
 export async function updateDestinatarios(payload: ActualizarDestinatariosPayload): Promise<void> {
   await api.patch(ENDPOINT, payload)
 }
+
+export async function deleteDestinatario(id: number): Promise<void> {
+  await api.delete(ENDPOINT, { data: { id } })
+}
