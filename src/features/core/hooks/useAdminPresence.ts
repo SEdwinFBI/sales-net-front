@@ -21,7 +21,7 @@ function useAdminPresence(token: string | null) {
       ws = new WebSocket(buildWsUrl("/ws/admin/presence/", token as string));
 
       ws.onopen = () => {
-        console.log("[admin] conectado");
+        console.debug("[admin] conectado");
         heartbeatInterval = setInterval(() => {
           if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: "ping" }));
@@ -31,7 +31,7 @@ function useAdminPresence(token: string | null) {
 
       ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        console.log("[admin] evento:", data);
+        console.debug("[admin] evento:", data);
 
         if (data.type === "snapshot") {
           setOnline(new Map(Object.entries(data.online).map(([id, count]) => [id, Number(count)])));
@@ -48,7 +48,7 @@ function useAdminPresence(token: string | null) {
       ws.onerror = (e) => console.error("[admin] error:", e);
 
       ws.onclose = () => {
-        console.log("[admin] desconectado, reintentando en 3s");
+        console.debug("[admin] desconectado, reintentando en 3s");
         if (heartbeatInterval !== null) {
           clearInterval(heartbeatInterval);
           heartbeatInterval = null;

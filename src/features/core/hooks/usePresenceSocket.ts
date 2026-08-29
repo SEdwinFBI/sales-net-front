@@ -4,7 +4,7 @@ import { buildWsUrl } from "@/lib/api";
 
 const PING_INTERVAL_MS = 10000;
 const RECONNECT_DELAY_MS = 3000;
-const PRESENCE_WS_ENABLED = false; // deshabilitado: el hosting actual (PythonAnywhere) no soporta websockets
+const PRESENCE_WS_ENABLED = true;
 
 function usePresenceSocket(token: string | null) {
   useEffect(() => {
@@ -18,7 +18,7 @@ function usePresenceSocket(token: string | null) {
       ws = new WebSocket(buildWsUrl("/ws/presence/", token as string));
 
       ws.onopen = () => {
-        console.log("[presence] conectado");
+        console.debug("[presence] conectado");
         heartbeatInterval = setInterval(() => {
           if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: "ping" }));
@@ -27,11 +27,11 @@ function usePresenceSocket(token: string | null) {
       };
 
       ws.onmessage = (e) => {
-        console.log("[presence] mensaje:", e.data);
+        console.debug("[presence] mensaje:", e.data);
       };
 
       ws.onclose = () => {
-        console.log("[presence] desconectado, reintentando en 3s");
+        console.debug("[presence] desconectado, reintentando en 3s");
         if (heartbeatInterval !== null) {
           clearInterval(heartbeatInterval);
           heartbeatInterval = null;
