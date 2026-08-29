@@ -4,10 +4,11 @@ import { buildWsUrl } from "@/lib/api";
 
 const PING_INTERVAL_MS = 10000;
 const RECONNECT_DELAY_MS = 3000;
+const PRESENCE_WS_ENABLED = false; // deshabilitado: el hosting actual (PythonAnywhere) no soporta websockets
 
 function usePresenceSocket(token: string | null) {
   useEffect(() => {
-    if (!token) return;
+    if (!token || !PRESENCE_WS_ENABLED) return;
     let ws: WebSocket | null = null;
     let heartbeatInterval: NodeJS.Timeout | null = null;
     let reconnectTimeout: NodeJS.Timeout | null = null;
