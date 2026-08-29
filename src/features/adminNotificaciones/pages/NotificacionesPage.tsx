@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, Mail, MailPlus, Save } from 'lucide-react'
+import { Loader2, Mail, MailPlus, Save, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { getApiErrorMessage } from '@/lib/api-error'
-import { useCreateDestinatario, useDestinatarios, useUpdateDestinatarios } from '../hooks/useDestinatarios'
+import { useCreateDestinatario, useDeleteDestinatario, useDestinatarios, useUpdateDestinatarios } from '../hooks/useDestinatarios'
 import type { CrearDestinatarioPayload, DestinatarioNotificacion, PreferenciaNotificacion } from '../types/notificaciones-types'
 
 const PREFERENCIAS: Array<{ key: PreferenciaNotificacion; label: string }> = [
@@ -31,6 +31,7 @@ export default function NotificacionesPage() {
   const { data = [], isLoading, isError } = useDestinatarios()
   const { mutateAsync: create, isPending: isCreating } = useCreateDestinatario()
   const { mutateAsync: update, isPending: isUpdating } = useUpdateDestinatarios()
+  const { mutateAsync: remove, isPending: isDeleting } = useDeleteDestinatario()
   const [destinatarios, setDestinatarios] = useState<DestinatarioNotificacion[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -70,6 +71,17 @@ export default function NotificacionesPage() {
     }
   }
 
+  const removeDestinatario = async (destinatario: DestinatarioNotificacion) => {
+    if (!window.confirm(`¿Eliminar a ${destinatario.nombre_persona_email} de los destinatarios?`)) return
+
+    try {
+      await remove(destinatario.id)
+      toast.success('Destinatario eliminado')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo eliminar el destinatario'))
+    }
+  }
+
   return (
     <PageTemplateSimple title="Notificaciones" description="Configura quién recibe cada aviso del sistema.">
       <Card className="mx-auto mt-4 max-w-5xl space-y-4 p-3.5 sm:p-5">
@@ -94,9 +106,14 @@ export default function NotificacionesPage() {
 
         {destinatarios.map((destinatario) => (
           <Card key={destinatario.id} size="sm" className="border-l-4 border-l-primary bg-card shadow-sm">
-            <CardHeader>
-              <CardTitle>{destinatario.nombre_persona_email}</CardTitle>
-              <CardDescription>{destinatario.email}</CardDescription>
+            <CardHeader className="flex-row items-start justify-between gap-3">
+              <div>
+                <CardTitle>{destinatario.nombre_persona_email}</CardTitle>
+                <CardDescription>{destinatario.email}</CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" disabled={isDeleting} onClick={() => removeDestinatario(destinatario)} aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}>
+                <Trash2 className="text-destructive" />
+              </Button>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {PREFERENCIAS.map(({ key, label }) => (
