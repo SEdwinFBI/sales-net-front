@@ -18,7 +18,7 @@ function usePresenceSocket(token: string | null) {
       ws = new WebSocket(buildWsUrl("/ws/presence/", token as string));
 
       ws.onopen = () => {
-        console.log("[presence] conectado");
+        console.debug("[presence] conectado");
         heartbeatInterval = setInterval(() => {
           if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: "ping" }));
@@ -27,11 +27,11 @@ function usePresenceSocket(token: string | null) {
       };
 
       ws.onmessage = (e) => {
-        console.log("[presence] mensaje:", e.data);
+        console.debug("[presence] mensaje:", e.data);
       };
 
       ws.onclose = () => {
-        console.log("[presence] desconectado, reintentando en 3s");
+        console.debug("[presence] desconectado, reintentando en 3s");
         if (heartbeatInterval !== null) {
           clearInterval(heartbeatInterval);
           heartbeatInterval = null;
