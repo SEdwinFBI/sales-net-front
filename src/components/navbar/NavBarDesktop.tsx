@@ -11,20 +11,20 @@ type NavBarDesktopProps = {
   onToggleModule?: (moduleId: string) => void
 }
 
-/** Construye la ruta */
+/** Concatena el path del item con el de su padre para armar la ruta absoluta. */
 function buildFullPath(item: SidebarItem, parentPath?: string): string {
   const currentPath = parentPath ? `${parentPath}/${item.path}` : `/${item.path}`
   return currentPath
 }
 
-/** Verifica  */
+/** True si el item o alguno de sus descendientes corresponde a la ruta actual. */
 export function isItemOrDescendantActive(item: SidebarItem, currentPathname: string, parentPath?: string): boolean {
   const fullPath = buildFullPath(item, parentPath)
   if (currentPathname === fullPath || currentPathname.startsWith(`${fullPath}/`)) return true
   return item.children.some((child) => isItemOrDescendantActive(child, currentPathname, fullPath))
 }
 
-/** Renderiza los hijos*/
+/** Sub-items de un módulo expandido, con la línea guía que marca la jerarquía activa. */
 function SubItems({
   items,
   expanded,
@@ -69,7 +69,7 @@ function SubItems({
       <div
         className={cn(
           'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-150',
-          hasActiveInLevel ? 'bg-primary' : 'bg-border',
+          hasActiveInLevel ? 'bg-sidebar-primary' : 'bg-sidebar-border',
         )}
         style={{ left: guideLeft }}
       />
@@ -83,10 +83,10 @@ function SubItems({
           const isItemExpanded = expandedModules?.includes(item.id) ?? false
           const isActiveItem = location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`)
 
-          const lineClass = isActiveItem ? 'bg-primary' : 'bg-border'
-          const dotClass = isActiveItem ? 'bg-primary' : 'bg-border'
-          const textClass = isActiveItem ? 'text-neutral font-semibold text-xs' : 'text-neutral/65 group-hover:text-neutral text-xs'
-          const iconClass = isActiveItem ? 'text-primary/90' : 'text-neutral/45 group-hover:text-neutral/70'
+          const lineClass = isActiveItem ? 'bg-sidebar-primary' : 'bg-sidebar-border'
+          const dotClass = isActiveItem ? 'bg-sidebar-primary' : 'bg-sidebar-border'
+          const textClass = isActiveItem ? 'text-sidebar-foreground font-semibold text-xs' : 'text-sidebar-foreground/65 group-hover:text-sidebar-foreground text-xs'
+          const iconClass = isActiveItem ? 'text-sidebar-primary' : 'text-sidebar-foreground/45 group-hover:text-sidebar-foreground/70'
 
           if (isLeaf) {
             return (
@@ -96,9 +96,9 @@ function SubItems({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'group relative flex items-center gap-1 rounded-lg border border-border/60 px-5 py-0.5 transition-[background-color,border-color,color] duration-150 ease-out',
-                    'bg-card/40',
-                    isActive && 'bg-primary/8', textClass
+                    'group relative flex items-center gap-1 rounded-lg border border-sidebar-border px-5 py-0.5 transition-[background-color,border-color,color] duration-150 ease-out',
+                    'bg-sidebar-accent/25',
+                    isActive && 'bg-sidebar-primary/20', textClass
 
                   )
                 }
@@ -144,9 +144,9 @@ function SubItems({
                 type="button"
                 onClick={() => onToggleModule?.(item.id)}
                 className={cn(
-                  'group relative flex w-full items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5 transition-[background-color,border-color,color] duration-150 ease-out',
-                  'hover:bg-primary-nav/60',
-                  isActiveItem && 'bg-primary/8',
+                  'group relative flex w-full items-center gap-2 rounded-lg border border-sidebar-border px-2 py-1.5 transition-[background-color,border-color,color] duration-150 ease-out',
+                  'hover:bg-sidebar-accent/60',
+                  isActiveItem && 'bg-sidebar-primary/20',
 
                 )}
               >
@@ -215,7 +215,7 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-xl border border-primary/20 bg-primary py-3 text-white shadow-sm transition-[background-color,border-color,box-shadow] duration-150 ease-out',
+          'flex items-center rounded-xl border border-white/15 bg-primary-complement py-3 text-white shadow-sm transition-[background-color,border-color,box-shadow] duration-150 ease-out',
           expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
         )}
       >
@@ -225,7 +225,7 @@ export default function NavBarDesktop({
         <div
           className={cn(
             'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-            expanded ? 'w-40 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
+            expanded ? 'w-40 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
           )}
         >
           <div className="flex flex-col justify-center gap-0.5 overflow-hidden">
@@ -248,7 +248,7 @@ export default function NavBarDesktop({
           const isActiveModule = hasChildren && isItemOrDescendantActive(item, location.pathname)
           const showChildren = hasChildren && isModuleExpanded
 
-          // Modulo nivel raiz 
+          // Modulo nivel raiz
           if (hasChildren) {
             return (
               <div key={item.id} className="space-y-1.5">
@@ -259,30 +259,30 @@ export default function NavBarDesktop({
                     'flex w-full items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
                     expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                     isActiveModule
-                      ? 'border-primary/25 bg-primary/10 shadow-sm'
-                      : 'border-border/70 bg-transparent text-neutral/65 hover:border-primary/25 hover:bg-primary-nav hover:text-neutral',
+                      ? 'border-sidebar-primary/40 bg-sidebar-accent shadow-sm'
+                      : 'border-sidebar-border bg-transparent text-sidebar-foreground/65 hover:border-sidebar-primary/30 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                   )}
                 >
                   <>
                     <div
                       className={cn(
                         'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
-                        isActiveModule ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
+                        isActiveModule ? 'bg-sidebar-primary/25 ring-1 ring-sidebar-primary/30' : 'bg-sidebar-accent/60',
                       )}
                     >
-                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-primary' : 'text-neutral/60')} />}
+                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-sidebar-primary' : 'text-sidebar-foreground/60')} />}
                     </div>
                     <div
                       className={cn(
                         'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-                        expanded ? 'w-32 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
+                        expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
                       )}
                     >
-                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-primary' : 'text-neutral')}>
+                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-sidebar-primary' : 'text-sidebar-foreground')}>
                         {item.name}
                       </p>
                       {item.description && (
-                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-primary/75' : 'text-neutral/50')}>
+                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-sidebar-primary/80' : 'text-sidebar-foreground/55')}>
                           {item.description}
                         </p>
                       )}
@@ -308,7 +308,7 @@ export default function NavBarDesktop({
             )
           }
 
-          // Pagina simple 
+          // Pagina simple
           return (
             <NavLink
               key={item.id}
@@ -319,8 +319,8 @@ export default function NavBarDesktop({
                   'flex items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
                   expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
                   isActive
-                    ? 'border-primary/25 bg-primary/10 shadow-sm'
-                    : 'border-border/70 bg-transparent text-neutral/65 hover:border-primary/25 hover:bg-primary-nav hover:text-neutral',
+                    ? 'border-sidebar-primary/40 bg-sidebar-accent shadow-sm'
+                    : 'border-sidebar-border bg-transparent text-sidebar-foreground/65 hover:border-sidebar-primary/30 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                 )
               }
             >
@@ -329,22 +329,22 @@ export default function NavBarDesktop({
                   <div
                     className={cn(
                       'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
-                      isActive ? 'bg-primary/12 ring-1 ring-primary/15' : 'bg-primary-nav',
+                      isActive ? 'bg-sidebar-primary/25 ring-1 ring-sidebar-primary/30' : 'bg-sidebar-accent/60',
                     )}
                   >
-                    {Icon && <Icon className={cn('size-4', isActive ? 'text-primary' : 'text-neutral/60')} />}
+                    {Icon && <Icon className={cn('size-4', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/60')} />}
                   </div>
                   <div
                     className={cn(
                       'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-                      expanded ? 'w-32 translate-x-0 opacity-100 delay-75' : 'w-0 -translate-x-1 opacity-0',
+                      expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
                     )}
                   >
-                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-primary' : 'text-neutral')}>
+                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground')}>
                       {item.name}
                     </p>
                     {item.description && (
-                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-primary/75' : 'text-neutral/50')}>
+                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-sidebar-primary/80' : 'text-sidebar-foreground/55')}>
                         {item.description}
                       </p>
                     )}

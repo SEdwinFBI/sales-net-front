@@ -11,12 +11,27 @@ export const api = axios.create({
   },
 })
 
+/** Deriva el origen ws(s):// a partir de VITE_API_URL para  websockets. */
+function getWsOrigin(): string {
+  const url = new URL(import.meta.env.VITE_API_URL, window.location.origin)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.pathname = '/'
+  url.search = ''
+  return url.toString().replace(/\/$/, '')
+}
+
+export function buildWsUrl(path: string, token: string): string {
+  return `${getWsOrigin()}${path}?token=${encodeURIComponent(token)}`
+}
+
 let isRefreshing = false
+/** Peticiones que esperan un refresh de token ya en curso, para no disparar varios refresh en paralelo. */
 let pendingQueue: Array<{
   resolve: (token: string) => void
   reject: (error: unknown) => void
 }> = []
 
+/** Resuelve o rechaza todas las peticiones en espera con el resultado del refresh en curso. */
 function processQueue(error: unknown | null, token: string | null = null) {
   pendingQueue.forEach(({ resolve, reject }) => {
     if (error || !token) {
@@ -28,6 +43,7 @@ function processQueue(error: unknown | null, token: string | null = null) {
   pendingQueue = []
 }
 
+/** Pide un access token nuevo con el refresh token y actualiza la sesión guardada. */
 async function refreshAuth(): Promise<string> {
   const { refreshToken } = useAuthStore.getState()
   if (!refreshToken) throw new Error('No refresh token available')
@@ -37,6 +53,8 @@ async function refreshAuth(): Promise<string> {
   return data.access
 }
 
+// Renueva el access token antes de que expire. Si ya hay un refresh en
+// curso, encola la petición en vez de disparar otro refresh en paralelo.
 api.interceptors.request.use((config) => {
   if (config.url?.includes('/auth/refresh/')) return config
 
@@ -81,6 +99,8 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// Si una petición falla con 401/419 (token vencido en el servidor pese a no
+// haber expirado localmente), reintenta una sola vez tras refrescar el token.
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import type { Cliente } from '../types/clientes'
 import { initials } from '@/helpers/string'
 import { mostrarDias } from '../utils/dias-notificacion'
+import { formatDisplayDate } from '@/lib/dates'
 
 type Props = {
   cliente: Cliente
@@ -39,7 +40,7 @@ export default function ClienteInfo({ cliente }: Props) {
             </div>
 
             <p className="mt-1.5 text-xs text-muted-foreground">
-              Cliente desde {new Date(cliente.fecha_creacion).toLocaleDateString()}
+              Cliente desde {formatDisplayDate(cliente.fecha_creacion)}
             </p>
           </div>
         </div>

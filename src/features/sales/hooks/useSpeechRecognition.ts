@@ -103,8 +103,13 @@ function destroyMonitor(m: AudioMonitor | null) {
 
 
 /**
- * Transcripción de voz a texto
-
+ * Dictado continuo de voz a texto para el POS. Envuelve la Web Speech API,
+ * que en Chrome corta la sesión tras cada pausa larga y a veces se queda
+ * "zombie" (mic abierto, sin resultados); este hook la mantiene viva
+ * reiniciando la sesión sola cuando detecta esos casos, rota la sesión
+ * preventivamente en silencios largos para no cortar una frase a la mitad,
+ * y reintenta con el siguiente idioma de `LANG_CHAIN` si el navegador
+ * rechaza el actual. `enabled` prende y apaga el micrófono.
  */
 export function useSpeechRecognition(options: {
   enabled: boolean
@@ -224,17 +229,16 @@ export function useSpeechRecognition(options: {
           setError('Error de red en el reconocimiento de voz.')
           break
         case 'language-not-supported':
-          //api
           if (s.langIndex < s.langChain.length - 1) s.langIndex++
           break
-        //api
       }
     }
 
     rec.onend = () => {
       if (gen !== s.generation) return
 
-      //api
+      // Chrome no emite un resultado final al cortar la sesión: lo que
+      // quedó como interim se vuelca como final para no perderlo.
       if (s.interimPending.trim()) {
         s.acc = (s.acc + s.interimPending.trim() + ' ').slice(0, MAX_TRANSCRIPT_LENGTH)
         s.interimPending = ''
@@ -247,7 +251,8 @@ export function useSpeechRecognition(options: {
         return
       }
 
-      //api
+      // Guard contra loops de reinicio: si la sesión se cierra sola muchas
+      // veces seguidas sin entregar resultados, el servicio está caído.
       const now = Date.now()
       s.restarts = s.restarts.filter((t) => now - t < STORM_WINDOW_MS)
       s.restarts.push(now)
@@ -257,17 +262,15 @@ export function useSpeechRecognition(options: {
         return
       }
       if (s.restarts.length >= STORM_MAX) {
-        //api
         s.restarts = []
         s.gotResultsSinceStorm = false
       }
 
-      //api
       s.sessionStart = now
       try {
         rec.start()
       } catch {
-        //api
+        // El navegador aún no soltó la sesión anterior; reintenta enseguida.
         setTimeout(() => spawn(gen), 30)
       }
     }
@@ -285,8 +288,6 @@ export function useSpeechRecognition(options: {
       }
     }
   }, [teardown])
-
-  //api
 
   const startListening = useCallback(async () => {
     const s = r.current

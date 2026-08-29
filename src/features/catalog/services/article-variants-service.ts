@@ -66,6 +66,7 @@ const getTallas = async (): Promise<TallaApi[]> => {
   return getAllPages<TallaApi>('/admin/tallas/')
 }
 
+/** Busca la talla por nombre (case-insensitive) o la crea si no existe. */
 const getOrCreateTalla = async (size: ArticleSize): Promise<TallaApi> => {
   const tallas = await getTallas()
   const existing = tallas.find(

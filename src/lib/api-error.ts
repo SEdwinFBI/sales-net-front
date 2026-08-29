@@ -1,5 +1,11 @@
 import axios from 'axios'
 
+/**
+ * Extrae un mensaje legible de un error de Axios probando las formas más
+ * comunes de respuesta del backend (`message`, `detail`, `error`, array de
+ * errores, o el primer campo con error de validación). Cae al `fallback` si
+ * no reconoce la forma o el error no viene de una petición HTTP.
+ */
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error) && error.response?.data) {
     const data = error.response.data

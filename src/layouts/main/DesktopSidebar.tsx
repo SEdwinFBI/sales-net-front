@@ -13,6 +13,10 @@ type DesktopSidebarProps = {
     onMouseLeave: () => void
 }
 
+/**
+ * Sidebar de escritorio. Los módulos expandidos se persisten en localStorage
+ * y, al montar, se auto-expanden los que contienen la ruta activa.
+ */
 function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave }: DesktopSidebarProps) {
     const location = useLocation()
     const [expandedModules, setExpandedModules] = useState<string[]>(() => {
@@ -47,10 +51,10 @@ function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave }: Desktop
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             className={cn(
-                'sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border p-3 contain-layout contain-paint transition-[width,background-color,border-color] duration-200 ease-out will-change-[width] lg:block',
+                'sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border p-3 contain-layout contain-paint transition-[width,background-color,border-color] duration-150 ease-out will-change-[width] lg:block',
                 expanded
-                    ? 'w-64 border-border/70 bg-card shadow-sm'
-                    : 'w-24 border-border/60 bg-card/80 shadow-sm',
+                    ? 'w-64 border-sidebar-border bg-sidebar shadow-sm'
+                    : 'w-24 border-sidebar-border/70 bg-sidebar/90 shadow-sm',
             )}
         >
             <NavBarDesktop

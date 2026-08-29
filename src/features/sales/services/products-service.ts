@@ -3,9 +3,14 @@ import { formatCurrency } from '@/helpers/money'
 import { triggerBlobDownload } from '@/lib/download-blob'
 import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse, BranchAvailability } from '../types/sales'
 
+/**
+ * Lista los artículos del POS. El orden lo resuelve el servidor ANTES de
+ * paginar (`orden=stock` = mayores existencias primero), así que no debe
+ * reordenarse en el cliente: solo tendría efecto dentro de la página actual.
+ */
 export const getArticles = async (page = 1, pageSize = 10, search?: string): Promise<SalesArticlesResponse> => {
   const { data } = await api.get<SalesArticlesResponse>('/sales/articles', {
-    params: { page, page_size: pageSize, ...(search ? { search } : {}) },
+    params: { page, page_size: pageSize, orden: 'stock', ...(search ? { search } : {}) },
   })
   return data
 }

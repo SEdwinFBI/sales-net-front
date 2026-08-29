@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,11 +13,13 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { TimeInput } from '@/components/ui/time-input'
 import { Loader2 } from 'lucide-react'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
+import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
@@ -44,17 +46,21 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
   const isEdit = !!usuario
   const { mutateAsync: createUsuario, isPending: isCreating } = useCreateUsuario()
   const { mutateAsync: updateUsuario, isPending: isUpdating } = useUpdateUsuario()
+  const { data: sucursales } = useSucursales()
+  const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState<Set<number>>(new Set())
   const isPending = isCreating || isUpdating
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '04:00', hora_salida: '16:00' },
   })
+  const role = watch('role')
 
   useEffect(() => {
     if (open) {
@@ -63,8 +69,18 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
           ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor', hora_entrada: usuario.hora_entrada?.slice(0, 5) ?? '', hora_salida: usuario.hora_salida?.slice(0, 5) ?? '' }
           : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '04:00', hora_salida: '16:00' }
       )
+      setSucursalesSeleccionadas(new Set(usuario?.sucursales ?? []))
     }
   }, [open, usuario, reset])
+
+  const toggleSucursal = (id: number, checked: boolean) => {
+    setSucursalesSeleccionadas((current) => {
+      const next = new Set(current)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -80,6 +96,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         role: values.role,
         hora_entrada: values.hora_entrada,
         hora_salida: values.hora_salida,
+        ...(values.role === 'vendedor' ? { sucursales: Array.from(sucursalesSeleccionadas) } : {}),
         ...(values.email ? { email: values.email } : {}),
         ...(values.password ? { password: values.password } : {}),
       }
@@ -156,6 +173,34 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
               <FieldError errors={[errors.hora_salida]} />
             </Field>
           </FieldGroup>
+
+          {role === 'vendedor' && (
+            <div className="mt-4 space-y-2">
+              <FieldLabel>Sucursales</FieldLabel>
+              <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-border p-2">
+                {sucursales.length === 0 ? (
+                  <p className="px-1 py-2 text-sm text-muted-foreground">No hay sucursales registradas.</p>
+                ) : (
+                  sucursales.map((sucursal) => (
+                    <label
+                      key={sucursal.id}
+                      className="flex items-center gap-2 rounded-md px-1 py-1.5 text-sm hover:bg-muted/40"
+                    >
+                      <Switch
+                        size="sm"
+                        checked={sucursalesSeleccionadas.has(sucursal.id)}
+                        onCheckedChange={(checked) => toggleSucursal(sucursal.id, checked === true)}
+                      />
+                      <span className="truncate">{sucursal.nombre}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+              {sucursalesSeleccionadas.size === 0 && (
+                <p className="text-xs text-destructive">Un vendedor debe tener al menos una sucursal asignada.</p>
+              )}
+            </div>
+          )}
 
           <DialogFooter className="pt-4">
             <Button className="w-full sm:w-auto" variant="outline" type="button" onClick={onClose} disabled={isPending}>

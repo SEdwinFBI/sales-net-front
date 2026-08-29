@@ -17,6 +17,7 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { formatCurrency, getVentaTotal } from '../utils/venta-total'
+import { formatDisplayDateTime } from '@/lib/dates'
 import {
   Table,
   TableBody,
@@ -43,10 +44,7 @@ export default function ComprasTable({ ventas }: Props) {
     {
       accessorKey: 'fecha',
       header: 'Fecha',
-      cell: ({ row }) => {
-        const date = new Date(row.original.fecha)
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      },
+      cell: ({ row }) => formatDisplayDateTime(row.original.fecha),
     },
     {
       id: 'total',
@@ -71,10 +69,16 @@ export default function ComprasTable({ ventas }: Props) {
       cell: ({ row }) => <span className="capitalize">{row.original.forma_pago}</span>,
     },
     {
+      id: 'sucursal',
+      accessorFn: (venta) => venta.sucursal.nombre,
+      header: 'Sucursal',
+      cell: ({ row }) => row.original.sucursal.nombre,
+    },
+    {
       id: 'vendedor',
-      accessorFn: (venta) => venta.vendedor.full_name,
+      accessorFn: (venta) => venta.vendedor?.full_name ?? 'Sin vendedor',
       header: 'Vendedor',
-      cell: ({ row }) => row.original.vendedor.full_name,
+      cell: ({ row }) => row.original.vendedor?.full_name ?? 'Sin vendedor',
     },
     {
       accessorKey: 'observacion',

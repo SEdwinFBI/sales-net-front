@@ -7,7 +7,19 @@ export interface CustomerRaw {
     balance: number
 }
 
-export const getCustomers = async (): Promise<CustomerRaw[]> => {
-    const { data } = await api.get<{ status: string; data: { count: number; results: CustomerRaw[] } }>('/admin/clientes/')
+export type CustomerSearchParams = {
+    search?: string
+    activeOnly?: boolean
+    pageSize?: 10 | 25 | 50
+}
+
+export const getCustomers = async (params: CustomerSearchParams = {}): Promise<CustomerRaw[]> => {
+    const { data } = await api.get<{ status: string; data: { count: number; results: CustomerRaw[] } }>('/admin/clientes/', {
+        params: {
+            ...(params.search ? { search: params.search } : {}),
+            ...(params.activeOnly ? { activo: true } : {}),
+            page_size: params.pageSize ?? 10,
+        },
+    })
     return data.data.results
 }

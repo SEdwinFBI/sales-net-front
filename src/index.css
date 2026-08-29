@@ -54,14 +54,16 @@
   --chart-4: #7a8294;
   --chart-5: #b24a65;
   --radius: 0.5rem;
-  --sidebar: #f6f9fc;
-  --sidebar-foreground: var(--app-neutral);
-  --sidebar-primary: var(--app-primary);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--app-primary-nav);
-  --sidebar-accent-foreground: var(--app-primary);
-  --sidebar-border: #b6c7dc;
-  --sidebar-ring: rgb(79 143 201 / 28%);
+  /* Sidebar en modo claro: el celeste de marca solido (ver .dark para la
+     variante marino de modo oscuro). */
+  --sidebar: var(--app-primary);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: var(--app-primary);
+  --sidebar-accent: rgb(255 255 255 / 14%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 20%);
+  --sidebar-ring: rgb(255 255 255 / 45%);
 }
 
 * {
@@ -174,14 +176,16 @@ a {
   --chart-3: #e0a458;
   --chart-4: #93a0b4;
   --chart-5: #d97a92;
-  --sidebar: #161e29;
-  --sidebar-foreground: #dce4ee;
-  --sidebar-primary: #6ba6d9;
-  --sidebar-primary-foreground: #0e1620;
-  --sidebar-accent: #223041;
-  --sidebar-accent-foreground: #9cc4e8;
+  /* Sidebar en modo oscuro: marino oscurecido a partir del mismo celeste de
+     marca (#4f8fc9), en vez del celeste solido que se usa en modo claro. */
+  --sidebar: #1c3654;
+  --sidebar-foreground: #e8f1fa;
+  --sidebar-primary: var(--app-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2b4a6f;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 12%);
-  --sidebar-ring: rgb(107 166 217 / 36%);
+  --sidebar-ring: rgb(255 255 255 / 30%);
 }
 
 @layer base {

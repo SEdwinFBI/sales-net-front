@@ -4,7 +4,7 @@ export interface ReporteVentasFilters {
   fecha_desde?: string
   fecha_hasta?: string
   id_variante?: number
-  id_vendedor?: number
+  id_sucursal?: number
   id_articulo?: number
   id_talla?: number
   output?: 'json' | 'pdf'
@@ -29,7 +29,7 @@ export interface ReporteVentas {
   data: {
     resumen: ReporteResumen
     por_variante: ReporteVentaItem[]
-    por_vendedor: ReporteVentaVendedor[]
+    por_sucursal: ReporteVentaSucursal[]
   }
 }
 
@@ -63,7 +63,8 @@ export interface VentaEnVariante {
   monto: number
   descuento: number
   tipo_descuento?: 'INDIVIDUAL' | 'MAYORISTA' | 'NINGUNO'
-  vendedor: VendedorInfo
+  vendedor: VendedorInfo | null
+  sucursal: SucursalInfo
   cliente: ClienteInfo
   estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
   forma_pago: string
@@ -75,13 +76,18 @@ export interface VendedorInfo {
   full_name: string
 }
 
+export interface SucursalInfo {
+  id: number
+  nombre: string
+}
+
 export interface ClienteInfo {
   id: number
   nombre_completo: string
 }
 
-export interface ReporteVentaVendedor {
-  id_vendedor: number
+export interface ReporteVentaSucursal {
+  id_sucursal: number
   nombre: string
   cantidad_ventas: number
   unidades: number
@@ -120,7 +126,7 @@ export interface DashboardData {
     total_adeudado: number
     total_articulos: number
     total_variantes: number
-    total_vendedores: number
+    total_sucursales: number
     stock_bajo: number
   }
   comparacion: {
@@ -162,8 +168,8 @@ export interface DashboardData {
     total_neto: number
     cantidad_ventas: number
   }[]
-  top_vendedores: {
-    id_vendedor: number
+  top_sucursales: {
+    id_sucursal: number
     nombre: string
     total_neto: number
     total_bruto: number
@@ -192,7 +198,8 @@ export interface DashboardData {
     fecha: string
     cliente: string
     total_neto: number
-    vendedor: string
+    vendedor: string | null
+    sucursal: string
     estado: string
     forma_pago: string
   }[]

@@ -6,6 +6,7 @@ type WithAdminActionProps = {
     onEdit: () => void;
 }
 
+/** Envuelve un componente de producto con un botón de edición flotante para el admin. */
 function withAdminAction<T extends object>(Component: ComponentType<T>) {
     type Props = Omit<T, keyof WithAdminActionProps> & WithAdminActionProps;
 

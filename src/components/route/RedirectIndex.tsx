@@ -3,10 +3,7 @@ import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { getHomeRoute } from '@/lib/app-routes'
 
 
-/**
- * RedirectIndex - Redirige al HOME del usuario según su rol.
-
- */
+/** Redirige a la ruta de inicio según el rol del usuario autenticado. */
 export default function RedirectIndex() {
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)

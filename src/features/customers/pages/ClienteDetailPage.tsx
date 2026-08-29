@@ -34,11 +34,11 @@ export default function ClienteDetailPage() {
   if (isLoading) {
     return (
       <PageTemplateSimple title="Cargando..." description="">
-        <div className="animate-pulse space-y-4 rounded-2xl bg-card p-6">
+        <Card className="animate-pulse space-y-4 p-3.5 sm:p-5">
           <div className="h-8 w-48 rounded bg-muted" />
           <div className="h-4 w-96 rounded bg-muted" />
           <div className="h-20 rounded bg-muted" />
-        </div>
+        </Card>
       </PageTemplateSimple>
     )
   }

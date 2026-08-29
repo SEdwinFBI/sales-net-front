@@ -164,11 +164,11 @@ const AvailabilityMatrixMode = ({ articleId, highlightVariantId }: MatrixProps) 
                             </TableHeader>
                             <TableBody>
                                 {availability.sucursales.map((sucursal) => (
-                                    <TableRow key={sucursal.id_usuario}>
+                                    <TableRow key={sucursal.id_sucursal}>
                                         <TableCell>
                                             <div className="flex items-center gap-2">
                                                 <span className="truncate text-sm">
-                                                    {sucursal.nombre || sucursal.username}
+                                                    {sucursal.nombre}
                                                 </span>
                                                 {sucursal.es_propia && (
                                                     <Badge variant="secondary">Tu tienda</Badge>

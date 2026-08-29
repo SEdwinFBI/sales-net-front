@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
-import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
+import type { Sucursal } from '@/features/adminSucursales/types/sucursal-types'
 import { cn } from '@/lib/utils'
 import { useSaveSellerStock } from '../hooks/useSaveSellerStock'
 import type { Article } from '../types/article-types'
@@ -35,7 +35,7 @@ const pageSize = 8
 type Props = {
   articles: Article[]
   isLoading: boolean
-  seller: Usuario
+  sucursal: Sucursal
   stock: StockAssignment[]
   variants: ArticleVariant[]
   onBack: () => void
@@ -44,7 +44,7 @@ type Props = {
 export default function SellerStockEditor({
   articles,
   isLoading,
-  seller,
+  sucursal,
   stock,
   variants,
   onBack,
@@ -132,7 +132,7 @@ export default function SellerStockEditor({
     }))
 
     try {
-      await saveStock({ sellerId: seller.id, items })
+      await saveStock({ sucursalId: sucursal.id, items })
       toast.success('Stock guardado correctamente')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar el stock'))
@@ -143,11 +143,11 @@ export default function SellerStockEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <Button size="icon-sm" variant="outline" onClick={onBack} aria-label="Volver a vendedores">
+          <Button size="icon-sm" variant="outline" onClick={onBack} aria-label="Volver a sucursales">
             <ArrowLeft />
           </Button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-primary">{seller.fullName}</p>
+            <p className="truncate text-sm font-semibold text-primary">{sucursal.nombre}</p>
             <p className="text-sm text-muted-foreground">Stock asignado por talla</p>
           </div>
         </div>

@@ -12,7 +12,7 @@ type Props = {
   onChange: (filters: Filters) => void
   articuloOptions: Option[]
   tallaOptions: Option[]
-  vendedorOptions: Option[]
+  sucursalOptions: Option[]
 }
 
 export default function ReporteVentasFilters({
@@ -20,7 +20,7 @@ export default function ReporteVentasFilters({
   onChange,
   articuloOptions,
   tallaOptions,
-  vendedorOptions,
+  sucursalOptions,
 }: Props) {
   const set = (key: keyof Filters, value: string | number | undefined) => {
     onChange({ ...filters, [key]: value !== undefined && value !== '' ? value : undefined })
@@ -32,14 +32,14 @@ export default function ReporteVentasFilters({
       fecha_desde: d.fecha_desde,
       fecha_hasta: d.fecha_hasta,
       id_variante: undefined,
-      id_vendedor: undefined,
+      id_sucursal: undefined,
       id_articulo: undefined,
       id_talla: undefined,
     })
   }
 
   const hasFilters = filters.id_variante !== undefined
-    || filters.id_vendedor !== undefined
+    || filters.id_sucursal !== undefined
     || filters.id_articulo !== undefined
     || filters.id_talla !== undefined
 
@@ -84,12 +84,12 @@ export default function ReporteVentasFilters({
         />
       </div>
       <div className="min-w-0">
-        <label className="mb-1  text-xs text-muted-foreground">Vendedor</label>
+        <label className="mb-1  text-xs text-muted-foreground">Sucursal</label>
         <SearchableSelect
-          value={filters.id_vendedor}
-          onChange={(v) => set('id_vendedor', v ? Number(v) : undefined)}
-          options={vendedorOptions}
-          placeholder="Buscar vendedor..."
+          value={filters.id_sucursal}
+          onChange={(v) => set('id_sucursal', v ? Number(v) : undefined)}
+          options={sucursalOptions}
+          placeholder="Buscar sucursal..."
           className="w-full"
         />
       </div>

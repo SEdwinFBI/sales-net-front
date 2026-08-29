@@ -6,21 +6,24 @@ import { buildSidebarItems } from '@/lib/app-routes'
 import { salesRoutes } from '@/features/sales'
 import { catalogRoutes } from '@/features/catalog'
 
-import { adminUsuariosRoutes } from '@/features/adminUsuarios'
-
 import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
 import { reportingRoutes } from '@/features/reporting'
 import { clientesRoutes } from '@/features/customers'
+import { inventarioRoutes } from '@/features/inventario'
+import { administracionRoute } from '@/routes/administracion-routes'
+import { cashRoutes } from '@/features/cash'
 
 const allFeatureRoutes = [
   ...reportingRoutes,
   ...salesRoutes,
+  ...cashRoutes,
   ...clientesRoutes,
   ...catalogRoutes,
-  ...adminUsuariosRoutes
+  ...inventarioRoutes,
+  administracionRoute,
 ]
 
 export default function MainLayout() {
@@ -132,6 +135,7 @@ export default function MainLayout() {
             user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
+            onSettings={() => navigate('/administracion/notificaciones')}
           />
 
           <main className="min-w-0 flex-1 py-2 pb-8 sm:py-3">

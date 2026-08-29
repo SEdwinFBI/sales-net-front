@@ -21,7 +21,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
+import type { Sucursal } from '@/features/adminSucursales/types/sucursal-types'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/helpers/money'
 import { useDeleteUserPricing } from '../hooks/useDeleteUserPricing'
@@ -50,7 +50,7 @@ type RowErrors = Partial<Record<'precio' | 'descuentoMayorista', string>> & {
 
 type Props = {
   articles: Article[]
-  seller: Usuario
+  sucursal: Sucursal
   pricing: UserVariantPricing[]
   tiers: MayoreoTier[]
   isLoading: boolean
@@ -97,7 +97,7 @@ const EMPTY_TIER: TierDraft = { desde: '', hasta: '', descuento: '' }
 
 export default function UserPricingEditor({
   articles: catalogArticles,
-  seller,
+  sucursal,
   pricing,
   tiers,
   isLoading,
@@ -272,7 +272,7 @@ export default function UserPricingEditor({
     })
     if (!variant.tiene_config) return
     try {
-      await deletePricing({ userId: seller.id, variantId: variant.id_variante })
+      await deletePricing({ userId: sucursal.id, variantId: variant.id_variante })
       toast.success(`La talla ${variant.talla} vuelve a heredar los valores por defecto`)
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al restablecer la variante'))
@@ -356,7 +356,7 @@ export default function UserPricingEditor({
     if (items.length === 0) return
 
     try {
-      await savePricing({ userId: seller.id, items })
+      await savePricing({ userId: sucursal.id, items })
       setDrafts({})
       toast.success(`Se guardaron los precios de ${items.length} variante(s)`)
     } catch (error) {
@@ -404,7 +404,7 @@ export default function UserPricingEditor({
             <ArrowLeft />
           </Button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-primary">{seller.fullName}</p>
+            <p className="truncate text-sm font-semibold text-primary">{sucursal.nombre}</p>
             <p className="text-sm text-muted-foreground">
               Precio y descuentos por talla
             </p>

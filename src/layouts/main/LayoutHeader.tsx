@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from "lucide-react"
+import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Settings, Sun, X } from "lucide-react"
 import type { User } from "@/features/auth/types/auth"
 import { useThemeStore } from "@/features/core/store/theme-store"
 
@@ -12,6 +12,7 @@ type LayoutHeaderProps = {
     user: User
     onLogout: () => void
     onSidebarToggle: () => void
+    onSettings: () => void
 }
 
 
@@ -24,6 +25,7 @@ function LayoutHeader({
     user,
     onLogout,
     onSidebarToggle,
+    onSettings,
 }: LayoutHeaderProps) {
     const displayName = user.fullName?.trim() || user.username
     const theme = useThemeStore((state) => state.theme)
@@ -39,8 +41,8 @@ function LayoutHeader({
 
     return (
         <header className="sticky top-0 z-10 rounded-2xl border border-border/70 bg-card/95 px-3.5 py-3 shadow-sm backdrop-blur sm:px-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap">
+                <div className="order-1 w-full flex items-center gap-3 min-[400px]:w-auto">
                     <button
                         type="button"
                         onClick={onSidebarToggle}
@@ -48,7 +50,10 @@ function LayoutHeader({
                         aria-expanded={isSidebarExpanded}
                         aria-label={sidebarLabel}
                         className={cn(
-                            'size-10 items-center justify-center rounded-xl border border-border bg-secondary/70 text-neutral transition hover:bg-primary-nav',
+                            'size-10 items-center justify-center rounded-xl border transition-[background-color,border-color,color] duration-150',
+                            isSidebarPinned
+                                ? 'border-primary/25 bg-primary/10 text-primary hover:bg-primary/15'
+                                : 'border-border bg-card text-neutral hover:bg-primary-nav',
                             hasSidebarNavigation ? 'inline-flex' : 'hidden',
                         )}
                     >
@@ -65,25 +70,28 @@ function LayoutHeader({
                         )}
                     </button>
 
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary sm:tracking-[0.22em]">
+                    <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold uppercase tracking-[0.16em] text-primary sm:tracking-[0.22em]">
                             Distribuidora MZ
                         </p>
-                        <p className="text-sm text-neutral/70">
+                        <p className="truncate text-sm text-neutral/70">
                             Tablero comercial
                         </p>
                     </div>
                 </div>
 
-                <div className="flex min-w-0 items-center gap-3">
-                    <div className="min-w-0 text-right">
-                        <p className="max-w-42 truncate text-sm font-semibold text-neutral">
-                            {displayName}
-                        </p>
-                        <p className="text-xs font-medium uppercase tracking-wide text-neutral/55">
-                            {user?.username}
-                        </p>
-                    </div>
+                <div className="order-3 ml-auto flex shrink-0 items-center gap-2 min-[400px]:max-sm:order-2 sm:order-3 sm:ml-0 sm:gap-3">
+                    {user.permissions.includes('admin') && (
+                        <button
+                            type="button"
+                            onClick={onSettings}
+                            aria-label="Configurar notificaciones"
+                            title="Configurar notificaciones"
+                            className="inline-flex size-10 items-center justify-center rounded-xl border border-border bg-card text-neutral transition hover:bg-primary-nav"
+                        >
+                            <Settings className="size-4" />
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={toggleTheme}
@@ -101,6 +109,15 @@ function LayoutHeader({
                     >
                         <LogOut className="size-4 text-[--color-danger]" />
                     </button>
+                </div>
+
+                <div className="order-2 min-w-0 min-[400px]:max-sm:order-3 min-[400px]:max-sm:w-full min-[400px]:max-sm:text-center sm:order-2 sm:ml-auto sm:w-auto sm:text-right">
+                    <p className="max-w-40 truncate text-sm font-semibold text-neutral min-[400px]:max-sm:mx-auto min-[400px]:max-sm:max-w-56 sm:max-w-42">
+                        {displayName}
+                    </p>
+                    <p className="truncate text-xs font-medium uppercase tracking-wide text-neutral/55">
+                        {user.sucursalActual?.nombre ?? user.username}
+                    </p>
                 </div>
             </div>
         </header>

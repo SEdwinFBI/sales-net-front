@@ -38,6 +38,11 @@ function getDebtValue(row: ReporteCobroCliente) {
   return Number(row.balance ?? row.saldo_restante ?? 0)
 }
 
+/**
+ * Filas de cliente a expandir bajo un usuario. Si el reporte ya trae
+ * `clientes` se usa tal cual; si sólo trae `cobros` sueltos (reportes
+ * filtrados por fecha), se agrupan aquí por cliente para armar la misma forma.
+ */
 function getClienteRows(row: ReporteCobrosUsuario): ReporteCobroCliente[] {
   if (row.clientes) return row.clientes
 

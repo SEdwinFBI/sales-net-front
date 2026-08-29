@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
-import type { Usuario } from '@/features/adminUsuarios/types/usuario-types'
+import type { Sucursal } from '@/features/adminSucursales/types/sucursal-types'
 import { useMayoreoTiers } from '../hooks/useMayoreoTiers'
 import { useSaveMayoreoTiers } from '../hooks/useSaveMayoreoTiers'
 import type { MayoreoTier } from '../types/pricing-types'
@@ -30,7 +30,7 @@ type TierRow = {
 }
 
 type Props = {
-  seller: Usuario
+  sucursal: Sucursal
   onGoToPrecios: () => void
 }
 
@@ -46,8 +46,8 @@ function toRows(tiers: MayoreoTier[]): TierRow[] {
 
 const percentToFactor = (value: string) => value === '' ? '1' : String(Number(value) / 100)
 
-export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
-  const { tiers, esDefault, isLoading } = useMayoreoTiers(seller.id)
+export default function MayoreoTiersEditor({ sucursal, onGoToPrecios }: Props) {
+  const { tiers, esDefault, isLoading } = useMayoreoTiers(sucursal.id)
   const { mutateAsync: saveTiers, isPending: isSaving } = useSaveMayoreoTiers()
   const [rows, setRows] = useState<TierRow[] | null>(null)
 
@@ -102,7 +102,7 @@ export default function MayoreoTiersEditor({ seller, onGoToPrecios }: Props) {
     }
 
     try {
-      await saveTiers({ userId: seller.id, tiers: parsedTiers })
+      await saveTiers({ userId: sucursal.id, tiers: parsedTiers })
       toast.success('Configuración de mayoreo guardada')
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar la configuración de mayoreo'))

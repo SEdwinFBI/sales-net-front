@@ -22,6 +22,7 @@ import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaItem } from '../types/reportes'
+import { formatDisplayDateTime } from '@/lib/dates'
 
 type Row = ReporteVentaItem
 
@@ -162,6 +163,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Estado</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">F. Pago</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vendedor</th>
+                                <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sucursal</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cliente</th>
                                 <th className="px-2 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Observación</th>
                               </tr>
@@ -174,7 +176,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                           return (
                                 <tr key={v.id_venta} className={vi % 2 === 0 ? 'bg-card' : 'bg-muted/10'}>
                                   <td className="px-2 py-1 text-xs font-mono text-muted-foreground">{v.id_venta}</td>
-                                  <td className="px-2 py-1 text-xs">{(() => { const d = new Date(v.fecha); return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` })()}</td>
+                                  <td className="px-2 py-1 text-xs">{formatDisplayDateTime(v.fecha)}</td>
                                   <td className="px-2 py-1 text-xs">{formatNumber(v.cantidad)}</td>
                                   <td className="px-2 py-1 text-xs">{formatCurrency(precioBrutoU)}</td>
                                   <td className="px-2 py-1 text-xs text-destructive">{formatCurrency(v.descuento ?? 0)}</td>
@@ -183,7 +185,8 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
                                   <td className="px-2 py-1 text-xs font-semibold">{formatCurrency(v.monto ?? 0)}</td>
                                   <td className="px-2 py-1 text-xs">{v.estado}</td>
                                   <td className="px-2 py-1 text-xs">{v.forma_pago}</td>
-                                  <td className="px-2 py-1 text-xs">{v.vendedor.full_name}</td>
+                                  <td className="px-2 py-1 text-xs">{v.vendedor?.full_name ?? 'Sin vendedor'}</td>
+                                  <td className="px-2 py-1 text-xs">{v.sucursal.nombre}</td>
                                   <td className="px-2 py-1 text-xs">{v.cliente.nombre_completo}</td>
                                   <td className="px-2 py-1 text-xs">{v.observacion || <span className="text-muted-foreground">—</span>}</td>
                                 </tr>
