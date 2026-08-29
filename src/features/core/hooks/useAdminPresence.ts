@@ -4,7 +4,7 @@ import { buildWsUrl } from "@/lib/api";
 
 const RECONNECT_DELAY_MS = 3000;
 const PING_INTERVAL_MS = 10000;
-const PRESENCE_WS_ENABLED = false; // deshabilitado: el hosting actual (PythonAnywhere) no soporta websockets
+const PRESENCE_WS_ENABLED = true; // deshabilitado: el hosting actual (PythonAnywhere) no soporta websockets
 
 /** user_id -> cantidad de conexiones (pestañas/dispositivos) activas. */
 function useAdminPresence(token: string | null) {
