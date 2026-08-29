@@ -4,7 +4,7 @@ import { buildWsUrl } from "@/lib/api";
 
 const PING_INTERVAL_MS = 10000;
 const RECONNECT_DELAY_MS = 3000;
-const PRESENCE_WS_ENABLED = false; // deshabilitado: el hosting actual (PythonAnywhere) no soporta websockets
+const PRESENCE_WS_ENABLED = true;
 
 function usePresenceSocket(token: string | null) {
   useEffect(() => {
