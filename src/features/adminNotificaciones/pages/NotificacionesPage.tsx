@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { getApiErrorMessage } from '@/lib/api-error'
@@ -34,6 +34,7 @@ export default function NotificacionesPage() {
   const { mutateAsync: remove, isPending: isDeleting } = useDeleteDestinatario()
   const [destinatarios, setDestinatarios] = useState<DestinatarioNotificacion[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [destinatarioAEliminar, setDestinatarioAEliminar] = useState<DestinatarioNotificacion | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
 
   useEffect(() => setDestinatarios(data), [data])
@@ -71,12 +72,12 @@ export default function NotificacionesPage() {
     }
   }
 
-  const removeDestinatario = async (destinatario: DestinatarioNotificacion) => {
-    if (!window.confirm(`¿Eliminar a ${destinatario.nombre_persona_email} de los destinatarios?`)) return
-
+  const removeDestinatario = async () => {
+    if (!destinatarioAEliminar) return
     try {
-      await remove(destinatario.id)
+      await remove(destinatarioAEliminar.id)
       toast.success('Destinatario eliminado')
+      setDestinatarioAEliminar(null)
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo eliminar el destinatario'))
     }
@@ -111,7 +112,7 @@ export default function NotificacionesPage() {
                 <CardTitle>{destinatario.nombre_persona_email}</CardTitle>
                 <CardDescription>{destinatario.email}</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" disabled={isDeleting} onClick={() => removeDestinatario(destinatario)} aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}>
+              <Button variant="ghost" size="icon" disabled={isDeleting} onClick={() => setDestinatarioAEliminar(destinatario)} aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}>
                 <Trash2 className="text-destructive" />
               </Button>
             </CardHeader>
@@ -132,6 +133,24 @@ export default function NotificacionesPage() {
           </div>
         )}
       </Card>
+
+      <Dialog open={Boolean(destinatarioAEliminar)} onOpenChange={(open) => !open && !isDeleting && setDestinatarioAEliminar(null)}>
+        <DialogContent showCloseButton={!isDeleting}>
+          <DialogHeader>
+            <DialogTitle>Eliminar destinatario</DialogTitle>
+            <DialogDescription>
+              ¿Seguro que deseas eliminar a <span className="font-medium text-foreground">{destinatarioAEliminar?.nombre_persona_email}</span> ({destinatarioAEliminar?.email})? Dejará de recibir todas las notificaciones.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={isDeleting} onClick={() => setDestinatarioAEliminar(null)}>Cancelar</Button>
+            <Button variant="destructive" disabled={isDeleting} onClick={removeDestinatario}>
+              {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+              Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
