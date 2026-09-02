@@ -76,8 +76,8 @@ export default function MyCashPage() {
 
           {isLoading ? (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, index) => (
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton key={index} className="h-24 rounded-xl" />
                 ))}
               </div>
