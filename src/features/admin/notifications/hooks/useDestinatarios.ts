@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createDestinatario, deleteDestinatario, getDestinatarios, updateDestinatarios } from '../services/notificaciones-service'
-import type { ActualizarDestinatariosPayload, CrearDestinatarioPayload } from '../types/notificaciones-types'
+import type { ActualizarDestinatariosPayload, CrearDestinatarioPayload, DestinatariosFilters } from '../types/notificaciones-types'
 
 const queryKey = ['adminNotificaciones', 'destinatarios'] as const
 
-export function useDestinatarios() {
-  return useQuery({ queryKey, queryFn: getDestinatarios })
+export function useDestinatarios(filters?: DestinatariosFilters) {
+  return useQuery({
+    queryKey: [...queryKey, filters] as const,
+    queryFn: () => getDestinatarios(filters),
+  })
 }
 
 export function useCreateDestinatario() {
