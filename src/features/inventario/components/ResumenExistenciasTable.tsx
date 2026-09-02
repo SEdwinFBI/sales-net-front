@@ -41,9 +41,9 @@ export default function ResumenExistenciasTable({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columns: ColumnDef<ResumenFilaExistencias>[] = [
+    { accessorKey: 'sucursal', header: 'Sucursal' },
     { accessorKey: 'articulo', header: 'Artículo' },
     { accessorKey: 'talla', header: 'Talla' },
-    { accessorKey: 'sucursal', header: 'Sucursal' },
     {
       accessorKey: 'habia',
       header: 'Había',

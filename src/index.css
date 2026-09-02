@@ -200,4 +200,18 @@ a {
   html {
     @apply font-sans;
   }
+
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+
+  option,
+  optgroup {
+    background-color: var(--card);
+    color: var(--card-foreground);
+  }
 }

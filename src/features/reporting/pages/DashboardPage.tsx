@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { getApiErrorMessage } from '@/lib/api-error'
@@ -231,29 +232,29 @@ export default function DashboardPage() {
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Sucursal</label>
-            <select className="h-8 w-[150px] rounded-md border border-input bg-card px-2 text-xs"
+            <Select className="h-8 w-[150px] text-xs"
               value={searchParams.get('sucursal') ?? ''}
               onChange={e => setFilter('sucursal', e.target.value)}>
               <option value="">Todas</option>
               {sucursales.map(s => (
                 <option key={s.id} value={s.id}>{s.nombre}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Artículo</label>
-            <select className="h-8 w-[170px] rounded-md border border-input bg-card px-2 text-xs"
+            <Select className="h-8 w-[170px] text-xs"
               value={searchParams.get('articulo') ?? ''}
               onChange={e => setFilter('articulo', e.target.value)}>
               <option value="">Todos</option>
               {articulos.filter(a => a.activo !== false).map(a => (
                 <option key={a.id} value={a.id}>{a.titulo}</option>
               ))}
-            </select>
+            </Select>
           </div>
           <div>
             <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Talla</label>
-            <select className="h-8 w-[110px] rounded-md border border-input bg-card px-2 text-xs disabled:opacity-50"
+            <Select className="h-8 w-[110px] text-xs disabled:opacity-50"
               value={searchParams.get('talla') ?? ''}
               onChange={e => setFilter('talla', e.target.value)}
               disabled={!filters.id_articulo}>
@@ -261,7 +262,7 @@ export default function DashboardPage() {
               {tallasDelArticulo.map(t => (
                 <option key={t.id} value={t.id}>{t.nombre}</option>
               ))}
-            </select>
+            </Select>
           </div>
           {hasCustomFilters && (
             <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearFilters}>
