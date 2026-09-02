@@ -14,8 +14,22 @@ export type DestinatarioNotificacion = {
   recibir_ventas_realizadas: boolean
 }
 
+export type DestinatariosFilters = {
+  search?: string
+  page?: number
+  page_size?: number
+}
+
+export type DestinatariosResponse = {
+  count: number
+  next: string | null
+  previous: string | null
+  results: DestinatarioNotificacion[]
+}
+
 export type CrearDestinatarioPayload = Omit<DestinatarioNotificacion, 'id'>
 
 export type ActualizarDestinatariosPayload = {
   destinatarios: Array<Pick<DestinatarioNotificacion, 'id'> & Record<PreferenciaNotificacion, boolean>>
 }
+
