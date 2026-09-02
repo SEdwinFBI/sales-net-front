@@ -1,1 +1,0 @@
-export { adminNotificacionesRoute } from './routes'

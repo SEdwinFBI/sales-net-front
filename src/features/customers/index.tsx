@@ -1,1 +1,0 @@
-export { clientesRoutes } from './routes'

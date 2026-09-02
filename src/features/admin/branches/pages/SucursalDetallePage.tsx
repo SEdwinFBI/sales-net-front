@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getApiErrorMessage } from '@/lib/api-error'
-import { useUsuarios } from '@/features/adminUsuarios/hooks/useUsuarios'
+import { useUsuarios } from '@/features/admin'
 import { useSucursalDetalle } from '../hooks/useSucursalDetalle'
 import { useSetAccesoUsuarioSucursal } from '../hooks/useSetAccesoUsuarioSucursal'
 
