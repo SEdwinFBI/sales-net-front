@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Search, Store } from 'lucide-react'
 import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/ui/empty-state'
-import type { Sucursal } from '@/features/adminSucursales/types/sucursal-types'
+import { Input } from '@/components/ui/input'
+import type { Sucursal } from '@/features/admin'
 
 type Props = {
   isLoading: boolean

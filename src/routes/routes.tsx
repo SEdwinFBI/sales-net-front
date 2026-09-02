@@ -10,7 +10,7 @@ import { catalogRoutes } from '@/features/catalog'
 import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
 import { reportingRoutes } from '@/features/reporting'
-import { administracionRoute } from './administracion-routes'
+import { adminRoutes } from '@/features/admin'
 import { cashRoutes } from '@/features/cash'
 
 const mainLayoutRoutes: RouteObject = {
@@ -22,7 +22,7 @@ const mainLayoutRoutes: RouteObject = {
       index: true,
       element: <RedirectIndex />,
     },
-    ...buildReactRoutes([administracionRoute, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...cashRoutes, ...catalogRoutes, ...inventarioRoutes]),
+    ...buildReactRoutes([...adminRoutes, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...cashRoutes, ...catalogRoutes, ...inventarioRoutes]),
   ],
 }
 

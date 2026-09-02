@@ -1,0 +1,8 @@
+export { clientesRoutes } from './routes'
+export { useCustomers, type Customer, type CustomerSearchParams } from './hooks/useCustomers'
+export { useClientes } from './hooks/useClientes'
+export { useCliente } from './hooks/useCliente'
+export { useCreateCliente } from './hooks/useCreateCliente'
+export { useUpdateCliente } from './hooks/useUpdateCliente'
+export { useDeleteCliente } from './hooks/useDeleteCliente'
+export type { Cliente } from './types/clientes'

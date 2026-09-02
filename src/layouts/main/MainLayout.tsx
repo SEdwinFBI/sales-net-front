@@ -13,7 +13,7 @@ import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery
 import { reportingRoutes } from '@/features/reporting'
 import { clientesRoutes } from '@/features/customers'
 import { inventarioRoutes } from '@/features/inventario'
-import { administracionRoute } from '@/routes/administracion-routes'
+import { adminRoutes } from '@/features/admin'
 import { cashRoutes } from '@/features/cash'
 
 const allFeatureRoutes = [
@@ -23,7 +23,7 @@ const allFeatureRoutes = [
   ...clientesRoutes,
   ...catalogRoutes,
   ...inventarioRoutes,
-  administracionRoute,
+  ...adminRoutes,
 ]
 
 export default function MainLayout() {

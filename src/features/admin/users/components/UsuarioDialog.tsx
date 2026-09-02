@@ -19,7 +19,7 @@ import { Loader2 } from 'lucide-react'
 import { useCreateUsuario } from '../hooks/useCreateUsuario'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import type { Usuario } from '../types/usuario-types'
-import { useSucursales } from '@/features/adminSucursales/hooks/useSucursales'
+import { useSucursales } from '@/features/admin'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
