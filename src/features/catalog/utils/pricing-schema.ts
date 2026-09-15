@@ -13,7 +13,10 @@ export const tierRowSchema = z.object({
     (value) => /^\d+$/.test(value) && Number(value) >= 1,
     { message: 'Debe ser un entero ≥ 1' }
   ),
-  hasta: z.string().trim(),
+  hasta: z.string().trim().refine(
+    (value) => value === '' || (/^\d+$/.test(value) && Number(value) >= 1),
+    { message: 'Debe ser un entero mayor o igual a 1 o estar vacío (sin límite)' }
+  ),
   descuento: z.string().trim().refine(
     (value) => /^\d+(\.\d{1,2})?$/.test(value) && Number(value) > 0,
     { message: 'Debe ser un monto en quetzales > 0' }
