@@ -6,6 +6,8 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import LoginForm from '@/features/auth/components/LoginForm'
 import SucursalPicker from '@/features/auth/components/SucursalPicker'
 import { isSessionExpired, useAuthStore } from '@/features/core/store/auth-store'
+import { usePatternLoginMutation } from '../hooks/usePatternLoginMutation'
+import type { PatternLoginCredentials } from '../types/pattern'
 import { useLoginMutation } from '../hooks/useLoginMutation'
 import { seleccionarSucursalService } from '../services/auth-service'
 import { requiereSeleccionSucursal } from '../types/auth'
@@ -25,6 +27,7 @@ export default function LoginFeature() {
   const applySession = useAuthStore((state) => state.login)
   const logout = useAuthStore((state) => state.logout)
   const { mutateAsync: login, isPending } = useLoginMutation()
+  const { mutateAsync: loginPattern, reset: resetPatternLogin } = usePatternLoginMutation()
   const [seleccion, setSeleccion] = useState<{ sucursales: Sucursal[]; preToken: string } | null>(null)
 
   const completarSesion = (session: Parameters<typeof applySession>[0]) => {
@@ -60,6 +63,19 @@ export default function LoginFeature() {
     }
   }
 
+  const performPatternLogin = async (values: PatternLoginCredentials) => {
+    try {
+      const result = await loginPattern(values)
+      if (requiereSeleccionSucursal(result)) {
+        setSeleccion({ sucursales: result.sucursales, preToken: result.pre_token })
+        return
+      }
+      completarSesion(result)
+    } finally {
+      resetPatternLogin()
+    }
+  }
+
   const performSeleccionSucursal = async (sucursalId: number) => {
     if (!seleccion) return
     try {
@@ -88,6 +104,6 @@ export default function LoginFeature() {
   }
 
   return (
-    <LoginForm onSubmit={performLogin} />
+    <LoginForm onSubmit={performLogin} onPatternSubmit={performPatternLogin} />
   )
 }
