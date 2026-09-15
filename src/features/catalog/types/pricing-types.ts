@@ -83,6 +83,7 @@ export type CotizacionLinea = {
 }
 
 export type CotizacionResponse = {
+  evidencia_fotografica: boolean
   lineas: CotizacionLinea[]
   total: number
 }

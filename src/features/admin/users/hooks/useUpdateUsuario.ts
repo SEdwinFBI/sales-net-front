@@ -8,8 +8,8 @@ export const useUpdateUsuario = () => {
 
   return useMutation<Usuario, Error, UpdateUsuarioPayload>({
     mutationFn: updateUsuario,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminUsuarios.list() })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminUsuarios.list() })
     },
   })
 }

@@ -1,4 +1,4 @@
-import { Settings, Store, Users } from 'lucide-react'
+import { Settings, ShieldCheck, Store, Users } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const adminRoutes: AppRoute[] = [
@@ -38,6 +38,16 @@ export const adminRoutes: AppRoute[] = [
           icon: Users,
           permissions: ['admin'],
           lazy: () => import('./users/pages/UsuariosPage'),
+        },
+      },
+      {
+        path: 'patron-acceso',
+        meta: {
+          name: 'Patrón de acceso',
+          description: 'Configuración del patrón personal de ingreso',
+          icon: ShieldCheck,
+          permissions: ['admin', 'vendedor'],
+          lazy: () => import('./users/pages/PatronAccesoPage'),
         },
       },
       {
