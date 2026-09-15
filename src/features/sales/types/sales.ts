@@ -74,8 +74,8 @@ export type SubmitSalePayload = {
   customerId?: string
   total: number
   observacion?: string
-  /** Foto de entrega en data URL. El backend la exige para cerrar la venta. */
-  foto: string
+  /** Foto de entrega en data URL, cuando está habilitada para el usuario. */
+  foto?: string
 }
 
 export type SubmitSaleResponse = {
@@ -164,7 +164,7 @@ export interface CreateVentaPayload {
   idempotencia_key: string
   observacion?: string
   /** Data URL `data:image/jpeg;base64,...` ya comprimida en el navegador. */
-  foto: string
+  foto?: string
   detalles: {
     id_variante: number
     cantidad: number

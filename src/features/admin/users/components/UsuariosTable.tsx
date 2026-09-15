@@ -23,6 +23,9 @@ import { EmptyState } from '@/components/ui/empty-state'
 import type { Usuario } from '../types/usuario-types'
 import UsuarioDialog from './UsuarioDialog'
 import DeleteUsuarioDialog from './DeleteUsuarioDialog'
+import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
+import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
 
 type Props = {
   data: Usuario[]
@@ -61,6 +64,29 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null)
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null)
+  const { mutateAsync: updateUsuario, isPending: isUpdating } = useUpdateUsuario()
+
+  const evidenceCheckbox = (usuario: Usuario) => (
+    <label className="inline-flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        className="size-4 accent-primary"
+        checked={usuario.evidencia_fotografica ?? true}
+        disabled={isUpdating}
+        aria-label={`Evidencia fotográfica de ${usuario.fullName || usuario.username}`}
+        onChange={async (event) => {
+          const enabled = event.target.checked
+          try {
+            await updateUsuario({ id: usuario.id, evidencia_fotografica: enabled })
+            toast.success(`Evidencia fotográfica ${enabled ? 'activada' : 'desactivada'}`)
+          } catch (error) {
+            toast.error(getApiErrorMessage(error, 'No se pudo actualizar la evidencia fotográfica'))
+          }
+        }}
+      />
+      <span className="md:hidden">Evidencia fotográfica</span>
+    </label>
+  )
 
   const columns: ColumnDef<Usuario>[] = [
     {
@@ -103,6 +129,11 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
           {row.original.role ?? 'Sin rol'}
         </Badge>
       ),
+    },
+    {
+      id: 'evidencia_fotografica',
+      header: 'Evidencia fotográfica',
+      cell: ({ row }) => evidenceCheckbox(row.original),
     },
     {
       id: 'actions',
@@ -238,6 +269,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
                     </Badge>
                   </div>
 
+                  <div className="mt-4">{evidenceCheckbox(usuario)}</div>
                   <div className="mt-4 flex justify-end gap-2">
                     <Button
                       size="icon-sm"
