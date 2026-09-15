@@ -9,6 +9,7 @@ interface UserApi {
   email: string
   role: string | null
   is_active: boolean
+  evidencia_fotografica: boolean
   created_at: string
   hora_entrada: string | null
   hora_salida: string | null
