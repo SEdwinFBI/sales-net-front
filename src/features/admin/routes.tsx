@@ -46,7 +46,7 @@ export const adminRoutes: AppRoute[] = [
           name: 'Patrón de acceso',
           description: 'Configuración del patrón personal de ingreso',
           icon: ShieldCheck,
-          permissions: ['admin'],
+          permissions: ['admin', 'vendedor'],
           lazy: () => import('./users/pages/PatronAccesoPage'),
         },
       },
