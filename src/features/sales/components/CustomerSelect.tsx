@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, type FC } from "react"
-import { Search, X, ChevronDown, Check } from "lucide-react"
+import { Search, X, ChevronDown, Check, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/helpers/money"
 
@@ -13,9 +13,10 @@ type Props = {
     onChange: (id: string) => void
     onSearch?: (query: string) => void
     loading?: boolean
+    onQuickCreate?: () => void
 }
 
-const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loading }) => {
+const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loading, onQuickCreate }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
     const [highlighted, setHighlighted] = useState(0)
@@ -123,7 +124,23 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg">
+                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg overflow-hidden">
+                    {onQuickCreate && (
+                        <div className="border-b border-border/60 p-2 bg-muted/20">
+                            <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault()
+                                    setOpen(false)
+                                    onQuickCreate()
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                            >
+                                <UserPlus className="size-3.5" />
+                                + Crear cliente rápido
+                            </button>
+                        </div>
+                    )}
                     {loading ? (
                         <div className="p-6 text-center text-sm text-muted-foreground">
                             Cargando clientes...
@@ -133,8 +150,22 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                             No hay clientes disponibles
                         </div>
                     ) : filtered.length === 0 ? (
-                        <div className="p-6 text-center text-sm text-muted-foreground">
-                            Sin coincidencias
+                        <div className="p-5 text-center text-sm text-muted-foreground space-y-2">
+                            <p>Sin coincidencias para &quot;{query}&quot;</p>
+                            {onQuickCreate && (
+                                <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault()
+                                        setOpen(false)
+                                        onQuickCreate()
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors cursor-pointer"
+                                >
+                                    <UserPlus className="size-3.5" />
+                                    Crear este cliente
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <ul className="max-h-56 overflow-y-auto py-1">

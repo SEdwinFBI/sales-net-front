@@ -1,9 +1,10 @@
 
 
-import { useEffect } from 'react'
-import { PackageOpen, ShoppingCart, Sparkles } from 'lucide-react'
+import { useState, useEffect, useDeferredValue } from 'react'
+import { PackageOpen, ShoppingCart, Sparkles, UserCheck, Tag, Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   Drawer,
@@ -19,7 +20,11 @@ import { useSalesStore } from '../store/useSalesStore'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import { formatCurrency } from '@/helpers/money'
 import CartItemComponent from './CartItemComponent'
-//import SpeechTranscriptBox from './SpeechTranscriptBox'
+import CustomerSelect from './CustomerSelect'
+import { useCustomers } from '@/features/customers'
+import { useCustomerPricesStore } from '@/features/customers/store/useCustomerPricesStore'
+import { usePreciosCliente } from '@/features/customers/hooks/usePreciosCliente'
+import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
 import { selectTotal, selectTotalDiscount, selectTotalItems } from '../utils/utilsSales'
 import type { CartPricingResult } from '../utils/pricing-engine'
 
@@ -47,6 +52,61 @@ const CartDrawer = ({ pricing }: Props) => {
   const activeTier = pricing?.activeTier ?? null
   const nextTierHint = pricing?.nextTierHint ?? null
 
+  const customerPricingEnabled = useSalesStore((state) => state.customerPricingEnabled)
+  const setCustomerPricingEnabled = useSalesStore((state) => state.setCustomerPricingEnabled)
+  const selectedCustomerId = useSalesStore((state) => state.selectedCustomerId)
+  const setSelectedCustomerId = useSalesStore((state) => state.setSelectedCustomerId)
+
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+
+  const deferredCustomerSearch = useDeferredValue(customerSearch.trim())
+  const { data: customers, isLoading: loadingCustomers } = useCustomers({
+    search: deferredCustomerSearch,
+    activeOnly: true,
+    pageSize: 50,
+  })
+
+  const getCustomerPrices = useCustomerPricesStore((state) => state.getCustomerPrices)
+  const saveLocalPrices = useCustomerPricesStore((state) => state.savePrices)
+  const customerPricesList = selectedCustomerId
+    ? getCustomerPrices(Number(selectedCustomerId))
+    : []
+
+  const selectedCustomerObj = customers?.find((c) => String(c.id) === selectedCustomerId)
+  const itemsWithCustomerPriceCount = items.filter((item) => item.discountType === 'CLIENTE').length
+
+  // Sincronizar precios configurados en backend para este cliente
+  const { data: remoteCustomerPrices, isLoading: loadingCustomerPrices } = usePreciosCliente(
+    customerPricingEnabled && selectedCustomerId ? Number(selectedCustomerId) : 0
+  )
+
+  useEffect(() => {
+    if (remoteCustomerPrices && remoteCustomerPrices.length > 0 && selectedCustomerId) {
+      const configurados = remoteCustomerPrices.filter(
+        (p) => p.tiene_config && p.precio_cliente !== null
+      )
+      if (configurados.length > 0) {
+        saveLocalPrices(
+          configurados.map((p) => ({
+            id: `${selectedCustomerId}::${p.id_variante}`,
+            customerId: Number(selectedCustomerId),
+            customerName: selectedCustomerObj?.name ?? 'Cliente',
+            variantId: p.id_variante,
+            productId: p.id_articulo,
+            productName: p.articulo,
+            variantSize: p.talla,
+            precioPactado: Number(p.precio_cliente!),
+            precioCatalogo: Number(p.precio_base),
+            descuentoAplicado: Math.max(0, Number(p.precio_base) - Number(p.precio_cliente ?? p.precio_base)),
+            tipoDescuentoOrigen: 'MANUAL',
+            fechaRegistro: p.fecha_actualizacion || new Date().toISOString(),
+          }))
+        )
+      }
+    }
+  }, [remoteCustomerPrices, selectedCustomerId, selectedCustomerObj, saveLocalPrices])
+
   const speech = useSpeechRecognition({ enabled: cartOpen })
 
   useEffect(() => {
@@ -59,7 +119,8 @@ const CartDrawer = ({ pricing }: Props) => {
   }, [speech.resetTranscript, registerVoiceReset])
 
   return (
-    <Drawer
+    <>
+      <Drawer
       shouldScaleBackground={false}
       open={cartOpen}
       onOpenChange={(open) => {
@@ -110,6 +171,68 @@ const CartDrawer = ({ pricing }: Props) => {
         )} */}
 
         <DrawerBody className="mx-auto w-full max-w-2xl pt-2 overflow-y-auto max-h-[calc(100dvh-16rem)] min-h-[6rem]">
+          {/* Panel: Aplicar precios de cliente */}
+          <div className="rounded-2xl border border-border/80 bg-muted/20 p-3.5 space-y-2.5 mb-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <UserCheck className="size-4 text-primary" />
+                <span className="text-sm font-medium">Aplicar precios para clientes</span>
+              </div>
+              <Switch
+                checked={customerPricingEnabled}
+                onCheckedChange={setCustomerPricingEnabled}
+              />
+            </div>
+
+            {customerPricingEnabled && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <CustomerSelect
+                  customers={customers ?? []}
+                  value={selectedCustomerId}
+                  onChange={setSelectedCustomerId}
+                  onSearch={setCustomerSearch}
+                  loading={loadingCustomers}
+                  onQuickCreate={() => setQuickCreateOpen(true)}
+                />
+
+                {selectedCustomerId ? (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                    {loadingCustomerPrices ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Loader2 className="size-3 animate-spin text-primary" />
+                        Cargando precios pactados...
+                      </span>
+                    ) : (
+                      <span>
+                        {itemsWithCustomerPriceCount > 0 ? (
+                          <strong className="text-emerald-600 dark:text-emerald-400">
+                            {itemsWithCustomerPriceCount} producto{itemsWithCustomerPriceCount === 1 ? '' : 's'} con precio pactado
+                          </strong>
+                        ) : (
+                          'Sin precios pactados en este carrito para este cliente'
+                        )}
+                      </span>
+                    )}
+                    {customerPricesList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => openDialog('customer-prices')}
+                        className="text-primary hover:underline text-xs font-medium cursor-pointer inline-flex items-center gap-1"
+                      >
+                        <Tag className="size-3" />
+                        Ver pactados ({customerPricesList.length})
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-warning px-1">
+                    Selecciona un cliente para aplicar sus precios guardados.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           {items.length === 0 ? (
             <EmptyState icon={ShoppingCart} size="sm" title="Agrega productos para empezar la venta." />
           ) : (
@@ -172,6 +295,13 @@ const CartDrawer = ({ pricing }: Props) => {
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+
+    <QuickClienteDialog
+      open={quickCreateOpen}
+      onClose={() => setQuickCreateOpen(false)}
+      onSuccess={(newC) => setSelectedCustomerId(String(newC.id))}
+    />
+  </>
   )
 }
 

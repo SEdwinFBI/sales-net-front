@@ -17,12 +17,13 @@ import { formatCurrency } from '@/helpers/money'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
 import { Wallet, CreditCard, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
 
 
 const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet }[] = [
@@ -43,6 +44,10 @@ const CheckoutDialog = () => {
   const ventaFoto = useSalesStore((state) => state.ventaFoto)
   const setVentaFoto = useSalesStore((state) => state.setVentaFoto)
 
+  const storeCustomerId = useSalesStore((state) => state.selectedCustomerId)
+  const setStoreCustomerId = useSalesStore((state) => state.setSelectedCustomerId)
+  const customerPricingEnabled = useSalesStore((state) => state.customerPricingEnabled)
+
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
   const [customerSearch, setCustomerSearch] = useState('')
@@ -54,12 +59,17 @@ const CheckoutDialog = () => {
   })
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
+  const [selectedCustomerId, setSelectedCustomerId] = useState(storeCustomerId)
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+
   // Cotización del servidor para confirmar el total antes
   // de cobrar
   const detalles = items.map((item) => ({ id_variante: item.variantId, cantidad: item.qty }))
+  const activeClienteId = customerPricingEnabled && selectedCustomerId ? Number(selectedCustomerId) : null
   const { data: cotizacion, isFetching: isQuoting, isError: quoteError, refetch: retryQuote } = useQuery({
-    queryKey: ['pricing', 'cotizar', userId, detalles],
-    queryFn: () => cotizarCarrito(detalles),
+    queryKey: ['pricing', 'cotizar', userId, detalles, activeClienteId],
+    queryFn: () => cotizarCarrito(detalles, activeClienteId),
     enabled: activeDialog === 'checkout' && items.length > 0,
     staleTime: 0,
   })
@@ -67,8 +77,16 @@ const CheckoutDialog = () => {
   const evidenciaFotografica = cotizacion?.evidencia_fotografica ?? true
   const totalsDiffer = serverTotal !== undefined && Math.abs(serverTotal - total) >= 0.01
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
-  const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  useEffect(() => {
+    if (activeDialog === 'checkout' && storeCustomerId && !selectedCustomerId) {
+      setSelectedCustomerId(storeCustomerId)
+    }
+  }, [activeDialog, storeCustomerId, selectedCustomerId])
+
+  const handleCustomerChange = (id: string) => {
+    setSelectedCustomerId(id)
+    setStoreCustomerId(id)
+  }
 
   // El servidor indica si este usuario tiene habilitada la evidencia.
   const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
@@ -83,6 +101,7 @@ const CheckoutDialog = () => {
         items,
         paymentMethod,
         customerId: selectedCustomerId || undefined,
+        customerPricingEnabled,
         total,
         observacion: voiceTranscript.trim() || undefined,
         foto: evidenciaFotografica ? ventaFoto ?? undefined : undefined,
@@ -98,6 +117,7 @@ const CheckoutDialog = () => {
         items: [...items],
         paymentMethod,
         customerName,
+        customerId: selectedCustomerId || undefined,
       })
       clearCart()
       voiceResetFn?.()
@@ -109,7 +129,8 @@ const CheckoutDialog = () => {
   }
 
   return (
-    <Dialog
+    <>
+      <Dialog
       disablePointerDismissal
       modal
       open={activeDialog === 'checkout'}
@@ -137,9 +158,10 @@ const CheckoutDialog = () => {
             <CustomerSelect
               customers={customers}
               value={selectedCustomerId}
-              onChange={setSelectedCustomerId}
+              onChange={handleCustomerChange}
               onSearch={setCustomerSearch}
               loading={isLoading}
+              onQuickCreate={() => setQuickCreateOpen(true)}
             />
           </div>
 
@@ -204,6 +226,13 @@ const CheckoutDialog = () => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <QuickClienteDialog
+      open={quickCreateOpen}
+      onClose={() => setQuickCreateOpen(false)}
+      onSuccess={(newC) => handleCustomerChange(String(newC.id))}
+    />
+  </>
   )
 }
 
