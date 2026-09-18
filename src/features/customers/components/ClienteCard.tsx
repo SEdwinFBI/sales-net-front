@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { formatCurrency } from '../utils/venta-total'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Eye } from 'lucide-react'
+import { Pencil, Trash2, Eye, Tag } from 'lucide-react'
 import type { Cliente } from '../types/clientes'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { initials } from '@/helpers/string'
@@ -48,13 +48,24 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
-        <Link
-          to={`${cliente.id}`}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          <Eye className="size-3" />
-          Ver detalle
-        </Link>
+        <div className="flex items-center gap-2.5">
+          <Link
+            to={`${cliente.id}`}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Eye className="size-3" />
+            Detalle
+          </Link>
+
+          <Link
+            to={`${cliente.id}/precios`}
+            className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+            title="Ver artículos y precios del cliente"
+          >
+            <Tag className="size-3" />
+            Precios
+          </Link>
+        </div>
 
         <div className="flex gap-1">
           <Button size="icon-sm" variant="ghost" onClick={onEdit} disabled={isNotAdmin} aria-label={`Editar ${cliente.nombre_completo}`}>

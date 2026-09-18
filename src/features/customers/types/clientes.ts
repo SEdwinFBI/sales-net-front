@@ -16,6 +16,7 @@ export interface Cliente {
 export interface ApiResponse<T> {
   status: 'success' | 'error'
   data: T
+  message?: string
 }
 
 export interface CreateClientePayload {
