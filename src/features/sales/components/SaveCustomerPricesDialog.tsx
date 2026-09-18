@@ -151,7 +151,12 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
+      <Dialog
+        open={open && !quickCreateOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && !quickCreateOpen) onClose()
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -287,6 +292,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
         onClose={() => setQuickCreateOpen(false)}
         onSuccess={(nuevoCliente) => {
           setSelectedCustomerId(String(nuevoCliente.id))
+          setQuickCreateOpen(false)
         }}
       />
     </>

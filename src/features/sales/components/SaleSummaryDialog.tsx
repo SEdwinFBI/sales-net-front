@@ -33,9 +33,9 @@ const SaleSummaryDialog = () => {
     <Dialog
       disablePointerDismissal
       modal
-      open={activeDialog === 'summary'}
+      open={activeDialog === 'summary' && !savePricesOpen}
       onOpenChange={(open) => {
-        if (!open) closeSummary()
+        if (!open && !savePricesOpen) closeSummary()
       }}
     >
       <DialogContent className="max-h-[90vh] overflow-y-auto">

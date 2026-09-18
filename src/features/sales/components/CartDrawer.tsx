@@ -60,6 +60,22 @@ const CartDrawer = ({ pricing }: Props) => {
   const [customerSearch, setCustomerSearch] = useState('')
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
 
+  const handleOpenQuickCreate = () => {
+    closeCart()
+    setQuickCreateOpen(true)
+  }
+
+  const handleCloseQuickCreate = () => {
+    setQuickCreateOpen(false)
+    openCart()
+  }
+
+  const handleSuccessQuickCreate = (newC: { id: number | string }) => {
+    setSelectedCustomerId(String(newC.id))
+    setQuickCreateOpen(false)
+    openCart()
+  }
+
   const deferredCustomerSearch = useDeferredValue(customerSearch.trim())
   const { data: customers, isLoading: loadingCustomers } = useCustomers({
     search: deferredCustomerSearch,
@@ -192,7 +208,7 @@ const CartDrawer = ({ pricing }: Props) => {
                   onChange={setSelectedCustomerId}
                   onSearch={setCustomerSearch}
                   loading={loadingCustomers}
-                  onQuickCreate={() => setQuickCreateOpen(true)}
+                  onQuickCreate={handleOpenQuickCreate}
                 />
 
                 {selectedCustomerId ? (
@@ -298,8 +314,8 @@ const CartDrawer = ({ pricing }: Props) => {
 
     <QuickClienteDialog
       open={quickCreateOpen}
-      onClose={() => setQuickCreateOpen(false)}
-      onSuccess={(newC) => setSelectedCustomerId(String(newC.id))}
+      onClose={handleCloseQuickCreate}
+      onSuccess={handleSuccessQuickCreate}
     />
   </>
   )

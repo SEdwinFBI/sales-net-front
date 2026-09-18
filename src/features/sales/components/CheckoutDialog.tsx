@@ -131,13 +131,13 @@ const CheckoutDialog = () => {
   return (
     <>
       <Dialog
-      disablePointerDismissal
-      modal
-      open={activeDialog === 'checkout'}
-      onOpenChange={(open) => {
-        if (!open) closeDialog()
-      }}
-    >
+        disablePointerDismissal
+        modal
+        open={activeDialog === 'checkout' && !quickCreateOpen}
+        onOpenChange={(open) => {
+          if (!open && !quickCreateOpen) closeDialog()
+        }}
+      >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Confirmar venta</DialogTitle>
@@ -230,7 +230,10 @@ const CheckoutDialog = () => {
     <QuickClienteDialog
       open={quickCreateOpen}
       onClose={() => setQuickCreateOpen(false)}
-      onSuccess={(newC) => handleCustomerChange(String(newC.id))}
+      onSuccess={(newC) => {
+        handleCustomerChange(String(newC.id))
+        setQuickCreateOpen(false)
+      }}
     />
   </>
   )
