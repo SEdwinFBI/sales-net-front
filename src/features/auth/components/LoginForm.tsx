@@ -15,7 +15,7 @@ import { Fingerprint, Eye, EyeOff, LockKeyhole, Loader2, Mail, MoveRight } from 
 import type { PatternLoginCredentials } from '../types/pattern'
 import PatternLoginForm from './PatternLoginForm'
 import { supportsPasskeys } from '../services/passkey-service'
-import { getPasskeyErrorMessage } from '../utils/passkey-error'
+import PasskeyErrorAlert from './PasskeyErrorAlert'
 import RotateHover from '@/components/motion/RotateHover'
 
 
@@ -29,7 +29,7 @@ type LoginFormProps = {
 
 export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }: LoginFormProps) {
   const [passkeyPending, setPasskeyPending] = useState(false)
-  const [passkeyError, setPasskeyError] = useState('')
+  const [passkeyError, setPasskeyError] = useState<unknown>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [usePattern, setUsePattern] = useState(false)
   const {
@@ -122,16 +122,16 @@ export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }
         <Button type="button" variant="outline" className="mb-3 w-full" disabled={!supportsPasskeys() || isSubmitting || passkeyPending}
           onClick={async () => {
             setPasskeyPending(true)
-            setPasskeyError('')
+            setPasskeyError(null)
             try { await onPasskeySubmit() }
-            catch (error) { setPasskeyError(getPasskeyErrorMessage(error)) }
+            catch (error) { setPasskeyError(error) }
             finally { setPasskeyPending(false) }
           }}>
           {passkeyPending ? <Loader2 className="animate-spin" /> : <Fingerprint />}
           {passkeyPending ? 'Esperando tu dispositivo…' : 'Ingresar con mi dispositivo'}
         </Button>
         {!supportsPasskeys() && <p className="mb-3 text-xs text-muted-foreground">Las passkeys requieren un navegador compatible y una conexión HTTPS o localhost.</p>}
-        {passkeyError && <p role="alert" className="mb-3 text-sm text-destructive">{passkeyError}</p>}
+        <div className="empty:hidden mb-3"><PasskeyErrorAlert error={passkeyError} /></div>
         <Button
           className="group/pattern h-auto min-h-16 w-full justify-start gap-3 whitespace-normal rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-primary-complement/5 p-3 text-primary-complement shadow-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:text-primary-complement hover:shadow-md focus-visible:ring-primary/30 motion-reduce:transition-none"
           type="button"

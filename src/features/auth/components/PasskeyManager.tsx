@@ -8,7 +8,7 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
 import { deletePasskey, listPasskeys, registerPasskey, supportsPasskeys } from '../services/passkey-service'
 import type { Passkey } from '../services/passkey-service'
-import { getPasskeyErrorMessage } from '../utils/passkey-error'
+import PasskeyErrorAlert from './PasskeyErrorAlert'
 
 export default function PasskeyManager({ userId }: { userId: number }) {
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -16,7 +16,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
   const [nombre, setNombre] = useState('')
   const [target, setTarget] = useState<Passkey | null>(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [message, setMessage] = useState('')
   const passkeys = useQuery({ queryKey: ['passkeys', userId], queryFn: listPasskeys, retry: false })
   const supported = supportsPasskeys()
@@ -41,7 +41,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
           passwordRef.current.value = ''
           setShowPassword(false)
           setBusy(true)
-          setError('')
+          setError(null)
           setMessage('')
           try {
             if (target) await deletePasskey(target.id, password)
@@ -57,11 +57,12 @@ export default function PasskeyManager({ userId }: { userId: number }) {
             setNombre('')
             await passkeys.refetch()
           } catch (error) {
-            setError(getPasskeyErrorMessage(error))
+            setError(error)
           } finally {
             setBusy(false)
           }
         }}>
+          <PasskeyErrorAlert error={error} />
           <fieldset disabled={busy} className="space-y-4">
             {target ? (
               <div className="space-y-1 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm">
@@ -95,10 +96,9 @@ export default function PasskeyManager({ userId }: { userId: number }) {
               <Button type="submit" variant={target ? 'destructive' : 'default'} disabled={busy || (!target && !supported)}>
                 {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : target ? <Trash2 aria-hidden="true" /> : <Fingerprint aria-hidden="true" />}{busy ? 'Procesando…' : target ? 'Confirmar revocación' : 'Agregar passkey'}
               </Button>
-              {target && <Button type="button" variant="outline" onClick={() => { setTarget(null); setShowPassword(false); setError(''); if (passwordRef.current) passwordRef.current.value = '' }}>Cancelar</Button>}
+              {target && <Button type="button" variant="outline" onClick={() => { setTarget(null); setShowPassword(false); setError(null); if (passwordRef.current) passwordRef.current.value = '' }}>Cancelar</Button>}
             </div>
           </fieldset>
-          {error && <p role="alert" className="whitespace-pre-line rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
           {message && <p role="status" className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm"><CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />{message}</p>}
         </form>
         <p className="text-xs text-muted-foreground">Tu contraseña sigue disponible para ingresar si pierdes acceso a tus passkeys.</p>
@@ -109,7 +109,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
           {!passkeys.isError && passkeys.data && <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary" aria-label={`${passkeys.data.length} passkeys registradas`}>{passkeys.data.length}</span>}
         </div>
         {passkeys.isPending && <p role="status" className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground"><Loader2 aria-hidden="true" className="size-4 animate-spin" />Cargando passkeys…</p>}
-        {passkeys.isError && <div role="alert" className="space-y-2"><p className="text-sm text-destructive">{getPasskeyErrorMessage(passkeys.error)}</p><Button variant="outline" disabled={passkeys.isFetching || busy} onClick={() => void passkeys.refetch()}>Reintentar</Button></div>}
+        {passkeys.isError && <div className="space-y-2"><PasskeyErrorAlert error={passkeys.error} /><Button variant="outline" disabled={passkeys.isFetching || busy} onClick={() => void passkeys.refetch()}>Reintentar</Button></div>}
         {!passkeys.isError && passkeys.data?.length === 0 && <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed bg-muted/20 px-4 py-8 text-center">
           <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Fingerprint aria-hidden="true" className="size-6" /></span>
           <div className="space-y-1"><p className="font-medium">Tu primera passkey empieza aquí</p><p className="text-sm text-muted-foreground">Completa el formulario para activar el ingreso con tu dispositivo.</p></div>
@@ -118,7 +118,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
           <li key={passkey.id} className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 sm:p-4 ${target?.id === passkey.id ? 'border-destructive/30 bg-destructive/5' : 'border-border'}`}>
             <div className="flex min-w-0 flex-1 items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><KeyRound aria-hidden="true" className="size-4" /></span><span className="min-w-0 break-words text-sm font-medium">{passkey.nombre || `Passkey ${passkey.id}`}</span></div>
             <Button type="button" variant="outline" disabled={busy} aria-label={`Revocar ${passkey.nombre || `passkey ${passkey.id}`}`} onClick={() => {
-              setTarget(passkey); setShowPassword(false); setError(''); setMessage('')
+              setTarget(passkey); setShowPassword(false); setError(null); setMessage('')
               if (passwordRef.current) { passwordRef.current.value = ''; passwordRef.current.focus() }
             }}><Trash2 aria-hidden="true" />Revocar</Button>
           </li>
