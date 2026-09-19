@@ -1,5 +1,27 @@
 import axios from 'axios'
 
+function readMessage(data: unknown): string | undefined {
+  if (typeof data === 'string') {
+    const value = data.trim()
+    return value && !/<\/?[a-z][^>]*>/i.test(value) ? value : undefined
+  }
+  if (Array.isArray(data)) {
+    const messages = data.map(readMessage).filter(Boolean)
+    return messages.length ? messages.join('\n') : undefined
+  }
+  if (!data || typeof data !== 'object') return undefined
+  const fields = data as Record<string, unknown>
+  for (const key of ['message', 'detail', 'error', 'data']) {
+    const message = readMessage(fields[key])
+    if (message) return message
+  }
+  for (const [key, value] of Object.entries(fields)) {
+    if (['status', 'message', 'detail', 'error', 'data'].includes(key)) continue
+    const message = readMessage(value)
+    if (message) return `${key}: ${message}`
+  }
+}
+
 /**
  * Extrae un mensaje legible de un error de Axios probando las formas más
  * comunes de respuesta del backend (`message`, `detail`, `error`, array de
@@ -8,18 +30,7 @@ import axios from 'axios'
  */
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error) && error.response?.data) {
-    const data = error.response.data
-    if (typeof data === 'string') return data
-    if (data.message) return String(data.message)
-    if (data.detail) return String(data.detail)
-    if (data.error) return String(data.error)
-    if (Array.isArray(data)) return data.map(String).join('\n')
-    const firstKey = Object.keys(data)[0]
-    if (firstKey) {
-      const value = data[firstKey]
-      if (Array.isArray(value)) return `${firstKey}: ${value.join(', ')}`
-      if (typeof value === 'string') return `${firstKey}: ${value}`
-    }
+    return readMessage(error.response.data) ?? fallback
   }
   if (error instanceof Error) return error.message
   return fallback
