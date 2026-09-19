@@ -11,7 +11,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
-import { Eye, EyeOff, LockKeyhole, Loader2, Mail, MoveRight } from 'lucide-react'
+import { Eye, EyeOff, LockKeyhole, Loader2, MoveRight, User } from 'lucide-react'
 import type { PatternLoginCredentials } from '../types/pattern'
 import PatternLoginForm from './PatternLoginForm'
 import RotateHover from '@/components/motion/RotateHover'
@@ -61,16 +61,16 @@ export default function LoginForm({ onSubmit, onPatternSubmit }: LoginFormProps)
       <form className="mt-7 space-y-5" onSubmit={handleFormSubmit}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="username">Correo o usuario</FieldLabel>
+                  <FieldLabel htmlFor="username">Usuario</FieldLabel>
                   <InputGroup >
                     <InputGroupInput
                       {...register('username')}
                       id="username"
                       type="text"
-                      placeholder="usuario@distribuidoramz.com"
+                      placeholder="usuario"
                       aria-invalid={!!errors.username} />
                     <InputGroupAddon>
-                      <Mail />
+                      <User/>
                     </InputGroupAddon>
 
                   </InputGroup>
