@@ -56,7 +56,7 @@ async function refreshAuth(): Promise<string> {
 // Renueva el access token antes de que expire. Si ya hay un refresh en
 // curso, encola la petición en vez de disparar otro refresh en paralelo.
 api.interceptors.request.use((config) => {
-  if (config.url === '/auth/login/' || config.url === '/auth/login/patron/') {
+  if (config.url === '/auth/login/' || config.url === '/auth/login/patron/' || config.url?.startsWith('/auth/passkeys/login/')) {
     config.headers.delete('Authorization')
     return config
   }
@@ -111,7 +111,7 @@ api.interceptors.response.use(
     if (!axios.isAxiosError(error) || !error.config) return Promise.reject(error)
 
     const originalRequest = error.config
-    if (originalRequest.url === '/auth/login/' || originalRequest.url === '/auth/login/patron/') {
+    if (originalRequest.url === '/auth/login/' || originalRequest.url === '/auth/login/patron/' || originalRequest.url?.startsWith('/auth/passkeys/login/')) {
       return Promise.reject(error)
     }
     const status = error.response?.status
