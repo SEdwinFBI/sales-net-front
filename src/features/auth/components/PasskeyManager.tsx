@@ -45,7 +45,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
   return (
     <div className="grid min-w-0 gap-4">
       {message && <p role="status" className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm"><CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />{message}</p>}
-      {!supported && <p role="status" className="rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">Este navegador no permite crear passkeys aquí. Usa un navegador compatible con HTTPS o localhost. Puedes administrar tus passkeys existentes.</p>}
+      {!supported && <p role="status" className="rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">Este navegador no permite crear passkeys aquí. Usa un navegador compatible con HTTPS para administrar tus passkeys existentes.</p>}
       <Card className="gap-0 overflow-hidden p-0">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border p-4 sm:p-5">
           <div className="space-y-1">
