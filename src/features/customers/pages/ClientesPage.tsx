@@ -65,9 +65,9 @@ export default function ClientesPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               {filterTipo === 'SOLO_PRECIOS'
-                ? 'Precios pactados y compras al contado. Sin crédito ni abonos.'
+                ? 'Compras al contado con precios personalizados. Sin crédito ni abonos.'
                 : filterTipo === 'GENERAL'
-                  ? 'Clientes con precios pactados, crédito y abonos habilitados.'
+                  ? 'Compras al contado o a crédito, con precios personalizados y registro de abonos.'
                   : 'Verde: crédito y precios. Violeta: solo precios.'}
             </p>
           </div>

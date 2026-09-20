@@ -31,10 +31,10 @@ export const useUpsertPreciosCliente = (clienteId: number, sucursalId?: number) 
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.customers.precios(clienteId, effectiveSucursalId), data)
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.precios(clienteId) })
-      toast.success('Precios pactados guardados correctamente')
+      toast.success('Precios del cliente guardados')
     },
     onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Error al guardar precios pactados'
+      const msg = error?.response?.data?.message || 'No se pudieron guardar los precios del cliente'
       toast.error(msg)
     },
   })
@@ -47,10 +47,10 @@ export const useDeletePrecioCliente = (clienteId: number, _sucursalId?: number) 
     mutationFn: (idVariante: number) => deletePrecioCliente(clienteId, idVariante),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.precios(clienteId) })
-      toast.success('Precio pactado eliminado; se usará el precio de catálogo')
+      toast.success('Precio eliminado. Se usará el precio de catálogo.')
     },
     onError: (error: any) => {
-      const msg = error?.response?.data?.message || 'Error al eliminar precio pactado'
+      const msg = error?.response?.data?.message || 'No se pudo eliminar el precio del cliente'
       toast.error(msg)
     },
   })

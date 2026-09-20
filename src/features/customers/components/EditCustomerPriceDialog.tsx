@@ -55,7 +55,7 @@ export default function EditCustomerPriceDialog({
   const handleSave = async () => {
     const nuevoPrecio = Number(precioInput)
     if (!Number.isFinite(nuevoPrecio) || nuevoPrecio <= 0) {
-      toast.error('Ingresa un precio válido mayor a 0.')
+      toast.error('Ingresa un precio mayor que cero.')
       return
     }
 
@@ -102,10 +102,10 @@ export default function EditCustomerPriceDialog({
             </div>
             <div>
               <DialogTitle>
-                {isConfigured ? 'Modificar precio pactado' : 'Asignar precio pactado'}
+                {isConfigured ? 'Editar precio del cliente' : 'Asignar precio al cliente'}
               </DialogTitle>
               <DialogDescription>
-                {customerName} · Variante: {variantItem.talla}
+                {customerName}
               </DialogDescription>
             </div>
           </div>
@@ -117,12 +117,12 @@ export default function EditCustomerPriceDialog({
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>Talla: <strong className="text-foreground">{variantItem.talla}</strong></span>
               {variantItem.sku && <span>SKU: {variantItem.sku}</span>}
-              <span>Base catálogo: <strong className="text-foreground">{formatCurrency(variantItem.precio_base)}</strong></span>
+              <span>Precio de catálogo: <strong className="text-foreground">{formatCurrency(variantItem.precio_base)}</strong></span>
             </div>
           </div>
 
           <Field>
-            <FieldLabel>Precio pactado para el cliente (Q)</FieldLabel>
+            <FieldLabel>Precio del cliente (Q)</FieldLabel>
             <Input
               type="number"
               step="0.01"
@@ -136,14 +136,14 @@ export default function EditCustomerPriceDialog({
               <div className="mt-1 text-xs">
                 {Number(precioInput) < variantItem.precio_base ? (
                   <span className="text-emerald-600 font-medium">
-                    Ahorro para el cliente: {formatCurrency(variantItem.precio_base - Number(precioInput))}
+                    Ahorro por unidad: {formatCurrency(variantItem.precio_base - Number(precioInput))}
                   </span>
                 ) : Number(precioInput) > variantItem.precio_base ? (
                   <span className="text-amber-600 font-medium">
                     Precio superior al de catálogo (+{formatCurrency(Number(precioInput) - variantItem.precio_base)})
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">Igual al precio estándar de catálogo</span>
+                  <span className="text-muted-foreground">Igual al precio de catálogo</span>
                 )}
               </div>
             )}

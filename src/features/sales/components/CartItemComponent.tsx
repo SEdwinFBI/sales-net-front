@@ -88,7 +88,7 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                         <>
                             <div className="flex items-center gap-1.5 min-[420px]:justify-end">
                                 <Badge className="border-transparent bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-medium">
-                                    Precio pactado {ahorroCliente > 0 ? `−${formatCurrency(ahorroCliente)} c/u` : ''}
+                                    Precio del cliente {ahorroCliente > 0 ? `−${formatCurrency(ahorroCliente)} c/u` : ''}
                                 </Badge>
                                 {ahorroCliente > 0 && (
                                     <p className="text-sm text-muted-foreground line-through">

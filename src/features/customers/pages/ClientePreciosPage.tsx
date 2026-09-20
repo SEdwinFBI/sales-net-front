@@ -5,7 +5,7 @@ import PreciosClienteTable from '../components/PreciosClienteTable'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
-import { ArrowLeft, Tag } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { formatCurrency } from '@/helpers/money'
 import TipoClienteBadge from '../components/TipoClienteBadge'
 
@@ -39,8 +39,8 @@ export default function ClientePreciosPage() {
 
   return (
     <PageTemplateSimple
-      title={`Artículos y Precios: ${cliente.nombre_completo}`}
-      description="Consulta y administración de precios pactados para este cliente"
+      title={`Precios de ${cliente.nombre_completo}`}
+      description="Consulta los precios de catálogo y los precios del cliente."
     >
       <div className="space-y-5">
         <Card className="p-3.5 sm:p-5">
@@ -49,7 +49,7 @@ export default function ClientePreciosPage() {
             items={[
               { label: 'Clientes', href: '/clientes/listado' },
               { label: cliente.nombre_completo, href: `/clientes/listado/${clienteId}` },
-              { label: 'Artículos y precios' },
+              { label: 'Precios del cliente' },
             ]}
           />
 
@@ -62,7 +62,7 @@ export default function ClientePreciosPage() {
                 className="gap-1 text-xs"
               >
                 <ArrowLeft className="size-4" />
-                Volver a detalle
+                Volver al cliente
               </Button>
             </div>
 
@@ -75,11 +75,6 @@ export default function ClientePreciosPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Tag className="size-4 text-primary" />
-              <span>Catálogo de artículos con precio especial</span>
-            </div>
-
             <PreciosClienteTable
               customerId={clienteId}
               customerName={cliente.nombre_completo}

@@ -118,7 +118,7 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
                 <option value="GENERAL">Crédito y precios</option>
                 <option value="SOLO_PRECIOS">Solo precios</option>
               </Select>
-              <p className="text-xs text-muted-foreground">Solo precios permite precios pactados y compras al contado, sin crédito ni abonos.</p>
+              <p className="text-xs text-muted-foreground">Solo precios: compras al contado con precios personalizados, sin crédito ni abonos.</p>
               <FieldError errors={[errors.tipo_cliente]} />
             </Field>
             <Field>

@@ -81,7 +81,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
   const handleSave = () => {
     if (!selectedCustomerId) {
-      toast.warning('Por favor selecciona o crea un cliente para vincular los precios.')
+      toast.warning('Selecciona o crea un cliente para guardar los precios.')
       return
     }
 
@@ -140,7 +140,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
     setHasSaved(true)
     toast.success(
-      `Se guardaron ${itemsToSave.length} precios pactados para ${currentCustomerName}.`
+      `Se guardaron ${itemsToSave.length} precios para ${currentCustomerName}.`
     )
     setTimeout(() => {
       onClose()
@@ -166,7 +166,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
               <div>
                 <DialogTitle>Guardar precios para el cliente</DialogTitle>
                 <DialogDescription>
-                  Los precios seleccionados se guardarán para que el cliente los reciba en futuras compras.
+                  Selecciona los artículos cuyos precios quieres guardar para próximas compras.
                 </DialogDescription>
               </div>
             </div>
@@ -177,7 +177,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
             <div className="rounded-xl border border-border/80 bg-card p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor={`${baseInputId}-customer`} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Cliente asignado
+                  Cliente
                 </label>
                 <button
                   type="button"
@@ -185,7 +185,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
                   className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline cursor-pointer"
                 >
                   <UserPlus className="size-3.5" />
-                  + Crear cliente rápido
+                  Nuevo cliente
                 </button>
               </div>
 
@@ -200,11 +200,11 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
               {selectedCustomerId ? (
                 <p className="text-xs text-muted-foreground">
-                  Vinculando a: <strong className="text-foreground">{currentCustomerName}</strong>
+                  Guardar para: <strong className="text-foreground">{currentCustomerName}</strong>
                 </p>
               ) : (
                 <p className="text-xs text-warning">
-                  Elige o crea un cliente para registrar los precios.
+                  Selecciona o crea un cliente.
                 </p>
               )}
             </div>
@@ -213,7 +213,6 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
                 <span>Artículos de la venta ({lastSale.items.length})</span>
-                <span className="text-[11px]">Marca los precios que deseas pactar</span>
               </div>
 
               <div className="divide-y divide-border/60 rounded-xl border border-border/70 overflow-hidden bg-card">
@@ -239,7 +238,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
                             {item.name} <span className="text-xs text-muted-foreground font-normal">({item.size})</span>
                           </p>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                            <span>Base: {formatCurrency(item.price)}</span>
+                            <span>Precio antes del descuento: {formatCurrency(item.price)}</span>
                             {item.discount > 0 && (
                               <Badge variant="outline" className="text-[10px] px-1 py-0 border-emerald-300 bg-emerald-50 text-emerald-700">
                                 −{formatCurrency(item.discount)} ({item.discountType})
@@ -250,7 +249,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
                       </div>
 
                       <div className="text-right shrink-0">
-                        <p className="text-xs text-muted-foreground">Precio pactado</p>
+                        <p className="text-xs text-muted-foreground">Precio a guardar</p>
                         <p className="text-base font-bold text-primary tabular-nums">
                           {formatCurrency(precioFinal)}
                         </p>
@@ -264,7 +263,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={onClose} disabled={hasSaved}>
-              Omitir / Cerrar
+              Cancelar
             </Button>
             <Button
               onClick={handleSave}

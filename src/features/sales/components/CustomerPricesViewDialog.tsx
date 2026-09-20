@@ -55,11 +55,11 @@ export default function CustomerPricesViewDialog({
               <Tag className="size-5" />
             </div>
             <div>
-              <DialogTitle className="text-base sm:text-lg">Precios pactados del cliente</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg">Precios del cliente</DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 {effectiveCustomerId
-                  ? `Precios especiales guardados para ${effectiveCustomerName}`
-                  : 'Precios especiales guardados'}
+                  ? `Consulta los precios de ${effectiveCustomerName}.`
+                  : 'Consulta los precios de un cliente.'}
               </DialogDescription>
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function CustomerPricesViewDialog({
             />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Selecciona un cliente para ver sus precios especiales.
+              Selecciona un cliente para consultar sus precios.
             </p>
           )}
         </div>

@@ -82,9 +82,9 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
               <UserPlus className="size-5" />
             </div>
             <div>
-              <DialogTitle>Crear cliente rápido</DialogTitle>
+              <DialogTitle>Nuevo cliente</DialogTitle>
               <DialogDescription>
-                Registra al cliente para vincular sus precios y ventas
+                Registra un cliente para guardar sus precios y asociar sus compras.
               </DialogDescription>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
                 <option value="GENERAL">Crédito y precios</option>
                 <option value="SOLO_PRECIOS">Solo precios</option>
               </Select>
-              <p className="text-xs text-muted-foreground">Solo precios: precios pactados y contado, sin crédito ni abonos.</p>
+              <p className="text-xs text-muted-foreground">Solo precios: compras al contado con precios personalizados, sin crédito ni abonos.</p>
               <FieldError errors={[errors.tipo_cliente]} />
             </Field>
             <Field>
@@ -142,7 +142,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="animate-spin size-4 mr-2" />}
-              Crear y vincular
+              Crear cliente
             </Button>
           </DialogFooter>
         </form>

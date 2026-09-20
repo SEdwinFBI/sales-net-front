@@ -192,7 +192,7 @@ const CartDrawer = ({ pricing }: Props) => {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <UserCheck className="size-4 text-primary" />
-                <span className="text-sm font-medium">Aplicar precios para clientes</span>
+                <span className="text-sm font-medium">Usar precios del cliente</span>
               </div>
               <Switch
                 checked={customerPricingEnabled}
@@ -216,16 +216,16 @@ const CartDrawer = ({ pricing }: Props) => {
                     {loadingCustomerPrices ? (
                       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Loader2 className="size-3 animate-spin text-primary" />
-                        Cargando precios pactados...
+                        Cargando precios...
                       </span>
                     ) : (
                       <span>
                         {itemsWithCustomerPriceCount > 0 ? (
                           <strong className="text-emerald-600 dark:text-emerald-400">
-                            {itemsWithCustomerPriceCount} producto{itemsWithCustomerPriceCount === 1 ? '' : 's'} con precio pactado
+                            {itemsWithCustomerPriceCount} artículo{itemsWithCustomerPriceCount === 1 ? '' : 's'} con precio del cliente
                           </strong>
                         ) : (
-                          'Sin precios pactados en este carrito para este cliente'
+                          'Ningún artículo del carrito tiene precio personalizado.'
                         )}
                       </span>
                     )}
@@ -236,13 +236,13 @@ const CartDrawer = ({ pricing }: Props) => {
                         className="text-primary hover:underline text-xs font-medium cursor-pointer inline-flex items-center gap-1"
                       >
                         <Tag className="size-3" />
-                        Ver pactados ({customerPricesList.length})
+                        Ver precios ({customerPricesList.length})
                       </button>
                     )}
                   </div>
                 ) : (
                   <p className="text-xs text-warning px-1">
-                    Selecciona un cliente para aplicar sus precios guardados.
+                    Selecciona un cliente para usar sus precios.
                   </p>
                 )}
               </div>

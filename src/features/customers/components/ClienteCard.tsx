@@ -63,7 +63,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
           <Link
             to={`${cliente.id}/precios`}
             className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
-            title="Ver artículos y precios del cliente"
+            title="Ver precios del cliente"
           >
             <Tag className="size-3" />
             Precios

@@ -77,7 +77,7 @@ export default function ClienteDetailPage() {
               className="gap-1.5"
             >
               <Tag className="size-4 text-primary" />
-              Ver artículos y precios
+              Ver precios
             </Button>
           </div>
 
@@ -108,14 +108,14 @@ export default function ClienteDetailPage() {
             </div>
           )}
 
-          {soloPrecios && <p className="text-sm text-muted-foreground">Este cliente guarda precios pactados y compra al contado. No admite crédito, abonos ni ajustes de saldo.</p>}
+          {soloPrecios && <p className="text-sm text-muted-foreground">Compras al contado con precios personalizados. Sin crédito, abonos ni ajustes de saldo.</p>}
           <Tabs key={cliente.tipo_cliente} defaultValue={soloPrecios ? 'precios' : 'movimientos'}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">
                 {!soloPrecios && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
                 {!soloPrecios && <TabsTrigger value="abonos">Abonos</TabsTrigger>}
                 <TabsTrigger value="compras">Compras</TabsTrigger>
-                <TabsTrigger value="precios">Precios pactados</TabsTrigger>
+                <TabsTrigger value="precios">Precios del cliente</TabsTrigger>
               </TabsList>
               {!soloPrecios && <>
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">

@@ -115,10 +115,10 @@ const SaleSummaryDialog = () => {
               <div className="space-y-0.5">
                 <p className="text-sm font-semibold text-primary flex items-center gap-1.5">
                   <BookmarkCheck className="size-4 shrink-0" />
-                  ¿Deseas guardar estos precios para el cliente?
+                  Precios para próximas compras
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Al guardarlos, cuando este cliente vuelva a comprar recibirá automáticamente estos precios sin necesidad de aplicar descuentos.
+                  Guarda los precios de esta venta para volver a usarlos con este cliente.
                 </p>
               </div>
               <Button

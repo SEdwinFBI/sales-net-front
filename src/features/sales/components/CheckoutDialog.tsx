@@ -194,7 +194,7 @@ const CheckoutDialog = () => {
             </div>
           </div>
 
-          {soloPrecios && <p className="text-xs text-muted-foreground">Cliente Solo precios: selecciona efectivo. No admite ventas a crédito.</p>}
+          {soloPrecios && <p className="text-xs text-muted-foreground">Este cliente solo puede comprar al contado.</p>}
           {paymentMethod === 'credito' && !selectedCustomerId && (
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito

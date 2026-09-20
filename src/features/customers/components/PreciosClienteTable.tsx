@@ -87,7 +87,7 @@ export default function PreciosClienteTable({
 
   const handleDelete = async (variant: ClienteVariantePrecioResponse) => {
     if (!isAdmin) {
-      toast.error('Solo los administradores pueden eliminar precios pactados.')
+      toast.error('Solo un administrador puede eliminar precios del cliente.')
       return
     }
 
@@ -104,7 +104,7 @@ export default function PreciosClienteTable({
       {
         id: 'articulo',
         accessorFn: (row) => row.articulo,
-        header: 'Artículo (Variante)',
+        header: 'Artículo',
         cell: ({ row }) => (
           <div className="flex flex-col min-w-[170px]">
             <span className="font-medium text-foreground leading-tight">{row.original.articulo}</span>
@@ -129,7 +129,7 @@ export default function PreciosClienteTable({
       {
         id: 'precio_base',
         accessorKey: 'precio_base',
-        header: 'Precio catálogo',
+        header: 'Precio de catálogo',
         cell: ({ row }) => (
           <span className="text-muted-foreground tabular-nums text-right block">
             {formatCurrency(row.original.precio_base)}
@@ -140,7 +140,7 @@ export default function PreciosClienteTable({
         id: 'precio_cliente',
         accessorFn: (row) =>
           row.tiene_config && row.precio_cliente !== null ? row.precio_cliente : row.precio_base,
-        header: 'Precio pactado',
+        header: 'Precio del cliente',
         cell: ({ row }) => {
           const v = row.original
           return (
@@ -161,7 +161,7 @@ export default function PreciosClienteTable({
       {
         id: 'ahorro',
         accessorKey: 'ahorro',
-        header: 'Ahorro cliente',
+        header: 'Diferencia',
         cell: ({ row }) => {
           const v = row.original
           if (v.tiene_config && v.ahorro > 0) {
@@ -206,11 +206,11 @@ export default function PreciosClienteTable({
               {v.tiene_config ? (
                 <Badge className="bg-primary/15 text-primary border-primary/20 text-xs font-medium gap-1">
                   <Sparkles className="size-3" />
-                  Pactado
+                  Personalizado
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="text-[11px] text-muted-foreground">
-                  Estándar
+                  Catálogo
                 </Badge>
               )}
             </div>
@@ -232,7 +232,7 @@ export default function PreciosClienteTable({
     if (isAdmin) {
       cols.push({
         id: 'acciones',
-        header: 'Acciones (Admin)',
+        header: 'Acciones',
         enableSorting: false,
         enableColumnFilter: false,
         cell: ({ row }) => {
@@ -245,7 +245,7 @@ export default function PreciosClienteTable({
                     size="icon-sm"
                     variant="ghost"
                     onClick={() => setActiveItem(v)}
-                    title="Modificar precio pactado"
+                    title="Editar precio del cliente"
                     className="text-muted-foreground hover:text-primary cursor-pointer"
                   >
                     <Pencil className="size-3.5" />
@@ -256,7 +256,7 @@ export default function PreciosClienteTable({
                     className="text-destructive hover:bg-destructive/10 cursor-pointer"
                     onClick={() => handleDelete(v)}
                     disabled={deleteMutation.isPending}
-                    title="Eliminar precio pactado (vuelve a catálogo)"
+                    title="Eliminar precio del cliente y usar el de catálogo"
                   >
                     <Trash2 className="size-3.5" />
                   </Button>
@@ -334,7 +334,7 @@ export default function PreciosClienteTable({
       <div className="rounded-2xl border border-border bg-card p-10 text-center">
         <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
           <Loader2 className="size-8 animate-spin text-primary" />
-          <p className="text-sm font-medium">Cargando catálogo completo de variantes...</p>
+          <p className="text-sm font-medium">Cargando precios...</p>
         </div>
       </div>
     )
@@ -344,7 +344,7 @@ export default function PreciosClienteTable({
     return (
       <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center">
         <p className="text-sm font-medium text-destructive">
-          Error al cargar los precios del cliente desde el servidor.
+          No se pudieron cargar los precios del cliente.
         </p>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-3">
           Reintentar
@@ -371,7 +371,7 @@ export default function PreciosClienteTable({
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Todas las variantes ({counts.todos})
+              Todos ({counts.todos})
             </button>
             <button
               type="button"
@@ -383,7 +383,7 @@ export default function PreciosClienteTable({
               }`}
             >
               <Sparkles className="size-3 text-primary" />
-              Con precio pactado ({counts.configurados})
+              Personalizados ({counts.configurados})
             </button>
             <button
               type="button"
@@ -394,7 +394,7 @@ export default function PreciosClienteTable({
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Precio catálogo ({counts.sinConfigurar})
+              De catálogo ({counts.sinConfigurar})
             </button>
           </div>
 
@@ -425,12 +425,12 @@ export default function PreciosClienteTable({
               className="border-primary/40 bg-primary/5 text-primary text-xs gap-1 py-1"
             >
               <ShieldCheck className="size-3.5" />
-              Administrador (Edición habilitada)
+              Puedes editar precios
             </Badge>
           ) : (
             <Badge variant="secondary" className="text-xs gap-1 py-1 text-muted-foreground">
               <ShieldAlert className="size-3.5" />
-              Solo lectura (Admin requerido para modificar)
+              Solo consulta
             </Badge>
           )}
         </div>
@@ -441,8 +441,7 @@ export default function PreciosClienteTable({
           <EmptyState
             icon={Layers}
             size="sm"
-            title="No hay variantes en el catálogo"
-            description="El catálogo de artículos y tallas se encuentra vacío en este momento."
+            title="No hay artículos disponibles"
           />
         </div>
       ) : (
@@ -494,7 +493,7 @@ export default function PreciosClienteTable({
                 {table.getRowModel().rows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="py-8 text-center text-xs text-muted-foreground">
-                      No hay artículos/variantes que coincidan con los filtros aplicados.
+                      No hay artículos que coincidan con los filtros.
                     </TableCell>
                   </TableRow>
                 ) : (

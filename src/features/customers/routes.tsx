@@ -34,7 +34,7 @@ export const clientesRoutes: AppRoute[] = [
       {
         path: 'listado/:id/precios',
         meta: {
-          name: 'Artículos y precios',
+          name: 'Precios del cliente',
           description: 'Precios asignados al cliente',
           icon: Users,
           permissions: ['admin', 'vendedor'],

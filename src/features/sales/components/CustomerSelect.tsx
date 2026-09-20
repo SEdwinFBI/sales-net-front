@@ -139,7 +139,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                                 className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer"
                             >
                                 <UserPlus className="size-3.5" />
-                                + Crear cliente rápido
+                                Nuevo cliente
                             </button>
                         </div>
                     )}

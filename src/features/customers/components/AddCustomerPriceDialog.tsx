@@ -61,13 +61,13 @@ export default function AddCustomerPriceDialog({
 
   const handleSave = () => {
     if (!selectedProduct || !selectedVariant) {
-      toast.warning('Selecciona un producto y su variante/talla.')
+      toast.warning('Selecciona un artículo y su talla.')
       return
     }
 
     const priceNum = Number(precioPactado)
     if (!Number.isFinite(priceNum) || priceNum <= 0) {
-      toast.error('Ingresa un precio válido mayor a 0.')
+      toast.error('Ingresa un precio mayor que cero.')
       return
     }
 
@@ -107,9 +107,9 @@ export default function AddCustomerPriceDialog({
               <Plus className="size-5" />
             </div>
             <div>
-              <DialogTitle>Asignar precio pactado</DialogTitle>
+              <DialogTitle>Asignar precio al cliente</DialogTitle>
               <DialogDescription>
-                Define un precio especial para {customerName} en un artículo del catálogo
+                Selecciona un artículo y define su precio para {customerName}.
               </DialogDescription>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function AddCustomerPriceDialog({
           {/* Buscador de artículo */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              1. Buscar producto del catálogo
+              1. Busca un artículo
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -135,7 +135,7 @@ export default function AddCustomerPriceDialog({
               {isLoading ? (
                 <p className="p-4 text-center text-xs text-muted-foreground">Buscando artículos…</p>
               ) : articles.length === 0 ? (
-                <p className="p-4 text-center text-xs text-muted-foreground">No se encontraron productos</p>
+                <p className="p-4 text-center text-xs text-muted-foreground">No se encontraron artículos</p>
               ) : (
                 articles.map((art) => {
                   const isSelected = selectedProduct?.id === art.id
@@ -164,7 +164,7 @@ export default function AddCustomerPriceDialog({
           {selectedProduct && (
             <div className="space-y-2 pt-2 border-t border-border/60">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                2. Selecciona la talla / variante
+                2. Selecciona la talla
               </label>
               <div className="flex flex-wrap gap-2">
                 {selectedProduct.variants.map((v) => {
@@ -195,13 +195,13 @@ export default function AddCustomerPriceDialog({
                   <p className="text-muted-foreground">Talla {selectedVariant.size}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-muted-foreground">Precio catálogo</p>
+                  <p className="text-muted-foreground">Precio de catálogo</p>
                   <p className="font-medium text-foreground">{formatCurrency(selectedVariant.price)}</p>
                 </div>
               </div>
 
               <Field>
-                <FieldLabel>Precio pactado para el cliente (Q)</FieldLabel>
+                <FieldLabel>Precio del cliente (Q)</FieldLabel>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
