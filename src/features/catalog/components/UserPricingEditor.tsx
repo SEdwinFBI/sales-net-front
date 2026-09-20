@@ -288,19 +288,23 @@ export default function UserPricingEditor({
       if (!variant) continue
       const row = getRow(variantId)
       const rowErrors: RowErrors = {}
+      const activeTierEntries = row.tiers
+        .map((tier, index) => ({ tier, index }))
+        .filter(({ tier }) => tier.descuento !== '' || tier.hasta !== '')
+      const activeTiers = activeTierEntries.map(({ tier }) => tier)
 
       // Validate basic fields + tier discounts
       const parsed = variantPricingRowSchema.safeParse({
         precio: row.precio,
         descuentoMayorista: row.descuentoMayorista,
         precioBase: variant.precio_base,
-        tiers: row.tiers.filter((t) => t.descuento !== '' && t.desde !== ''),
+        tiers: activeTiers,
       })
       if (!parsed.success) {
         for (const issue of parsed.error.issues) {
           const [field, ...rest] = issue.path
           if (field === 'tiers' && typeof rest[0] === 'number') {
-            const tierIndex = rest[0] as number
+            const tierIndex = activeTierEntries[rest[0]].index
             const tierField = rest[1] as keyof TierErrors
             rowErrors.tiers = rowErrors.tiers ?? {}
             rowErrors.tiers[tierIndex] = rowErrors.tiers[tierIndex] ?? {}
@@ -312,7 +316,6 @@ export default function UserPricingEditor({
       }
 
       // Validate tier ranges
-      const activeTiers = row.tiers.filter((t) => t.descuento !== '' && t.desde !== '')
       if (activeTiers.length > 0) {
         const tierErrors = validateTiers(activeTiers.map((t) => ({
           desde: t.desde || '1',
@@ -322,7 +325,7 @@ export default function UserPricingEditor({
         if (tierErrors) {
           rowErrors.tiers = rowErrors.tiers ?? {}
           for (const [tierIndex, errMsg] of Object.entries(tierErrors)) {
-            const idx = Number(tierIndex)
+            const idx = activeTierEntries[Number(tierIndex)].index
             rowErrors.tiers[idx] = rowErrors.tiers[idx] ?? {}
             rowErrors.tiers[idx].desde = errMsg
           }
@@ -337,8 +340,7 @@ export default function UserPricingEditor({
       items.push({
         id_variante: variantId,
         precio: row.precio === '' ? null : Number(row.precio),
-        individual_tiers: row.tiers
-          .filter((t) => t.descuento !== '' && t.desde !== '')
+        individual_tiers: activeTiers
           .map((t) => ({
             unidades_min: Number(t.desde),
             unidades_max: t.hasta === '' ? null : Number(t.hasta),

@@ -11,7 +11,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
-import { Fingerprint, Eye, EyeOff, LockKeyhole, Loader2, Mail, MoveRight } from 'lucide-react'
+import {
+  Fingerprint,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Loader2,
+  MoveRight,
+  User,
+} from 'lucide-react'
 import type { PatternLoginCredentials } from '../types/pattern'
 import PatternLoginForm from './PatternLoginForm'
 import { supportsPasskeys } from '../services/passkey-service'
@@ -66,16 +74,16 @@ export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }
       <form className="mt-7 flex flex-col gap-6" onSubmit={handleFormSubmit}>
               <fieldset disabled={passkeyPending} className="min-w-0"><FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="username">Correo o usuario</FieldLabel>
+                  <FieldLabel htmlFor="username">Usuario</FieldLabel>
                   <InputGroup >
                     <InputGroupInput
                       {...register('username')}
                       id="username"
                       type="text"
-                      placeholder="usuario@distribuidoramz.com"
+                      placeholder="usuario"
                       aria-invalid={!!errors.username} />
                     <InputGroupAddon>
-                      <Mail />
+                      <User/>
                     </InputGroupAddon>
 
                   </InputGroup>

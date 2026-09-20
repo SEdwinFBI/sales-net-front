@@ -22,6 +22,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
 import { Wallet, CreditCard, Loader2 } from 'lucide-react'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 
 const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet }[] = [
@@ -30,6 +31,7 @@ const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet
 ]
 
 const CheckoutDialog = () => {
+  const userId = useAuthStore((state) => state.user?.id)
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const items = useSalesStore((state) => state.items)
   const clearCart = useSalesStore((state) => state.clearCart)
@@ -55,24 +57,25 @@ const CheckoutDialog = () => {
   // Cotización del servidor para confirmar el total antes
   // de cobrar
   const detalles = items.map((item) => ({ id_variante: item.variantId, cantidad: item.qty }))
-  const { data: cotizacion } = useQuery({
-    queryKey: ['pricing', 'cotizar', detalles],
+  const { data: cotizacion, isFetching: isQuoting, isError: quoteError, refetch: retryQuote } = useQuery({
+    queryKey: ['pricing', 'cotizar', userId, detalles],
     queryFn: () => cotizarCarrito(detalles),
     enabled: activeDialog === 'checkout' && items.length > 0,
     staleTime: 0,
   })
   const serverTotal = cotizacion?.total
+  const evidenciaFotografica = cotizacion?.evidencia_fotografica ?? true
   const totalsDiffer = serverTotal !== undefined && Math.abs(serverTotal - total) >= 0.01
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
 
-  // La foto de entrega es obligatoria: el backend rechaza la venta sin ella.
+  // El servidor indica si este usuario tiene habilitada la evidencia.
   const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
-  const canConfirm = Boolean(pagoValido && ventaFoto)
+  const canConfirm = Boolean(pagoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
 
   const handleConfirm = async () => {
-    if (!canConfirm || !ventaFoto) return
+    if (!canConfirm) return
 
     try {
       const result = await createSale({
@@ -82,7 +85,7 @@ const CheckoutDialog = () => {
         customerId: selectedCustomerId || undefined,
         total,
         observacion: voiceTranscript.trim() || undefined,
-        foto: ventaFoto,
+        foto: evidenciaFotografica ? ventaFoto ?? undefined : undefined,
       })
       // Snapshot ANTES de limpiar el carrito
       const customerName =
@@ -170,9 +173,18 @@ const CheckoutDialog = () => {
             </p>
           )}
 
-          <VentaFotoCapture foto={ventaFoto} onChange={setVentaFoto} />
+          {quoteError ? (
+            <div className="text-sm text-destructive">
+              <p>No se pudo verificar la configuración de la venta.</p>
+              <Button variant="outline" onClick={() => void retryQuote()}>Reintentar</Button>
+            </div>
+          ) : isQuoting ? (
+            <p className="text-sm text-muted-foreground">Verificando venta…</p>
+          ) : evidenciaFotografica && (
+            <VentaFotoCapture foto={ventaFoto} onChange={setVentaFoto} />
+          )}
 
-          {pagoValido && !ventaFoto && (
+          {!isQuoting && !quoteError && evidenciaFotografica && pagoValido && !ventaFoto && (
             <p className="text-xs text-warning -mt-3">
               Toma la foto de entrega para confirmar la venta
             </p>
