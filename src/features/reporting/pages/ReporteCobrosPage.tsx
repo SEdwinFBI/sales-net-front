@@ -6,7 +6,7 @@ import { FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { useReporteCobros } from '../hooks/useReporteCobros'
 import ReporteCobrosFilters from '../components/ReporteCobrosFilters'
-import CobrosPorUsuarioTable from '../components/CobrosPorUsuarioTable'
+import CobrosPorSucursal from '../components/CobrosPorSucursal'
 import { downloadReporteCobrosPdf } from '../services/reportes-service'
 import type { ReporteCobrosFilters as Filters } from '../types/reportes'
 
@@ -16,7 +16,7 @@ export default function ReporteCobrosPage() {
   const [pdfUserLoading, setPdfUserLoading] = useState<number | null>(null)
   const hasFilters = Object.values(filters).some((v) => v !== undefined && v !== '')
   const activeFilters = hasFilters ? filters : undefined
-  const { porUsuario, isLoading } = useReporteCobros(activeFilters)
+  const { porSucursal, isLoading } = useReporteCobros(activeFilters)
 
   const handleExportPdf = async () => {
     setPdfLoading(true)
@@ -44,7 +44,7 @@ export default function ReporteCobrosPage() {
   }, [])
 
   return (
-    <PageTemplateSimple title="Reporte de Cobros" description="Abonos realizados por usuario.">
+    <PageTemplateSimple title="Reporte de Cobros" description="Abonos por sucursal y usuario.">
       <Card className="mx-auto p-3.5 sm:p-5">
         <div className="space-y-5 sm:space-y-6">
           <div className="flex items-center justify-center gap-4">
@@ -58,8 +58,8 @@ export default function ReporteCobrosPage() {
                 {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
               </Button>
             </div>
-            <CobrosPorUsuarioTable
-              data={porUsuario}
+            <CobrosPorSucursal
+              data={porSucursal}
               isLoading={isLoading}
               onDownloadUserPdf={handleExportUserPdf}
               pdfUserLoading={pdfUserLoading}
