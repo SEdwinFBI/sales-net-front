@@ -142,7 +142,7 @@ const CheckoutDialog = () => {
           if (!open && !quickCreateOpen) closeDialog()
         }}
       >
-      <DialogContent>
+      <DialogContent className="min-w-0 grid-cols-1">
         <DialogHeader>
           <DialogTitle>Confirmar venta</DialogTitle>
           <DialogDescription>
@@ -156,7 +156,7 @@ const CheckoutDialog = () => {
           )}
         </DialogHeader>
 
-        <div className="space-y-5 px-6">
+        <div className="min-w-0 space-y-5">
           <div>
             <p className="text-sm font-medium mb-2">Cliente</p>
             <CustomerSelect

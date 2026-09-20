@@ -64,11 +64,11 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
     }
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={ref} className="relative min-w-0 w-full">
             {/* Trigger */}
             <div
                 className={cn(
-                    "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
+                    "flex min-w-0 w-full items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
                     open
                         ? "border-primary/50 shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
                         : "border-border hover:border-ring"
@@ -81,7 +81,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                 {/* Input */}
                 <input
                     ref={inputRef}
-                    className="flex-1 bg-transparent outline-none text-sm"
+                    className="min-w-0 w-full flex-1 truncate bg-transparent outline-none text-sm"
                     placeholder="Buscar cliente..."
                     value={open ? query : selected?.name ?? ""}
                     onChange={(e) => {
@@ -100,7 +100,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                             e.stopPropagation()
                             onChange("")
                         }}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
@@ -113,7 +113,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                         e.stopPropagation()
                         toggle()
                     }}
-                    className="text-muted-foreground"
+                    className="shrink-0 text-muted-foreground"
                 >
                     <ChevronDown
                         className={cn(
