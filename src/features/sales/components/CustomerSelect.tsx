@@ -4,8 +4,8 @@ import { useState, useRef, useEffect, type FC } from "react"
 import { Search, X, ChevronDown, Check, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/helpers/money"
-
-type Customer = { id: string; name: string; phone: string; balance: number }
+import type { Customer } from '@/features/customers/hooks/useCustomers'
+import TipoClienteBadge from '@/features/customers/components/TipoClienteBadge'
 
 type Props = {
     customers: Customer[]
@@ -90,6 +90,8 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                         setHighlighted(0)
                     }}
                 />
+
+                {selected?.tipo_cliente === 'SOLO_PRECIOS' && !open && <TipoClienteBadge tipo={selected.tipo_cliente} />}
 
                 {/* Clear */}
                 {value && !open && (
@@ -197,8 +199,9 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
 
                                         <div className="flex-1 text-sm min-w-0">
                                             <div className="truncate">{c.name ?? 'Sin nombre'}</div>
+                                            <TipoClienteBadge tipo={c.tipo_cliente} />
                                             <div className="text-xs text-muted-foreground truncate">
-                                                {c.phone ?? 'Sin teléfono'} · Saldo: {formatCurrency(c.balance ?? 0)}
+                                                {c.phone ?? 'Sin teléfono'}{c.tipo_cliente !== 'SOLO_PRECIOS' && <> · Saldo: {formatCurrency(c.balance ?? 0)}</>}
                                             </div>
                                         </div>
 

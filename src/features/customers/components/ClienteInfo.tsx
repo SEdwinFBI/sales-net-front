@@ -5,6 +5,7 @@ import type { Cliente } from '../types/clientes'
 import { initials } from '@/helpers/string'
 import { mostrarDias } from '../utils/dias-notificacion'
 import { formatDisplayDate } from '@/lib/dates'
+import TipoClienteBadge from './TipoClienteBadge'
 
 type Props = {
   cliente: Cliente
@@ -15,7 +16,7 @@ export default function ClienteInfo({ cliente }: Props) {
     <Card className="bg-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-          <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${cliente.activo ? 'bg-successful' : 'bg-muted-foreground/70'}`}>
+          <div className={`flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:size-14 ${!cliente.activo ? 'bg-muted-foreground/70' : cliente.tipo_cliente === 'SOLO_PRECIOS' ? 'bg-violet-600' : 'bg-emerald-600'}`}>
             {initials(cliente.nombre_completo)}
           </div>
 
@@ -25,6 +26,7 @@ export default function ClienteInfo({ cliente }: Props) {
               <Badge variant={cliente.activo ? 'default' : 'secondary'}>
                 {cliente.activo ? 'Activo' : 'Inactivo'}
               </Badge>
+              <TipoClienteBadge tipo={cliente.tipo_cliente} />
             </div>
 
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
@@ -34,9 +36,9 @@ export default function ClienteInfo({ cliente }: Props) {
               <span className="whitespace-nowrap text-muted-foreground">
                 Direccion: <span className="font-medium text-foreground">{cliente.direccion}</span>
               </span>
-              <span className="whitespace-nowrap text-muted-foreground">
+              {cliente.tipo_cliente !== 'SOLO_PRECIOS' && <span className="whitespace-nowrap text-muted-foreground">
                 Días de notificación: <span className="font-medium text-foreground">{mostrarDias(cliente.dias_notificacion)}</span>
-              </span>
+              </span>}
             </div>
 
             <p className="mt-1.5 text-xs text-muted-foreground">
@@ -45,12 +47,12 @@ export default function ClienteInfo({ cliente }: Props) {
           </div>
         </div>
 
-        <div className="shrink-0 text-right">
+        {cliente.tipo_cliente !== 'SOLO_PRECIOS' && <div className="shrink-0 text-right">
           <p className="text-xs text-muted-foreground">Balance</p>
           <p className="text-xl font-bold text-primary sm:text-2xl">
             {formatCurrency(cliente.balance)}
           </p>
-        </div>
+        </div>}
       </div>
     </Card>
   )

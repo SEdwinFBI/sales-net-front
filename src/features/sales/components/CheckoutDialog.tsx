@@ -24,6 +24,7 @@ import type { PaymentMethod } from '../types/sales'
 import { Wallet, CreditCard, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
+import { useCliente } from '@/features/customers/hooks/useCliente'
 
 
 const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet }[] = [
@@ -62,6 +63,9 @@ const CheckoutDialog = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
   const [selectedCustomerId, setSelectedCustomerId] = useState(storeCustomerId)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  const { data: selectedCliente } = useCliente(activeDialog === 'checkout' ? Number(selectedCustomerId) : 0)
+  const soloPrecios = selectedCliente?.tipo_cliente === 'SOLO_PRECIOS'
+  const permiteCredito = selectedCliente?.tipo_cliente === 'GENERAL'
 
   // Cotización del servidor para confirmar el total antes
   // de cobrar
@@ -89,7 +93,7 @@ const CheckoutDialog = () => {
   }
 
   // El servidor indica si este usuario tiene habilitada la evidencia.
-  const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
+  const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId && permiteCredito)
   const canConfirm = Boolean(pagoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
 
   const handleConfirm = async () => {
@@ -175,8 +179,9 @@ const CheckoutDialog = () => {
                   <button
                     key={opt.value}
                     type="button"
+                    disabled={opt.value === 'credito' && Boolean(selectedCustomerId) && !permiteCredito}
                     onClick={() => setPaymentMethod(opt.value)}
-                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer ${selected
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${selected
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-border bg-background text-muted-foreground hover:border-muted-foreground/30'
                       }`}
@@ -189,6 +194,7 @@ const CheckoutDialog = () => {
             </div>
           </div>
 
+          {soloPrecios && <p className="text-xs text-muted-foreground">Cliente Solo precios: selecciona efectivo. No admite ventas a crédito.</p>}
           {paymentMethod === 'credito' && !selectedCustomerId && (
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito

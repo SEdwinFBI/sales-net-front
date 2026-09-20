@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { getClientes } from '../services/clientes-service'
-import type { Cliente } from '../types/clientes'
+import type { Cliente, TipoCliente } from '../types/clientes'
 
 export interface Customer {
+  tipo_cliente: TipoCliente
   id: string
   name: string
   phone: string
@@ -28,6 +29,7 @@ export const useCustomers = (params: CustomerSearchParams = {}) => {
       name: c.nombre_completo,
       phone: c.telefono,
       balance: Number(c.balance) || 0,
+      tipo_cliente: c.tipo_cliente,
     })),
   })
 

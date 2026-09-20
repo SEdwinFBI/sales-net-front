@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { useCreateCliente } from '../hooks/useCreateCliente'
 import { useUpdateCliente } from '../hooks/useUpdateCliente'
@@ -15,6 +16,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
+  tipo_cliente: z.enum(['GENERAL', 'SOLO_PRECIOS']),
   nombre_completo: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   direccion: z.string().min(3, 'La dirección debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
@@ -40,6 +42,7 @@ type Props = {
 }
 
 const EMPTY_FORM: FormValues = {
+  tipo_cliente: 'GENERAL',
   nombre_completo: '',
   direccion: '',
   telefono: '',
@@ -59,10 +62,12 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
     defaultValues: EMPTY_FORM,
   })
   const diasSeleccionados = watch('dias_notificacion')
+  const soloPrecios = watch('tipo_cliente') === 'SOLO_PRECIOS'
 
   useEffect(() => {
     if (!open) return
     reset(cliente ? {
+      tipo_cliente: cliente.tipo_cliente ?? 'GENERAL',
       nombre_completo: cliente.nombre_completo,
       direccion: cliente.direccion,
       telefono: cliente.telefono,
@@ -73,6 +78,9 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
   }, [open, cliente, reset])
 
   const onSubmit = async (values: FormValues) => {
+    if (values.tipo_cliente === 'SOLO_PRECIOS') {
+      values = { ...values, balance: 0, dias_notificacion: [] }
+    }
     try {
       if (isEdit) {
         await updateCliente({ id: cliente!.id, data: values })
@@ -105,6 +113,15 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
           <FieldGroup>
             <Field>
+              <FieldLabel htmlFor="cliente-tipo">Tipo de cliente</FieldLabel>
+              <Select id="cliente-tipo" {...register('tipo_cliente')}>
+                <option value="GENERAL">Crédito y precios</option>
+                <option value="SOLO_PRECIOS">Solo precios</option>
+              </Select>
+              <p className="text-xs text-muted-foreground">Solo precios permite precios pactados y compras al contado, sin crédito ni abonos.</p>
+              <FieldError errors={[errors.tipo_cliente]} />
+            </Field>
+            <Field>
               <FieldLabel>Nombre completo</FieldLabel>
               <Input {...register('nombre_completo')} placeholder="Juan Pérez" />
               <FieldError errors={[errors.nombre_completo]} />
@@ -119,12 +136,12 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
               <Input {...register('telefono')} placeholder="12345678" />
               <FieldError errors={[errors.telefono]} />
             </Field>
-            <Field>
+            {!soloPrecios && <Field>
               <FieldLabel>Balance</FieldLabel>
               <Input {...register('balance')} type="number" step="0.01" placeholder="0.00" />
               <FieldError errors={[errors.balance]} />
-            </Field>
-            <Field>
+            </Field>}
+            {!soloPrecios && <Field>
               <FieldLabel>Días de notificación</FieldLabel>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Días de notificación">
                 {DIAS_NOTIFICACION.map((dia) => {
@@ -144,7 +161,7 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
                 })}
               </div>
               <FieldError errors={[errors.dias_notificacion]} />
-            </Field>
+            </Field>}
             <Field orientation="horizontal">
               <FieldLabel>Activo</FieldLabel>
               <Switch checked={watch('activo')} onCheckedChange={(checked: boolean) => setValue('activo', checked)} />

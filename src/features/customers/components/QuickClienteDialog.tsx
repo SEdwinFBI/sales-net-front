@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { useCreateCliente } from '../hooks/useCreateCliente'
 import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { UserPlus, Loader2 } from 'lucide-react'
 
 const schema = z.object({
+  tipo_cliente: z.enum(['GENERAL', 'SOLO_PRECIOS']),
   nombre_completo: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
   direccion: z.string().default('Ciudad'),
@@ -43,6 +45,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: {
+      tipo_cliente: 'GENERAL',
       nombre_completo: '',
       telefono: '',
       direccion: 'Ciudad',
@@ -52,6 +55,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
   const onSubmit = async (values: FormValues) => {
     try {
       const res = await createCliente({
+        tipo_cliente: values.tipo_cliente,
         nombre_completo: values.nombre_completo.trim(),
         telefono: values.telefono.trim(),
         direccion: values.direccion.trim() || 'Ciudad',
@@ -88,6 +92,15 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="cliente-rapido-tipo">Tipo de cliente</FieldLabel>
+              <Select id="cliente-rapido-tipo" {...register('tipo_cliente')}>
+                <option value="GENERAL">Crédito y precios</option>
+                <option value="SOLO_PRECIOS">Solo precios</option>
+              </Select>
+              <p className="text-xs text-muted-foreground">Solo precios: precios pactados y contado, sin crédito ni abonos.</p>
+              <FieldError errors={[errors.tipo_cliente]} />
+            </Field>
             <Field>
               <FieldLabel>Nombre completo</FieldLabel>
               <Input

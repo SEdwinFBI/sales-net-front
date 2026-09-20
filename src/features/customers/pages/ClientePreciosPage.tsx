@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { ArrowLeft, Tag } from 'lucide-react'
 import { formatCurrency } from '@/helpers/money'
+import TipoClienteBadge from '../components/TipoClienteBadge'
 
 export default function ClientePreciosPage() {
   const { id } = useParams<{ id: string }>()
@@ -66,9 +67,10 @@ export default function ClientePreciosPage() {
             </div>
 
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <TipoClienteBadge tipo={cliente.tipo_cliente} />
               <span>Teléfono: <strong className="text-foreground">{cliente.telefono}</strong></span>
               <span>·</span>
-              <span>Saldo: <strong className="text-foreground">{formatCurrency(cliente.balance)}</strong></span>
+              {cliente.tipo_cliente !== 'SOLO_PRECIOS' && <span>Saldo: <strong className="text-foreground">{formatCurrency(cliente.balance)}</strong></span>}
             </div>
           </div>
 
