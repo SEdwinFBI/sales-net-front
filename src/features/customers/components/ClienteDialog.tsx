@@ -62,6 +62,7 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
   })
   const diasSeleccionados = watch('dias_notificacion')
   const sinCredito = !watch('permitir_credito')
+  const creditoBloqueado = !!cliente && Number(cliente.balance) !== 0
 
   useEffect(() => {
     if (!open) return
@@ -113,9 +114,10 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
           <FieldGroup>
             <Field orientation="horizontal">
               <FieldLabel htmlFor="cliente-credito">Permitir dar crédito</FieldLabel>
-              <Switch id="cliente-credito" checked={watch('permitir_credito')} onCheckedChange={(checked: boolean) => setValue('permitir_credito', checked, { shouldDirty: true, shouldValidate: true })} />
+              <Switch id="cliente-credito" disabled={creditoBloqueado} checked={watch('permitir_credito')} onCheckedChange={(checked: boolean) => setValue('permitir_credito', checked, { shouldDirty: true, shouldValidate: true })} />
               <FieldError errors={[errors.permitir_credito]} />
             </Field>
+            {creditoBloqueado && <p className="text-sm text-muted-foreground">El balance debe ser cero para cambiar el permiso de crédito.</p>}
             <Field>
               <FieldLabel>Nombre completo</FieldLabel>
               <Input {...register('nombre_completo')} placeholder="Juan Pérez" />
