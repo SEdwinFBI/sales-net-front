@@ -7,7 +7,6 @@ import {
   Mail,
   MailPlus,
   Receipt,
-  RotateCcw,
   Save,
   Search,
   ShoppingBag,
@@ -231,6 +230,10 @@ export default function NotificacionesPage() {
       description="Configura los destinatarios de los avisos y la hora de notificación de cobros."
     >
       <div className="mt-4 space-y-5">
+        <header className="space-y-1">
+          <h1 className="font-heading text-xl font-semibold sm:text-2xl">Notificaciones</h1>
+          <p className="text-sm text-muted-foreground">Define cuándo enviar los avisos de cobros y quién recibe cada tipo de notificación.</p>
+        </header>
         <Card className="gap-4 p-4 sm:p-5">
           <HorarioCobrosSection />
         </Card>
@@ -244,13 +247,13 @@ export default function NotificacionesPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-semibold text-card-foreground">Destinatarios</h1>
+                  <h2 className="text-lg font-semibold text-card-foreground">Destinatarios</h2>
                   <Badge variant="secondary" className="px-1.5 py-0 text-xs font-medium">
                     {count}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Avisos automáticos de stock, cobros y ventas
+                  Selecciona los avisos que recibe cada persona
                 </p>
               </div>
             </div>
@@ -278,223 +281,200 @@ export default function NotificacionesPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                {hasChanges && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={resetChanges}
-                      disabled={isUpdating}
-                      className="h-10 px-3 text-sm"
-                    >
-                      <RotateCcw className="size-3.5" />
-                      Descartar
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={save}
-                      disabled={isUpdating}
-                      className="h-10 gap-2 px-4 text-sm"
-                    >
-                      {isUpdating ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
-                      Guardar
-                    </Button>
-                  </>
-                )}
                 <Button
                   size="sm"
                   onClick={() => setDialogOpen(true)}
                   className="h-10 gap-2 px-4 text-sm"
                 >
                   <MailPlus className="size-3.5" />
-                  Agregar
+                  Agregar destinatario
                 </Button>
               </div>
             </div>
           </div>
-        </Card>
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-card/40 py-10 text-center">
-            <Loader2 className="size-5 animate-spin text-primary" />
-            <p className="text-xs text-muted-foreground">Cargando destinatarios...</p>
-          </div>
-        )}
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-card/40 py-10 text-center">
+              <Loader2 className="size-5 animate-spin text-primary" />
+              <p className="text-xs text-muted-foreground">Cargando destinatarios...</p>
+            </div>
+          )}
 
-        {/* Empty State */}
-        {!isLoading && !isError && destinatarios.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-card/40 p-8 text-center">
-            <Mail className="size-7 text-muted-foreground/60" />
-            <p className="text-xs font-semibold text-foreground">
-              {search ? 'Sin coincidencias para la búsqueda' : 'No hay destinatarios registrados'}
-            </p>
-            {!search && (
-              <Button size="sm" onClick={() => setDialogOpen(true)} className="mt-1 h-7 gap-1 text-xs">
-                <MailPlus className="size-3.5" />
-                Registrar primero
-              </Button>
-            )}
-          </div>
-        )}
+          {/* Empty State */}
+          {!isLoading && !isError && destinatarios.length === 0 && (
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/80 bg-card/40 p-8 text-center">
+              <Mail className="size-7 text-muted-foreground/60" />
+              <p className="text-xs font-semibold text-foreground">
+                {search ? 'Sin coincidencias para la búsqueda' : 'No hay destinatarios registrados'}
+              </p>
+              {!search && (
+                <Button size="sm" onClick={() => setDialogOpen(true)} className="mt-1 h-7 gap-1 text-xs">
+                  <MailPlus className="size-3.5" />
+                  Registrar primero
+                </Button>
+              )}
+            </div>
+          )}
 
-        {/* Lista de Tarjetas Compactas */}
-        <div className="space-y-3">
-          {destinatarios.map((destinatario) => {
-            const activeCount = PREFERENCIAS_CONFIG.filter((p) => destinatario[p.key]).length
-            const initials = getInitials(destinatario.nombre_persona_email)
-            const avatarGradient = getAvatarGradient(destinatario.id)
+          {/* Lista de Tarjetas Compactas */}
+          <div className="divide-y divide-border/70 border-t border-border/70">
+            {destinatarios.map((destinatario) => {
+              const activeCount = PREFERENCIAS_CONFIG.filter((p) => destinatario[p.key]).length
+              const initials = getInitials(destinatario.nombre_persona_email)
+              const avatarGradient = getAvatarGradient(destinatario.id)
 
-            return (
-              <Card
-                key={destinatario.id}
-                className="p-4 transition-colors hover:border-primary/40 sm:p-5"
-              >
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                  {/* Info Destinatario */}
-                  <div className="flex items-center justify-between gap-3 xl:min-w-[240px] xl:max-w-xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${avatarGradient} text-xs font-bold text-white shadow-2xs`}
-                      >
-                        {initials}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h2 className="truncate text-sm font-semibold text-card-foreground">
-                            {destinatario.nombre_persona_email}
-                          </h2>
-                          <span className="text-xs text-muted-foreground">
-                            ({activeCount}/4)
-                          </span>
+              return (
+                <div
+                  key={destinatario.id}
+                  className="py-4"
+                >
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    {/* Info Destinatario */}
+                    <div className="flex items-center justify-between gap-3 xl:min-w-[240px] xl:max-w-xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${avatarGradient} text-xs font-bold text-white shadow-2xs`}
+                        >
+                          {initials}
                         </div>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {destinatario.email}
-                        </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="truncate text-sm font-semibold text-card-foreground">
+                              {destinatario.nombre_persona_email}
+                            </h3>
+                            <span className="text-xs text-muted-foreground">
+                              ({activeCount}/4)
+                            </span>
+                          </div>
+                          <p className="truncate text-sm text-muted-foreground">
+                            {destinatario.email}
+                          </p>
+                        </div>
                       </div>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={isDeleting}
+                        onClick={() => setDestinatarioAEliminar(destinatario)}
+                        className="size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:hidden"
+                        aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
                     </div>
 
+                    {/* 4 Canales de Notificación en Formato Compacto */}
+                    <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4 xl:max-w-3xl">
+                      {PREFERENCIAS_CONFIG.map(({ key, title, description, icon: Icon, activeColor, iconBg }) => {
+                        const isActive = Boolean(destinatario[key])
+
+                        return (
+                          <label
+                            key={key}
+                            title={description}
+                            className={`flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-3 transition-all ${
+                              isActive
+                                ? `${activeColor} border-opacity-100 shadow-2xs`
+                                : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Icon
+                                className={`size-3.5 shrink-0 ${
+                                  isActive ? iconBg.split(' ')[1] : 'text-muted-foreground'
+                                }`}
+                              />
+                              <span
+                                className={`text-sm ${
+                                  isActive ? 'font-medium text-foreground' : 'text-muted-foreground'
+                                }`}
+                              >
+                                {title}
+                              </span>
+                            </div>
+
+                            <Switch
+                              checked={isActive}
+                              onCheckedChange={(checked) => toggle(destinatario.id, key, checked)}
+                              className="shrink-0"
+                            />
+                          </label>
+                        )
+                      })}
+                    </div>
+
+                    {/* Botón Eliminar en Desktop */}
                     <Button
                       variant="ghost"
                       size="icon"
                       disabled={isDeleting}
                       onClick={() => setDestinatarioAEliminar(destinatario)}
-                      className="size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:hidden"
+                      className="hidden size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:flex"
                       aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
                   </div>
-
-                  {/* 4 Canales de Notificación en Formato Compacto */}
-                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4 xl:max-w-3xl">
-                    {PREFERENCIAS_CONFIG.map(({ key, title, description, icon: Icon, activeColor, iconBg }) => {
-                      const isActive = Boolean(destinatario[key])
-
-                      return (
-                        <label
-                          key={key}
-                          title={description}
-                          className={`flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-3 transition-all ${
-                            isActive
-                              ? `${activeColor} border-opacity-100 shadow-2xs`
-                              : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <Icon
-                              className={`size-3.5 shrink-0 ${
-                                isActive ? iconBg.split(' ')[1] : 'text-muted-foreground'
-                              }`}
-                            />
-                            <span
-                              className={`text-sm ${
-                                isActive ? 'font-medium text-foreground' : 'text-muted-foreground'
-                              }`}
-                            >
-                              {title}
-                            </span>
-                          </div>
-
-                          <Switch
-                            checked={isActive}
-                            onCheckedChange={(checked) => toggle(destinatario.id, key, checked)}
-                            className="shrink-0"
-                          />
-                        </label>
-                      )
-                    })}
-                  </div>
-
-                  {/* Botón Eliminar en Desktop */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    disabled={isDeleting}
-                    onClick={() => setDestinatarioAEliminar(destinatario)}
-                    className="hidden size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:flex"
-                    aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
                 </div>
-              </Card>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
 
-        {/* Sticky Save Bar cuando hay cambios pendientes */}
-        {hasChanges && (
-          <div className="sticky bottom-3 z-10 flex items-center justify-between rounded-xl border border-primary/40 bg-card/95 px-3.5 py-2 shadow-lg backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              <span className="flex size-2 rounded-full bg-primary animate-ping" />
-              <p className="text-xs font-medium text-card-foreground">
-                Tienes cambios sin guardar.
+          {/* Sticky Save Bar cuando hay cambios pendientes */}
+          {hasChanges && (
+            <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/40 bg-card/95 px-3.5 py-2 shadow-lg backdrop-blur-md">
+              <div className="flex items-center gap-2">
+                <span className="flex size-2 rounded-full bg-primary animate-ping" />
+                <p className="text-xs font-medium text-card-foreground">
+                  Preferencias de destinatarios sin guardar.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="sm" onClick={resetChanges} disabled={isUpdating} className="h-7 px-2 text-xs">
+                  Descartar
+                </Button>
+                <Button size="sm" onClick={save} disabled={isUpdating} className="h-7 gap-1 px-3 text-xs">
+                  {isUpdating ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
+                  Guardar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Paginación Compacta */}
+          {count > 0 && (
+            <div className="flex flex-col gap-2.5 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-center text-xs text-muted-foreground sm:text-left">
+                {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, count)} de {count} destinatarios
               </p>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="sm" onClick={resetChanges} disabled={isUpdating} className="h-7 px-2 text-xs">
-                Descartar
-              </Button>
-              <Button size="sm" onClick={save} disabled={isUpdating} className="h-7 gap-1 px-3 text-xs">
-                {isUpdating ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
-                Guardar
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Paginación Compacta */}
-        {count > 0 && (
-          <div className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-center text-xs text-muted-foreground sm:text-left">
-              {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, count)} de {count} destinatarios
-            </p>
-            <div className="flex flex-col items-center gap-2.5 sm:flex-row">
-              <label
-                className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted-foreground"
-                htmlFor="notif-page-size"
-              >
-                Por página:
-                <Select
-                  id="notif-page-size"
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value))
-                    setPage(1)
-                  }}
-                  className="h-7 w-16 text-xs"
+              <div className="flex flex-col items-center gap-2.5 sm:flex-row">
+                <label
+                  className="flex items-center gap-1.5 whitespace-nowrap text-xs text-muted-foreground"
+                  htmlFor="notif-page-size"
                 >
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                </Select>
-              </label>
-              <Paginator page={page} totalPages={totalPages} onPageChange={(p) => setPage(p)} />
+                  Por página:
+                  <Select
+                    id="notif-page-size"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value))
+                      setPage(1)
+                    }}
+                    className="h-7 w-16 text-xs"
+                  >
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                  </Select>
+                </label>
+                <Paginator page={page} totalPages={totalPages} onPageChange={(p) => setPage(p)} />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </Card>
       </div>
 
       {/* Modal: Confirmación para Eliminar */}
