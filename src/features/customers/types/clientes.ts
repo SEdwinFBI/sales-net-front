@@ -1,11 +1,10 @@
 import type { Venta } from "@/features/sales/types/sales"
 
 export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
-export type TipoCliente = 'GENERAL' | 'SOLO_PRECIOS'
 
 export interface Cliente {
   id: number
-  tipo_cliente: TipoCliente
+  permitir_credito: boolean
   nombre_completo: string
   direccion: string
   telefono: string
@@ -22,7 +21,7 @@ export interface ApiResponse<T> {
 }
 
 export interface CreateClientePayload {
-  tipo_cliente?: TipoCliente
+  permitir_credito?: boolean
   nombre_completo: string
   direccion: string
   telefono: string
@@ -32,7 +31,7 @@ export interface CreateClientePayload {
 }
 
 export interface UpdateClientePayload {
-  tipo_cliente?: TipoCliente
+  permitir_credito?: boolean
   nombre_completo?: string
   direccion?: string
   telefono?: string

@@ -5,7 +5,7 @@ import { Search, X, ChevronDown, Check, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/helpers/money"
 import type { Customer } from '@/features/customers/hooks/useCustomers'
-import TipoClienteBadge from '@/features/customers/components/TipoClienteBadge'
+import CreditoClienteBadge from '@/features/customers/components/CreditoClienteBadge'
 
 type Props = {
     customers: Customer[]
@@ -91,7 +91,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                     }}
                 />
 
-                {selected?.tipo_cliente === 'SOLO_PRECIOS' && !open && <TipoClienteBadge tipo={selected.tipo_cliente} />}
+                {selected?.permitir_credito === false && !open && <CreditoClienteBadge permitirCredito={selected.permitir_credito} />}
 
                 {/* Clear */}
                 {value && !open && (
@@ -199,9 +199,9 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
 
                                         <div className="flex-1 text-sm min-w-0">
                                             <div className="truncate">{c.name ?? 'Sin nombre'}</div>
-                                            <TipoClienteBadge tipo={c.tipo_cliente} />
+                                            <CreditoClienteBadge permitirCredito={c.permitir_credito} />
                                             <div className="text-xs text-muted-foreground truncate">
-                                                {c.phone ?? 'Sin teléfono'}{c.tipo_cliente !== 'SOLO_PRECIOS' && <> · Saldo: {formatCurrency(c.balance ?? 0)}</>}
+                                                {c.phone ?? 'Sin teléfono'}{c.permitir_credito === true && <> · Saldo: {formatCurrency(c.balance ?? 0)}</>}
                                             </div>
                                         </div>
 

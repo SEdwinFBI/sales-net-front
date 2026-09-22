@@ -25,10 +25,10 @@ export default function ClienteDetailPage() {
   const navigate = useNavigate()
   const clienteId = Number(id)
   const { data: cliente, isLoading, isError } = useCliente(clienteId)
-  const soloPrecios = cliente?.tipo_cliente === 'SOLO_PRECIOS'
-  const { abonos } = useAbonosHistorial(soloPrecios ? 0 : clienteId)
+  const sinCredito = cliente?.permitir_credito === false
+  const { abonos } = useAbonosHistorial(sinCredito ? 0 : clienteId)
   const { ventas, resumen } = useComprasCliente(clienteId)
-  const { movimientos } = useMovimientosCliente(soloPrecios ? 0 : clienteId)
+  const { movimientos } = useMovimientosCliente(sinCredito ? 0 : clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ajusteOpen, setAjusteOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
@@ -83,7 +83,7 @@ export default function ClienteDetailPage() {
 
           <ClienteInfo cliente={cliente} />
 
-          {resumen && !soloPrecios && (
+          {resumen && !sinCredito && (
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total ventas</p>
@@ -108,16 +108,16 @@ export default function ClienteDetailPage() {
             </div>
           )}
 
-          {soloPrecios && <p className="text-sm text-muted-foreground">Compras al contado con precios personalizados. Sin crédito, abonos ni ajustes de saldo.</p>}
-          <Tabs key={cliente.tipo_cliente} defaultValue={soloPrecios ? 'precios' : 'movimientos'}>
+          {sinCredito && <p className="text-sm text-muted-foreground">Compras al contado con precios personalizados. Sin crédito, abonos ni ajustes de saldo.</p>}
+          <Tabs key={String(cliente.permitir_credito)} defaultValue={sinCredito ? 'precios' : 'movimientos'}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">
-                {!soloPrecios && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
-                {!soloPrecios && <TabsTrigger value="abonos">Abonos</TabsTrigger>}
+                {!sinCredito && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
+                {!sinCredito && <TabsTrigger value="abonos">Abonos</TabsTrigger>}
                 <TabsTrigger value="compras">Compras</TabsTrigger>
                 <TabsTrigger value="precios">Precios del cliente</TabsTrigger>
               </TabsList>
-              {!soloPrecios && <>
+              {!sinCredito && <>
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
@@ -156,7 +156,7 @@ export default function ClienteDetailPage() {
         </Card>
       </div>
 
-      {!soloPrecios && <>
+      {!sinCredito && <>
       <CrearVentaEncabezadoDialog
         open={ventaDialogOpen}
         idCliente={clienteId}

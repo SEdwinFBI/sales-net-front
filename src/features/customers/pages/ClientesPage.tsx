@@ -9,15 +9,15 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { Search, Plus, Users, Wallet, Tag } from 'lucide-react'
-import type { Cliente, TipoCliente } from '../types/clientes'
+import type { Cliente } from '../types/clientes'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import Paginator from '@/components/shared/table/Paginator'
 
-const secciones: { value: TipoCliente | ''; label: string; icon: typeof Users; activeClass: string }[] = [
+const secciones: { value: boolean | ''; label: string; icon: typeof Users; activeClass: string }[] = [
   { value: '', label: 'Todos', icon: Users, activeClass: 'border-primary/30 bg-primary/10 text-primary' },
-  { value: 'GENERAL', label: 'Crédito y precios', icon: Wallet, activeClass: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' },
-  { value: 'SOLO_PRECIOS', label: 'Solo precios', icon: Tag, activeClass: 'border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300' },
+  { value: true, label: 'Con crédito', icon: Wallet, activeClass: 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' },
+  { value: false, label: 'Sin crédito', icon: Tag, activeClass: 'border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300' },
 ]
 
 export default function ClientesPage() {
@@ -27,9 +27,9 @@ export default function ClientesPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterActivo, setFilterActivo] = useState('todos')
-  const [filterTipo, setFilterTipo] = useState<TipoCliente | ''>('')
+  const [filterCredito, setFilterCredito] = useState<boolean | ''>('')
   const activo = filterActivo === 'todos' ? undefined : filterActivo === 'activo'
-  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch, activo, filterTipo || undefined)
+  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch, activo, filterCredito === '' ? undefined : filterCredito)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
@@ -52,24 +52,18 @@ export default function ClientesPage() {
             <div role="group" aria-label="Secciones de clientes" className="flex flex-wrap gap-2">
               {secciones.map(({ value, label, icon: Icon, activeClass }) => (
                 <Button
-                  key={value}
+                  key={String(value)}
                   variant="outline"
-                  aria-pressed={filterTipo === value}
-                  onClick={() => { setFilterTipo(value); setPage(1) }}
-                  className={`flex-1 sm:flex-none ${filterTipo === value ? activeClass : ''}`}
+                  aria-pressed={filterCredito === value}
+                  onClick={() => { setFilterCredito(value); setPage(1) }}
+                  className={`flex-1 sm:flex-none ${filterCredito === value ? activeClass : ''}`}
                 >
                   <Icon className="size-4" aria-hidden="true" />
                   {label}
                 </Button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {filterTipo === 'SOLO_PRECIOS'
-                ? 'Compras al contado con precios personalizados. Sin crédito ni abonos.'
-                : filterTipo === 'GENERAL'
-                  ? 'Compras al contado o a crédito, con precios personalizados y registro de abonos.'
-                  : 'Verde: crédito y precios. Violeta: solo precios.'}
-            </p>
+
           </div>
           <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex w-full flex-col gap-2 sm:max-w-3xl sm:flex-row">
@@ -104,7 +98,7 @@ export default function ClientesPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground sm:p-12">
-              {search || filterActivo !== 'todos' || filterTipo ? 'No hay clientes que coincidan con los filtros.' : 'No hay clientes registrados.'}
+              {search || filterActivo !== 'todos' || filterCredito !== '' ? 'No hay clientes que coincidan con los filtros.' : 'No hay clientes registrados.'}
             </div>
           ) : (
             <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">

@@ -64,8 +64,8 @@ const CheckoutDialog = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(storeCustomerId)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
   const { data: selectedCliente } = useCliente(activeDialog === 'checkout' ? Number(selectedCustomerId) : 0)
-  const soloPrecios = selectedCliente?.tipo_cliente === 'SOLO_PRECIOS'
-  const permiteCredito = selectedCliente?.tipo_cliente === 'GENERAL'
+  const sinCredito = selectedCliente?.permitir_credito === false
+  const permiteCredito = selectedCliente?.permitir_credito === true
 
   // Cotización del servidor para confirmar el total antes
   // de cobrar
@@ -194,7 +194,7 @@ const CheckoutDialog = () => {
             </div>
           </div>
 
-          {soloPrecios && <p className="text-xs text-muted-foreground">Este cliente solo puede comprar al contado.</p>}
+          {sinCredito && <p className="text-xs text-muted-foreground">Este cliente solo puede comprar al contado.</p>}
           {paymentMethod === 'credito' && !selectedCustomerId && (
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito

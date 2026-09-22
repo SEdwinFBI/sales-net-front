@@ -1,3 +1,4 @@
+import { Switch } from '@/components/ui/switch'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { useCreateCliente } from '../hooks/useCreateCliente'
 import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
@@ -20,7 +20,7 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { UserPlus, Loader2 } from 'lucide-react'
 
 const schema = z.object({
-  tipo_cliente: z.enum(['GENERAL', 'SOLO_PRECIOS']),
+  permitir_credito: z.boolean(),
   nombre_completo: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
   direccion: z.string().default('Ciudad'),
@@ -41,11 +41,13 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: {
-      tipo_cliente: 'GENERAL',
+      permitir_credito: true,
       nombre_completo: '',
       telefono: '',
       direccion: 'Ciudad',
@@ -55,7 +57,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
   const onSubmit = async (values: FormValues) => {
     try {
       const res = await createCliente({
-        tipo_cliente: values.tipo_cliente,
+        permitir_credito: values.permitir_credito,
         nombre_completo: values.nombre_completo.trim(),
         telefono: values.telefono.trim(),
         direccion: values.direccion.trim() || 'Ciudad',
@@ -92,14 +94,10 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="cliente-rapido-tipo">Tipo de cliente</FieldLabel>
-              <Select id="cliente-rapido-tipo" {...register('tipo_cliente')}>
-                <option value="GENERAL">Crédito y precios</option>
-                <option value="SOLO_PRECIOS">Solo precios</option>
-              </Select>
-              <p className="text-xs text-muted-foreground">Solo precios: compras al contado con precios personalizados, sin crédito ni abonos.</p>
-              <FieldError errors={[errors.tipo_cliente]} />
+            <Field orientation="horizontal">
+              <FieldLabel htmlFor="cliente-credito">Permitir dar crédito</FieldLabel>
+              <Switch id="cliente-credito" checked={watch('permitir_credito')} onCheckedChange={(checked: boolean) => setValue('permitir_credito', checked, { shouldDirty: true, shouldValidate: true })} />
+              <FieldError errors={[errors.permitir_credito]} />
             </Field>
             <Field>
               <FieldLabel>Nombre completo</FieldLabel>
