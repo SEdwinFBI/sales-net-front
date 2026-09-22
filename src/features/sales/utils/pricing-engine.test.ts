@@ -248,3 +248,69 @@ describe('computeCartPricing — múltiples tiers individuales', () => {
     expect(result.lines['1::1'].descuentoUnitario).toBe(10)
   })
 })
+
+describe('computeCartPricing — precios pactados por cliente', () => {
+  it('aplica precio pactado del cliente a 1 sola unidad ignorando tiers estándar', () => {
+    // Variante 1 base 200, precio pactado 165 -> precio efectivo 165
+    const customerPrices = { 1: 165 }
+    const result = computeCartPricing([cartItem({ qty: 1 })], config(), customerPrices)
+    expect(result.lines['1::1']).toMatchObject({
+      tipo: 'CLIENTE',
+      descuentoUnitario: 0,
+      precioUnitario: 165,
+    })
+  })
+
+  it('el precio pactado prevalece sobre el tier individual y de mayoreo', () => {
+    // 5 unidades de la variante 1 normalmente tendrían individual 30, pero el cliente tiene pactado 150
+    const customerPrices = { 1: 150 }
+    const result = computeCartPricing([cartItem({ qty: 5 })], config(), customerPrices)
+    expect(result.lines['1::1']).toMatchObject({
+      tipo: 'CLIENTE',
+      descuentoUnitario: 0,
+      precioUnitario: 150,
+    })
+  })
+
+  it('aplica precio pactado mayor al precio base de catálogo (ej. base 1.00, pactado 10.00)', () => {
+    const customerPrices = { 1: 10 }
+    const result = computeCartPricing([cartItem({ qty: 2, price: 1, basePrice: 1 })], config(), customerPrices)
+    expect(result.lines['1::1']).toMatchObject({
+      tipo: 'CLIENTE',
+      descuentoUnitario: 0,
+      precioUnitario: 10,
+    })
+  })
+
+  it('carrito mixto: línea con precio pactado usa precio de cliente, línea sin pactar usa mayoreo normal', () => {
+    const items = [
+      cartItem({ id: '1::1', variantId: 1, qty: 1 }), // precio pactado 170 (base 200)
+      cartItem({ id: '1::2', variantId: 2, qty: 1, price: 150, size: 'L' }), // sin precio pactado
+    ]
+    const customerPrices = { 1: 170 }
+    const result = computeCartPricing(items, config(), customerPrices)
+
+    // Variante 1: precio cliente fijado en 170
+    expect(result.lines['1::1']).toMatchObject({
+      tipo: 'CLIENTE',
+      descuentoUnitario: 0,
+      precioUnitario: 170,
+    })
+
+    // Variante 2: no tiene precio de cliente, pero el carrito suma 2 unidades activando mayoreo al 50%
+    expect(result.lines['1::2']).toMatchObject({
+      tipo: 'MAYORISTA',
+      descuentoUnitario: 10,
+    })
+  })
+
+  it('sin configuración efectiva, los precios pactados se respetan con el precio pactado', () => {
+    const customerPrices = { 1: 180 }
+    const result = computeCartPricing([cartItem({ qty: 2 })], null, customerPrices)
+    expect(result.lines['1::1']).toMatchObject({
+      tipo: 'CLIENTE',
+      descuentoUnitario: 0,
+      precioUnitario: 180,
+    })
+  })
+})

@@ -18,6 +18,7 @@ export interface ReporteDeudoresFilters {
 }
 
 export interface ReporteCobrosFilters {
+  id_sucursal?: number | 'sin_sucursal'
   nombre?: string
   fecha?: string
   id_usuario?: number
@@ -243,8 +244,16 @@ export interface ReporteCobros {
       total_abonado: number
       total_restante: number
     }
+    por_sucursal: ReporteCobrosSucursal[]
     por_usuario: ReporteCobrosUsuario[]
   }
+}
+
+export interface ReporteCobrosSucursal {
+  id_sucursal: number | null
+  nombre: string
+  total_abonado: number
+  por_usuario: ReporteCobrosUsuario[]
 }
 
 export interface ReporteCobrosUsuario {

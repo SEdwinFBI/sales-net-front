@@ -10,11 +10,12 @@ import ClienteInfo from '../components/ClienteInfo'
 import MovimientosTable from '../components/MovimientosTable'
 import AbonosTable from '../components/AbonosTable'
 import ComprasTable from '../components/ComprasTable'
+import PreciosClienteTable from '../components/PreciosClienteTable'
 import AbonarDialog from '../components/AbonarDialog'
 import AjusteClienteDialog from '../components/AjusteClienteDialog'
 import CrearVentaEncabezadoDialog from '../components/CrearVentaEncabezadoDialog'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft, Plus, Tag } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
@@ -24,9 +25,10 @@ export default function ClienteDetailPage() {
   const navigate = useNavigate()
   const clienteId = Number(id)
   const { data: cliente, isLoading, isError } = useCliente(clienteId)
-  const { abonos } = useAbonosHistorial(clienteId)
+  const sinCredito = cliente?.permitir_credito === false
+  const { abonos } = useAbonosHistorial(sinCredito ? 0 : clienteId)
   const { ventas, resumen } = useComprasCliente(clienteId)
-  const { movimientos } = useMovimientosCliente(clienteId)
+  const { movimientos } = useMovimientosCliente(sinCredito ? 0 : clienteId)
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ajusteOpen, setAjusteOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
@@ -62,14 +64,26 @@ export default function ClienteDetailPage() {
             items={[{ label: 'Clientes', href: '/clientes' }, { label: cliente.nombre_completo }]}
           />
 
-          <Button variant="ghost" onClick={() => navigate('/clientes')} className="w-fit">
-            <ArrowLeft />
-            Volver a clientes
-          </Button>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <Button variant="ghost" onClick={() => navigate('/clientes/listado')} className="w-fit">
+              <ArrowLeft />
+              Volver a clientes
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/clientes/listado/${clienteId}/precios`)}
+              className="gap-1.5"
+            >
+              <Tag className="size-4 text-primary" />
+              Ver precios
+            </Button>
+          </div>
 
           <ClienteInfo cliente={cliente} />
 
-          {resumen && (
+          {resumen && !sinCredito && (
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
               <div className="rounded-xl bg-card p-4 shadow-sm">
                 <p className="text-xs text-muted-foreground">Total ventas</p>
@@ -94,13 +108,16 @@ export default function ClienteDetailPage() {
             </div>
           )}
 
-          <Tabs defaultValue="movimientos">
+          {sinCredito && <p className="text-sm text-muted-foreground">Compras al contado con precios personalizados. Sin crédito, abonos ni ajustes de saldo.</p>}
+          <Tabs key={String(cliente.permitir_credito)} defaultValue={sinCredito ? 'precios' : 'movimientos'}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">
-                <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>
-                <TabsTrigger value="abonos">Abonos</TabsTrigger>
+                {!sinCredito && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
+                {!sinCredito && <TabsTrigger value="abonos">Abonos</TabsTrigger>}
                 <TabsTrigger value="compras">Compras</TabsTrigger>
+                <TabsTrigger value="precios">Precios del cliente</TabsTrigger>
               </TabsList>
+              {!sinCredito && <>
               <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
@@ -117,6 +134,7 @@ export default function ClienteDetailPage() {
                 <Plus />
                 Registrar ajuste
               </Button>
+              </>}
             </div>
 
             <TabsContent value="movimientos" className="mt-4">
@@ -130,10 +148,15 @@ export default function ClienteDetailPage() {
             <TabsContent value="compras" className="mt-4">
               <ComprasTable ventas={ventas} />
             </TabsContent>
+
+            <TabsContent value="precios" className="mt-4">
+              <PreciosClienteTable customerId={clienteId} customerName={cliente.nombre_completo} />
+            </TabsContent>
           </Tabs>
         </Card>
       </div>
 
+      {!sinCredito && <>
       <CrearVentaEncabezadoDialog
         open={ventaDialogOpen}
         idCliente={clienteId}
@@ -153,6 +176,7 @@ export default function ClienteDetailPage() {
         idCliente={clienteId}
         onClose={() => setAjusteOpen(false)}
       />
+      </>}
     </PageTemplateSimple>
   )
 }

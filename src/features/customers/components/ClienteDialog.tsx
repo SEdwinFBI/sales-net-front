@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
 const schema = z.object({
+  permitir_credito: z.boolean(),
   nombre_completo: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   direccion: z.string().min(3, 'La dirección debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
@@ -40,6 +41,7 @@ type Props = {
 }
 
 const EMPTY_FORM: FormValues = {
+  permitir_credito: true,
   nombre_completo: '',
   direccion: '',
   telefono: '',
@@ -59,10 +61,12 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
     defaultValues: EMPTY_FORM,
   })
   const diasSeleccionados = watch('dias_notificacion')
+  const sinCredito = !watch('permitir_credito')
 
   useEffect(() => {
     if (!open) return
     reset(cliente ? {
+      permitir_credito: cliente.permitir_credito ?? true,
       nombre_completo: cliente.nombre_completo,
       direccion: cliente.direccion,
       telefono: cliente.telefono,
@@ -73,6 +77,9 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
   }, [open, cliente, reset])
 
   const onSubmit = async (values: FormValues) => {
+    if (values.permitir_credito === false) {
+      values = { ...values, balance: 0, dias_notificacion: [] }
+    }
     try {
       if (isEdit) {
         await updateCliente({ id: cliente!.id, data: values })
@@ -104,6 +111,11 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
           <FieldGroup>
+            <Field orientation="horizontal">
+              <FieldLabel htmlFor="cliente-credito">Permitir dar crédito</FieldLabel>
+              <Switch id="cliente-credito" checked={watch('permitir_credito')} onCheckedChange={(checked: boolean) => setValue('permitir_credito', checked, { shouldDirty: true, shouldValidate: true })} />
+              <FieldError errors={[errors.permitir_credito]} />
+            </Field>
             <Field>
               <FieldLabel>Nombre completo</FieldLabel>
               <Input {...register('nombre_completo')} placeholder="Juan Pérez" />
@@ -119,12 +131,12 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
               <Input {...register('telefono')} placeholder="12345678" />
               <FieldError errors={[errors.telefono]} />
             </Field>
-            <Field>
+            {!sinCredito && <Field>
               <FieldLabel>Balance</FieldLabel>
               <Input {...register('balance')} type="number" step="0.01" placeholder="0.00" />
               <FieldError errors={[errors.balance]} />
-            </Field>
-            <Field>
+            </Field>}
+            {!sinCredito && <Field>
               <FieldLabel>Días de notificación</FieldLabel>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Días de notificación">
                 {DIAS_NOTIFICACION.map((dia) => {
@@ -144,7 +156,7 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
                 })}
               </div>
               <FieldError errors={[errors.dias_notificacion]} />
-            </Field>
+            </Field>}
             <Field orientation="horizontal">
               <FieldLabel>Activo</FieldLabel>
               <Switch checked={watch('activo')} onCheckedChange={(checked: boolean) => setValue('activo', checked)} />

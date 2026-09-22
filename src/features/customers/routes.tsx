@@ -31,6 +31,17 @@ export const clientesRoutes: AppRoute[] = [
           hideFromSidebar: true,
         },
       },
+      {
+        path: 'listado/:id/precios',
+        meta: {
+          name: 'Precios del cliente',
+          description: 'Precios asignados al cliente',
+          icon: Users,
+          permissions: ['admin', 'vendedor'],
+          lazy: () => import('./pages/ClientePreciosPage'),
+          hideFromSidebar: true,
+        },
+      },
     ],
   },
 ]

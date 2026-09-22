@@ -33,6 +33,7 @@ function cleanReporteCobrosParams(filters?: ReporteCobrosFilters): Record<string
   setParam(params, 'nombre', filters?.nombre)
   setParam(params, 'fecha', filters?.fecha)
   setParam(params, 'id_usuario', filters?.id_usuario)
+  setParam(params, 'id_sucursal', filters?.id_sucursal)
   return params
 }
 

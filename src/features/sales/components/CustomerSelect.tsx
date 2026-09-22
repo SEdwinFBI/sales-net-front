@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useRef, useEffect, type FC } from "react"
-import { Search, X, ChevronDown, Check } from "lucide-react"
+import { Search, X, ChevronDown, Check, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/helpers/money"
-
-type Customer = { id: string; name: string; phone: string; balance: number }
+import type { Customer } from '@/features/customers/hooks/useCustomers'
+import CreditoClienteBadge from '@/features/customers/components/CreditoClienteBadge'
 
 type Props = {
     customers: Customer[]
@@ -13,9 +13,10 @@ type Props = {
     onChange: (id: string) => void
     onSearch?: (query: string) => void
     loading?: boolean
+    onQuickCreate?: () => void
 }
 
-const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loading }) => {
+const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loading, onQuickCreate }) => {
     const [open, setOpen] = useState(false)
     const [query, setQuery] = useState("")
     const [highlighted, setHighlighted] = useState(0)
@@ -63,11 +64,11 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
     }
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={ref} className="relative min-w-0 w-full">
             {/* Trigger */}
             <div
                 className={cn(
-                    "flex items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
+                    "flex min-w-0 w-full items-center gap-2 rounded-2xl border px-4 py-3 bg-card",
                     open
                         ? "border-primary/50 shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]"
                         : "border-border hover:border-ring"
@@ -80,7 +81,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                 {/* Input */}
                 <input
                     ref={inputRef}
-                    className="flex-1 bg-transparent outline-none text-sm"
+                    className="min-w-0 w-full flex-1 truncate bg-transparent outline-none text-sm"
                     placeholder="Buscar cliente..."
                     value={open ? query : selected?.name ?? ""}
                     onChange={(e) => {
@@ -90,6 +91,8 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                     }}
                 />
 
+                {selected?.permitir_credito === false && !open && <CreditoClienteBadge permitirCredito={selected.permitir_credito} />}
+
                 {/* Clear */}
                 {value && !open && (
                     <button
@@ -97,7 +100,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                             e.stopPropagation()
                             onChange("")
                         }}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="shrink-0 text-muted-foreground hover:text-foreground"
                     >
                         <X className="size-4" />
                     </button>
@@ -110,7 +113,7 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                         e.stopPropagation()
                         toggle()
                     }}
-                    className="text-muted-foreground"
+                    className="shrink-0 text-muted-foreground"
                 >
                     <ChevronDown
                         className={cn(
@@ -123,7 +126,23 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg">
+                <div className="absolute z-50 mt-1 w-full rounded-2xl border bg-card shadow-lg overflow-hidden">
+                    {onQuickCreate && (
+                        <div className="border-b border-border/60 p-2 bg-muted/20">
+                            <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault()
+                                    setOpen(false)
+                                    onQuickCreate()
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary/10 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                            >
+                                <UserPlus className="size-3.5" />
+                                Nuevo cliente
+                            </button>
+                        </div>
+                    )}
                     {loading ? (
                         <div className="p-6 text-center text-sm text-muted-foreground">
                             Cargando clientes...
@@ -133,8 +152,22 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
                             No hay clientes disponibles
                         </div>
                     ) : filtered.length === 0 ? (
-                        <div className="p-6 text-center text-sm text-muted-foreground">
-                            Sin coincidencias
+                        <div className="p-5 text-center text-sm text-muted-foreground space-y-2">
+                            <p>Sin coincidencias para &quot;{query}&quot;</p>
+                            {onQuickCreate && (
+                                <button
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                        e.preventDefault()
+                                        setOpen(false)
+                                        onQuickCreate()
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors cursor-pointer"
+                                >
+                                    <UserPlus className="size-3.5" />
+                                    Crear este cliente
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <ul className="max-h-56 overflow-y-auto py-1">
@@ -166,8 +199,9 @@ const CustomerSelect: FC<Props> = ({ customers, value, onChange, onSearch, loadi
 
                                         <div className="flex-1 text-sm min-w-0">
                                             <div className="truncate">{c.name ?? 'Sin nombre'}</div>
+                                            <CreditoClienteBadge permitirCredito={c.permitir_credito} />
                                             <div className="text-xs text-muted-foreground truncate">
-                                                {c.phone ?? 'Sin teléfono'} · Saldo: {formatCurrency(c.balance ?? 0)}
+                                                {c.phone ?? 'Sin teléfono'}{c.permitir_credito === true && <> · Saldo: {formatCurrency(c.balance ?? 0)}</>}
                                             </div>
                                         </div>
 

@@ -16,10 +16,13 @@ type CartItemProps = {
 }
 
 const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDecrease, onSetQty }) => {
+    const isSpecialCustomerPrice = item.discountType === 'CLIENTE'
+    const precioBase = item.basePrice ?? item.price
     const precioFinal = item.discount > 0
         ? item.price - item.discount
         : item.price
     const subtotal = precioFinal * item.qty
+    const ahorroCliente = isSpecialCustomerPrice && precioBase > item.price ? precioBase - item.price : 0
     const handleQtyChange = (value: string) => {
         const nextQty = Number(value)
 
@@ -81,7 +84,23 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                 </div>
 
                 <div className="text-left min-[420px]:text-right">
-                    {item.discount > 0 ? (
+                    {isSpecialCustomerPrice ? (
+                        <>
+                            <div className="flex items-center gap-1.5 min-[420px]:justify-end">
+                                <Badge className="border-transparent bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-medium">
+                                    Precio del cliente {ahorroCliente > 0 ? `−${formatCurrency(ahorroCliente)} c/u` : ''}
+                                </Badge>
+                                {ahorroCliente > 0 && (
+                                    <p className="text-sm text-muted-foreground line-through">
+                                        {formatCurrency(precioBase)}
+                                    </p>
+                                )}
+                            </div>
+                            <p className="text-xs text-successful font-bold">
+                                {formatCurrency(precioFinal)} c/u
+                            </p>
+                        </>
+                    ) : item.discount > 0 ? (
                         <>
                             <div className="flex items-center gap-1.5 min-[420px]:justify-end">
                                 {item.discountType === 'INDIVIDUAL' && (

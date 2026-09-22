@@ -4,6 +4,7 @@ export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export interface Cliente {
   id: number
+  permitir_credito: boolean
   nombre_completo: string
   direccion: string
   telefono: string
@@ -16,9 +17,11 @@ export interface Cliente {
 export interface ApiResponse<T> {
   status: 'success' | 'error'
   data: T
+  message?: string
 }
 
 export interface CreateClientePayload {
+  permitir_credito?: boolean
   nombre_completo: string
   direccion: string
   telefono: string
@@ -28,6 +31,7 @@ export interface CreateClientePayload {
 }
 
 export interface UpdateClientePayload {
+  permitir_credito?: boolean
   nombre_completo?: string
   direccion?: string
   telefono?: string

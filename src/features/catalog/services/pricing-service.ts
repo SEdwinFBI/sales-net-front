@@ -66,11 +66,16 @@ export const getEffectivePricing = async (): Promise<EffectivePricingConfig> => 
 
 /** Cotiza el carrito en el servidor (mismo motor que la venta, sin tocar stock). */
 export const cotizarCarrito = async (
-  detalles: { id_variante: number; cantidad: number }[]
+  detalles: { id_variante: number; cantidad: number }[],
+  idCliente?: number | null
 ): Promise<CotizacionResponse> => {
   const { data } = await api.post<ApiResponse<CotizacionResponse>>(
     '/admin/pos/cotizar/',
-    { detalles }
+    {
+      detalles,
+      ...(idCliente ? { id_cliente: idCliente } : {}),
+    }
   )
   return data.data
 }
+

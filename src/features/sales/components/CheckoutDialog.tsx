@@ -17,12 +17,14 @@ import { formatCurrency } from '@/helpers/money'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
 import { Wallet, CreditCard, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
+import { useCliente } from '@/features/customers/hooks/useCliente'
 
 
 const paymentOptions: { value: PaymentMethod; label: string; icon: typeof Wallet }[] = [
@@ -43,6 +45,10 @@ const CheckoutDialog = () => {
   const ventaFoto = useSalesStore((state) => state.ventaFoto)
   const setVentaFoto = useSalesStore((state) => state.setVentaFoto)
 
+  const storeCustomerId = useSalesStore((state) => state.selectedCustomerId)
+  const setStoreCustomerId = useSalesStore((state) => state.setSelectedCustomerId)
+  const customerPricingEnabled = useSalesStore((state) => state.customerPricingEnabled)
+
   const totalItems = useSalesStore(selectTotalItems)
   const total = useSalesStore(selectTotal)
   const [customerSearch, setCustomerSearch] = useState('')
@@ -54,12 +60,20 @@ const CheckoutDialog = () => {
   })
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
+  const [selectedCustomerId, setSelectedCustomerId] = useState(storeCustomerId)
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  const { data: selectedCliente } = useCliente(activeDialog === 'checkout' ? Number(selectedCustomerId) : 0)
+  const sinCredito = selectedCliente?.permitir_credito === false
+  const permiteCredito = selectedCliente?.permitir_credito === true
+
   // Cotización del servidor para confirmar el total antes
   // de cobrar
   const detalles = items.map((item) => ({ id_variante: item.variantId, cantidad: item.qty }))
+  const activeClienteId = customerPricingEnabled && selectedCustomerId ? Number(selectedCustomerId) : null
   const { data: cotizacion, isFetching: isQuoting, isError: quoteError, refetch: retryQuote } = useQuery({
-    queryKey: ['pricing', 'cotizar', userId, detalles],
-    queryFn: () => cotizarCarrito(detalles),
+    queryKey: ['pricing', 'cotizar', userId, detalles, activeClienteId],
+    queryFn: () => cotizarCarrito(detalles, activeClienteId),
     enabled: activeDialog === 'checkout' && items.length > 0,
     staleTime: 0,
   })
@@ -67,11 +81,19 @@ const CheckoutDialog = () => {
   const evidenciaFotografica = cotizacion?.evidencia_fotografica ?? true
   const totalsDiffer = serverTotal !== undefined && Math.abs(serverTotal - total) >= 0.01
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
-  const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  useEffect(() => {
+    if (activeDialog === 'checkout' && storeCustomerId && !selectedCustomerId) {
+      setSelectedCustomerId(storeCustomerId)
+    }
+  }, [activeDialog, storeCustomerId, selectedCustomerId])
+
+  const handleCustomerChange = (id: string) => {
+    setSelectedCustomerId(id)
+    setStoreCustomerId(id)
+  }
 
   // El servidor indica si este usuario tiene habilitada la evidencia.
-  const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId)
+  const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId && permiteCredito)
   const canConfirm = Boolean(pagoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
 
   const handleConfirm = async () => {
@@ -83,6 +105,7 @@ const CheckoutDialog = () => {
         items,
         paymentMethod,
         customerId: selectedCustomerId || undefined,
+        customerPricingEnabled,
         total,
         observacion: voiceTranscript.trim() || undefined,
         foto: evidenciaFotografica ? ventaFoto ?? undefined : undefined,
@@ -98,6 +121,7 @@ const CheckoutDialog = () => {
         items: [...items],
         paymentMethod,
         customerName,
+        customerId: selectedCustomerId || undefined,
       })
       clearCart()
       voiceResetFn?.()
@@ -109,15 +133,16 @@ const CheckoutDialog = () => {
   }
 
   return (
-    <Dialog
-      disablePointerDismissal
-      modal
-      open={activeDialog === 'checkout'}
-      onOpenChange={(open) => {
-        if (!open) closeDialog()
-      }}
-    >
-      <DialogContent>
+    <>
+      <Dialog
+        disablePointerDismissal
+        modal
+        open={activeDialog === 'checkout' && !quickCreateOpen}
+        onOpenChange={(open) => {
+          if (!open && !quickCreateOpen) closeDialog()
+        }}
+      >
+      <DialogContent className="min-w-0 grid-cols-1">
         <DialogHeader>
           <DialogTitle>Confirmar venta</DialogTitle>
           <DialogDescription>
@@ -131,15 +156,16 @@ const CheckoutDialog = () => {
           )}
         </DialogHeader>
 
-        <div className="space-y-5 px-6">
+        <div className="min-w-0 space-y-5">
           <div>
             <p className="text-sm font-medium mb-2">Cliente</p>
             <CustomerSelect
               customers={customers}
               value={selectedCustomerId}
-              onChange={setSelectedCustomerId}
+              onChange={handleCustomerChange}
               onSearch={setCustomerSearch}
               loading={isLoading}
+              onQuickCreate={() => setQuickCreateOpen(true)}
             />
           </div>
 
@@ -153,8 +179,9 @@ const CheckoutDialog = () => {
                   <button
                     key={opt.value}
                     type="button"
+                    disabled={opt.value === 'credito' && Boolean(selectedCustomerId) && !permiteCredito}
                     onClick={() => setPaymentMethod(opt.value)}
-                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer ${selected
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${selected
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-border bg-background text-muted-foreground hover:border-muted-foreground/30'
                       }`}
@@ -167,6 +194,7 @@ const CheckoutDialog = () => {
             </div>
           </div>
 
+          {sinCredito && <p className="text-xs text-muted-foreground">Este cliente solo puede comprar al contado.</p>}
           {paymentMethod === 'credito' && !selectedCustomerId && (
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito
@@ -204,6 +232,16 @@ const CheckoutDialog = () => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <QuickClienteDialog
+      open={quickCreateOpen}
+      onClose={() => setQuickCreateOpen(false)}
+      onSuccess={(newC) => {
+        handleCustomerChange(String(newC.id))
+        setQuickCreateOpen(false)
+      }}
+    />
+  </>
   )
 }
 
