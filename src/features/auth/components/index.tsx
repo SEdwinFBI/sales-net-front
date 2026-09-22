@@ -13,8 +13,6 @@ import { seleccionarSucursalService } from '../services/auth-service'
 import { requiereSeleccionSucursal } from '../types/auth'
 import type { Sucursal } from '../types/auth'
 import type { LoginFormValues } from '../types/form'
-import { loginWithPasskey } from '../services/passkey-service'
-import type { LoginResult } from '../types/auth'
 import { queryKeys } from '@/lib/query-keys'
 
 
@@ -40,19 +38,6 @@ export default function LoginFeature() {
     navigate('/', { replace: true })
   }
 
-  const handleLoginResult = (result: LoginResult) => {
-    if (requiereSeleccionSucursal(result)) {
-      setSeleccion({ sucursales: result.sucursales, preToken: result.pre_token })
-      toast.dismiss(toastId)
-      return
-    }
-    completarSesion(result)
-  }
-
-  const performPasskeyLogin = async () => {
-    handleLoginResult(await loginWithPasskey())
-  }
-
   const performLogin = async (values: LoginFormValues) => {
     if (isPending) {
       return
@@ -66,7 +51,13 @@ export default function LoginFeature() {
         password: values.password,
       })
 
-      handleLoginResult(result)
+      if (requiereSeleccionSucursal(result)) {
+        setSeleccion({ sucursales: result.sucursales, preToken: result.pre_token })
+        toast.dismiss(toastId)
+        return
+      }
+
+      completarSesion(result)
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al iniciar sesion'), { id: toastId })
     }
@@ -75,7 +66,11 @@ export default function LoginFeature() {
   const performPatternLogin = async (values: PatternLoginCredentials) => {
     try {
       const result = await loginPattern(values)
-      handleLoginResult(result)
+      if (requiereSeleccionSucursal(result)) {
+        setSeleccion({ sucursales: result.sucursales, preToken: result.pre_token })
+        return
+      }
+      completarSesion(result)
     } finally {
       resetPatternLogin()
     }
@@ -109,6 +104,6 @@ export default function LoginFeature() {
   }
 
   return (
-    <LoginForm onSubmit={performLogin} onPatternSubmit={performPatternLogin} onPasskeySubmit={performPasskeyLogin} />
+    <LoginForm onSubmit={performLogin} onPatternSubmit={performPatternLogin} />
   )
 }

@@ -34,7 +34,6 @@ import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import Paginator from '@/components/shared/table/Paginator'
 import { getApiErrorMessage } from '@/lib/api-error'
-import HorarioCobrosSection from '../components/HorarioCobrosSection'
 import {
   useCreateDestinatario,
   useDeleteDestinatario,
@@ -228,15 +227,12 @@ export default function NotificacionesPage() {
   return (
     <PageTemplateSimple
       title="Notificaciones"
-      description="Configura los destinatarios de los avisos y la hora de notificación de cobros."
+      description="Configura quién recibe los avisos automáticos por correo."
     >
-      <div className="mt-4 space-y-5">
-        <Card className="gap-4 p-4 sm:p-5">
-          <HorarioCobrosSection />
-        </Card>
+      <div className="space-y-3.5">
         {/* Barra Superior con Métricas, Búsqueda y Acciones */}
-        <Card className="gap-4 p-4 sm:p-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <Card className="border-border/70 bg-card p-3 shadow-2xs sm:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             {/* Título y Conteo */}
             <div className="flex items-center gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -244,7 +240,7 @@ export default function NotificacionesPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-semibold text-card-foreground">Destinatarios</h1>
+                  <h1 className="text-base font-bold text-card-foreground">Destinatarios</h1>
                   <Badge variant="secondary" className="px-1.5 py-0 text-xs font-medium">
                     {count}
                   </Badge>
@@ -256,14 +252,14 @@ export default function NotificacionesPage() {
             </div>
 
             {/* Buscador + Acciones */}
-            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end xl:max-w-3xl">
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:max-w-2xl">
               <div className="relative w-full sm:w-64">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Buscar nombre o correo..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-10 pl-9 pr-8 text-sm"
+                  className="h-8 pl-8 pr-7 text-xs"
                 />
                 {search && (
                   <button
@@ -285,7 +281,7 @@ export default function NotificacionesPage() {
                       size="sm"
                       onClick={resetChanges}
                       disabled={isUpdating}
-                      className="h-10 px-3 text-sm"
+                      className="h-8 px-2.5 text-xs"
                     >
                       <RotateCcw className="size-3.5" />
                       Descartar
@@ -294,7 +290,7 @@ export default function NotificacionesPage() {
                       size="sm"
                       onClick={save}
                       disabled={isUpdating}
-                      className="h-10 gap-2 px-4 text-sm"
+                      className="h-8 gap-1 px-3 text-xs"
                     >
                       {isUpdating ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
                       Guardar
@@ -304,7 +300,7 @@ export default function NotificacionesPage() {
                 <Button
                   size="sm"
                   onClick={() => setDialogOpen(true)}
-                  className="h-10 gap-2 px-4 text-sm"
+                  className="h-8 gap-1 px-3 text-xs"
                 >
                   <MailPlus className="size-3.5" />
                   Agregar
@@ -339,7 +335,7 @@ export default function NotificacionesPage() {
         )}
 
         {/* Lista de Tarjetas Compactas */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {destinatarios.map((destinatario) => {
             const activeCount = PREFERENCIAS_CONFIG.filter((p) => destinatario[p.key]).length
             const initials = getInitials(destinatario.nombre_persona_email)
@@ -348,27 +344,27 @@ export default function NotificacionesPage() {
             return (
               <Card
                 key={destinatario.id}
-                className="p-4 transition-colors hover:border-primary/40 sm:p-5"
+                className="overflow-hidden border-border/70 bg-card p-3 shadow-2xs transition-all hover:border-primary/40 sm:p-3.5"
               >
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   {/* Info Destinatario */}
-                  <div className="flex items-center justify-between gap-3 xl:min-w-[240px] xl:max-w-xs">
+                  <div className="flex items-center justify-between gap-3 lg:min-w-[240px] lg:max-w-xs">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${avatarGradient} text-xs font-bold text-white shadow-2xs`}
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${avatarGradient} text-xs font-bold text-white shadow-2xs`}
                       >
                         {initials}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h2 className="truncate text-sm font-semibold text-card-foreground">
+                          <h2 className="truncate text-xs font-semibold text-card-foreground">
                             {destinatario.nombre_persona_email}
                           </h2>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground">
                             ({activeCount}/4)
                           </span>
                         </div>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="truncate text-[11px] text-muted-foreground">
                           {destinatario.email}
                         </p>
                       </div>
@@ -379,7 +375,7 @@ export default function NotificacionesPage() {
                       size="icon"
                       disabled={isDeleting}
                       onClick={() => setDestinatarioAEliminar(destinatario)}
-                      className="size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:hidden"
+                      className="size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive lg:hidden"
                       aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}
                     >
                       <Trash2 className="size-3.5" />
@@ -387,7 +383,7 @@ export default function NotificacionesPage() {
                   </div>
 
                   {/* 4 Canales de Notificación en Formato Compacto */}
-                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-4 xl:max-w-3xl">
+                  <div className="grid flex-1 grid-cols-2 gap-1.5 sm:grid-cols-4 lg:max-w-2xl">
                     {PREFERENCIAS_CONFIG.map(({ key, title, description, icon: Icon, activeColor, iconBg }) => {
                       const isActive = Boolean(destinatario[key])
 
@@ -395,7 +391,7 @@ export default function NotificacionesPage() {
                         <label
                           key={key}
                           title={description}
-                          className={`flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-3 transition-all ${
+                          className={`flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 transition-all ${
                             isActive
                               ? `${activeColor} border-opacity-100 shadow-2xs`
                               : 'border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40'
@@ -408,7 +404,7 @@ export default function NotificacionesPage() {
                               }`}
                             />
                             <span
-                              className={`text-sm ${
+                              className={`truncate text-xs ${
                                 isActive ? 'font-medium text-foreground' : 'text-muted-foreground'
                               }`}
                             >
@@ -419,7 +415,7 @@ export default function NotificacionesPage() {
                           <Switch
                             checked={isActive}
                             onCheckedChange={(checked) => toggle(destinatario.id, key, checked)}
-                            className="shrink-0"
+                            className="scale-75 shrink-0"
                           />
                         </label>
                       )
@@ -432,7 +428,7 @@ export default function NotificacionesPage() {
                     size="icon"
                     disabled={isDeleting}
                     onClick={() => setDestinatarioAEliminar(destinatario)}
-                    className="hidden size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive xl:flex"
+                    className="hidden size-7 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive lg:flex"
                     aria-label={`Eliminar a ${destinatario.nombre_persona_email}`}
                   >
                     <Trash2 className="size-3.5" />
@@ -598,7 +594,7 @@ export default function NotificacionesPage() {
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-xs font-semibold leading-tight text-foreground">{title}</p>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{description}</p>
+                          <p className="line-clamp-1 text-[10px] text-muted-foreground">{description}</p>
                         </div>
                       </div>
                       <Switch
@@ -627,4 +623,5 @@ export default function NotificacionesPage() {
     </PageTemplateSimple>
   )
 }
+
 
