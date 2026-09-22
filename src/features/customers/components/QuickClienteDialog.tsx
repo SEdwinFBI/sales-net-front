@@ -62,7 +62,6 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
         telefono: values.telefono.trim(),
         direccion: values.direccion.trim() || 'Ciudad',
         balance: 0,
-        dias_notificacion: [],
         activo: true,
       })
 
