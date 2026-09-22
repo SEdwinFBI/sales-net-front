@@ -47,8 +47,9 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
         <DialogHeader>
           <DialogTitle>Anular venta #{venta.id}</DialogTitle>
           <DialogDescription>
-            Se registrará una venta compensatoria de {formatCurrency(-Number(venta.total_neto))}
-            {' '}y se devolverán los productos a la sucursal de origen. Si es a crédito, se descontará
+            Se registrará una venta compensatoria de {formatCurrency(-Number(venta.total_neto))}.
+            {venta.detalles.length > 0 && ' Se devolverán los productos a la sucursal de origen.'}
+            {' '}Si es a crédito, se descontará
             su importe del saldo del cliente. La venta original permanecerá en el historial.
           </DialogDescription>
         </DialogHeader>
