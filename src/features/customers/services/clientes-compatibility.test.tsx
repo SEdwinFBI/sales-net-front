@@ -8,6 +8,7 @@ import { createCliente, getClienteById, getClientes, updateCliente } from './cli
 vi.mock('@/lib/api', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn() } }))
 
 const cliente: Cliente = {
+  permitir_credito: true,
   id: 12, nombre_completo: 'Cliente de prueba', direccion: 'Zona 1',
   telefono: '12345678', balance: 150, activo: true, fecha_creacion: '2026-09-21',
 }
