@@ -88,4 +88,4 @@ export type CotizacionResponse = {
   total: number
 }
 
-export type DiscountType = 'INDIVIDUAL' | 'MAYORISTA' | 'NINGUNO'
+export type DiscountType = 'INDIVIDUAL' | 'MAYORISTA' | 'CLIENTE' | 'NINGUNO'

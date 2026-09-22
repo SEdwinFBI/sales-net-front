@@ -1,6 +1,6 @@
 import type { DiscountType } from '@/features/catalog/types/pricing-types'
 
-export type SalesDialog = 'checkout' | 'clear-cart' | 'summary' | null
+export type SalesDialog = 'checkout' | 'clear-cart' | 'summary' | 'customer-prices' | null
 
 /** Snapshot de la última venta registrada, para el diálogo de resumen. */
 export type LastSale = {
@@ -11,6 +11,7 @@ export type LastSale = {
   items: CartItem[]
   paymentMethod: 'efectivo' | 'credito'
   customerName: string | null
+  customerId?: string | number | null
 }
 
 export type ProductVariant = {
@@ -58,6 +59,7 @@ export type CartItem = {
   image: string | null
   variantId: number
   size: string
+  basePrice?: number
   price: number
   stock: number
   qty: number
@@ -72,6 +74,7 @@ export type SubmitSalePayload = {
   items: CartItem[]
   paymentMethod: PaymentMethod
   customerId?: string
+  customerPricingEnabled?: boolean
   total: number
   observacion?: string
   /** Foto de entrega en data URL, cuando está habilitada para el usuario. */

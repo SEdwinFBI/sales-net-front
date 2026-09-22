@@ -33,6 +33,8 @@ export const queryKeys = {
       [...queryKeys.customers.all, 'compras', idCliente, filters] as const,
     movimientos: (idCliente: number, filters?: Record<string, unknown>) =>
       [...queryKeys.customers.all, 'movimientos', idCliente, filters] as const,
+    precios: (idCliente: number, sucursalId?: number) =>
+      [...queryKeys.customers.all, 'precios', idCliente, ...(sucursalId !== undefined ? [sucursalId] : [])] as const,
   },
   sales: {
     all: ['sales'] as const,

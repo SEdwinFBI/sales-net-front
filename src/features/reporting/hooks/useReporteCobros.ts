@@ -13,6 +13,7 @@ export const useReporteCobros = (filters?: ReporteCobrosFilters) => {
 
   return {
     resumen: data?.resumen,
+    porSucursal: data?.por_sucursal ?? [],
     porUsuario: data?.por_usuario ?? [],
     isLoading,
     isError,
