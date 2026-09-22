@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/table'
 import type { Abono } from '../types/clientes'
 import { formatDisplayDateTime } from '@/lib/dates'
+import RevertirAbonoButton from './RevertirAbonoButton'
 
 type Props = {
   abonos: Abono[]
@@ -35,6 +36,10 @@ export default function AbonosTable({ abonos }: Props) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columns = useMemo<ColumnDef<Abono>[]>(() => [
+    {
+      id: 'revertir', header: 'Acciones', enableColumnFilter: false, enableSorting: false,
+      cell: ({ row }) => <RevertirAbonoButton abono={row.original} />,
+    },
     {
       accessorKey: 'id',
       header: 'ID',
@@ -130,12 +135,12 @@ export default function AbonosTable({ abonos }: Props) {
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           <ArrowUpDown className="size-3 opacity-40" />
                         </button>
-                        <Input
+                        {header.column.getCanFilter() && <Input
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(event) => header.column.setFilterValue(event.target.value || undefined)}
                           placeholder="Filtrar..."
                           className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
-                        />
+                        />}
                       </div>
                     </TableHead>
                   ))}

@@ -8,6 +8,7 @@ import type { TipoMovimiento } from '../types/inventario'
 export const TIPOS_STOCK: { value: TipoMovimiento | ''; label: string }[] = [
   { value: '', label: 'Todos los tipos' },
   { value: 'STOCK_VENTA', label: 'Salida por venta' },
+  { value: 'STOCK_REVERSION', label: 'Devolución por reversión de venta' },
   { value: 'STOCK_RESURTIDO', label: 'Resurtido' },
   { value: 'STOCK_AJUSTE', label: 'Ajuste de stock' },
   { value: 'STOCK_CARGA_INICIAL', label: 'Carga inicial' },
