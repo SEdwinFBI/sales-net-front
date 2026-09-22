@@ -33,7 +33,6 @@ import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import Paginator from '@/components/shared/table/Paginator'
 import { getApiErrorMessage } from '@/lib/api-error'
-import HorarioCobrosSection from '../components/HorarioCobrosSection'
 import {
   useCreateDestinatario,
   useDeleteDestinatario,
@@ -45,6 +44,7 @@ import type {
   DestinatarioNotificacion,
   PreferenciaNotificacion,
 } from '../types/notificaciones-types'
+import HorarioCobrosSection from '../components/HorarioCobrosSection'
 
 interface PreferenceConfig {
   key: PreferenciaNotificacion
@@ -227,7 +227,7 @@ export default function NotificacionesPage() {
   return (
     <PageTemplateSimple
       title="Notificaciones"
-      description="Configura los destinatarios de los avisos y la hora de notificación de cobros."
+      description="Configura quién recibe los avisos automáticos por correo."
     >
       <div className="mt-4 space-y-5">
         <header className="space-y-1">
@@ -238,8 +238,8 @@ export default function NotificacionesPage() {
           <HorarioCobrosSection />
         </Card>
         {/* Barra Superior con Métricas, Búsqueda y Acciones */}
-        <Card className="gap-4 p-4 sm:p-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <Card className="border-border/70 bg-card p-3 shadow-2xs sm:p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             {/* Título y Conteo */}
             <div className="flex items-center gap-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -259,14 +259,14 @@ export default function NotificacionesPage() {
             </div>
 
             {/* Buscador + Acciones */}
-            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end xl:max-w-3xl">
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end lg:max-w-2xl">
               <div className="relative w-full sm:w-64">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Buscar nombre o correo..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-10 pl-9 pr-8 text-sm"
+                  className="h-8 pl-8 pr-7 text-xs"
                 />
                 {search && (
                   <button
@@ -284,7 +284,7 @@ export default function NotificacionesPage() {
                 <Button
                   size="sm"
                   onClick={() => setDialogOpen(true)}
-                  className="h-10 gap-2 px-4 text-sm"
+                  className="h-8 gap-1 px-3 text-xs"
                 >
                   <MailPlus className="size-3.5" />
                   Agregar destinatario
@@ -578,7 +578,7 @@ export default function NotificacionesPage() {
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-xs font-semibold leading-tight text-foreground">{title}</p>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{description}</p>
+                          <p className="line-clamp-1 text-[10px] text-muted-foreground">{description}</p>
                         </div>
                       </div>
                       <Switch
@@ -607,4 +607,5 @@ export default function NotificacionesPage() {
     </PageTemplateSimple>
   )
 }
+
 
