@@ -1,4 +1,4 @@
-import type { DiaNotificacion } from '@/features/customers/types/clientes'
+import type { DiaNotificacion } from '@/features/admin/notifications/services/horario-cobros-service'
 
 export interface ReporteVentasFilters {
   fecha_desde?: string
@@ -11,7 +11,6 @@ export interface ReporteVentasFilters {
 }
 
 export interface ReporteDeudoresFilters {
-  dia_notificacion?: DiaNotificacion
   nombre?: string
   lugar?: string
   output?: 'json' | 'pdf'
