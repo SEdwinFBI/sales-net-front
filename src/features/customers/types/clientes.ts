@@ -42,6 +42,10 @@ export interface UpdateClientePayload {
 
 export interface Abono {
   id: number
+  id_movimiento?: number | null
+  id_abono_original?: number | null
+  revertido?: boolean
+  monto_pago?: number
   monto: number
   fecha_abono: string
   id_venta: number
@@ -108,7 +112,7 @@ export interface ComprasFilters {
   fecha_hasta?: string
 }
 
-export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE' | 'REVERSION_VENTA'
+export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE' | 'REVERSION_VENTA' | 'REVERSION_ABONO'
 
 export interface MovimientoCliente {
   id: number

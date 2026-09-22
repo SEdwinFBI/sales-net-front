@@ -44,6 +44,7 @@ const TIPO_CONFIG: Record<TipoMovimiento, { icon: LucideIcon; className: string 
   STOCK_VENTA: { icon: ShoppingCart, className: 'text-destructive' },
   STOCK_REVERSION: { icon: PackagePlus, className: 'text-successful' },
   SALDO_REVERSION_VENTA: { icon: Wallet, className: 'text-successful' },
+  SALDO_REVERSION_ABONO: { icon: Wallet, className: 'text-destructive' },
   STOCK_RESURTIDO: { icon: PackagePlus, className: 'text-successful' },
   STOCK_AJUSTE: { icon: Settings2, className: 'text-warning' },
   STOCK_CARGA_INICIAL: { icon: PackagePlus, className: 'text-primary' },

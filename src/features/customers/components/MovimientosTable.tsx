@@ -30,6 +30,7 @@ const formatDate = (value: string) => {
 const TIPO_CONFIG: Record<TipoMovimiento, { icon: LucideIcon; iconClassName: string }> = {
   VENTA_CREDITO: { icon: ShoppingBag, iconClassName: 'bg-secondary text-secondary-foreground' },
   REVERSION_VENTA: { icon: XCircle, iconClassName: 'bg-primary/10 text-primary' },
+  REVERSION_ABONO: { icon: XCircle, iconClassName: 'bg-muted text-muted-foreground' },
   ABONO: { icon: Banknote, iconClassName: 'bg-primary/10 text-primary' },
   CANCELACION: { icon: XCircle, iconClassName: 'bg-muted text-muted-foreground' },
   SALDO_INICIAL: { icon: Wallet, iconClassName: 'bg-muted text-muted-foreground' },
