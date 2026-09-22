@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
@@ -32,11 +33,14 @@ export default function RevertirAbonoButton({ abono }: { abono: Abono }) {
   }
 
   return <>
-    <Button variant="outline" size="sm" onClick={() => setOpen(true)}>Revertir</Button>
+    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" onClick={() => setOpen(true)}>
+      <Undo2 aria-hidden="true" />
+      Anular abono
+    </Button>
     <Dialog open={open} onOpenChange={(value) => { if (!isPending) setOpen(value) }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Revertir abono #{abono.id}</DialogTitle>
+          <DialogTitle>Anular abono #{abono.id}</DialogTitle>
           <DialogDescription>
             {abono.id_movimiento
               ? 'Se revertirá el pago completo y todas sus aplicaciones a ventas.'
@@ -48,7 +52,7 @@ export default function RevertirAbonoButton({ abono }: { abono: Abono }) {
         <DialogFooter>
           <Button variant="outline" disabled={isPending} onClick={() => setOpen(false)}>Volver</Button>
           <Button variant="destructive" disabled={isPending} onClick={() => void confirmar()}>
-            {isPending ? 'Revirtiendo…' : 'Confirmar reversión'}
+            {isPending ? 'Anulando…' : 'Confirmar anulación'}
           </Button>
         </DialogFooter>
       </DialogContent>

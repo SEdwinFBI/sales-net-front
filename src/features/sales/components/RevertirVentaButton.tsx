@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
@@ -35,13 +36,16 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
   }
 
   return <>
-    <Button variant="outline" size="sm" disabled={Number(venta.abonado) > 0}
-      title={Number(venta.abonado) > 0 ? 'Revierte primero los abonos de esta venta' : undefined}
-      onClick={() => setOpen(true)}>Revertir</Button>
+    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={Number(venta.abonado) > 0}
+      title={Number(venta.abonado) > 0 ? 'Anula primero los abonos de esta venta' : undefined}
+      onClick={() => setOpen(true)}>
+      <Undo2 aria-hidden="true" />
+      Anular venta
+    </Button>
     <Dialog open={open} onOpenChange={(value) => { if (!isPending) setOpen(value) }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Revertir venta #{venta.id}</DialogTitle>
+          <DialogTitle>Anular venta #{venta.id}</DialogTitle>
           <DialogDescription>
             Se registrará una venta compensatoria de {formatCurrency(-Number(venta.total_neto))}
             {' '}y se devolverán los productos a la sucursal de origen. Si es a crédito, se descontará
@@ -51,7 +55,7 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
         <DialogFooter>
           <Button variant="outline" disabled={isPending} onClick={() => setOpen(false)}>Volver</Button>
           <Button variant="destructive" disabled={isPending} onClick={() => void confirmar()}>
-            {isPending ? 'Revirtiendo…' : 'Confirmar reversión'}
+            {isPending ? 'Anulando…' : 'Confirmar anulación'}
           </Button>
         </DialogFooter>
       </DialogContent>
