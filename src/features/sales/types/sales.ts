@@ -111,7 +111,7 @@ export interface Venta {
   total: number
   total_neto: number
   total_descuento: number
-  estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA'
+  estado: 'PENDIENTE' | 'PAGADA' | 'CANCELADA' | 'REVERTIDA' | 'REVERSION'
   forma_pago: string
   abonado: number
   saldo: number

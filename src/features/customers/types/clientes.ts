@@ -108,7 +108,7 @@ export interface ComprasFilters {
   fecha_hasta?: string
 }
 
-export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE'
+export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE' | 'REVERSION_VENTA'
 
 export interface MovimientoCliente {
   id: number
