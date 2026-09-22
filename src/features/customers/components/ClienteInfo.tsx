@@ -3,7 +3,6 @@ import { formatCurrency } from '../utils/venta-total'
 import { Badge } from '@/components/ui/badge'
 import type { Cliente } from '../types/clientes'
 import { initials } from '@/helpers/string'
-import { mostrarDias } from '../utils/dias-notificacion'
 import { formatDisplayDate } from '@/lib/dates'
 
 type Props = {
@@ -33,9 +32,6 @@ export default function ClienteInfo({ cliente }: Props) {
               </span>
               <span className="whitespace-nowrap text-muted-foreground">
                 Direccion: <span className="font-medium text-foreground">{cliente.direccion}</span>
-              </span>
-              <span className="whitespace-nowrap text-muted-foreground">
-                Días de notificación: <span className="font-medium text-foreground">{mostrarDias(cliente.dias_notificacion)}</span>
               </span>
             </div>
 

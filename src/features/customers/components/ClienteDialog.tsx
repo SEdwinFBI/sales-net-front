@@ -9,8 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { useCreateCliente } from '../hooks/useCreateCliente'
 import { useUpdateCliente } from '../hooks/useUpdateCliente'
-import type { Cliente, DiaNotificacion } from '../types/clientes'
-import { DIAS_NOTIFICACION } from '../utils/dias-notificacion'
+import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 
@@ -19,15 +18,6 @@ const schema = z.object({
   direccion: z.string().min(3, 'La dirección debe tener al menos 3 caracteres'),
   telefono: z.string().min(8, 'El teléfono debe tener al menos 8 dígitos'),
   balance: z.preprocess((val) => Number(val), z.number().min(0, 'El balance debe ser un número positivo')),
-  dias_notificacion: z.array(z.union([
-    z.literal(1),
-    z.literal(2),
-    z.literal(3),
-    z.literal(4),
-    z.literal(5),
-    z.literal(6),
-    z.literal(7),
-  ])).max(7),
   activo: z.boolean(),
 })
 
@@ -44,7 +34,6 @@ const EMPTY_FORM: FormValues = {
   direccion: '',
   telefono: '',
   balance: 0,
-  dias_notificacion: [],
   activo: true,
 }
 
@@ -58,7 +47,6 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: EMPTY_FORM,
   })
-  const diasSeleccionados = watch('dias_notificacion')
 
   useEffect(() => {
     if (!open) return
@@ -67,7 +55,6 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
       direccion: cliente.direccion,
       telefono: cliente.telefono,
       balance: cliente.balance,
-      dias_notificacion: cliente.dias_notificacion ?? [],
       activo: cliente.activo,
     } : EMPTY_FORM)
   }, [open, cliente, reset])
@@ -87,14 +74,6 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
     }
   }
 
-  const toggleDia = (dia: DiaNotificacion) => {
-    const nextDias = diasSeleccionados.includes(dia)
-      ? diasSeleccionados.filter((value) => value !== dia)
-      : [...diasSeleccionados, dia].sort((a, b) => a - b)
-
-    setValue('dias_notificacion', nextDias, { shouldDirty: true, shouldValidate: true })
-  }
-
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
       <DialogContent>
@@ -102,7 +81,7 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
           <DialogTitle>{isEdit ? 'Editar cliente' : 'Nuevo cliente'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           <FieldGroup>
             <Field>
               <FieldLabel>Nombre completo</FieldLabel>
@@ -124,34 +103,13 @@ export default function ClienteDialog({ open, cliente, onClose }: Props) {
               <Input {...register('balance')} type="number" step="0.01" placeholder="0.00" />
               <FieldError errors={[errors.balance]} />
             </Field>
-            <Field>
-              <FieldLabel>Días de notificación</FieldLabel>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Días de notificación">
-                {DIAS_NOTIFICACION.map((dia) => {
-                  const isSelected = diasSeleccionados.includes(dia.value)
-                  return (
-                    <Button
-                      key={dia.value}
-                      type="button"
-                      size="sm"
-                      variant={isSelected ? 'default' : 'outline'}
-                      aria-pressed={isSelected}
-                      onClick={() => toggleDia(dia.value)}
-                    >
-                      {dia.label}
-                    </Button>
-                  )
-                })}
-              </div>
-              <FieldError errors={[errors.dias_notificacion]} />
-            </Field>
             <Field orientation="horizontal">
               <FieldLabel>Activo</FieldLabel>
               <Switch checked={watch('activo')} onCheckedChange={(checked: boolean) => setValue('activo', checked)} />
             </Field>
           </FieldGroup>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="py-5">
             <Button variant="outline" type="button" onClick={onClose} disabled={isPending}>Cancelar</Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear cliente'}

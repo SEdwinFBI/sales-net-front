@@ -135,7 +135,7 @@ export default function HorarioCobrosSection() {
               {!activo ? 'Los avisos de cobros estarán pausados hasta que selecciones al menos un día.'
                 : `${diasResumen}. ${hora === null ? 'Se usará el horario por defecto.' : valid ? `Envío a partir de las ${hora}.` : 'Falta elegir la hora de envío.'}`}
             </p>
-            <p className="text-xs text-muted-foreground">Solo se incluyen clientes asignados a los días elegidos. El envío se realiza en la primera revisión disponible.</p>
+            <p className="text-xs text-muted-foreground">Se incluyen todos los clientes activos con saldo pendiente en los días seleccionados. El envío se realiza en la primera revisión disponible.</p>
           </div>
           {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
           <div className="flex flex-col gap-4 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
