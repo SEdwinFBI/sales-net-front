@@ -3,7 +3,7 @@ import { Badge, badgeVariants } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DrawerBody, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import type { Product, ProductVariant } from "@/features/sales/types/sales"
-import { ShoppingCart, Store } from "lucide-react"
+import { Check, ShoppingCart, Store } from "lucide-react"
 import type { FC } from "react"
 import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
@@ -13,11 +13,13 @@ type Props = {
     item: Product
     variantSelected: ProductVariant | null
     onVariantChange: (variant: ProductVariant) => void
+    checkedVariantIds: number[]
+    onVariantCheck: (variant: ProductVariant) => void
     onAddToCart: () => void
     onCheckOtherStores: () => void
 }
 
-const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, onAddToCart, onCheckOtherStores }) => {
+const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantChange, checkedVariantIds, onVariantCheck, onAddToCart, onCheckOtherStores }) => {
     const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.src = imageUrl
     }, [])
@@ -75,21 +77,42 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
 
                 <div className='mt-4 grid w-full grid-cols-[repeat(auto-fit,minmax(3rem,1fr))] items-center justify-center gap-2 sm:gap-3'>
                     {item.variants.map((variant) => (
+                        <div key={variant.id} className="flex flex-col items-center">
                         <button
                             type="button"
                             className={cn(
-                                badgeVariants({ variant: variant.id !== variantSelected?.id ? 'secondary' : 'default' }),
+                                badgeVariants({ variant: (checkedVariantIds.length > 0
+                                    ? checkedVariantIds.includes(variant.id)
+                                    : variant.id === variantSelected?.id) ? 'default' : 'secondary' }),
                                 "flex h-10 w-full cursor-pointer items-center justify-center text-sm disabled:cursor-not-allowed disabled:opacity-60",
                                 getStockBadgeClassDrawer(variant.stock)
                             )}
-                            key={variant.id}
                             aria-label={`Seleccionar talla ${variant.size}, stock ${variant.stock}`}
-                            aria-pressed={variant.id === variantSelected?.id}
+                            aria-pressed={checkedVariantIds.length > 0 ? checkedVariantIds.includes(variant.id) : variant.id === variantSelected?.id}
                             disabled={variant.stock <= 0}
                             onClick={() => onVariantChange(variant)}
                         >
                             {variant.size}
                         </button>
+                        <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={checkedVariantIds.includes(variant.id)}
+                            aria-label={`Agregar talla ${variant.size} a la selección múltiple`}
+                            disabled={variant.stock <= 0}
+                            onClick={() => onVariantCheck(variant)}
+                            className="flex size-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            <span className={cn(
+                                "flex size-5 items-center justify-center rounded-full border transition-colors",
+                                checkedVariantIds.includes(variant.id)
+                                    ? "border-primary bg-primary text-primary-foreground"
+                                    : "border-muted-foreground/50"
+                            )}>
+                                {checkedVariantIds.includes(variant.id) && <Check className="size-3.5" aria-hidden="true" />}
+                            </span>
+                        </button>
+                        </div>
                     ))}
                 </div>
                 {item.variants.filter(v => v.stock > 0).length === 0 && (
@@ -111,7 +134,9 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                 <Button
                     size={"lg"}
                     className="w-full"
-                    disabled={!variantSelected || variantSelected.stock <= 0}
+                    disabled={checkedVariantIds.length > 0
+                        ? !item.variants.some((variant) => checkedVariantIds.includes(variant.id) && variant.stock > 0)
+                        : !variantSelected || variantSelected.stock <= 0}
                     onClick={onAddToCart}
                 >
                     <ShoppingCart className="w-5! h-10!" size={30} strokeWidth={3} />
