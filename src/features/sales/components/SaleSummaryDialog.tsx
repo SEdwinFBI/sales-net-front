@@ -1,4 +1,5 @@
-import { CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle2, BookmarkCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,8 +14,10 @@ import { Separator } from '@/components/ui/separator'
 import { formatCurrency } from '@/helpers/money'
 import { useSalesStore } from '../store/useSalesStore'
 import { formatDisplayDateTime } from '@/lib/dates'
+import SaveCustomerPricesDialog from './SaveCustomerPricesDialog'
 
 const SaleSummaryDialog = () => {
+  const [savePricesOpen, setSavePricesOpen] = useState(false)
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const lastSale = useSalesStore((state) => state.lastSale)
   const closeSummary = useSalesStore((state) => state.closeSummary)
@@ -30,9 +33,9 @@ const SaleSummaryDialog = () => {
     <Dialog
       disablePointerDismissal
       modal
-      open={activeDialog === 'summary'}
+      open={activeDialog === 'summary' && !savePricesOpen}
       onOpenChange={(open) => {
-        if (!open) closeSummary()
+        if (!open && !savePricesOpen) closeSummary()
       }}
     >
       <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -105,6 +108,29 @@ const SaleSummaryDialog = () => {
               {formatCurrency(lastSale.total)}
             </span>
           </div>
+
+          {/* Pregunta post-venta: ¿Deseas guardar precios para el cliente? */}
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-primary flex items-center gap-1.5">
+                  <BookmarkCheck className="size-4 shrink-0" />
+                  Precios para próximas compras
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Guarda los precios de esta venta para volver a usarlos con este cliente.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setSavePricesOpen(true)}
+                className="shrink-0 cursor-pointer"
+              >
+                Guardar precios
+              </Button>
+            </div>
+          </div>
         </div>
 
         <DialogFooter>
@@ -113,6 +139,12 @@ const SaleSummaryDialog = () => {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <SaveCustomerPricesDialog
+        open={savePricesOpen}
+        onClose={() => setSavePricesOpen(false)}
+        lastSale={lastSale}
+      />
     </Dialog>
   )
 }

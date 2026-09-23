@@ -5,14 +5,11 @@ import DeudoresResumenCards from '../components/DeudoresResumenCards'
 import DeudoresTable from '../components/DeudoresTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { FileDown, MapPin, RotateCcw, Search } from 'lucide-react'
 import { downloadReporteDeudoresPdf } from '../services/reportes-service'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import type { ReporteDeudoresFilters } from '../types/reportes'
-import type { DiaNotificacion } from '@/features/customers/types/clientes'
-import { DIAS_NOTIFICACION } from '@/features/customers/utils/dias-notificacion'
 
 export default function ReporteDeudoresPage() {
   const [filters, setFilters] = useState<ReporteDeudoresFilters>({})
@@ -42,25 +39,7 @@ export default function ReporteDeudoresPage() {
 
       <Card className="p-3.5 sm:p-5">
 
-        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] shadow-sm">
-          <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Día de notificación</label>
-            <Select
-              value={filters.dia_notificacion ?? ''}
-              onChange={(e) => setFilters((prev) => ({
-                ...prev,
-                dia_notificacion: e.target.value
-                  ? Number(e.target.value) as DiaNotificacion
-                  : undefined,
-              }))}
-              className="w-full"
-            >
-              <option value="">Todos los días</option>
-              {DIAS_NOTIFICACION.map((dia) => (
-                <option key={dia.value} value={dia.value}>{dia.label}</option>
-              ))}
-            </Select>
-          </div>
+        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto] shadow-sm">
           <div className="min-w-0">
             <label className="mb-1 block text-xs text-muted-foreground">Nombre</label>
             <div className="relative">

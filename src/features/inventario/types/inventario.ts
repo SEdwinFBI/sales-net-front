@@ -7,6 +7,9 @@ export type ModuloMovimiento = 'STOCK' | 'SALDO'
  */
 export type TipoMovimiento =
   | 'STOCK_VENTA'
+  | 'STOCK_REVERSION'
+  | 'SALDO_REVERSION_VENTA'
+  | 'SALDO_REVERSION_ABONO'
   | 'STOCK_RESURTIDO'
   | 'STOCK_AJUSTE'
   | 'STOCK_CARGA_INICIAL'

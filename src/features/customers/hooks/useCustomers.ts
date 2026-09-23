@@ -3,6 +3,7 @@ import { getClientes } from '../services/clientes-service'
 import type { Cliente } from '../types/clientes'
 
 export interface Customer {
+  permitir_credito: boolean
   id: string
   name: string
   phone: string
@@ -28,6 +29,7 @@ export const useCustomers = (params: CustomerSearchParams = {}) => {
       name: c.nombre_completo,
       phone: c.telefono,
       balance: Number(c.balance) || 0,
+      permitir_credito: c.permitir_credito,
     })),
   })
 

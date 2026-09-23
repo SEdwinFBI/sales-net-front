@@ -7,8 +7,8 @@ export const getVentaTotal = (venta: Venta) => {
   const total = Number(venta.total)
   const totalDesdeSaldo = Number(venta.abonado) + Number(venta.saldo)
 
-  if (totalNeto > 0) return totalNeto
-  if (total > 0) return total
+  if (venta.total_neto != null && Number.isFinite(totalNeto)) return totalNeto
+  if (venta.total != null && Number.isFinite(total)) return total
   return totalDesdeSaldo
 }
 
