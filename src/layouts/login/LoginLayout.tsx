@@ -44,9 +44,6 @@ export default function LoginLayout({ children }: PropsWithChildren) {
                 <h2 className="font-heading text-3xl font-semibold leading-tight xl:text-4xl">
                   Sistema de gestión de ventas
                 </h2>
-                <p className="mt-4 text-sm leading-relaxed text-white/85">
-                  Plataforma interna de Distribuidora MZ para administrar la operación diaria.
-                </p>
 
                 <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
                   Módulos del sistema

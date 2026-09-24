@@ -15,7 +15,7 @@ export default function PatronAccesoPage() {
             <span className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm"><ShieldCheck aria-hidden="true" className="size-6" /></span>
             <div className="space-y-2">
               <h2 className="font-heading text-xl font-semibold">Tu acceso, con un patrón</h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">Crea una secuencia de puntos y confírmala para preparar tu nuevo método de ingreso.</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">Configura tu patrón de acceso.</p>
             </div>
             <div className="flex items-center gap-3 border-t border-primary/15 pt-4">
               <UserRound aria-hidden="true" className="size-5 shrink-0 text-primary" />
@@ -30,7 +30,7 @@ export default function PatronAccesoPage() {
             <p className="text-sm text-muted-foreground">Contraseña actual de tu cuenta</p>
             <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">
               <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
-              <p>Ingresa tu contraseña actual, dibuja tu patrón y repítelo para guardarlo en tu cuenta.</p>
+              <p>Necesitarás tu contraseña actual.</p>
             </div>
           </Card>
         </div>

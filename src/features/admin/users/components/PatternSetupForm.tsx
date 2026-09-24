@@ -49,7 +49,7 @@ export default function PatternSetupForm() {
         <form noValidate className="grid gap-4" onSubmit={(event) => {
           event.preventDefault()
           if (!password.trim()) {
-            setError('Escribe la contraseña que utilizas para iniciar sesión. Puedes usar el ícono del ojo para revisar lo que escribiste.')
+            setError('Ingresa tu contraseña actual.')
             return
           }
           setShowPassword(false)
@@ -99,7 +99,7 @@ export default function PatternSetupForm() {
             setPattern([])
             setStep(1)
           } else if (pattern.join(',') !== original.join(',')) {
-            setError('La confirmación no coincide con el primer patrón. Repite los mismos puntos, con el mismo inicio y en el mismo orden. Si no recuerdas el patrón, selecciona «Empezar de nuevo».')
+            setError('Los patrones no coinciden. Repítelo en el mismo orden.')
             setPattern([])
           } else {
             setStep(2)
@@ -130,7 +130,7 @@ export default function PatternSetupForm() {
           event.preventDefault()
           if (isPending || saved) return
           if (!password.trim()) {
-            setError('Escribe la contraseña que utilizas para iniciar sesión. Puedes usar el ícono del ojo para revisar lo que escribiste.')
+            setError('Ingresa tu contraseña actual.')
             return
           }
           setError('')
@@ -153,7 +153,7 @@ export default function PatternSetupForm() {
             <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ShieldCheck aria-hidden="true" className="size-7" /></span>
             <h2 className="font-heading text-lg font-semibold">{saved ? 'Patrón guardado' : 'Patrón confirmado'}</h2>
             <p className="max-w-sm text-sm text-muted-foreground">
-              {saved ? 'Tu patrón se guardó correctamente en tu cuenta.' : 'Tu patrón está listo. Confirma para guardarlo en tu cuenta.'}
+              {saved ? 'Ya puedes ingresar con tu patrón.' : 'Guarda el patrón para activarlo.'}
             </p>
           </div>
 

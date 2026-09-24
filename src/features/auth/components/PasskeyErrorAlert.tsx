@@ -12,7 +12,6 @@ export default function PasskeyErrorAlert({ error }: { error: unknown }) {
       <div className="min-w-0 space-y-1">
         <p className="font-semibold text-destructive">{limited ? 'Límite de intentos alcanzado' : 'No se pudo completar la operación'}</p>
         <p className="whitespace-pre-line break-words text-muted-foreground">{getPasskeyErrorMessage(error)}</p>
-        {limited && <p className="text-muted-foreground">Se alcanzó el límite de solicitudes de acceso con dispositivo. Espera antes de volver a intentarlo.</p>}
       </div>
     </div>
   )

@@ -140,12 +140,11 @@ export default function PasskeyManager({ userId }: { userId: number }) {
             if (target) await deletePasskey(target.id, password)
             else {
               await registerPasskey(password, nombre)
-              toast.success('Acceso creado correctamente', {
-                description: 'Ya puedes usar «Ingresar con mi dispositivo» para acceder a tu cuenta.',
+              toast.success('Acceso agregado', {
                 duration: 6000,
               })
             }
-            setMessage(target ? 'Acceso eliminado. Las sesiones abiertas siguen activas.' : 'Acceso agregado. Ya puedes ingresar con tu dispositivo.')
+            setMessage(target ? 'Acceso eliminado. Las sesiones abiertas siguen activas.' : 'Usa «Ingresar con mi dispositivo» al iniciar sesión.')
             setOpen(false)
             setTarget(null)
             setNombre('')
@@ -171,7 +170,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
                   <InputGroupInput id="passkey-name" value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder="Por ejemplo: Mi laptop" aria-describedby="passkey-name-help" />
                   <InputGroupAddon><KeyRound aria-hidden="true" /></InputGroupAddon>
                 </InputGroup>
-                <FieldDescription id="passkey-name-help">Un nombre te ayudará a reconocerlo cuando quieras administrarlo.</FieldDescription>
+                <FieldDescription id="passkey-name-help">Para identificar este acceso.</FieldDescription>
               </Field>
             )}
             <Field>

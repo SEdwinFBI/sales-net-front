@@ -212,9 +212,8 @@ export default function MayoreoTiersEditor({ sucursal, onGoToPrecios }: Props) {
               <Info className="mt-0.5 size-3.5 shrink-0" />
               {row.modo === 'DERIVADO' ? (
                 <span>
-                  Calculo partir del descuento individual de
-                  cada variante ({row.factor || '100'}%: individual Q30.00 a este rango Q
-                  {(30 * (Number(row.factor || 100) / 100)).toFixed(2)}). Nunca se muestra porcentaje al vender.
+                  {row.factor || '100'}% del descuento individual. Ejemplo: Q30.00 → Q
+                  {(30 * (Number(row.factor || 100) / 100)).toFixed(2)}.
                 </span>
               ) : (
                 <span>

@@ -95,7 +95,7 @@ export default function MovimientosTable({ movimientos }: Props) {
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold">Movimientos generales</h3>
-        <p className="text-sm text-muted-foreground">Flujo del saldo del cliente: cada movimiento muestra cuánto afectó la deuda y el saldo resultante.</p>
+        <p className="text-sm text-muted-foreground">Historial de cambios en el saldo.</p>
       </div>
 
       {movimientos.length === 0 ? (

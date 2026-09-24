@@ -122,21 +122,21 @@ export default function HorarioCobrosSection() {
                 className="h-11 w-full text-base"
               />
               <p id="hora-cobros-ayuda" className="text-xs text-muted-foreground">
-                {hora === null ? 'Se usará la programación diaria.' : !valid ? 'Selecciona una hora para guardar.' : 'Los avisos se envían a partir de esta hora.'}
+                {hora === null ? 'Horario predeterminado.' : !valid ? 'Selecciona una hora.' : 'Hora de inicio de los avisos.'}
               </p>
             </div>
           </div>
 
           <div className="space-y-1.5 border-l-2 border-primary/40 pl-3" role="status">
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="text-sm font-semibold">{hasChanges ? 'Programación pendiente de guardar' : 'Programación actual'}</h4>
+              <h4 className="text-sm font-semibold">{hasChanges ? 'Nueva programación' : 'Programación actual'}</h4>
               {hasChanges && <Badge variant="secondary">Sin guardar</Badge>}
             </div>
             <p className="text-sm leading-relaxed">
-              {!activo ? 'Los avisos de cobros estarán pausados hasta que selecciones al menos un día.'
-                : `${diasResumen}. ${hora === null ? 'Se usará el horario por defecto.' : valid ? `Envío a partir de las ${hora}.` : 'Falta elegir la hora de envío.'}`}
+              {!activo ? 'Avisos pausados. Selecciona al menos un día.'
+                : `${diasResumen}. ${hora === null ? 'Horario predeterminado.' : valid ? `A partir de las ${hora}.` : 'Sin hora de envío.'}`}
             </p>
-            <p className="text-xs text-muted-foreground">Se incluyen todos los clientes activos con saldo pendiente en los días seleccionados. El envío se realiza en la primera revisión disponible.</p>
+            <p className="text-xs text-muted-foreground">Avisos para clientes activos con saldo pendiente. La hora de envío es aproximada.</p>
           </div>
           {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
           <div className="flex flex-col gap-4 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
