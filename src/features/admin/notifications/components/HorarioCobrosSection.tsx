@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BellRing, Loader2, Save } from 'lucide-react'
+import { BellRing, Loader2, Save, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,16 +17,17 @@ const LABORABLES = [1, 2, 3, 4, 5]
 export default function HorarioCobrosSection() {
   const { data, isPending, isError, error, refetch, isFetching } = useHorarioCobros()
   const update = useUpdateHorarioCobros()
-  const [draftHora, setDraftHora] = useState<string | null | undefined>()
+  const [draftHoras, setDraftHoras] = useState<string[] | undefined>()
   const [draftDias, setDraftDias] = useState<number[] | undefined>()
   const [lastDias, setLastDias] = useState<number[]>(TODOS)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const hora = draftHora === undefined ? data?.hora_notificacion ?? null : draftHora
+  const horasGuardadas = data?.horas_notificacion ?? (data?.hora_notificacion ? [data.hora_notificacion] : [])
+  const horas = draftHoras ?? horasGuardadas
   const dias = draftDias ?? data?.dias_notificacion ?? []
   const activo = dias.length > 0
-  const valid = hora === null || /^([01]\d|2[0-3]):[0-5]\d$/.test(hora)
+  const valid = horas.every(hora => /^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) && new Set(horas).size === horas.length
   const hasChanges = data !== undefined && (
-    hora !== data.hora_notificacion || JSON.stringify(dias) !== JSON.stringify(data.dias_notificacion)
+    JSON.stringify([...horas].sort()) !== JSON.stringify([...horasGuardadas].sort()) || JSON.stringify(dias) !== JSON.stringify(data.dias_notificacion)
   )
   const diasResumen = dias.length === 7 ? 'Todos los días' : dias.map((dia) => DIAS[dia - 1]).join(', ')
 
@@ -38,7 +39,7 @@ export default function HorarioCobrosSection() {
 
   
   const reset = () => {
-    setDraftHora(undefined)
+    setDraftHoras(undefined)
     setDraftDias(undefined)
     setSaveError(null)
   }
@@ -47,7 +48,7 @@ export default function HorarioCobrosSection() {
     if (!hasChanges || !valid || update.isPending) return
     setSaveError(null)
     try {
-      const saved = await update.mutateAsync({ dias_notificacion: dias, hora_notificacion: hora })
+      const saved = await update.mutateAsync({ dias_notificacion: dias, horas_notificacion: [...horas].sort() })
       reset()
       toast.success(saved.dias_notificacion.length ? 'Configuración de cobros guardada' : 'Avisos de cobros pausados')
     } catch (error) {
@@ -101,28 +102,40 @@ export default function HorarioCobrosSection() {
               <label htmlFor="modo-horario-cobros" className="block text-sm font-medium">Horario</label>
               <Select
                 id="modo-horario-cobros"
-                value={hora === null ? 'default' : 'custom'}
+                value={horas.length === 0 ? 'default' : 'custom'}
                 disabled={update.isPending}
-                onChange={(event) => { setDraftHora(event.target.value === 'default' ? null : data.hora_notificacion ?? ''); setSaveError(null) }}
+                onChange={(event) => { setDraftHoras(event.target.value === 'default' ? [] : horasGuardadas.length ? [...horasGuardadas] : ['']); setSaveError(null) }}
                 className="h-11"
               >
                 <option value="default">Usar horario por defecto</option>
-                <option value="custom">Elegir una hora</option>
+                <option value="custom">Elegir horarios</option>
               </Select>
               <p className="text-xs text-muted-foreground">Hora local: {data.zona_horaria}.</p>
             </div>
             <div className="min-w-0 space-y-3">
-              <label htmlFor="hora-notificacion-cobros" className="block text-sm font-medium">Hora de envío</label>
-              <Input
-                id="hora-notificacion-cobros" type="time" step={60}
-                required={hora !== null} value={hora ?? ''}
-                disabled={update.isPending || hora === null}
-                aria-describedby="hora-cobros-ayuda"
-                onChange={(event) => { setDraftHora(event.target.value); setSaveError(null) }}
-                className="h-11 w-full text-base"
-              />
+              <div className="flex items-center justify-between gap-2">
+                <span className="block text-sm font-medium">Horas de envío</span>
+                <Button type="button" variant="outline" size="icon" aria-label="Agregar horario"
+                  disabled={update.isPending} onClick={() => { setDraftHoras([...horas, '']); setSaveError(null) }}>
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+              {horas.map((hora, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input type="time" step={60} required value={hora}
+                    aria-label={`Hora de envío ${index + 1}`} disabled={update.isPending}
+                    aria-describedby="hora-cobros-ayuda"
+                    onChange={event => { setDraftHoras(horas.map((value, i) => i === index ? event.target.value : value)); setSaveError(null) }}
+                    className="h-11 w-full text-base" />
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Quitar horario ${index + 1}`}
+                    disabled={update.isPending || horas.length === 1}
+                    onClick={() => { setDraftHoras(horas.filter((_, i) => i !== index)); setSaveError(null) }}>
+                    <X className="size-4" />
+                  </Button>
+                </div>
+              ))}
               <p id="hora-cobros-ayuda" className="text-xs text-muted-foreground">
-                {hora === null ? 'Horario predeterminado.' : !valid ? 'Selecciona una hora.' : 'Hora de inicio de los avisos.'}
+                {!horas.length ? 'Un envío diario al ejecutarse la tarea.' : !valid ? 'Completa las horas sin repetir horarios.' : 'Un aviso por horario. Puedes agregar una hora próxima para probar hoy.'}
               </p>
             </div>
           </div>
@@ -134,7 +147,7 @@ export default function HorarioCobrosSection() {
             </div>
             <p className="text-sm leading-relaxed">
               {!activo ? 'Avisos pausados. Selecciona al menos un día.'
-                : `${diasResumen}. ${hora === null ? 'Horario predeterminado.' : valid ? `A partir de las ${hora}.` : 'Sin hora de envío.'}`}
+                : `${diasResumen}. ${!horas.length ? 'Horario predeterminado.' : valid ? `A las ${[...horas].sort().join(', ')}.` : 'Revisa los horarios.'}`}
             </p>
             <p className="text-xs text-muted-foreground">Solo se incluyen clientes activos con saldo pendiente que tengan marcado el mismo día. La hora de envío es aproximada.</p>
           </div>
