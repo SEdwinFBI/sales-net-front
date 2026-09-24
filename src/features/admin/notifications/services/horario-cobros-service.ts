@@ -5,11 +5,14 @@ export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
 export interface ConfiguracionNotificacionCobros {
   dias_notificacion: number[]
   hora_notificacion: string | null
+  horas_notificacion: string[]
+  ultimo_envio: string | null
   zona_horaria: string
   ultima_fecha_envio: string | null
 }
 
 export type ActualizarHorarioCobros =
+  | { dias_notificacion?: number[]; horas_notificacion: string[] }
   | { dias_notificacion: number[]; hora_notificacion?: string | null }
   | { dias_notificacion?: number[]; hora_notificacion: string | null }
 
