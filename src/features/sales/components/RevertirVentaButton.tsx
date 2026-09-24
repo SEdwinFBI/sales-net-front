@@ -10,11 +10,12 @@ import { queryKeys } from '@/lib/query-keys'
 import { formatCurrency } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 
-export default function RevertirVentaButton({ venta }: { venta: Venta }) {
+export default function RevertirVentaButton({ venta, incluirAbonos = false }: { venta: Venta; incluirAbonos?: boolean }) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`),
+    mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`,
+      incluirAbonos && Number(venta.abonado) > 0 ? { anular_abonos: true } : undefined),
     onSuccess: async () => {
       await Promise.all([
         queryKeys.sales.all, queryKeys.adminVentas.all, queryKeys.customers.all,
@@ -36,8 +37,8 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
   }
 
   return <>
-    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={Number(venta.abonado) > 0}
-      title={Number(venta.abonado) > 0 ? 'Anula primero los abonos de esta venta' : undefined}
+    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={!incluirAbonos && Number(venta.abonado) > 0}
+      title={!incluirAbonos && Number(venta.abonado) > 0 ? 'Anula primero los abonos de esta venta' : undefined}
       onClick={() => setOpen(true)}>
       <Undo2 aria-hidden="true" />
       Anular venta
@@ -47,6 +48,7 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
         <DialogHeader>
           <DialogTitle>Anular venta #{venta.id}</DialogTitle>
           <DialogDescription>
+            {incluirAbonos && Number(venta.abonado) > 0 && `Se anularán ${formatCurrency(Number(venta.abonado))} de abonos aplicados únicamente a esta venta. Las aplicaciones a otras ventas se conservarán. `}
             Se registrará una venta compensatoria de {formatCurrency(-Number(venta.total_neto))}.
             {venta.detalles.length > 0 && ' Se devolverán los productos a la sucursal de origen.'}
             {' '}Si es a crédito, se descontará
