@@ -36,7 +36,7 @@ function descriptor(value: DescriptorJSON): PublicKeyCredentialDescriptor {
 }
 
 function serializeCredential(credential: Credential | null) {
-  if (!credential || credential.type !== 'public-key') throw new Error('No se obtuvo una passkey. Vuelve a intentarlo.')
+  if (!credential || credential.type !== 'public-key') throw new Error('No se pudo obtener el acceso guardado. Vuelve a intentarlo.')
   const key = credential as PublicKeyCredential
   const response = key.response
   const common = { clientDataJSON: encodeBase64url(response.clientDataJSON) }
@@ -50,7 +50,7 @@ function serializeCredential(credential: Credential | null) {
     }
   } else {
     const assertion = response as AuthenticatorAssertionResponse
-    if (!assertion.userHandle?.byteLength) throw new Error('La passkey no identifica al usuario. Ingresa con contraseña y registra otra passkey.')
+    if (!assertion.userHandle?.byteLength) throw new Error('El acceso guardado no identifica al usuario. Ingresa con contraseña y configura un nuevo acceso con dispositivo.')
     serializedResponse = {
       ...common,
       authenticatorData: encodeBase64url(assertion.authenticatorData),
@@ -67,7 +67,7 @@ function serializeCredential(credential: Credential | null) {
 }
 
 function requireSupport() {
-  if (!supportsPasskeys()) throw new Error('Este navegador no permite passkeys aquí. Usa HTTPS o localhost y un navegador compatible.')
+  if (!supportsPasskeys()) throw new Error('Este navegador no permite el acceso con dispositivo aquí. Usa una conexión segura y un navegador compatible.')
 }
 
 export async function registerPasskey(currentPassword: string, nombre: string): Promise<Passkey> {

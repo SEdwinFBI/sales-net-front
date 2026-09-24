@@ -148,7 +148,7 @@ export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }
           </span>
           <MoveRight aria-hidden="true" className="size-4 transition-transform group-hover/passkey:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none" />
         </Button>
-        {!supportsPasskeys() && <p className="mb-3 text-xs text-muted-foreground">Las passkeys requieren un navegador compatible y una conexión HTTPS o localhost.</p>}
+        {!supportsPasskeys() && <p className="mb-3 text-xs text-muted-foreground">El acceso con dispositivo requiere un navegador compatible y una conexión segura.</p>}
         <div className="empty:hidden mb-3"><PasskeyErrorAlert error={passkeyError} /></div>
         <Button
           className="group/pattern h-auto min-h-16 w-full justify-start gap-3 whitespace-normal rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-primary-complement/5 p-3 text-primary-complement shadow-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:text-primary-complement hover:shadow-md focus-visible:ring-primary/30 motion-reduce:transition-none"
