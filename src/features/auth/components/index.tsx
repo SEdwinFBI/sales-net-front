@@ -13,6 +13,7 @@ import { seleccionarSucursalService } from '../services/auth-service'
 import { requiereSeleccionSucursal } from '../types/auth'
 import type { Sucursal } from '../types/auth'
 import type { LoginFormValues } from '../types/form'
+import { loginWithPasskey } from '../services/passkey-service'
 import { queryKeys } from '@/lib/query-keys'
 
 
@@ -36,6 +37,15 @@ export default function LoginFeature() {
     queryClient.removeQueries({ queryKey: queryKeys.sales.all })
     toast.success('Sesion iniciada', { id: toastId })
     navigate('/', { replace: true })
+  }
+
+  const performPasskeyLogin = async () => {
+    const result = await loginWithPasskey()
+    if (requiereSeleccionSucursal(result)) {
+      setSeleccion({ sucursales: result.sucursales, preToken: result.pre_token })
+      return
+    }
+    completarSesion(result)
   }
 
   const performLogin = async (values: LoginFormValues) => {
@@ -104,6 +114,6 @@ export default function LoginFeature() {
   }
 
   return (
-    <LoginForm onSubmit={performLogin} onPatternSubmit={performPatternLogin} />
+    <LoginForm onSubmit={performLogin} onPatternSubmit={performPatternLogin} onPasskeySubmit={performPasskeyLogin} />
   )
 }

@@ -29,7 +29,7 @@ describe('passkeys', () => {
   it('requiere un contexto seguro y no inicia una ceremonia sin soporte', async () => {
     vi.stubGlobal('window', { isSecureContext: false })
     expect(supportsPasskeys()).toBe(false)
-    await expect(loginWithPasskey()).rejects.toThrow('HTTPS')
+    await expect(loginWithPasskey()).rejects.toThrow('conexión segura')
     expect(api.post).not.toHaveBeenCalled()
   })
 

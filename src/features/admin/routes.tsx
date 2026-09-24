@@ -1,4 +1,4 @@
-import { Settings, ShieldCheck, Store, Users } from 'lucide-react'
+import { Fingerprint, Settings, ShieldCheck, Store, Users } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const adminRoutes: AppRoute[] = [
@@ -38,6 +38,16 @@ export const adminRoutes: AppRoute[] = [
           icon: Users,
           permissions: ['admin'],
           lazy: () => import('./users/pages/UsuariosPage'),
+        },
+      },
+      {
+        path: 'passkeys',
+        meta: {
+          name: 'Acceso con dispositivo',
+          description: 'Acceso con tus dispositivos',
+          icon: Fingerprint,
+          permissions: ['admin', 'vendedor'],
+          lazy: () => import('@/features/auth/pages/PasskeysPage'),
         },
       },
       {
