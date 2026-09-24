@@ -63,8 +63,8 @@ export default function HorarioCobrosSection() {
             <BellRing aria-hidden="true" className="size-4.5" />
           </div>
           <div>
-            <h2 id="horario-cobros-title" className="text-lg font-semibold">Programación de cobros</h2>
-            <p className="text-sm text-muted-foreground">Días y horario de los avisos de saldos pendientes.</p>
+            <h2 id="horario-cobros-title" className="text-lg font-semibold">Programación global de cobros</h2>
+            <p className="text-sm text-muted-foreground">Los días desmarcados bloquean los avisos de todos los clientes.</p>
           </div>
         </div>
         {data && !isError && (
@@ -136,7 +136,7 @@ export default function HorarioCobrosSection() {
               {!activo ? 'Avisos pausados. Selecciona al menos un día.'
                 : `${diasResumen}. ${hora === null ? 'Horario predeterminado.' : valid ? `A partir de las ${hora}.` : 'Sin hora de envío.'}`}
             </p>
-            <p className="text-xs text-muted-foreground">Avisos para clientes activos con saldo pendiente. La hora de envío es aproximada.</p>
+            <p className="text-xs text-muted-foreground">Solo se incluyen clientes activos con saldo pendiente que tengan marcado el mismo día. La hora de envío es aproximada.</p>
           </div>
           {saveError && <p role="alert" className="text-sm text-destructive">{saveError}</p>}
           <div className="flex flex-col gap-4 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">

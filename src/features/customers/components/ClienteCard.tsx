@@ -7,6 +7,7 @@ import type { Cliente } from '../types/clientes'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { initials } from '@/helpers/string'
 import CreditoClienteBadge from './CreditoClienteBadge'
+import { mostrarDias } from '../utils/dias-notificacion'
 
 type Props = {
   cliente: Cliente
@@ -71,6 +72,7 @@ export default function ClienteCard({ cliente, onEdit, onDelete }: Props) {
               <span className="text-xs text-primary">balance</span>
             </div>
           )}
+          <p className="mt-1 text-xs text-muted-foreground">Notificación: {mostrarDias(cliente.dias_notificacion)}</p>
         </div>
       </div>
 
