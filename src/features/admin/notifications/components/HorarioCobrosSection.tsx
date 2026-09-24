@@ -36,6 +36,7 @@ export default function HorarioCobrosSection() {
     setSaveError(null)
   }
 
+  
   const reset = () => {
     setDraftHora(undefined)
     setDraftDias(undefined)
