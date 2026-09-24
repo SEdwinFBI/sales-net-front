@@ -43,7 +43,7 @@ export const adminRoutes: AppRoute[] = [
       {
         path: 'passkeys',
         meta: {
-          name: 'Passkeys',
+          name: 'Acceso con dispositivo',
           description: 'Acceso con tus dispositivos',
           icon: Fingerprint,
           permissions: ['admin', 'vendedor'],
