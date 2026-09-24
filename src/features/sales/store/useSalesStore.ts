@@ -55,6 +55,10 @@ export interface SalesState {
   setVoiceTranscript: (text: string) => void;
   registerVoiceReset: (fn: (() => void) | null) => void;
   setVentaFoto: (foto: string | null) => void;
+  customerPricingEnabled: boolean;
+  selectedCustomerId: string;
+  setCustomerPricingEnabled: (enabled: boolean) => void;
+  setSelectedCustomerId: (id: string) => void;
 }
 
 function buildCartItemId(productId: number, variantId: number): string {
@@ -71,6 +75,8 @@ export const useSalesStore = create<SalesState>()(
     voiceTranscript: '',
     voiceResetFn: null,
     ventaFoto: null,
+    customerPricingEnabled: false,
+    selectedCustomerId: '',
 
     openBranchAvailability: (articleId, highlightVariantId = null) =>
       set({ branchAvailability: { open: true, articleId, highlightVariantId } }),
@@ -87,13 +93,15 @@ export const useSalesStore = create<SalesState>()(
         const variant = product.variants.find((v) => v.id === variantId)
         if (!variant) return state
 
+        const variantPrice = Number(variant.price)
         const existing = state.items.find((item) => item.id === cartItemId)
         if (existing) {
+          const basePrice = existing.basePrice ?? variantPrice
           if (existing.qty >= variant.stock) {
             return {
               items: state.items.map((item) =>
                 item.id === cartItemId
-                  ? { ...item, stock: variant.stock, price: variant.price }
+                  ? { ...item, stock: variant.stock, basePrice }
                   : item
               ),
             }
@@ -102,7 +110,7 @@ export const useSalesStore = create<SalesState>()(
           return {
             items: state.items.map((item) =>
               item.id === cartItemId
-                ? { ...item, qty: item.qty + 1, stock: variant.stock, price: variant.price }
+                ? { ...item, qty: item.qty + 1, stock: variant.stock, basePrice }
                 : item
             ),
           }
@@ -116,7 +124,8 @@ export const useSalesStore = create<SalesState>()(
           image: product.image,
           variantId,
           size: variant.size,
-          price: variant.price,
+          basePrice: variantPrice,
+          price: variantPrice,
           stock: variant.stock,
           qty: 1,
           discount: 0,
@@ -173,16 +182,19 @@ export const useSalesStore = create<SalesState>()(
         const nextItems = state.items.map((item) => {
           const line = lines[item.id]
           if (!line) return item
+          const basePrice = item.basePrice ?? item.price
           if (
             item.discount === line.descuentoUnitario &&
             item.discountType === line.tipo &&
-            item.price === line.precioUnitario
+            item.price === line.precioUnitario &&
+            item.basePrice === basePrice
           ) {
             return item
           }
           changed = true
           return {
             ...item,
+            basePrice,
             price: line.precioUnitario,
             discount: line.descuentoUnitario,
             discountType: line.tipo,
@@ -222,6 +234,8 @@ export const useSalesStore = create<SalesState>()(
     registerVoiceReset: (fn) => set({ voiceResetFn: fn }),
 
     setVentaFoto: (foto) => set({ ventaFoto: foto }),
+    setCustomerPricingEnabled: (enabled) => set({ customerPricingEnabled: enabled }),
+    setSelectedCustomerId: (id) => set({ selectedCustomerId: id }),
   }),
     {
       name: 'sales-store',
@@ -229,6 +243,8 @@ export const useSalesStore = create<SalesState>()(
       partialize: (state) => ({
         items: state.items,
         cartOpen: state.cartOpen,
+        customerPricingEnabled: state.customerPricingEnabled,
+        selectedCustomerId: state.selectedCustomerId,
       }),
     }
   ))

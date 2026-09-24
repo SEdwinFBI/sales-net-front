@@ -47,17 +47,24 @@ const EMPTY_RESULT: CartPricingResult = {
 
 export function computeCartPricing(
   items: CartItem[],
-  config: EffectivePricingConfig | null
+  config: EffectivePricingConfig | null,
+  customerPrices?: Record<number, number> | null
 ): CartPricingResult {
   if (items.length === 0) return EMPTY_RESULT
 
   const totalUnits = items.reduce((sum, item) => sum + item.qty, 0)
 
   if (!config) {
-    // Sin config (cargando o con error): precios del catálogo, sin descuentos.
+    // Sin config (cargando o con error): precios del catálogo, sin descuentos (salvo precios pactados de cliente).
     const lines: Record<string, LineDiscount> = {}
     for (const item of items) {
-      lines[item.id] = { tipo: 'NINGUNO', descuentoUnitario: 0, precioUnitario: item.price }
+      if (customerPrices && customerPrices[item.variantId] !== undefined) {
+        const precioPactado = Number(customerPrices[item.variantId])
+        lines[item.id] = { tipo: 'CLIENTE', descuentoUnitario: 0, precioUnitario: precioPactado }
+      } else {
+        const base = item.basePrice ?? item.price
+        lines[item.id] = { tipo: 'NINGUNO', descuentoUnitario: 0, precioUnitario: base }
+      }
     }
     return { lines, totalUnits, activeTier: null, nextTierHint: null }
   }
@@ -69,14 +76,14 @@ export function computeCartPricing(
 
   const lines: Record<string, LineDiscount> = {}
   for (const item of items) {
-    lines[item.id] = resolveLine(item, variantConfig.get(item.variantId), activeTier)
+    lines[item.id] = resolveLine(item, variantConfig.get(item.variantId), activeTier, customerPrices)
   }
 
   return {
     lines,
     totalUnits,
     activeTier,
-    nextTierHint: findNextTierHint(items, variantConfig, config.tiers, totalUnits),
+    nextTierHint: findNextTierHint(items, variantConfig, config.tiers, totalUnits, customerPrices),
   }
 }
 
@@ -116,9 +123,18 @@ function firstTierDescuento(tiers: IndividualTier[]): number {
 function resolveLine(
   item: CartItem,
   config: UserVariantPricing | undefined,
-  activeTier: MayoreoTier | null
+  activeTier: MayoreoTier | null,
+  customerPrices?: Record<number, number> | null
 ): LineDiscount {
-  const precioUnitario = config?.precio_efectivo ?? item.price
+  const baseCatalogPrice = config?.precio_efectivo ?? item.basePrice ?? item.price
+
+  // Si tiene precio pactado de cliente para esta variante, se respeta fijando el precio exacto
+  if (customerPrices && customerPrices[item.variantId] !== undefined) {
+    const precioPactado = Number(customerPrices[item.variantId])
+    return { tipo: 'CLIENTE', descuentoUnitario: 0, precioUnitario: precioPactado }
+  }
+
+  const precioUnitario = baseCatalogPrice
 
   if (!config) {
     return { tipo: 'NINGUNO', descuentoUnitario: 0, precioUnitario }
@@ -164,7 +180,8 @@ function findNextTierHint(
   items: CartItem[],
   variantConfig: Map<number, UserVariantPricing>,
   tiers: MayoreoTier[],
-  totalUnits: number
+  totalUnits: number,
+  customerPrices?: Record<number, number> | null
 ): NextTierHint | null {
   const upcoming = [...tiers]
     .filter((tier) => tier.unidades_min > totalUnits)
@@ -172,10 +189,12 @@ function findNextTierHint(
 
   for (const tier of upcoming) {
     const someLineImproves = items.some((item) => {
+      // Si la línea ya tiene precio pactado de cliente, no mejora con mayoreo
+      if (customerPrices && customerPrices[item.variantId] !== undefined) return false
       const config = variantConfig.get(item.variantId)
       if (!config) return false
-      const current = resolveLine(item, config, findActiveTier(tiers, totalUnits))
-      if (current.tipo === 'INDIVIDUAL') return false
+      const current = resolveLine(item, config, findActiveTier(tiers, totalUnits), customerPrices)
+      if (current.tipo === 'INDIVIDUAL' || current.tipo === 'CLIENTE') return false
       const hypothetical = Math.min(tierDiscount(config, tier), current.precioUnitario)
       return hypothetical > current.descuentoUnitario
     })
