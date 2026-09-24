@@ -53,17 +53,17 @@ export default function PasskeyManager({ userId }: { userId: number }) {
               <h2 className="font-heading text-lg font-semibold">Tus accesos guardados</h2>
               {!passkeys.isError && passkeys.data && <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold" aria-label={`${passkeys.data.length} accesos registrados`}>{passkeys.data.length}</span>}
             </div>
-            <p className="text-sm text-muted-foreground">Agrega una nueva o revoca las que ya no uses.</p>
+            <p className="text-sm text-muted-foreground">Agrega o elimina accesos.</p>
           </div>
           {passkeys.data?.length !== 0 && <Button className="w-full sm:w-auto" disabled={!supported || busy} onClick={() => openDialog()}><Plus aria-hidden="true" />Agregar acceso</Button>}
         </div>
         <div className="p-4 sm:p-5">
           {passkeys.isPending && <p role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground"><Loader2 aria-hidden="true" className="size-4 animate-spin" />Cargando accesos…</p>}
-          {passkeys.isError && <div className="space-y-3"><PasskeyErrorAlert error={passkeys.error} /><Button variant="outline" disabled={passkeys.isFetching || busy} onClick={() => void passkeys.refetch()}>Volver a cargar</Button></div>}
+          {passkeys.isError && <div className="space-y-3"><PasskeyErrorAlert error={passkeys.error} /><Button variant="outline" disabled={passkeys.isFetching || busy} onClick={() => void passkeys.refetch()}>Reintentar</Button></div>}
           {!passkeys.isError && passkeys.data?.length === 0 && (
             <div className="flex flex-col items-center gap-4 py-6 text-center sm:py-10">
-              <span className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Fingerprint aria-hidden="true" className="size-8" /></span>
-              <div className="max-w-sm space-y-2"><h3 className="font-heading text-lg font-semibold">Agrega tu primer acceso</h3><p className="text-sm leading-relaxed text-muted-foreground">Después podrás elegir «Ingresar con mi dispositivo» en la pantalla de inicio de sesión.</p></div>
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Fingerprint aria-hidden="true" className="size-6" /></span>
+              <div className="max-w-sm space-y-2"><h3 className="font-heading text-lg font-semibold">Agrega tu primer acceso</h3><p className="text-sm leading-relaxed text-muted-foreground">Ingresa con huella, rostro o PIN.</p></div>
               <Button disabled={!supported || busy} onClick={() => openDialog()}><Plus aria-hidden="true" />Agregar acceso</Button>
               <p className="text-xs text-muted-foreground">Necesitarás la contraseña actual de tu cuenta.</p>
             </div>
@@ -72,7 +72,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
             <li key={passkey.id} className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><KeyRound aria-hidden="true" className="size-5" /></span>
-                <div className="min-w-0"><p className="break-words text-sm font-semibold">{passkey.nombre || `Acceso ${passkey.id}`}</p><p className="text-xs text-muted-foreground">Disponible para ingresar a tu cuenta</p></div>
+                <div className="min-w-0"><p className="break-words text-sm font-semibold">{passkey.nombre || `Acceso ${passkey.id}`}</p></div>
               </div>
               <Button type="button" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" disabled={busy} aria-label={`Eliminar acceso ${passkey.nombre || `acceso ${passkey.id}`}`} onClick={() => openDialog(passkey)}><Trash2 aria-hidden="true" />Eliminar acceso</Button>
             </li>
@@ -83,8 +83,8 @@ export default function PasskeyManager({ userId }: { userId: number }) {
         <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
         <p className="text-sm leading-relaxed">Si no puedes usar tu dispositivo, ingresa con tu contraseña.</p>
       </div>
-      <details className="group/access-info overflow-hidden rounded-2xl border border-primary/15 bg-card text-sm shadow-sm">
-        <summary className="flex cursor-pointer list-none items-center gap-3 bg-primary/5 p-4 transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none sm:p-5 [&::-webkit-details-marker]:hidden">
+      <details className="group/access-info overflow-hidden rounded-xl border border-border/70 bg-card text-sm shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center gap-3 bg-muted/20 p-4 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none sm:p-5 [&::-webkit-details-marker]:hidden">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Info aria-hidden="true" className="size-5" />
           </span>
@@ -109,7 +109,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
               description: 'Dejará de funcionar, pero no cerrará las sesiones abiertas. Si sigue en tu administrador de contraseñas, elimínalo también allí.',
             },
           ].map(({ icon: Icon, title, description }) => (
-            <div key={title} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div key={title} className="flex items-start gap-3 py-2">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background text-primary">
                 <Icon aria-hidden="true" className="size-4" />
               </span>
@@ -156,12 +156,12 @@ export default function PasskeyManager({ userId }: { userId: number }) {
           }
         }}>
           <PasskeyErrorAlert error={error} />
-          {busy && <p role="status" className="rounded-xl bg-primary/5 p-3 text-sm">{target ? 'Eliminando el acceso…' : 'Sigue las indicaciones de tu dispositivo. Al terminar, confirmaremos el registro aquí.'}</p>}
+          {busy && <p role="status" className="rounded-xl bg-primary/5 p-3 text-sm">{target ? 'Eliminando el acceso…' : 'Sigue las indicaciones de tu dispositivo.'}</p>}
           <fieldset disabled={busy} className="space-y-4">
             {target ? (
               <div className="space-y-1 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm">
                 <p className="break-words font-semibold">{target.nombre || `Acceso ${target.id}`}</p>
-                <p className="text-muted-foreground">Ya no podrás ingresar con esta credencial. Las sesiones abiertas seguirán activas. Puede seguir apareciendo en el administrador de contraseñas de tu dispositivo; allí puedes eliminar su copia.</p>
+                <p className="text-muted-foreground">Este acceso dejará de funcionar; las sesiones abiertas continuarán activas. Si aparece en tu administrador de contraseñas, elimina también esa copia.</p>
               </div>
             ) : (
               <Field>
@@ -189,7 +189,7 @@ export default function PasskeyManager({ userId }: { userId: number }) {
             <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
               <Button type="button" variant="outline" onClick={closeDialog}>Cancelar</Button>
               <Button type="submit" variant={target ? 'destructive' : 'default'} disabled={busy || (!target && !supported)}>
-                {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : target ? <Trash2 aria-hidden="true" /> : <Fingerprint aria-hidden="true" />}{busy ? 'Procesando…' : target ? 'Eliminar acceso' : 'Crear acceso'}
+                {busy ? <Loader2 aria-hidden="true" className="animate-spin" /> : target ? <Trash2 aria-hidden="true" /> : <Fingerprint aria-hidden="true" />}{busy ? 'Procesando…' : target ? 'Eliminar acceso' : 'Agregar acceso'}
               </Button>
 
             </div>

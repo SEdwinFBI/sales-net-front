@@ -8,7 +8,7 @@ import { useCreatePatternMutation } from '@/features/auth/hooks/useCreatePattern
 import { getPatternErrorMessage } from '@/features/auth/utils/pattern-error'
 import PatternInput from '@/features/auth/components/PatternInput'
 
-const steps = ['Contraseña', 'Crear patrón', 'Confirmar patrón', 'Guardar patrón']
+const steps = ['Contraseña', 'Crear', 'Confirmar', 'Guardar']
 
 export default function PatternSetupForm() {
   const [step, setStep] = useState(-1)
@@ -58,7 +58,7 @@ export default function PatternSetupForm() {
         }}>
           <div className="space-y-2">
             <h2 className="font-heading text-lg font-semibold">Ingresa tu contraseña actual</h2>
-            <p className="text-sm text-muted-foreground">Después podrás crear y confirmar tu patrón. La contraseña se comprobará al guardar.</p>
+            <p className="text-sm text-muted-foreground">La contraseña se comprobará al guardar.</p>
           </div>
           <Field>
             <FieldLabel htmlFor="pattern-current-password">Contraseña actual</FieldLabel>
@@ -91,7 +91,7 @@ export default function PatternSetupForm() {
         <form noValidate className="grid gap-4" onSubmit={(event) => {
           event.preventDefault()
           if (pattern.length < 6) {
-            setError(`Seleccionaste ${pattern.length} de los 6 puntos mínimos. Conecta puntos diferentes; usa «Limpiar patrón» si quieres volver a dibujarlo.`)
+            setError(`Selecciona al menos 6 puntos. Llevas ${pattern.length}.`)
             return
           }
           if (step === 0) {
@@ -117,7 +117,7 @@ export default function PatternSetupForm() {
           </div>
           {error && <p role="alert" className="whitespace-pre-line rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm leading-relaxed text-destructive">{error}</p>}
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
-            <Button type="button" variant="ghost" onClick={restart} >
+            <Button type="button" variant="outline" onClick={restart} >
               <RotateCcw aria-hidden="true" /> Empezar de nuevo
             </Button>
             <Button type="submit">
