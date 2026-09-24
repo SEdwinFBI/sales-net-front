@@ -23,8 +23,10 @@ import { useUpdateCliente } from '../hooks/useUpdateCliente'
 import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { DIAS_NOTIFICACION } from '../utils/dias-notificacion'
 
 const schema = z.object({
+  dias_notificacion: z.array(z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)])).max(7),
   permitir_credito: z.boolean(),
   nombre_completo: z
     .string()
@@ -51,6 +53,7 @@ type Props = {
 }
 
 const EMPTY_FORM: FormValues = {
+  dias_notificacion: [],
   permitir_credito: true,
   nombre_completo: '',
   direccion: '',
@@ -105,6 +108,7 @@ export default function ClienteDialog({
             telefono: cliente.telefono,
             balance: cliente.balance,
             activo: cliente.activo,
+            dias_notificacion: cliente.dias_notificacion ?? [],
           }
         : EMPTY_FORM,
     )
@@ -208,6 +212,28 @@ export default function ClienteDialog({
                 <FieldError errors={[errors.balance]} />
               </Field>
             )}
+
+            <Field>
+              <FieldLabel>Días de notificación</FieldLabel>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Días de notificación">
+                {DIAS_NOTIFICACION.map(({ value, label }) => {
+                  const dias = watch('dias_notificacion')
+                  const selected = dias.includes(value)
+                  return (
+                    <Button key={value} type="button" size="sm" disabled={isPending}
+                      variant={selected ? 'default' : 'outline'} aria-pressed={selected}
+                      onClick={() => setValue('dias_notificacion', selected
+                        ? dias.filter(dia => dia !== value)
+                        : [...dias, value].sort((a, b) => a - b),
+                      { shouldDirty: true, shouldValidate: true })}>
+                      {label}
+                    </Button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">Los avisos de este cliente solo se enviarán en días habilitados también en los ajustes globales. Sin días seleccionados, no se incluirá en los avisos de cobros.</p>
+              <FieldError errors={[errors.dias_notificacion]} />
+            </Field>
 
             <Field orientation="horizontal">
               <FieldLabel htmlFor="cliente-activo">

@@ -14,7 +14,8 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`),
+    mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`,
+      Number(venta.abonado) > 0 ? { anular_abonos: true } : undefined),
     onSuccess: async () => {
       await Promise.all([
         queryKeys.sales.all, queryKeys.adminVentas.all, queryKeys.customers.all,
@@ -36,8 +37,7 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
   }
 
   return <>
-    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={Number(venta.abonado) > 0}
-      title={Number(venta.abonado) > 0 ? 'Anula primero los abonos de esta venta' : undefined}
+    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={isPending}
       onClick={() => setOpen(true)}>
       <Undo2 aria-hidden="true" />
       Anular venta
@@ -47,10 +47,11 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
         <DialogHeader>
           <DialogTitle>Anular venta #{venta.id}</DialogTitle>
           <DialogDescription>
+            {Number(venta.abonado) > 0 && `El importe abonado a esta venta quedará en cero: se compensarán únicamente los ${formatCurrency(Number(venta.abonado))} aplicados a ella. Los pagos aplicados a otras ventas se conservarán. `}
             Se registrará una venta compensatoria de {formatCurrency(-Number(venta.total_neto))}.
             {venta.detalles.length > 0 && ' Se devolverán los productos a la sucursal de origen.'}
-            {' '}Si es a crédito, se descontará
-            su importe del saldo del cliente. La venta original permanecerá en el historial.
+            {' '}Si es a crédito, se eliminará su saldo pendiente de la deuda del cliente.
+            La venta y los registros de pago permanecerán en el historial.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

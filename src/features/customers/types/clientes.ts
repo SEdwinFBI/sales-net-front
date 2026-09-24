@@ -1,6 +1,8 @@
 import type { Venta } from "@/features/sales/types/sales"
+export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export interface Cliente {
+  dias_notificacion?: DiaNotificacion[]
   id: number
   permitir_credito: boolean
   nombre_completo: string
@@ -18,6 +20,7 @@ export interface ApiResponse<T> {
 }
 
 export interface CreateClientePayload {
+  dias_notificacion?: DiaNotificacion[]
   permitir_credito?: boolean
   nombre_completo: string
   direccion: string
@@ -27,6 +30,7 @@ export interface CreateClientePayload {
 }
 
 export interface UpdateClientePayload {
+  dias_notificacion?: DiaNotificacion[]
   permitir_credito?: boolean
   nombre_completo?: string
   direccion?: string

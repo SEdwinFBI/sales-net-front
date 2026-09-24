@@ -19,6 +19,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { formatCurrency, getVentaTotal } from '../utils/venta-total'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { amountFilter, dateFilter, idFilter, textFilter } from '../utils/table-filters'
 import {
   Table,
   TableBody,
@@ -46,27 +47,32 @@ export default function ComprasTable({ ventas }: Props) {
     },
     {
       accessorKey: 'id',
+      filterFn: idFilter,
       header: 'ID',
       cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span>,
     },
     {
       accessorKey: 'fecha',
+      filterFn: dateFilter,
       header: 'Fecha',
       cell: ({ row }) => formatDisplayDateTime(row.original.fecha),
     },
     {
       id: 'total',
+      filterFn: amountFilter,
       accessorFn: (venta) => getVentaTotal(venta),
       header: 'Total',
       cell: ({ row }) => <span className="font-semibold">{formatCurrency(getVentaTotal(row.original))}</span>,
     },
     {
       accessorKey: 'abonado',
+      filterFn: amountFilter,
       header: 'Abonado',
       cell: ({ row }) => <span className="text-warning">{formatCurrency(row.original.abonado)}</span>,
     },
     {
       accessorKey: 'saldo',
+      filterFn: amountFilter,
       header: 'Saldo',
       cell: ({ row }) => <span className="text-destructive">{formatCurrency(row.original.saldo)}</span>,
     },
@@ -97,6 +103,7 @@ export default function ComprasTable({ ventas }: Props) {
 
   const table = useReactTable({
     data: ventas,
+    defaultColumn: { filterFn: textFilter },
     columns,
     state: { sorting, columnFilters },
     onSortingChange: setSorting,
