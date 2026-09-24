@@ -19,7 +19,6 @@ function cleanReporteVentasParams(filters?: ReporteVentasFilters): Record<string
 
 function cleanReporteDeudoresParams(filters?: ReporteDeudoresFilters): Record<string, unknown> {
   const params: Record<string, unknown> = {}
-  setParam(params, 'dia_notificacion', filters?.dia_notificacion)
   setParam(params, 'nombre', filters?.nombre)
   setParam(params, 'lugar', filters?.lugar)
   // El backend de este endpoint filtra por 'search', no por 'nombre'; se
@@ -33,6 +32,7 @@ function cleanReporteCobrosParams(filters?: ReporteCobrosFilters): Record<string
   setParam(params, 'nombre', filters?.nombre)
   setParam(params, 'fecha', filters?.fecha)
   setParam(params, 'id_usuario', filters?.id_usuario)
+  setParam(params, 'id_sucursal', filters?.id_sucursal)
   return params
 }
 

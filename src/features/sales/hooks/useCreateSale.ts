@@ -23,6 +23,7 @@ export const useCreateSale = () => {
       const payloadBuild = {
         ...(user.sucursalActual ? { id_sucursal: user.sucursalActual.id } : {}),
         id_cliente: Number(payload.customerId) || 0,
+        aplicar_precios_cliente: Boolean(payload.customerPricingEnabled ?? true),
         id_forma_pago: PAGO_MAP[payload.paymentMethod] || 1,
         estado: payload.paymentMethod === 'credito' ? 'PENDIENTE' : 'PAGADA',
         idempotencia_key: crypto.randomUUID(),

@@ -28,6 +28,7 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 import React from 'react'
+import RevertirVentaButton from './RevertirVentaButton'
 import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
@@ -44,6 +45,10 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
   const [fotoAbierta, setFotoAbierta] = useState<Venta | null>(null)
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
+    {
+      id: 'revertir', header: 'Acciones', enableColumnFilter: false, enableSorting: false,
+      cell: ({ row }) => <RevertirVentaButton venta={row.original} />,
+    },
     {
       id: 'expand',
       header: '',
@@ -74,8 +79,8 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
     {
       accessorKey: 'total_descuento',
       header: 'Desc.',
-      cell: ({ row }) => row.original.total_descuento > 0
-        ? <span className="text-successful">-{formatCurrency(Number(row.original.total_descuento))}</span>
+      cell: ({ row }) => Number(row.original.total_descuento) !== 0
+        ? <span className="text-successful">{formatCurrency(-Number(row.original.total_descuento))}</span>
         : <span className="text-muted-foreground">—</span>,
     },
     { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-warning">{formatCurrency(Number(row.original.abonado))}</span> : <span className="text-muted-foreground">—</span> },
@@ -189,12 +194,12 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           <ArrowUpDown className="size-3 opacity-40" />
                         </button>
-                        <Input
+                        {header.column.getCanFilter() && <Input
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
                           placeholder="Filtrar..."
                           className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-xs placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
-                        />
+                        />}
                       </div>
                     )}
                   </TableHead>

@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-table'
 import { ArrowUpDown, Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
+import RevertirVentaButton from '@/features/sales/components/RevertirVentaButton'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,13 @@ export default function ComprasTable({ ventas }: Props) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
+    {
+      id: 'anular',
+      header: 'Acciones',
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: ({ row }) => <RevertirVentaButton venta={row.original} />,
+    },
     {
       accessorKey: 'id',
       header: 'ID',
@@ -117,20 +125,22 @@ export default function ComprasTable({ ventas }: Props) {
                   {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
                       <div className="space-y-0.5">
-                        <button
+                        {header.column.getCanSort() ? <button
                           type="button"
                           className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
                           onClick={() => header.column.toggleSorting()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           <ArrowUpDown className="size-3 opacity-40" />
-                        </button>
-                        <Input
+                        </button> : <span className="text-[11px] font-semibold uppercase tracking-wider">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>}
+                        {header.column.getCanFilter() && <Input
                           value={(header.column.getFilterValue() ?? '') as string}
                           onChange={(event) => header.column.setFilterValue(event.target.value || undefined)}
                           placeholder="Filtrar..."
                           className="h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0"
-                        />
+                        />}
                       </div>
                     </TableHead>
                   ))}

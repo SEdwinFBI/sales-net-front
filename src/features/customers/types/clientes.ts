@@ -1,14 +1,12 @@
 import type { Venta } from "@/features/sales/types/sales"
 
-export type DiaNotificacion = 1 | 2 | 3 | 4 | 5 | 6 | 7
-
 export interface Cliente {
   id: number
+  permitir_credito: boolean
   nombre_completo: string
   direccion: string
   telefono: string
   balance: number
-  dias_notificacion: DiaNotificacion[]
   fecha_creacion: string
   activo: boolean
 }
@@ -16,28 +14,33 @@ export interface Cliente {
 export interface ApiResponse<T> {
   status: 'success' | 'error'
   data: T
+  message?: string
 }
 
 export interface CreateClientePayload {
+  permitir_credito?: boolean
   nombre_completo: string
   direccion: string
   telefono: string
   balance: number
-  dias_notificacion: DiaNotificacion[]
   activo?: boolean
 }
 
 export interface UpdateClientePayload {
+  permitir_credito?: boolean
   nombre_completo?: string
   direccion?: string
   telefono?: string
   balance?: number
-  dias_notificacion?: DiaNotificacion[]
   activo?: boolean
 }
 
 export interface Abono {
   id: number
+  id_movimiento?: number | null
+  id_abono_original?: number | null
+  revertido?: boolean
+  monto_pago?: number
   monto: number
   fecha_abono: string
   id_venta: number
@@ -104,7 +107,7 @@ export interface ComprasFilters {
   fecha_hasta?: string
 }
 
-export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE'
+export type TipoMovimiento = 'VENTA_CREDITO' | 'ABONO' | 'CANCELACION' | 'SALDO_INICIAL' | 'AJUSTE' | 'REVERSION_VENTA' | 'REVERSION_ABONO'
 
 export interface MovimientoCliente {
   id: number
