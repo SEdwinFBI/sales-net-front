@@ -112,18 +112,6 @@ function getInitials(name: string): string {
   return name.slice(0, 2).toUpperCase() || 'NT'
 }
 
-const AVATAR_GRADIENTS = [
-  'from-blue-600 to-indigo-600',
-  'from-emerald-600 to-teal-600',
-  'from-violet-600 to-purple-600',
-  'from-amber-600 to-orange-600',
-  'from-rose-600 to-pink-600',
-]
-
-function getAvatarGradient(id: number): string {
-  return AVATAR_GRADIENTS[id % AVATAR_GRADIENTS.length]
-}
-
 export default function NotificacionesPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -266,7 +254,7 @@ export default function NotificacionesPage() {
                   placeholder="Buscar nombre o correo..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-8 pl-8 pr-7 text-xs"
+                  className="h-9 pl-8 pr-7 text-sm"
                 />
                 {search && (
                   <button
@@ -284,7 +272,7 @@ export default function NotificacionesPage() {
                 <Button
                   size="sm"
                   onClick={() => setDialogOpen(true)}
-                  className="h-8 gap-1 px-3 text-xs"
+                  className="h-9 gap-1.5 px-3 text-sm"
                 >
                   <MailPlus className="size-3.5" />
                   Agregar destinatario
@@ -309,9 +297,9 @@ export default function NotificacionesPage() {
                 {search ? 'Sin coincidencias para la búsqueda' : 'No hay destinatarios registrados'}
               </p>
               {!search && (
-                <Button size="sm" onClick={() => setDialogOpen(true)} className="mt-1 h-7 gap-1 text-xs">
+                <Button size="sm" onClick={() => setDialogOpen(true)} className="mt-1 h-9 gap-1.5 text-sm">
                   <MailPlus className="size-3.5" />
-                  Registrar primero
+                  Agregar destinatario
                 </Button>
               )}
             </div>
@@ -322,7 +310,6 @@ export default function NotificacionesPage() {
             {destinatarios.map((destinatario) => {
               const activeCount = PREFERENCIAS_CONFIG.filter((p) => destinatario[p.key]).length
               const initials = getInitials(destinatario.nombre_persona_email)
-              const avatarGradient = getAvatarGradient(destinatario.id)
 
               return (
                 <div
@@ -334,17 +321,17 @@ export default function NotificacionesPage() {
                     <div className="flex items-center justify-between gap-3 xl:min-w-[240px] xl:max-w-xs">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className={`flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${avatarGradient} text-xs font-bold text-white shadow-2xs`}
+                          className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary"
                         >
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                             <h3 className="truncate text-sm font-semibold text-card-foreground">
                               {destinatario.nombre_persona_email}
                             </h3>
                             <span className="text-xs text-muted-foreground">
-                              ({activeCount}/4)
+                              {activeCount} {activeCount === 1 ? 'aviso activo' : 'avisos activos'}
                             </span>
                           </div>
                           <p className="truncate text-sm text-muted-foreground">
@@ -424,20 +411,20 @@ export default function NotificacionesPage() {
 
           {/* Sticky Save Bar cuando hay cambios pendientes */}
           {hasChanges && (
-            <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/40 bg-card/95 px-3.5 py-2 shadow-lg backdrop-blur-md">
+            <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card px-3.5 py-3 shadow-sm">
               <div className="flex items-center gap-2">
-                <span className="flex size-2 rounded-full bg-primary animate-ping" />
+                <span className="flex size-2 rounded-full bg-primary" />
                 <p className="text-xs font-medium text-card-foreground">
                   Preferencias de destinatarios sin guardar.
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
-                <Button variant="ghost" size="sm" onClick={resetChanges} disabled={isUpdating} className="h-7 px-2 text-xs">
+                <Button variant="outline" size="sm" onClick={resetChanges} disabled={isUpdating} className="h-9 px-3 text-sm">
                   Descartar
                 </Button>
-                <Button size="sm" onClick={save} disabled={isUpdating} className="h-7 gap-1 px-3 text-xs">
+                <Button size="sm" onClick={save} disabled={isUpdating} className="h-9 gap-1.5 px-3 text-sm">
                   {isUpdating ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
-                  Guardar
+                  Guardar preferencias
                 </Button>
               </div>
             </div>
@@ -489,9 +476,9 @@ export default function NotificacionesPage() {
             </div>
             <DialogTitle>Eliminar destinatario</DialogTitle>
             <DialogDescription className="text-xs leading-relaxed">
-              ¿Estás seguro de que deseas eliminar a{' '}
+              ¿Eliminar a{' '}
               <span className="font-semibold text-foreground">{destinatarioAEliminar?.nombre_persona_email}</span> (
-              {destinatarioAEliminar?.email})? Esta persona dejará de recibir cualquier notificación por correo de forma inmediata.
+              {destinatarioAEliminar?.email})? Dejará de recibir avisos por correo.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
@@ -513,9 +500,9 @@ export default function NotificacionesPage() {
             <div className="mb-1 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <MailPlus className="size-5" />
             </div>
-            <DialogTitle>Nuevo destinatario de avisos</DialogTitle>
+            <DialogTitle>Agregar destinatario</DialogTitle>
             <DialogDescription className="text-xs">
-              Ingresa los datos de contacto y selecciona qué alertas se le enviarán por correo.
+              Selecciona los avisos que recibirá por correo.
             </DialogDescription>
           </DialogHeader>
 
@@ -536,7 +523,7 @@ export default function NotificacionesPage() {
               </label>
 
               <label className="block space-y-1.5 text-xs font-medium text-foreground">
-                <span>Correo electrónico de recepción</span>
+                <span>Correo electrónico</span>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -578,13 +565,13 @@ export default function NotificacionesPage() {
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-xs font-semibold leading-tight text-foreground">{title}</p>
-                          <p className="line-clamp-1 text-[10px] text-muted-foreground">{description}</p>
+                          <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
                         </div>
                       </div>
                       <Switch
                         checked={isChecked}
                         onCheckedChange={(checked) => setForm({ ...form, [key]: checked })}
-                        className="scale-90"
+                        className="shrink-0"
                       />
                     </label>
                   )

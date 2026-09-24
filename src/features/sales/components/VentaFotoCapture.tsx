@@ -80,7 +80,7 @@ const VentaFotoCapture = ({ foto, onChange }: VentaFotoCaptureProps) => {
       </div>
 
       {peso !== null && foto && (
-        <p className="mt-1.5 text-xs text-muted-foreground">Peso optimizado: {formatearPeso(peso)}</p>
+        <p className="mt-1.5 text-xs text-muted-foreground">Tamaño: {formatearPeso(peso)}</p>
       )}
 
       {mensaje && <p className="mt-1.5 text-xs text-warning">{mensaje}</p>}

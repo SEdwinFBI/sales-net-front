@@ -142,7 +142,6 @@ const VariantSelectionDrawer: FC<Props> = ({ item, variantSelected, onVariantCha
                     <ShoppingCart className="w-5! h-10!" size={30} strokeWidth={3} />
                     <p className="font-bold">Agregar al carrito</p>
                 </Button>
-                <p className="text-xs text-muted-foreground text-center mt-2">Revisa la variante y cantidad antes de confirmar</p>
             </DrawerFooter>
         </DrawerContent>
     )

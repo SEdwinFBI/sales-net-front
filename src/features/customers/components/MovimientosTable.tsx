@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import type { MovimientoCliente, TipoMovimiento } from '../types/clientes'
 import { formatCurrency } from '../utils/venta-total'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { textFilter } from '../utils/table-filters'
 
 type Props = {
   movimientos: MovimientoCliente[]
@@ -42,13 +43,17 @@ const getMovimientoSearchText = (movimiento: MovimientoCliente) => [
   movimiento.tipo_display,
   movimiento.id_venta,
   movimiento.fecha,
+  formatDisplayDateTime(movimiento.fecha),
   movimiento.descripcion,
   movimiento.usuario?.full_name,
   movimiento.usuario?.username,
   movimiento.monto,
   movimiento.saldo_anterior,
   movimiento.saldo_resultante,
-].filter(Boolean).join(' ')
+  formatCurrency(movimiento.monto),
+  formatCurrency(movimiento.saldo_anterior),
+  formatCurrency(movimiento.saldo_resultante),
+].filter((value) => value != null).join(' ')
 
 export default function MovimientosTable({ movimientos }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'fecha', desc: true }])
@@ -62,6 +67,7 @@ export default function MovimientosTable({ movimientos }: Props) {
     },
     {
       id: 'busqueda',
+      filterFn: textFilter,
       accessorFn: getMovimientoSearchText,
       header: 'Busqueda',
       enableSorting: false,
@@ -89,7 +95,7 @@ export default function MovimientosTable({ movimientos }: Props) {
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold">Movimientos generales</h3>
-        <p className="text-sm text-muted-foreground">Flujo del saldo del cliente: cada movimiento muestra cuánto afectó la deuda y el saldo resultante.</p>
+        <p className="text-sm text-muted-foreground">Historial de cambios en el saldo.</p>
       </div>
 
       {movimientos.length === 0 ? (

@@ -8,7 +8,7 @@ import { useCreatePatternMutation } from '@/features/auth/hooks/useCreatePattern
 import { getPatternErrorMessage } from '@/features/auth/utils/pattern-error'
 import PatternInput from '@/features/auth/components/PatternInput'
 
-const steps = ['Contraseña', 'Crear patrón', 'Confirmar patrón', 'Guardar patrón']
+const steps = ['Contraseña', 'Crear', 'Confirmar', 'Guardar']
 
 export default function PatternSetupForm() {
   const [step, setStep] = useState(-1)
@@ -49,7 +49,7 @@ export default function PatternSetupForm() {
         <form noValidate className="grid gap-4" onSubmit={(event) => {
           event.preventDefault()
           if (!password.trim()) {
-            setError('Escribe la contraseña que utilizas para iniciar sesión. Puedes usar el ícono del ojo para revisar lo que escribiste.')
+            setError('Ingresa tu contraseña actual.')
             return
           }
           setShowPassword(false)
@@ -58,7 +58,7 @@ export default function PatternSetupForm() {
         }}>
           <div className="space-y-2">
             <h2 className="font-heading text-lg font-semibold">Ingresa tu contraseña actual</h2>
-            <p className="text-sm text-muted-foreground">Después podrás crear y confirmar tu patrón. La contraseña se comprobará al guardar.</p>
+            <p className="text-sm text-muted-foreground">La contraseña se comprobará al guardar.</p>
           </div>
           <Field>
             <FieldLabel htmlFor="pattern-current-password">Contraseña actual</FieldLabel>
@@ -91,7 +91,7 @@ export default function PatternSetupForm() {
         <form noValidate className="grid gap-4" onSubmit={(event) => {
           event.preventDefault()
           if (pattern.length < 6) {
-            setError(`Seleccionaste ${pattern.length} de los 6 puntos mínimos. Conecta puntos diferentes; usa «Limpiar patrón» si quieres volver a dibujarlo.`)
+            setError(`Selecciona al menos 6 puntos. Llevas ${pattern.length}.`)
             return
           }
           if (step === 0) {
@@ -99,7 +99,7 @@ export default function PatternSetupForm() {
             setPattern([])
             setStep(1)
           } else if (pattern.join(',') !== original.join(',')) {
-            setError('La confirmación no coincide con el primer patrón. Repite los mismos puntos, con el mismo inicio y en el mismo orden. Si no recuerdas el patrón, selecciona «Empezar de nuevo».')
+            setError('Los patrones no coinciden. Repítelo en el mismo orden.')
             setPattern([])
           } else {
             setStep(2)
@@ -117,7 +117,7 @@ export default function PatternSetupForm() {
           </div>
           {error && <p role="alert" className="whitespace-pre-line rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm leading-relaxed text-destructive">{error}</p>}
           <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-3">
-            <Button type="button" variant="ghost" onClick={restart} >
+            <Button type="button" variant="outline" onClick={restart} >
               <RotateCcw aria-hidden="true" /> Empezar de nuevo
             </Button>
             <Button type="submit">
@@ -130,7 +130,7 @@ export default function PatternSetupForm() {
           event.preventDefault()
           if (isPending || saved) return
           if (!password.trim()) {
-            setError('Escribe la contraseña que utilizas para iniciar sesión. Puedes usar el ícono del ojo para revisar lo que escribiste.')
+            setError('Ingresa tu contraseña actual.')
             return
           }
           setError('')
@@ -153,7 +153,7 @@ export default function PatternSetupForm() {
             <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ShieldCheck aria-hidden="true" className="size-7" /></span>
             <h2 className="font-heading text-lg font-semibold">{saved ? 'Patrón guardado' : 'Patrón confirmado'}</h2>
             <p className="max-w-sm text-sm text-muted-foreground">
-              {saved ? 'Tu patrón se guardó correctamente en tu cuenta.' : 'Tu patrón está listo. Confirma para guardarlo en tu cuenta.'}
+              {saved ? 'Ya puedes ingresar con tu patrón.' : 'Guarda el patrón para activarlo.'}
             </p>
           </div>
 

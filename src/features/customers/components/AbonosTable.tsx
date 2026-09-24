@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/table'
 import type { Abono } from '../types/clientes'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { amountFilter, dateFilter, idFilter, textFilter } from '../utils/table-filters'
 import RevertirAbonoButton from './RevertirAbonoButton'
 
 type Props = {
@@ -42,38 +43,44 @@ export default function AbonosTable({ abonos }: Props) {
     },
     {
       accessorKey: 'id',
+      filterFn: idFilter,
       header: 'ID',
       cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span>,
     },
     {
       accessorKey: 'monto',
+      filterFn: amountFilter,
       header: 'Monto',
       cell: ({ row }) => <span className="font-semibold text-primary">{formatCurrency(row.original.monto)}</span>,
     },
     {
       accessorKey: 'fecha_abono',
+      filterFn: dateFilter,
       header: 'Fecha',
       cell: ({ row }) => formatDisplayDateTime(row.original.fecha_abono),
     },
     {
       accessorKey: 'id_venta',
+      filterFn: idFilter,
       header: 'Venta ID',
       cell: ({ row }) => <span className="font-mono text-xs">{row.original.id_venta}</span>,
     },
     {
       accessorKey: 'venta_total',
+      filterFn: amountFilter,
       header: 'Total venta',
       cell: ({ row }) => formatCurrency(row.original.venta_total),
     },
     {
       accessorKey: 'saldo_restante',
+      filterFn: amountFilter,
       header: 'Saldo restante',
       cell: ({ row }) => <span className="text-destructive">{formatCurrency(row.original.saldo_restante)}</span>,
     },
     { accessorKey: 'venta_estado', header: 'Estado venta' },
     {
       id: 'usuario',
-      accessorFn: (abono) => abono.usuario?.full_name || abono.usuario?.username || '',
+      accessorFn: (abono) => [abono.usuario?.full_name, abono.usuario?.username ? `@${abono.usuario.username}` : ''].filter(Boolean).join(' '),
       header: 'Usuario',
       cell: ({ row }) => row.original.usuario
         ? (
@@ -95,6 +102,7 @@ export default function AbonosTable({ abonos }: Props) {
 
   const table = useReactTable({
     data: abonos,
+    defaultColumn: { filterFn: textFilter },
     columns,
     state: { sorting, columnFilters },
     onSortingChange: setSorting,

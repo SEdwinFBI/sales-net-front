@@ -108,7 +108,7 @@ export default function ClienteDetailPage() {
             </div>
           )}
 
-          {sinCredito && <p className="text-sm text-muted-foreground">Compras al contado con precios personalizados. Sin crédito, abonos ni ajustes de saldo.</p>}
+          {sinCredito && <p className="text-sm text-muted-foreground">Este cliente compra únicamente al contado.</p>}
           <Tabs key={String(cliente.permitir_credito)} defaultValue={sinCredito ? 'precios' : 'movimientos'}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">

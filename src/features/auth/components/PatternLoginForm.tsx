@@ -61,7 +61,7 @@ export default function PatternLoginForm({ onBack, onSubmit }: PatternLoginFormP
             onChange={(event) => { setUsername(event.target.value); setPattern([]); setError('') }} />
           <InputGroupAddon><UserRound /></InputGroupAddon>
         </InputGroup>
-        <FieldDescription id="pattern-username-help" className="text-sm">Usa el nombre de usuario de tu cuenta.</FieldDescription>
+        <FieldDescription id="pattern-username-help" className="text-sm">El mismo que usas con tu contraseña.</FieldDescription>
       </Field>
       {blocked ? (
         <section aria-labelledby="pattern-lock-title" className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary-complement/5 p-5 text-center sm:p-6">

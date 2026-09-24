@@ -13,7 +13,7 @@ const cliente: Cliente = {
   telefono: '12345678', balance: 150, activo: true, fecha_creacion: '2026-09-21',
 }
 
-describe('clientes sin programación individual', () => {
+describe('clientes con programación individual', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it.each([
@@ -34,8 +34,24 @@ describe('clientes sin programación individual', () => {
     expect(html).toContain('Cliente de prueba')
     expect(html).toContain('Q150.00')
     expect(html).toContain('Activo')
-    expect(html).not.toContain('Días de notificación')
+    expect(html).toContain('Días de notificación')
+    expect(html).toContain('Sin asignar')
     expect(result).not.toHaveProperty('dias_notificacion')
+  })
+
+  it('guarda los días individuales al crear y editar sin modificar otros campos', async () => {
+    const payload: CreateClientePayload = {
+      nombre_completo: cliente.nombre_completo, direccion: cliente.direccion,
+      telefono: cliente.telefono, balance: cliente.balance, dias_notificacion: [1, 3],
+    }
+    vi.mocked(api.post).mockResolvedValue({ data: { status: 'success', data: { ...cliente, dias_notificacion: [1, 3] } } })
+    vi.mocked(api.put).mockResolvedValue({ data: { status: 'success', data: { ...cliente, dias_notificacion: [5] } } })
+    await createCliente(payload)
+    const result = await updateCliente(cliente.id, { dias_notificacion: [5] })
+    expect(api.post).toHaveBeenCalledWith('/admin/clientes/', payload)
+    expect(api.put).toHaveBeenCalledWith('/admin/clientes/12/', { dias_notificacion: [5] })
+    expect(renderToStaticMarkup(<ClienteInfo cliente={result.data} />)).toContain('Viernes')
+    expect(result.data.balance).toBe(cliente.balance)
   })
 
   it('crea y edita conservando saldo y estado, sin enviar días individuales', async () => {

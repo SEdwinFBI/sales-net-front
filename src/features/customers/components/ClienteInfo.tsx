@@ -5,6 +5,7 @@ import type { Cliente } from '../types/clientes'
 import { initials } from '@/helpers/string'
 import { formatDisplayDate } from '@/lib/dates'
 import CreditoClienteBadge from './CreditoClienteBadge'
+import { mostrarDias } from '../utils/dias-notificacion'
 
 type Props = {
   cliente: Cliente
@@ -58,6 +59,9 @@ export default function ClienteInfo({ cliente }: Props) {
               </span>
             </div>
 
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Días de notificación: {mostrarDias(cliente.dias_notificacion)}
+            </p>
             <p className="mt-1.5 text-xs text-muted-foreground">
               Cliente desde {formatDisplayDate(cliente.fecha_creacion)}
             </p>
