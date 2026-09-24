@@ -43,7 +43,7 @@ export default function ComprasTable({ ventas }: Props) {
       header: 'Acciones',
       enableColumnFilter: false,
       enableSorting: false,
-      cell: ({ row }) => <RevertirVentaButton venta={row.original} incluirAbonos />,
+      cell: ({ row }) => <RevertirVentaButton venta={row.original} />,
     },
     {
       accessorKey: 'id',
