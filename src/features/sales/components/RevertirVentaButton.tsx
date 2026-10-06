@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuthStore } from '@/features/core/store/auth-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Undo2 } from 'lucide-react'
@@ -12,6 +13,7 @@ import type { Venta } from '../types/sales'
 
 export default function RevertirVentaButton({ venta }: { venta: Venta }) {
   const [open, setOpen] = useState(false)
+  const user = useAuthStore((state) => state.user)
   const queryClient = useQueryClient()
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`,
@@ -24,6 +26,7 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
       ].map((queryKey) => queryClient.invalidateQueries({ queryKey })))
     },
   })
+  if (user?.role !== 'admin' && user?.puede_anular === false) return null
   if (venta.estado !== 'PENDIENTE' && venta.estado !== 'PAGADA') return null
 
   const confirmar = async () => {

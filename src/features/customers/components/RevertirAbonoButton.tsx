@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuthStore } from '@/features/core/store/auth-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Undo2 } from 'lucide-react'
@@ -12,6 +13,7 @@ import type { Abono } from '../types/clientes'
 
 export default function RevertirAbonoButton({ abono }: { abono: Abono }) {
   const [open, setOpen] = useState(false)
+  const user = useAuthStore((state) => state.user)
   const queryClient = useQueryClient()
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => api.post(`/abonos/${abono.id}/revertir`),
@@ -19,6 +21,7 @@ export default function RevertirAbonoButton({ abono }: { abono: Abono }) {
       queryKeys.customers.all, queryKeys.sales.all, queryKeys.adminVentas.all, queryKeys.reporting.all,
     ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))),
   })
+  if (user?.role !== 'admin' && user?.puede_anular === false) return null
   if (Number(abono.monto) <= 0) return <span>Reversión de #{abono.id_abono_original}</span>
   if (abono.revertido) return <span>Revertido</span>
 

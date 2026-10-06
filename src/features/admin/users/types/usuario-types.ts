@@ -7,6 +7,7 @@ export type Usuario = {
   fullName: string
   role: string | null
   is_active: boolean
+  puede_anular: boolean
   evidencia_fotografica: boolean
   created_at: string
   hora_entrada: string | null
@@ -23,6 +24,7 @@ export type CreateUsuarioPayload = {
   role?: string
   hora_entrada?: string
   hora_salida?: string
+  puede_anular?: boolean
   sucursales?: number[]
 }
 
@@ -37,5 +39,6 @@ export type UpdateUsuarioPayload = {
   role?: string
   hora_entrada?: string
   hora_salida?: string
+  puede_anular?: boolean
   sucursales?: number[]
 }
