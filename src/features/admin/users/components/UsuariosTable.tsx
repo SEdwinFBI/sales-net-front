@@ -88,6 +88,28 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
     </label>
   )
 
+  const anulacionesCheckbox = (usuario: Usuario) => (
+    <label className="inline-flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        className="size-4 accent-primary"
+        checked={usuario.role === 'admin' || (usuario.puede_anular ?? true)}
+        disabled={isUpdating || usuario.role === 'admin'}
+        aria-label={`Permitir anular ventas y abonos de ${usuario.fullName || usuario.username}`}
+        onChange={async (event) => {
+          const enabled = event.target.checked
+          try {
+            await updateUsuario({ id: usuario.id, puede_anular: enabled })
+            toast.success(`Permiso de anulación ${enabled ? 'activado' : 'desactivado'}`)
+          } catch (error) {
+            toast.error(getApiErrorMessage(error, 'No se pudo actualizar el permiso de anulación'))
+          }
+        }}
+      />
+      <span className="md:hidden">Anular ventas y abonos</span>
+    </label>
+  )
+
   const columns: ColumnDef<Usuario>[] = [
     {
       id: 'presence',
@@ -134,6 +156,11 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
       id: 'evidencia_fotografica',
       header: 'Evidencia fotográfica',
       cell: ({ row }) => evidenceCheckbox(row.original),
+    },
+    {
+      id: 'puede_anular',
+      header: 'Anular ventas y abonos',
+      cell: ({ row }) => anulacionesCheckbox(row.original),
     },
     {
       id: 'actions',
@@ -270,6 +297,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
                   </div>
 
                   <div className="mt-4">{evidenceCheckbox(usuario)}</div>
+                  <div className="mt-2">{anulacionesCheckbox(usuario)}</div>
                   <div className="mt-4 flex justify-end gap-2">
                     <Button
                       size="icon-sm"
