@@ -16,6 +16,7 @@ export type User = {
   id: number,
   role: AppRole,
   permissions: AppRole[],
+  puede_anular?: boolean,
   username: string,
   sucursalActual: Sucursal | null,
 }
