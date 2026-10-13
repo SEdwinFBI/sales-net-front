@@ -11,8 +11,10 @@ import {
   type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, Receipt } from 'lucide-react'
+import { ArrowUpDown, Eye, Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
+import { Button } from '@/components/ui/button'
+import CompraDetalleDialog from './CompraDetalleDialog'
 import RevertirVentaButton from '@/features/sales/components/RevertirVentaButton'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -36,6 +38,7 @@ type Props = {
 export default function ComprasTable({ ventas }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [ventaDetalle, setVentaDetalle] = useState<Venta | null>(null)
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
     {
@@ -98,6 +101,24 @@ export default function ComprasTable({ ventas }: Props) {
       accessorKey: 'observacion',
       header: 'Observación',
       cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      id: 'ver',
+      header: 'Detalle',
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          aria-label={`Ver detalle de la compra ${row.original.id}`}
+          title="Ver detalle de la compra"
+          onClick={() => setVentaDetalle(row.original)}
+        >
+          <Eye className="size-3.5" />
+        </Button>
+      ),
     },
   ], [])
 
@@ -184,6 +205,8 @@ export default function ComprasTable({ ventas }: Props) {
       </div>
 
       <TablePagination table={table} />
+
+      <CompraDetalleDialog venta={ventaDetalle} onClose={() => setVentaDetalle(null)} />
     </>
   )
 }
