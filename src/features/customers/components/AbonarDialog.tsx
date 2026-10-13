@@ -1,4 +1,4 @@
-import { useForm, type Resolver } from 'react-hook-form'
+import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { formatCurrency } from '../utils/venta-total'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
 import VentaSelect from './VentaSelect'
@@ -31,15 +31,17 @@ type FormValues = z.infer<typeof schema>
 type Props = {
   open: boolean
   ventas: Venta[]
+  balance: number
   idCliente: number
   onClose: () => void
 }
 
-export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props) {
+export default function AbonarDialog({ open, ventas, balance, idCliente, onClose }: Props) {
   const { mutateAsync: abonar, isPending } = useAbonarVenta()
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     setValue,
@@ -74,8 +76,14 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Registrar abono</DialogTitle>
+        <DialogHeader className="flex-row items-center justify-between gap-4 pr-8">
+          <DialogTitle className="min-w-0 leading-snug">Registrar abono</DialogTitle>
+          <div className="shrink-0 text-right">
+            <p className="text-xs text-muted-foreground">Balance</p>
+            <p className="text-base font-bold tabular-nums text-primary">
+              {formatCurrency(balance)}
+            </p>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -113,7 +121,13 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
 
           <Field>
             <FieldLabel>Monto a abonar</FieldLabel>
-            <Input {...register('monto')} type="number" step="0.01" placeholder="0.00" />
+            <Controller
+              name="monto"
+              control={control}
+              render={({ field: { onChange, ...field } }) => (
+                <MoneyInput {...field} onValueChange={onChange} placeholder="0.00" />
+              )}
+            />
             <FieldError errors={[errors.monto]} />
           </Field>
 

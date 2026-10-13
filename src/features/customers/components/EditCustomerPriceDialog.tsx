@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { formatCurrency } from '@/helpers/money'
 import { useUpsertPreciosCliente } from '../hooks/usePreciosCliente'
@@ -123,12 +123,9 @@ export default function EditCustomerPriceDialog({
 
           <Field>
             <FieldLabel>Precio del cliente (Q)</FieldLabel>
-            <Input
-              type="number"
-              step="0.01"
-              min="0.01"
+            <MoneyInput
               value={precioInput}
-              onChange={(e) => setPrecioInput(e.target.value)}
+              onValueChange={setPrecioInput}
               placeholder="0.00"
               autoFocus
             />
