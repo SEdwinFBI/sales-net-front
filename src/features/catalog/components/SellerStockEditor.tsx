@@ -53,6 +53,7 @@ export default function SellerStockEditor({
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [draftQuantities, setDraftQuantities] = useState<Record<number, number>>({})
+  const [emptyQuantities, setEmptyQuantities] = useState<Record<number, boolean>>({})
   const [expandedArticles, setExpandedArticles] = useState<Record<number, boolean>>({})
 
   const stockByVariant = useMemo(
@@ -107,6 +108,9 @@ export default function SellerStockEditor({
   const paginatedRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const handleQuantityChange = (variantId: number, value: string) => {
+    setEmptyQuantities((current) => ({ ...current, [variantId]: value === '' }))
+    if (value === '') return
+
     const quantity = Math.max(0, Number(value) || 0)
     setDraftQuantities((current) => ({ ...current, [variantId]: quantity }))
   }
@@ -276,9 +280,12 @@ export default function SellerStockEditor({
                                     className={cn("h-9 text-center font-semibold", getStockInputClass(quantity))}
                                     min={0}
                                     type="number"
-                                    value={quantity}
+                                    value={emptyQuantities[variant.id] ? '' : quantity}
                                     onChange={(event) =>
                                       handleQuantityChange(variant.id, event.target.value)
+                                    }
+                                    onBlur={() =>
+                                      setEmptyQuantities((current) => ({ ...current, [variant.id]: false }))
                                     }
                                   />
                                   <Button
