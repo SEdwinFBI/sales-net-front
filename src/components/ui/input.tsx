@@ -3,7 +3,7 @@ import { Input as InputPrimitive } from "@base-ui/react/input"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+function Input({ className, type, onClick, ...props }: React.ComponentProps<"input">) {
   return (
     <InputPrimitive
       type={type}
@@ -30,6 +30,24 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         className
       )}
       {...props}
+      onClick={(event) => {
+        onClick?.(event)
+
+        const input = event.currentTarget
+        if (
+          type !== "date" ||
+          event.defaultPrevented ||
+          input.disabled ||
+          input.readOnly ||
+          typeof input.showPicker !== "function"
+        ) return
+
+        try {
+          input.showPicker()
+        } catch {
+          // Keep the native picker available when the browser blocks showPicker.
+        }
+      }}
     />
   )
 }
