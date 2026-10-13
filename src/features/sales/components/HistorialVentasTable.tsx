@@ -25,10 +25,11 @@ import {
 } from '@/components/ui/dialog'
 import { ChevronDown, ChevronRight, ArrowUpDown, SearchX } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
-import { formatCurrency, formatNumber } from '@/helpers/money'
+import { formatCurrency } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 import React from 'react'
 import RevertirVentaButton from './RevertirVentaButton'
+import VentaDetallesTable from './VentaDetallesTable'
 import { formatDisplayDateTime } from '@/lib/dates'
 
 type Props = {
@@ -46,10 +47,6 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
     {
-      id: 'revertir', header: 'Acciones', enableColumnFilter: false, enableSorting: false,
-      cell: ({ row }) => <RevertirVentaButton venta={row.original} />,
-    },
-    {
       id: 'expand',
       header: '',
       cell: ({ row }) =>
@@ -65,10 +62,13 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
           </Button>
         ) : null,
     },
-    { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-xs">{row.original.id}</span> },
+    { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo, cell: ({ getValue }) => <span className="font-medium">{getValue() as string}</span> },
     {
       accessorKey: 'fecha', header: 'Fecha', cell: ({ row }) => formatDisplayDateTime(row.original.fecha)
     },
+    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-destructive">{formatCurrency(Number(row.original.saldo))}</span> : <span className="text-muted-foreground">—</span> },
+    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor?.full_name ?? 'Sin vendedor' },
+    { accessorKey: 'id', header: 'ID', cell: ({ row }) => <span className="font-mono text-[11px] text-muted-foreground">#{row.original.id}</span> },
     {
       id: 'total_sin_descuento',
       header: 'Total Bruto',
@@ -84,7 +84,6 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
         : <span className="text-muted-foreground">—</span>,
     },
     { accessorKey: 'abonado', header: 'Abonado', cell: ({ row }) => row.original.abonado > 0 ? <span className="text-warning">{formatCurrency(Number(row.original.abonado))}</span> : <span className="text-muted-foreground">—</span> },
-    { accessorKey: 'saldo', header: 'Saldo', cell: ({ row }) => row.original.saldo > 0 ? <span className="text-destructive">{formatCurrency(Number(row.original.saldo))}</span> : <span className="text-muted-foreground">—</span> },
     {
       accessorKey: 'estado',
       header: 'Estado',
@@ -100,8 +99,6 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
       cell: ({ row }) => <span className="capitalize">{row.original.forma_pago}</span>,
     },
     { id: 'sucursal', header: 'Sucursal', accessorFn: (row) => row.sucursal.nombre },
-    { id: 'vendedor', header: 'Vendedor', accessorFn: (row) => row.vendedor?.full_name ?? 'Sin vendedor' },
-    { id: 'cliente', header: 'Cliente', accessorFn: (row) => row.cliente_info.nombre_completo },
     { accessorKey: 'observacion', header: 'Observación', cell: ({ row }) => row.original.observacion || <span className="text-muted-foreground">—</span> },
     {
       id: 'foto',
@@ -124,6 +121,10 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
           </button>
         )
       },
+    },
+    {
+      id: 'revertir', header: 'Acciones', enableColumnFilter: false, enableSorting: false,
+      cell: ({ row }) => <RevertirVentaButton venta={row.original} />,
     },
   ], [])
 
@@ -230,63 +231,7 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
                       <TableCell colSpan={columns.length} className="bg-gradient-to-br from-muted/30 to-card p-4">
                         <div className="space-y-2">
                           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Detalle de la venta</p>
-                          <div className="overflow-x-auto rounded-lg border border-border bg-card">
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="border-b border-border bg-muted/20">
-                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Artículo</th>
-                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Ancho</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Cantidad</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Stock restante</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Precio Bruto</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Desc. Unidad</th>
-                                  <th className="text-center px-3 py-2 font-medium text-muted-foreground">Tipo</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Bruto</th>
-                                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Total Neto</th>
-                                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Observación</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {row.original.detalles.map((d) => {
-                                  const cant = d.cantidad || 1
-                                  const totalBrutoU = Number(d.total) / cant
-                                  const descU = Number(d.descuento)
-                                  const tipo = d.tipo_descuento ?? 'NINGUNO'
-                                  return (
-                                  <tr key={d.id} className="border-b border-border/50 last:border-0">
-                                    <td className="px-3 py-2">{d.articulo}</td>
-                                    <td className="px-3 py-2">{d.talla}</td>
-                                    <td className="px-3 py-2 text-right">{formatNumber(d.cantidad)}</td>
-                                    <td className="px-3 py-2 text-right">{d.stock_restante != null ? formatNumber(d.stock_restante) : <span className="text-muted-foreground">—</span>}</td>
-                                    <td className="px-3 py-2 text-right">{formatCurrency(totalBrutoU)}</td>
-                                    <td className="px-3 py-2 text-right text-destructive">{formatCurrency(descU)}</td>
-                                    <td className="px-3 py-2 text-center">
-                                      {tipo !== 'NINGUNO' ? (
-                                        <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ${tipo === 'INDIVIDUAL' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
-                                          {tipo === 'INDIVIDUAL' ? 'Individual' : 'Mayorista'}
-                                        </span>
-                                      ) : <span className="text-muted-foreground text-xs">—</span>}
-                                    </td>
-                                    <td className="px-3 py-2 text-right">{formatCurrency(Number(d.total))}</td>
-                                    <td className="px-3 py-2 text-right font-medium">{formatCurrency(Number(d.total_neto))}</td>
-                                    <td className="px-3 py-2">{row.original.observacion || <span className="text-muted-foreground">—</span>}</td>
-                                  </tr>
-                                  )
-                                })}
-                              </tbody>
-                              <tfoot>
-                                <tr className="border-t-2 border-border bg-muted/30">
-                                  <td className="px-3 py-2 font-semibold text-xs" colSpan={7}>Total</td>
-                                  <td className="px-3 py-2 text-right font-semibold text-xs">
-                                    {formatCurrency(row.original.detalles.reduce((s, d) => s + Number(d.total), 0))}
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-semibold text-xs">
-                                    {formatCurrency(row.original.detalles.reduce((s, d) => s + Number(d.total_neto), 0))}
-                                  </td>
-                                </tr>
-                              </tfoot>
-                            </table>
-                          </div>
+                          <VentaDetallesTable detalles={row.original.detalles} observacion={row.original.observacion} />
                         </div>
                       </TableCell>
                     </TableRow>
