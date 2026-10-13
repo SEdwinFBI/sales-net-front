@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm, type Resolver } from 'react-hook-form'
+import { Controller, useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2 } from 'lucide-react'
@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Textarea } from '@/components/ui/textarea'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useCrearAjusteCliente } from '../hooks/useCrearAjusteCliente'
@@ -39,6 +39,7 @@ export default function AjusteClienteDialog({ open, idCliente, onClose }: Props)
   const [isNegative, setIsNegative] = useState(false)
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -85,13 +86,12 @@ export default function AjusteClienteDialog({ open, idCliente, onClose }: Props)
           <Field>
             <FieldLabel>Monto del ajuste</FieldLabel>
             <div className="flex gap-2">
-              <Input
-                {...register('monto')}
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                autoFocus
+              <Controller
+                name="monto"
+                control={control}
+                render={({ field: { onChange, ...field } }) => (
+                  <MoneyInput {...field} onValueChange={onChange} placeholder="0.00" autoFocus />
+                )}
               />
               <Button
                 type="button"

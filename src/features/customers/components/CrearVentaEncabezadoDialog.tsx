@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2, Wallet, CreditCard } from 'lucide-react'
 import { useCreateVentaEncabezado } from '../hooks/useCreateVentaEncabezado'
@@ -144,12 +144,9 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
 
           <Field>
             <FieldLabel>Monto</FieldLabel>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
+            <MoneyInput
               value={monto}
-              onChange={(e) => { setMonto(e.target.value); setMontoError('') }}
+              onValueChange={(value) => { setMonto(value); setMontoError('') }}
               placeholder="0.00"
             />
             <FieldError errors={montoError ? [{ message: montoError }] : []} />
