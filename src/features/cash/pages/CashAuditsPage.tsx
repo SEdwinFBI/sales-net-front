@@ -22,6 +22,8 @@ import { useCaja, useCajas } from '../hooks/useCash'
 import type { Caja } from '../types/cash'
 import { downloadCashReport } from '../services/cash-service'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildArqueosTools } from '../agent/arqueos-tools'
 
 type Totals = Pick<Caja, 'entradas' | 'salidas' | 'ventas_efectivo' | 'efectivo_esperado'>
 
@@ -82,7 +84,8 @@ export default function CashAuditsPage() {
     else setBranchId(null)
   }
 
-  const downloadReport = async () => {
+  /** true si el reporte se descargó (el error ya se muestra con un toast). */
+  const downloadReport = async (): Promise<boolean> => {
     setDownloading(true)
     try {
       await downloadCashReport({
@@ -91,12 +94,37 @@ export default function CashAuditsPage() {
         id_usuario: userId ?? undefined,
       })
       toast.success('Reporte descargado correctamente')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo descargar el reporte'))
+      return false
     } finally {
       setDownloading(false)
     }
   }
+
+  // Tools del agente (la ruta ya es solo admin): navegar general → sucursal → usuario, filtrar fechas, leer y descargar.
+  useAgentTools(
+    'arqueos-page',
+    buildArqueosTools({
+      getFilters: () => filters,
+      setFilters,
+      getLevel: () => (userId !== null ? 'usuario' : branchId !== null ? 'sucursal' : 'general'),
+      isLoading: () => loadingBranches || loadingBranch || loadingCajas || loadingToday,
+      getSucursales: () => sucursales ?? [],
+      getBranch: () => (branch && branchId !== null ? { id: branchId, nombre: branch.nombre, usuarios: branch.usuarios } : undefined),
+      getUser: () => selectedUser,
+      getTodayCajas: () => (userId !== null ? userTodayCajas : branchId !== null ? branchTodayCajas : todayCajas),
+      getPeriodCajas: () => userCajas,
+      isDialogOpen: () => cashId !== null,
+      selectBranch,
+      selectUser,
+      back,
+      openDetalle: setCashId,
+      isDownloading: () => downloading,
+      download: downloadReport,
+    }),
+  )
 
   const resetReportFilters = () => {
     setFilters(getDefaultDateRange())

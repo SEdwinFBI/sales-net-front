@@ -25,6 +25,9 @@ import { CashSummary } from '../components/CashSummary'
 import { MovementsTable } from '../components/MovementsTable'
 import { useCreateMovimientoCaja, useMiCaja } from '../hooks/useCash'
 import type { TipoMovimientoCaja } from '../types/cash'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildMiCajaTools, buildMovimientoDialogTools } from '../agent/mi-caja-tools'
 
 export default function MyCashPage() {
   const { data: caja, isLoading } = useMiCaja()
@@ -34,8 +37,7 @@ export default function MyCashPage() {
   const [monto, setMonto] = useState('')
   const [observacion, setObservacion] = useState('')
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
+  const guardarMovimiento = async (): Promise<boolean> => {
     try {
       await mutation.mutateAsync({ tipo, monto: Number(monto), observacion })
       toast.success('Movimiento registrado correctamente')
@@ -43,10 +45,68 @@ export default function MyCashPage() {
       setMonto('')
       setObservacion('')
       setOpen(false)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo registrar el movimiento'))
+      return false
     }
   }
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
+    void guardarMovimiento()
+  }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar» tras un clic de confirmación.
+  useAgentTools(
+    'movimiento-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'guardar_movimiento_caja',
+            description: 'Guarda el movimiento de caja del formulario abierto (presiona Guardar).',
+            validar: () => {
+              if (mutation.isPending) return 'Ya se esta guardando.'
+              return Number(monto) > 0 ? null : 'El monto debe ser mayor que cero.'
+            },
+            texto: () => `Registrar ${tipo === 'ENTRADA' ? 'una entrada' : 'un gasto'} de caja de Q${Number(monto).toFixed(2)}${observacion.trim() ? `: ${observacion.trim()}` : ''}`,
+            run: guardarMovimiento,
+          }),
+        ]
+      : null,
+  )
+
+  const movimientoValues = () => ({ tipo, monto: Number(monto), observacion })
+
+  // Tools del agente: leen la caja y abren el formulario de movimiento (el usuario presiona Guardar).
+  useAgentTools(
+    'mi-caja-page',
+    buildMiCajaTools({
+      getCaja: () => caja,
+      isLoading: () => isLoading,
+      isDialogOpen: () => open,
+      openMovimiento: (valores) => {
+        // Abierto por el agente: parte de un formulario limpio más lo que pidió el usuario.
+        setTipo(valores?.tipo ?? 'ENTRADA')
+        setMonto(valores?.monto !== undefined ? String(valores.monto) : '')
+        setObservacion(valores?.observacion ?? '')
+        setOpen(true)
+      },
+    }),
+  )
+  useAgentTools(
+    'movimiento-dialog',
+    open
+      ? buildMovimientoDialogTools({
+          getValues: movimientoValues,
+          setValues: (values) => {
+            if (values.tipo !== undefined) setTipo(values.tipo)
+            if (values.monto !== undefined) setMonto(String(values.monto))
+            if (values.observacion !== undefined) setObservacion(values.observacion)
+          },
+        })
+      : null,
+  )
 
   return (
     <PageTemplateSimple title="Mi caja" description="Entradas y gastos de efectivo del día.">
