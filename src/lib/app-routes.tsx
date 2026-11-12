@@ -10,6 +10,11 @@ import type { AppRole } from '@/features/auth/types/auth'
 export type AppRouteMeta = {
   name: string
   description?: string
+  /**
+   * Una línea (máx. 160 caracteres) con lo que el agente de IA puede hacer en esta pantalla, con las
+   * condiciones de rol o crédito cuando apliquen. Se le muestra al modelo en la lista de rutas.
+   */
+  agentHint?: string
   icon?: LucideIcon
   permissions?: AppRole[]
 

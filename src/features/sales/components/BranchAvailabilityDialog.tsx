@@ -11,6 +11,8 @@ import { getStockTextClass } from '@/lib/stock-status'
 import { useArticles } from '../hooks/useArticles'
 import { useBranchAvailability } from '../hooks/useBranchAvailability'
 import { useSalesStore } from '../store/useSalesStore'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildDisponibilidadOpenTools, buildDisponibilidadReadTools } from '../agent/pos-dialog-tools'
 
 /**
  * Dialog para consultar existencias de un artículo en otras tiendas
@@ -21,6 +23,18 @@ import { useSalesStore } from '../store/useSalesStore'
 const BranchAvailabilityDialog = () => {
     const { open, articleId, highlightVariantId } = useSalesStore((state) => state.branchAvailability)
     const closeBranchAvailability = useSalesStore((state) => state.closeBranchAvailability)
+    const openBranchAvailability = useSalesStore((state) => state.openBranchAvailability)
+    const activeDialog = useSalesStore((state) => state.activeDialog)
+
+    // El agente abre las existencias de un artículo que ya buscó.
+    useAgentTools(
+        'disponibilidad-abrir',
+        buildDisponibilidadOpenTools({
+            isOpen: () => open,
+            isBusy: () => activeDialog !== null,
+            open: (articuloId) => openBranchAvailability(articuloId),
+        }),
+    )
 
     return (
         <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) closeBranchAvailability() }}>
@@ -109,6 +123,16 @@ type MatrixProps = {
 const AvailabilityMatrixMode = ({ articleId, highlightVariantId }: MatrixProps) => {
     const setBranchAvailabilityArticle = useSalesStore((state) => state.setBranchAvailabilityArticle)
     const { availability, isLoading, isError, refetch } = useBranchAvailability(articleId)
+
+    // Con la matriz abierta, el agente puede leerla.
+    useAgentTools(
+        'disponibilidad-leer',
+        buildDisponibilidadReadTools({
+            getAvailability: () => availability ?? undefined,
+            isLoading: () => isLoading,
+            isError: () => isError,
+        }),
+    )
 
     const otherStoresWithStock = availability?.sucursales.some((s) => !s.es_propia && s.total > 0) ?? false
 

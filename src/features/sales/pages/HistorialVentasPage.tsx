@@ -13,6 +13,8 @@ import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { downloadHistorialVentasPdf } from '../services/products-service'
 import { toast } from 'sonner'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildHistorialPageTools } from '../agent/historial-tools'
 
 export default function HistorialVentasPage() {
 
@@ -100,7 +102,8 @@ export default function HistorialVentasPage() {
     setSearchText('')
   }
 
-  const handleExportPdf = async () => {
+  /** true si el PDF se descargó (el error ya se muestra con un toast). */
+  const handleExportPdf = async (): Promise<boolean> => {
     setPdfLoading(true)
     try {
       await downloadHistorialVentasPdf(
@@ -114,12 +117,46 @@ export default function HistorialVentasPage() {
         },
       )
       toast.success('PDF descargado correctamente')
+      return true
     } catch {
       toast.error('Error al descargar el PDF')
+      return false
     } finally {
       setPdfLoading(false)
     }
   }
+
+  // Tools del agente: filtran, leen y descargan el PDF con lo que esta pantalla ya muestra.
+  useAgentTools(
+    'historial-page',
+    buildHistorialPageTools({
+      getFilters: () => ({
+        fecha_desde: filters.fecha_desde ?? '',
+        fecha_hasta: filters.fecha_hasta ?? '',
+        estado: filters.estado,
+        forma_pago: formaPagoFilter || undefined,
+        texto: searchText,
+      }),
+      getOptions: () => ({ estados, formasPago }),
+      setFilters: (next) => {
+        if ('fecha_desde' in next || 'fecha_hasta' in next || 'estado' in next) {
+          setFilters((prev) => ({
+            ...prev,
+            ...('fecha_desde' in next ? { fecha_desde: next.fecha_desde } : {}),
+            ...('fecha_hasta' in next ? { fecha_hasta: next.fecha_hasta } : {}),
+            ...('estado' in next ? { estado: next.estado } : {}),
+          }))
+        }
+        if ('forma_pago' in next) setFormaPagoFilter(next.forma_pago ?? '')
+        if ('texto' in next) setSearchText(next.texto ?? '')
+      },
+      clearFilters,
+      getFilteredVentas: () => filteredVentas,
+      isLoading: () => isLoading,
+      isExporting: () => pdfLoading,
+      exportPdf: handleExportPdf,
+    }),
+  )
 
   return (
     <PageTemplateSimple title="Historial de Ventas" description="Todas las ventas registradas en el sistema.">

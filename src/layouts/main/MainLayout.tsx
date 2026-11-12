@@ -3,28 +3,13 @@ import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 import { isTokenExpired, useAuthStore } from '@/features/core/store/auth-store'
 import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { buildSidebarItems } from '@/lib/app-routes'
-import { salesRoutes } from '@/features/sales'
-import { catalogRoutes } from '@/features/catalog'
+import { allFeatureRoutes } from '@/routes/feature-routes'
 
 import DesktopSidebar from './DesktopSidebar'
 import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
-import { reportingRoutes } from '@/features/reporting'
-import { clientesRoutes } from '@/features/customers'
-import { inventarioRoutes } from '@/features/inventario'
-import { adminRoutes } from '@/features/admin'
-import { cashRoutes } from '@/features/cash'
-
-const allFeatureRoutes = [
-  ...reportingRoutes,
-  ...salesRoutes,
-  ...cashRoutes,
-  ...clientesRoutes,
-  ...catalogRoutes,
-  ...inventarioRoutes,
-  ...adminRoutes,
-]
+import AgentWidget from '@/features/agent/components/AgentWidget'
 
 export default function MainLayout() {
   const user = useAuthStore((state) => state.user)
@@ -147,6 +132,8 @@ export default function MainLayout() {
           </footer>
         </div>
       </div>
+
+      <AgentWidget onLogout={handleLogout} />
     </div>
   )
 }

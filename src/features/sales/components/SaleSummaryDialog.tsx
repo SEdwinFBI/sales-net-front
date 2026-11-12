@@ -15,12 +15,32 @@ import { formatCurrency } from '@/helpers/money'
 import { useSalesStore } from '../store/useSalesStore'
 import { formatDisplayDateTime } from '@/lib/dates'
 import SaveCustomerPricesDialog from './SaveCustomerPricesDialog'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 
 const SaleSummaryDialog = () => {
   const [savePricesOpen, setSavePricesOpen] = useState(false)
   const activeDialog = useSalesStore((state) => state.activeDialog)
   const lastSale = useSalesStore((state) => state.lastSale)
   const closeSummary = useSalesStore((state) => state.closeSummary)
+
+  // Con el resumen de la venta abierto, el agente puede abrir «Guardar precios» (no guarda nada).
+  useAgentTools(
+    'resumen-venta',
+    lastSale && activeDialog === 'summary' && !savePricesOpen
+      ? [
+          {
+            name: 'abrir_guardar_precios_venta',
+            description: 'Abre el dialogo Guardar precios de la venta recien registrada. Despues usa leer_precios_venta y elegir_precios_venta.',
+            parameters: { type: 'object', properties: {}, additionalProperties: false },
+            abreUi: true,
+            run: async () => {
+              setSavePricesOpen(true)
+              return { ok: true, data: { mensaje: 'Dialogo Guardar precios abierto.' } }
+            },
+          },
+        ]
+      : null,
+  )
 
   if (!lastSale) return null
 

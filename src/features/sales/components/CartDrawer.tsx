@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/drawer'
 
 import { useSalesStore } from '../store/useSalesStore'
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
+import { useAgentStore } from '@/features/agent/store/useAgentStore'
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { formatCurrency } from '@/helpers/money'
 import CartItemComponent from './CartItemComponent'
 import CustomerSelect from './CustomerSelect'
@@ -25,6 +26,8 @@ import { useCustomers } from '@/features/customers'
 import { useCustomerPricesStore } from '@/features/customers/store/useCustomerPricesStore'
 import { usePreciosCliente } from '@/features/customers/hooks/usePreciosCliente'
 import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildClienteRapidoOpenTools } from '../agent/pos-dialog-tools'
 import { selectTotal, selectTotalDiscount, selectTotalItems } from '../utils/utilsSales'
 import type { CartPricingResult } from '../utils/pricing-engine'
 
@@ -34,6 +37,9 @@ type Props = {
 
 const CartDrawer = ({ pricing }: Props) => {
   const cartOpen = useSalesStore((state) => state.cartOpen)
+  const activeDialog = useSalesStore((state) => state.activeDialog)
+  // Un solo reconocimiento de voz a la vez: el dictado del carrito cede ante el micrófono del agente.
+  const agentListening = useAgentStore((state) => state.listening)
   const items = useSalesStore((state) => state.items)
   const openCart = useSalesStore((state) => state.openCart)
   const closeCart = useSalesStore((state) => state.closeCart)
@@ -64,6 +70,14 @@ const CartDrawer = ({ pricing }: Props) => {
     closeCart()
     setQuickCreateOpen(true)
   }
+
+  // Fuera del cobro, el agente abre el formulario de cliente rápido igual que el botón del carrito.
+  useAgentTools(
+    'cliente-rapido-abrir',
+    activeDialog === null && !quickCreateOpen
+      ? buildClienteRapidoOpenTools({ bloqueo: () => null, open: handleOpenQuickCreate })
+      : null,
+  )
 
   const handleCloseQuickCreate = () => {
     setQuickCreateOpen(false)
@@ -123,7 +137,7 @@ const CartDrawer = ({ pricing }: Props) => {
     }
   }, [remoteCustomerPrices, selectedCustomerId, selectedCustomerObj, saveLocalPrices])
 
-  const speech = useSpeechRecognition({ enabled: cartOpen })
+  const speech = useSpeechRecognition({ enabled: cartOpen && !agentListening })
 
   useEffect(() => {
     setVoiceTranscript(speech.transcript)
