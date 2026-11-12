@@ -10,6 +10,9 @@ import UserPricingEditor from '../components/UserPricingEditor'
 import { useArticles } from '../hooks/useArticles'
 import { useMayoreoTiers } from '../hooks/useMayoreoTiers'
 import { useUserPricing } from '../hooks/useUserPricing'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildSucursalPickerTools } from '../agent/stock-tools'
+import { buildPreciosPageTools, type PreciosTab } from '../agent/precios-tools'
 
 export default function PreciosPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -39,6 +42,30 @@ export default function PreciosPage() {
     setSelectedSucursal(null)
     setSearchParams({}, { replace: true })
   }
+
+  // Sin sucursal elegida el agente puede leer la lista y abrir una; con una abierta, cambiar de pestaña.
+  useAgentTools(
+    'precios-sucursales',
+    selectedSucursal
+      ? null
+      : buildSucursalPickerTools(
+          {
+            getSucursales: () => sucursales,
+            isLoading: () => isLoadingSucursales,
+            select: (id) => {
+              const sucursal = sucursales.find((s) => s.id === id)
+              if (sucursal) handleSelectSucursal(sucursal)
+            },
+          },
+          { leer: 'leer_sucursales_precios', abrir: 'abrir_precios_sucursal', area: 'los precios' },
+        ),
+  )
+  useAgentTools(
+    'precios-page',
+    selectedSucursal
+      ? buildPreciosPageTools({ getTab: () => activeTab as PreciosTab, setTab: setActiveTab })
+      : null,
+  )
 
   return (
     <PageTemplateSimple

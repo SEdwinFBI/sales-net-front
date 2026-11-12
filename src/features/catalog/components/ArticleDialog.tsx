@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, type Resolver } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -24,8 +24,12 @@ import { useUpdateArticle } from '../hooks/useUpdateArticle'
 import { useUpdateArticleVariant } from '../hooks/useUpdateArticleVariant'
 import type { Article } from '../types/article-types'
 import type { ArticleSize, ArticleVariant } from '../types/article-variant-types'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { DEFAULT_SIZES, buildArticuloDialogTools, type ArticuloFormValues } from '../agent/articulos-tools'
 
-const defaultSizes: ArticleSize[] = ['1', '2', '3', '4', '5', '6']
+// Mismas tallas que valida el agente (una sola fuente de verdad).
+const defaultSizes: ArticleSize[] = [...DEFAULT_SIZES]
 const showSizeSelectorOnCreate = false
 
 const articleSchema = z.object({
@@ -39,10 +43,12 @@ type Props = {
   article?: Article | null
   variants?: ArticleVariant[]
   open: boolean
+  /** Valores con los que se abre (los usa el agente): título y precios por talla. */
+  initialValues?: Partial<ArticuloFormValues>
   onClose: () => void
 }
 
-export default function ArticleDialog({ article, variants = [], open, onClose }: Props) {
+export default function ArticleDialog({ article, variants = [], open, initialValues, onClose }: Props) {
   const isEdit = !!article
   const articleVariants = useMemo(
     () =>
@@ -83,6 +89,8 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(articleSchema) as unknown as Resolver<FormValues>,
@@ -90,15 +98,22 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
   })
   const imageField = register('image')
 
+  // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto.
+  const initialRef = useRef(initialValues)
+  useEffect(() => {
+    initialRef.current = initialValues
+  })
+
   useEffect(() => {
     if (open) {
+      const initial = initialRef.current
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSizes(isEdit ? initialSizes : defaultSizes)
       setPricesBySize(
         Object.fromEntries(
           (isEdit ? initialSizes : defaultSizes).map((size) => [
             size,
-            initialPricesBySize[size] ?? '',
+            initial?.precios?.[size] !== undefined ? String(initial.precios[size]) : (initialPricesBySize[size] ?? ''),
           ])
         ) as Record<ArticleSize, string>
       )
@@ -106,12 +121,30 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       reset(
         article
           ? {
-            title: article.title,
+            title: initial?.titulo ?? article.title,
           }
-          : { title: '' }
+          : { title: initial?.titulo ?? '' }
       )
     }
   }, [article, initialPricesBySize, initialSizes, isEdit, open, reset])
+
+  // Mientras el diálogo está abierto, el agente puede llenar título y precios (nunca guardar ni subir la imagen).
+  useAgentTools(
+    'articulo-dialog',
+    open
+      ? buildArticuloDialogTools({
+          getSizes: () => [...(isEdit ? selectedSizes : defaultSizes)],
+          getValues: () => ({ titulo: getValues('title') ?? '', precios: pricesBySize }),
+          setValues: (values) => {
+            if (values.titulo !== undefined) setValue('title', values.titulo, { shouldValidate: true, shouldDirty: true })
+            if (values.precios) {
+              const nuevos = Object.fromEntries(Object.entries(values.precios).map(([size, price]) => [size, String(price)]))
+              setPricesBySize((current) => ({ ...current, ...nuevos }))
+            }
+          },
+        })
+      : null,
+  )
 
   const toggleSize = (size: ArticleSize) => {
     setSelectedSizes((current) =>
@@ -131,7 +164,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       const imageFile = selectedImage ?? undefined
       if (!isEdit && !imageFile) {
         toast.error('Selecciona una imagen para el artículo')
-        return
+        return false
       }
 
       const effectiveSelectedSizes = isEdit ? selectedSizes : defaultSizes
@@ -143,7 +176,7 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
       if (invalidPriceSizes.length > 0) {
         const sortedSizes = invalidPriceSizes.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
         toast.error(`Ingresa un precio mayor a 0 para las tallas: ${sortedSizes.join(', ')}`)
-        return
+        return false
       }
 
       // Reconcilia tallas contra las variantes existentes: las nuevas se
@@ -187,10 +220,32 @@ export default function ArticleDialog({ article, variants = [], open, onClose }:
         toast.success('Artículo creado correctamente')
       }
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar el artículo'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona el botón tras un clic de confirmación.
+  // La imagen del artículo la elige siempre el usuario.
+  useAgentTools(
+    'articulo-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'guardar_articulo',
+            description: 'Guarda el formulario de articulo abierto (crea el articulo o guarda los cambios). La imagen la elige el usuario.',
+            validar: () => {
+              if (isPending) return 'Ya se esta guardando.'
+              return !isEdit && !selectedImage ? 'Falta la imagen del articulo: el usuario debe seleccionarla.' : null
+            },
+            texto: () => `${isEdit ? 'Guardar los cambios del articulo' : 'Crear el articulo'} ${getValues('title') || '(sin titulo)'}`,
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>

@@ -13,6 +13,9 @@ import type { ArticleSize, ArticleVariant } from '../types/article-variant-types
 import ArticleImage from './ArticleImage'
 import ArticleDialog from './ArticleDialog'
 import DeleteArticleDialog from './DeleteArticleDialog'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildArticulosTools, type ArticuloFormValues } from '../agent/articulos-tools'
+import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   data: Article[]
@@ -32,6 +35,8 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null)
+  /** Valores con los que el agente abre el formulario (los botones normales lo abren vacío). */
+  const [dialogInitial, setDialogInitial] = useState<Partial<ArticuloFormValues> | undefined>(undefined)
   const availableSizes = useMemo(
     () => Array.from(new Set(variants.map((variant) => variant.size))).sort(),
     [variants]
@@ -54,6 +59,44 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   const totalPages = Math.max(Math.ceil(filteredData.length / pageSize), 1)
   const safePage = Math.min(currentPage, totalPages)
   const paginatedData = filteredData.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  // Paginación para el agente (tamaño fijo, como en la pantalla).
+  useAgentTools('paginacion-articulos', [paginationTool('articulos', 'la lista de articulos', slicePagination(filteredData.length, pageSize, safePage, setCurrentPage))])
+
+  // Tools del agente: filtran y leen el catálogo y abren el formulario o la confirmación (el usuario guarda).
+  useAgentTools(
+    'articulos-grid',
+    buildArticulosTools({
+      getFilters: () => ({
+        texto: globalFilter,
+        talla: sizeFilter === 'all' ? 'todas' : sizeFilter,
+        estado_tallas: sizesStateFilter === 'with-sizes' ? 'con_tallas' : sizesStateFilter === 'without-sizes' ? 'sin_tallas' : 'todos',
+      }),
+      setFilters: ({ texto, talla, estado_tallas }) => {
+        if (texto !== undefined) setGlobalFilter(texto)
+        if (talla !== undefined) setSizeFilter(talla as 'all' | ArticleSize)
+        if (estado_tallas !== undefined) {
+          setSizesStateFilter(estado_tallas === 'con_tallas' ? 'with-sizes' : estado_tallas === 'sin_tallas' ? 'without-sizes' : 'all')
+        }
+        setCurrentPage(1)
+      },
+      getSizes: () => availableSizes,
+      isLoading: () => isLoading,
+      getFiltered: () =>
+        filteredData.map((article) => ({
+          article,
+          tallas: variants.filter((v) => v.articleId === article.id).map((v) => ({ talla: v.size, precio: v.price })),
+        })),
+      getArticle: (id) => data.find((article) => article.id === id),
+      getArticleSizes: (id) => variants.filter((v) => v.articleId === id).map((v) => v.size),
+      isDialogOpen: () => dialogOpen,
+      isDeleteOpen: () => articleToDelete !== null,
+      openNew: (valores) => { setSelectedArticle(null); setDialogInitial(valores); setDialogOpen(true) },
+      openEdit: (article, valores) => { setSelectedArticle(article); setDialogInitial(valores); setDialogOpen(true) },
+      openDelete: setArticleToDelete,
+      goToPrecios: (articleId) => navigate(`/catalogo/precios?articulo=${articleId}`),
+    }),
+  )
 
   const clearFilters = () => {
     setGlobalFilter('')
@@ -119,7 +162,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
           </div>
           <Button
             className="w-full sm:w-auto"
-            onClick={() => { setSelectedArticle(null); setDialogOpen(true) }}
+            onClick={() => { setSelectedArticle(null); setDialogInitial(undefined); setDialogOpen(true) }}
           >
             <Plus />
             Nuevo artículo
@@ -168,6 +211,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         aria-label={`Editar ${article.title}`}
                         onClick={() => {
                           setSelectedArticle(article)
+                          setDialogInitial(undefined)
                           setDialogOpen(true)
                         }}
                       >
@@ -247,7 +291,8 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         open={dialogOpen}
         article={selectedArticle}
         variants={variants}
-        onClose={() => setDialogOpen(false)}
+        initialValues={dialogInitial}
+        onClose={() => { setDialogOpen(false); setDialogInitial(undefined) }}
       />
 
       <DeleteArticleDialog

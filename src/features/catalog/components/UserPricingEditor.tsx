@@ -29,18 +29,14 @@ import { useSaveUserPricing } from '../hooks/useSaveUserPricing'
 import type { Article } from '../types/article-types'
 import type { MayoreoTier, SaveUserPricingItem, UserVariantPricing } from '../types/pricing-types'
 import { validateTiers, variantPricingRowSchema } from '../utils/pricing-schema'
+import { rowsEqual, type DraftRow, type TierDraft } from '../utils/pricing-draft'
 import ArticleImage from './ArticleImage'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildPricingEditorTools } from '../agent/precios-tools'
+import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
 
 const pageSize = 8
-
-type TierDraft = { desde: string; hasta: string; descuento: string }
-
-/** Campos editables de la fila; siempre strings de input (vacío = heredar/default). */
-type DraftRow = {
-  precio: string
-  tiers: TierDraft[]
-  descuentoMayorista: string
-}
 
 type TierErrors = Partial<Record<'desde' | 'hasta' | 'descuento', string>>
 type RowErrors = Partial<Record<'precio' | 'descuentoMayorista', string>> & {
@@ -78,19 +74,6 @@ function serverRow(variant: UserVariantPricing): DraftRow {
     descuentoMayorista:
       variant.descuento_mayorista !== null ? String(variant.descuento_mayorista) : '',
   }
-}
-
-/** Deep compare including tiers array. */
-function rowsEqual(a: DraftRow, b: DraftRow): boolean {
-  if (a.precio !== b.precio) return false
-  if (a.descuentoMayorista !== b.descuentoMayorista) return false
-  if (a.tiers.length !== b.tiers.length) return false
-  return a.tiers.every(
-    (tier, index) =>
-      tier.desde === b.tiers[index].desde &&
-      tier.hasta === b.tiers[index].hasta &&
-      tier.descuento === b.tiers[index].descuento
-  )
 }
 
 const EMPTY_TIER: TierDraft = { desde: '', hasta: '', descuento: '' }
@@ -182,6 +165,9 @@ export default function UserPricingEditor({
   const safePage = Math.min(currentPage, totalPages)
   const paginatedArticles = articles.slice((safePage - 1) * pageSize, safePage * pageSize)
 
+  // Paginación para el agente (tamaño fijo, como en la pantalla).
+  useAgentTools('paginacion-precios', [paginationTool('precios', 'los articulos del editor de precios', slicePagination(articles.length, pageSize, safePage, setCurrentPage))])
+
   const customizedCount = useMemo(
     () =>
       pricing.filter((variant) => {
@@ -264,22 +250,25 @@ export default function UserPricingEditor({
     setErrors({})
   }
 
-  const handleResetRow = async (variant: UserVariantPricing) => {
+  /** true si la variante quedó restablecida (o no había nada guardado); el error ya se muestra con un toast. */
+  const handleResetRow = async (variant: UserVariantPricing): Promise<boolean> => {
     setDrafts((current) => {
       const next = { ...current }
       delete next[variant.id_variante]
       return next
     })
-    if (!variant.tiene_config) return
+    if (!variant.tiene_config) return true
     try {
       await deletePricing({ userId: sucursal.id, variantId: variant.id_variante })
       toast.success(`La talla ${variant.talla} vuelve a heredar los valores por defecto`)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al restablecer la variante'))
+      return false
     }
   }
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     const nextErrors: Record<number, RowErrors> = {}
     const items: SaveUserPricingItem[] = []
 
@@ -353,18 +342,55 @@ export default function UserPricingEditor({
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       toast.error('Revisa los campos marcados antes de guardar')
-      return
+      return false
     }
-    if (items.length === 0) return
+    if (items.length === 0) return false
 
     try {
       await savePricing({ userId: sucursal.id, items })
       setDrafts({})
       toast.success(`Se guardaron los precios de ${items.length} variante(s)`)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar los precios'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar cambios» tras un clic de confirmación.
+  useAgentTools('pricing-editor-guardar', [
+    commitTool({
+      name: 'guardar_precios_sucursal',
+      description: 'Guarda los precios del borrador de la sucursal abierta (presiona Guardar cambios).',
+      validar: () => (isSaving ? 'Ya se esta guardando.' : dirtyIds.length === 0 ? 'No hay cambios sin guardar.' : null),
+      texto: () => `Guardar los precios de ${dirtyIds.length} variante(s) en ${sucursal.nombre}`,
+      run: handleSave,
+    }),
+  ])
+
+  // Tools del agente: leen los precios, editan SOLO el borrador y restablecen una variante (con confirmación).
+  useAgentTools(
+    'user-pricing-editor',
+    buildPricingEditorTools({
+      getSucursalName: () => sucursal.nombre,
+      isLoading: () => isLoading,
+      getVariants: () => pricing,
+      getRow,
+      getServerRow: (variantId) => serverRows[variantId] ?? getRow(variantId),
+      dirtyCount: () => dirtyIds.length,
+      setRow: (variantId, row, articleId) => {
+        setDrafts((current) => ({ ...current, [variantId]: row }))
+        setErrors((current) => {
+          if (!current[variantId]) return current
+          const next = { ...current }
+          delete next[variantId]
+          return next
+        })
+        setExpandedArticles((current) => ({ ...current, [articleId]: true }))
+      },
+      resetVariant: handleResetRow,
+    }),
+  )
 
   const moneyField = (
     variantId: number,
@@ -705,7 +731,7 @@ export default function UserPricingEditor({
               <Button variant="outline" onClick={handleDiscard} disabled={isSaving}>
                 Descartar
               </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
+              <Button onClick={() => { void handleSave() }} disabled={isSaving}>
                 {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
                 {isSaving ? 'Guardando…' : 'Guardar cambios'}
               </Button>
