@@ -8,6 +8,10 @@ import { Switch } from '@/components/ui/switch'
 import { useSucursales } from '@/features/admin'
 import { useCustomers } from '@/features/customers'
 import { getToday, getTodayRange } from '@/lib/dates'
+import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/api-error'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildResumenTools } from '../agent/resumen-tools'
 import BotonDescargarPdf from '../components/BotonDescargarPdf'
 import ResumenExistenciasTable from '../components/ResumenExistenciasTable'
 import { useResumenExistencias } from '../hooks/useResumenExistencias'
@@ -26,6 +30,38 @@ export default function ResumenExistenciasPage() {
   const { resumen, totales, isLoading } = useResumenExistencias(filters)
   const { data: sucursales } = useSucursales()
   const { data: clientes } = useCustomers()
+
+  // Tools del agente: filtran, leen y descargan el PDF con lo que esta pantalla ya muestra.
+  const [pdfBusy, setPdfBusy] = useState(false)
+  useAgentTools(
+    'resumen-page',
+    buildResumenTools({
+      getFilters: () => filters,
+      setFilters,
+      getSucursales: () => sucursales.map((s) => ({ id: s.id, nombre: s.nombre })),
+      getClientes: () => (clientes ?? []).map((c) => ({ id: Number(c.id), nombre: c.name })),
+      getIncluirDetalle: () => incluirDetalle,
+      setIncluirDetalle,
+      getResumen: () => resumen,
+      getTotales: () => totales,
+      isLoading: () => isLoading,
+      isDownloading: () => pdfBusy,
+      download: async () => {
+        setPdfBusy(true)
+        try {
+          await downloadResumenPdf(filters, incluirDetalle)
+          toast.success('PDF descargado correctamente')
+          return true
+        } catch (error) {
+          toast.error(getApiErrorMessage(error, 'Error al descargar el PDF'))
+          return false
+        } finally {
+          setPdfBusy(false)
+        }
+      },
+      today: getToday,
+    }),
+  )
 
   const set = (key: keyof ResumenFilters, value: string | undefined) => {
     setFilters((previo) => ({ ...previo, [key]: value !== '' ? value : undefined }))
