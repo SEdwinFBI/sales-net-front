@@ -18,6 +18,9 @@ import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { UserPlus, Loader2 } from 'lucide-react'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { buildClienteRapidoDialogTools } from '@/features/sales/agent/pos-dialog-tools'
 
 const schema = z.object({
   permitir_credito: z.boolean(),
@@ -43,6 +46,7 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
     reset,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
@@ -69,10 +73,40 @@ export default function QuickClienteDialog({ open, onClose, onSuccess }: Props) 
       reset()
       onSuccess?.(res.data)
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al crear el cliente'))
+      return false
     }
   }
+
+  // Mientras el formulario está abierto, el agente puede llenarlo. Crear el cliente solo existe con las
+  // acciones de guardado activadas y tras un clic de confirmación.
+  useAgentTools(
+    'cliente-rapido-dialog',
+    open
+      ? [
+          ...buildClienteRapidoDialogTools({
+            getValues: () => {
+              const v = getValues()
+              return { nombre_completo: v.nombre_completo, telefono: v.telefono, direccion: v.direccion, permitir_credito: v.permitir_credito }
+            },
+            setValues: (values) => {
+              for (const key of ['nombre_completo', 'telefono', 'direccion', 'permitir_credito'] as const) {
+                if (key in values) setValue(key, values[key] as never, { shouldValidate: true, shouldDirty: true })
+              }
+            },
+          }),
+          commitTool({
+            name: 'guardar_cliente_rapido',
+            description: 'Crea el cliente del formulario rapido abierto en el punto de venta (presiona Crear cliente).',
+            validar: () => (isPending ? 'Ya se esta guardando.' : null),
+            texto: () => `Crear el cliente ${getValues('nombre_completo') || '(sin nombre)'} (tel. ${getValues('telefono') || 'sin telefono'})`,
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>

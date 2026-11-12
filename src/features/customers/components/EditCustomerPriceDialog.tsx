@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,9 @@ import { useUpsertPreciosCliente } from '../hooks/usePreciosCliente'
 import { useCustomerPricesStore } from '../store/useCustomerPricesStore'
 import type { ClienteVariantePrecioResponse } from '../types/customer-prices'
 import { toast } from 'sonner'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildPrecioDialogTools } from '../agent/precios-cliente-tools'
 import { Pencil, Tag, Loader2 } from 'lucide-react'
 
 type Props = {
@@ -23,6 +26,8 @@ type Props = {
   customerId: number
   customerName?: string
   variantItem: ClienteVariantePrecioResponse | null
+  /** Precio con el que se abre en vez del actual (lo usa el agente). */
+  initialPrice?: number
   onSuccess?: () => void
 }
 
@@ -32,31 +37,49 @@ export default function EditCustomerPriceDialog({
   customerId,
   customerName = 'Cliente',
   variantItem,
+  initialPrice,
   onSuccess,
 }: Props) {
   const [precioInput, setPrecioInput] = useState('')
   const upsertMutation = useUpsertPreciosCliente(customerId)
   const saveLocalPrice = useCustomerPricesStore((state) => state.savePrices)
 
+  // En una ref: solo cuenta al abrir con una variante, no si el prop cambia después.
+  const initialPriceRef = useRef(initialPrice)
+  useEffect(() => {
+    initialPriceRef.current = initialPrice
+  })
+
   useEffect(() => {
     if (variantItem) {
       const initialVal =
-        variantItem.precio_cliente !== null
-          ? String(variantItem.precio_cliente)
-          : String(variantItem.precio_base)
+        initialPriceRef.current !== undefined
+          ? String(initialPriceRef.current)
+          : variantItem.precio_cliente !== null
+            ? String(variantItem.precio_cliente)
+            : String(variantItem.precio_base)
       setPrecioInput(initialVal)
     }
   }, [variantItem])
 
-  if (!variantItem) return null
+  // Mientras el diálogo está abierto, el agente puede cambiar el precio (nunca guardarlo).
+  useAgentTools(
+    'precio-cliente-dialog',
+    open && variantItem
+      ? buildPrecioDialogTools({
+          getVariant: () => variantItem,
+          getPrecio: () => precioInput,
+          setPrecio: setPrecioInput,
+        })
+      : null,
+  )
 
-  const isConfigured = variantItem.tiene_config
-
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
+    if (!variantItem) return false
     const nuevoPrecio = Number(precioInput)
     if (!Number.isFinite(nuevoPrecio) || nuevoPrecio <= 0) {
       toast.error('Ingresa un precio mayor que cero.')
-      return
+      return false
     }
 
     try {
@@ -87,10 +110,37 @@ export default function EditCustomerPriceDialog({
 
       if (onSuccess) onSuccess()
       onClose()
+      return true
     } catch {
       // El error ya lo muestra useUpsertPreciosCliente
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar» tras un clic de confirmación.
+  useAgentTools(
+    'precio-cliente-dialog-guardar',
+    open && variantItem
+      ? [
+          commitTool({
+            name: 'guardar_precio_cliente',
+            description: 'Guarda el precio especial del dialogo abierto para este cliente.',
+            validar: () => {
+              if (upsertMutation.isPending) return 'Ya se esta guardando.'
+              const precio = Number(precioInput)
+              return Number.isFinite(precio) && precio > 0 ? null : 'El precio debe ser mayor que cero.'
+            },
+            texto: () =>
+              `Guardar el precio de ${variantItem.articulo} talla ${variantItem.talla} en Q${Number(precioInput).toFixed(2)}${customerName ? ` para ${customerName}` : ''}`,
+            run: handleSave,
+          }),
+        ]
+      : null,
+  )
+
+  if (!variantItem) return null
+
+  const isConfigured = variantItem.tiene_config
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
@@ -154,7 +204,7 @@ export default function EditCustomerPriceDialog({
           <Button variant="outline" type="button" onClick={onClose} disabled={upsertMutation.isPending}>
             Cancelar
           </Button>
-          <Button type="button" onClick={handleSave} disabled={upsertMutation.isPending} className="gap-1.5">
+          <Button type="button" onClick={() => { void handleSave() }} disabled={upsertMutation.isPending} className="gap-1.5">
             {upsertMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             {isConfigured ? 'Guardar cambios' : 'Asignar precio'}
           </Button>

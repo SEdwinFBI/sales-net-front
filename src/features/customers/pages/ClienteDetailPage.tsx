@@ -19,6 +19,9 @@ import { ArrowLeft, Plus, Tag } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Breadcrumb } from '@/components/ui/breadcrumb'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildClienteDetailTools, type ClienteTab } from '../agent/cliente-detail-tools'
+import type { AbonoFormValues, AjusteFormValues, VentaClienteFormValues } from '../agent/cliente-detail-forms'
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -32,6 +35,34 @@ export default function ClienteDetailPage() {
   const [abonarOpen, setAbonarOpen] = useState(false)
   const [ajusteOpen, setAjusteOpen] = useState(false)
   const [ventaDialogOpen, setVentaDialogOpen] = useState(false)
+  // Valores con los que el agente abre cada formulario (los botones normales los abren vacíos).
+  const [abonoInitial, setAbonoInitial] = useState<Partial<AbonoFormValues> | undefined>(undefined)
+  const [ajusteInitial, setAjusteInitial] = useState<Partial<AjusteFormValues> | undefined>(undefined)
+  const [ventaInitial, setVentaInitial] = useState<Partial<VentaClienteFormValues> | undefined>(undefined)
+  // Pestaña elegida y con qué estado de crédito se eligió: al cambiar el crédito vuelve a la pestaña inicial
+  // (antes lo hacía `key` al remontar las pestañas).
+  const [tabSelection, setTabSelection] = useState<{ creditKey: string; value: string } | null>(null)
+
+  const creditKey = String(cliente?.permitir_credito)
+  const activeTab = tabSelection?.creditKey === creditKey ? tabSelection.value : sinCredito ? 'precios' : 'movimientos'
+
+  // Tools del agente: leen la ficha, cambian de pestaña y abren los formularios (el usuario guarda).
+  useAgentTools(
+    'cliente-detail-page',
+    cliente
+      ? buildClienteDetailTools({
+          getCliente: () => cliente,
+          getTab: () => activeTab as ClienteTab,
+          setTab: (tab) => setTabSelection({ creditKey, value: tab }),
+          getResumen: () => resumen,
+          getVentas: () => ventas,
+          isDialogOpen: () => abonarOpen || ajusteOpen || ventaDialogOpen,
+          openAbono: (valores) => { setAbonoInitial(valores); setAbonarOpen(true) },
+          openAjuste: (valores) => { setAjusteInitial(valores); setAjusteOpen(true) },
+          openVenta: (valores) => { setVentaInitial(valores); setVentaDialogOpen(true) },
+        })
+      : null,
+  )
 
   if (isLoading) {
     return (
@@ -109,7 +140,7 @@ export default function ClienteDetailPage() {
           )}
 
           {sinCredito && <p className="text-sm text-muted-foreground">Este cliente compra únicamente al contado.</p>}
-          <Tabs key={String(cliente.permitir_credito)} defaultValue={sinCredito ? 'precios' : 'movimientos'}>
+          <Tabs key={creditKey} value={activeTab} onValueChange={(value) => setTabSelection({ creditKey, value: String(value) })}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList className="w-full sm:w-fit">
                 {!sinCredito && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
@@ -118,16 +149,16 @@ export default function ClienteDetailPage() {
                 <TabsTrigger value="precios">Precios del cliente</TabsTrigger>
               </TabsList>
               {!sinCredito && <>
-              <Button onClick={() => setVentaDialogOpen(true)} size="sm" className="w-full sm:w-auto">
+              <Button onClick={() => { setVentaInitial(undefined); setVentaDialogOpen(true) }} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar venta
               </Button>
-              <Button onClick={() => setAbonarOpen(true)} size="sm" className="w-full sm:w-auto">
+              <Button onClick={() => { setAbonoInitial(undefined); setAbonarOpen(true) }} size="sm" className="w-full sm:w-auto">
                 <Plus />
                 Registrar abono
               </Button>
               <Button
-                onClick={() => setAjusteOpen(true)}
+                onClick={() => { setAjusteInitial(undefined); setAjusteOpen(true) }}
                 size="sm"
                 className="w-full bg-red-500 text-white hover:bg-red-600 sm:w-auto"
               >
@@ -161,20 +192,23 @@ export default function ClienteDetailPage() {
         open={ventaDialogOpen}
         idCliente={clienteId}
         clienteNombre={cliente.nombre_completo}
-        onClose={() => setVentaDialogOpen(false)}
+        initialValues={ventaInitial}
+        onClose={() => { setVentaDialogOpen(false); setVentaInitial(undefined) }}
       />
 
       <AbonarDialog
         open={abonarOpen}
         ventas={ventas}
         idCliente={clienteId}
-        onClose={() => setAbonarOpen(false)}
+        initialValues={abonoInitial}
+        onClose={() => { setAbonarOpen(false); setAbonoInitial(undefined) }}
       />
 
       <AjusteClienteDialog
         open={ajusteOpen}
         idCliente={clienteId}
-        onClose={() => setAjusteOpen(false)}
+        initialValues={ajusteInitial}
+        onClose={() => { setAjusteOpen(false); setAjusteInitial(undefined) }}
       />
       </>}
     </PageTemplateSimple>

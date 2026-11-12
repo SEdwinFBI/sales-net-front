@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { formatCurrency } from '../utils/venta-total'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,6 +20,10 @@ import { useAbonarVenta } from '../hooks/useAbonarVenta'
 import type { Venta } from '@/features/sales/types/sales'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { buildAbonoDialogTools } from '../agent/cliente-detail-tools'
+import type { AbonoFormValues } from '../agent/cliente-detail-forms'
 
 const schema = z.object({
   idVenta: z.preprocess((val) => Number(val), z.number().min(0)),
@@ -32,10 +37,12 @@ type Props = {
   open: boolean
   ventas: Venta[]
   idCliente: number
+  /** Valores con los que se abre (los usa el agente); sin ellos el formulario se conserva como estaba. */
+  initialValues?: Partial<AbonoFormValues>
   onClose: () => void
 }
 
-export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props) {
+export default function AbonarDialog({ open, ventas, idCliente, initialValues, onClose }: Props) {
   const { mutateAsync: abonar, isPending } = useAbonarVenta()
 
   const {
@@ -44,11 +51,43 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
     reset,
     setValue,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: { idVenta: 0, monto: 0, observacion: '' },
   })
+
+  // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto.
+  const initialRef = useRef(initialValues)
+  useEffect(() => {
+    initialRef.current = initialValues
+  })
+  useEffect(() => {
+    if (!open || !initialRef.current) return
+    reset({ idVenta: 0, monto: 0, observacion: '', ...initialRef.current })
+  }, [open, reset])
+
+  // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca registrar el abono).
+  useAgentTools(
+    'abonar-dialog',
+    open
+      ? buildAbonoDialogTools({
+          getVentas: () => ventas,
+          getValues: () => ({
+            idVenta: Number(getValues('idVenta')),
+            monto: Number(getValues('monto')),
+            observacion: getValues('observacion') ?? '',
+          }),
+          setValues: (values) => {
+            const options = { shouldValidate: true, shouldDirty: true }
+            if (values.idVenta !== undefined) setValue('idVenta', values.idVenta, options)
+            if (values.monto !== undefined) setValue('monto', values.monto, options)
+            if (values.observacion !== undefined) setValue('observacion', values.observacion, options)
+          },
+        })
+      : null,
+  )
 
   const idVentaValue = watch('idVenta')
   const selectedVenta = ventas.find((v) => v.id === idVentaValue)
@@ -66,10 +105,31 @@ export default function AbonarDialog({ open, ventas, idCliente, onClose }: Props
       toast.success('Abono registrado correctamente')
       reset()
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar el abono'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Registrar abono» tras un clic de confirmación.
+  useAgentTools(
+    'abonar-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'confirmar_abono',
+            description: 'Registra el abono del formulario abierto (presiona Registrar abono).',
+            validar: () => (isPending ? 'Ya se esta registrando.' : null),
+            texto: () => {
+              const idVenta = Number(getValues('idVenta'))
+              return `Registrar un abono de Q${Number(getValues('monto')).toFixed(2)} ${idVenta ? `a la venta #${idVenta}` : 'a la deuda del cliente'}`
+            },
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>

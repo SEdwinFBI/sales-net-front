@@ -13,6 +13,11 @@ import type { Cliente } from '../types/clientes'
 import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import Paginator from '@/components/shared/table/Paginator'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildClientesPageTools, type ClientesPageAgentContext } from '../agent/clientes-page-tools'
+import type { ClienteFormValues } from '../agent/cliente-form-values'
+import { getClienteById } from '../services/clientes-service'
+import { paginationTool } from '@/features/agent/pagination-tools'
 
 const secciones: { value: boolean | ''; label: string; icon: typeof Users; activeClass: string }[] = [
   { value: '', label: 'Todos', icon: Users, activeClass: 'border-primary/30 bg-primary/10 text-primary' },
@@ -29,10 +34,11 @@ export default function ClientesPage() {
   const [filterActivo, setFilterActivo] = useState('todos')
   const [filterCredito, setFilterCredito] = useState<boolean | ''>('')
   const activo = filterActivo === 'todos' ? undefined : filterActivo === 'activo'
-  const { data: clientes, count, isLoading } = useClientes(page, pageSize, debouncedSearch, activo, filterCredito === '' ? undefined : filterCredito)
+  const { data: clientes, count, isLoading, isFetching } = useClientes(page, pageSize, debouncedSearch, activo, filterCredito === '' ? undefined : filterCredito)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null)
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null)
+  const [dialogInitial, setDialogInitial] = useState<Partial<ClienteFormValues> | undefined>(undefined)
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setDebouncedSearch(search.trim())
@@ -43,6 +49,40 @@ export default function ClientesPage() {
 
   const clientesList = Array.isArray(clientes) ? clientes : []
   const filtered = clientesList
+
+  // Tools del agente: leen y filtran lo que esta pantalla ya muestra y abren sus diálogos (el usuario guarda).
+  const agentContext: ClientesPageAgentContext = {
+    readFilters: () => ({
+      texto: search,
+      credito: filterCredito === '' ? 'todos' : filterCredito ? 'con' : 'sin',
+      estado: filterActivo as 'todos' | 'activo' | 'inactivo',
+    }),
+    readList: () => ({ clientes: clientesList, total: count, cargando: isLoading || isFetching }),
+    setFilters: ({ texto, credito, estado }) => {
+      if (texto !== undefined) {
+        setSearch(texto)
+        setDebouncedSearch(texto)
+      }
+      if (credito !== undefined) setFilterCredito(credito === 'todos' ? '' : credito === 'con')
+      if (estado !== undefined) setFilterActivo(estado)
+      setPage(1)
+    },
+    isDialogOpen: () => dialogOpen,
+    isDeleteOpen: () => clienteToDelete !== null,
+    openNew: (valores) => { setSelectedCliente(null); setDialogInitial(valores); setDialogOpen(true) },
+    openEdit: (cliente, valores) => { setSelectedCliente(cliente); setDialogInitial(valores); setDialogOpen(true) },
+    openDelete: setClienteToDelete,
+    fetchCliente: getClienteById,
+  }
+  useAgentTools('clientes-page', buildClientesPageTools(agentContext, user?.role === 'admin'))
+  useAgentTools('paginacion-clientes', [
+    paginationTool('clientes', 'la lista de clientes', {
+      get: () => ({ pagina: page, paginas: Math.ceil(count / pageSize), tamano: pageSize, total: count }),
+      setPagina: setPage,
+      setTamano: (tamano) => { setPageSize(tamano); setPage(1) },
+      tamanos: [10, 25, 50],
+    }),
+  ])
 
   return (
     <PageTemplateSimple title="Clientes" description="Gestión de clientes del sistema.">
@@ -86,7 +126,7 @@ export default function ClientesPage() {
                 <option value="inactivo">Inactivos</option>
               </Select>
             </div>
-            <Button className="w-full sm:w-auto" onClick={() => { setSelectedCliente(null); setDialogOpen(true) }} disabled={user?.role !== 'admin'}>
+            <Button className="w-full sm:w-auto" onClick={() => { setSelectedCliente(null); setDialogInitial(undefined); setDialogOpen(true) }} disabled={user?.role !== 'admin'}>
               <Plus />
               Nuevo cliente
             </Button>
@@ -106,7 +146,7 @@ export default function ClientesPage() {
                 <ClienteCard
                   key={cliente.id}
                   cliente={cliente}
-                  onEdit={() => { setSelectedCliente(cliente); setDialogOpen(true) }}
+                  onEdit={() => { setSelectedCliente(cliente); setDialogInitial(undefined); setDialogOpen(true) }}
                   onDelete={() => setClienteToDelete(cliente)}
                 />
               ))}
@@ -144,7 +184,8 @@ export default function ClientesPage() {
       <ClienteDialog
         open={dialogOpen}
         cliente={selectedCliente}
-        onClose={() => setDialogOpen(false)}
+        initialValues={dialogInitial}
+        onClose={() => { setDialogOpen(false); setDialogInitial(undefined) }}
       />
 
       <DeleteClienteDialog

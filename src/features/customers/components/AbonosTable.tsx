@@ -26,7 +26,11 @@ import {
 import type { Abono } from '../types/clientes'
 import { formatDisplayDateTime } from '@/lib/dates'
 import { amountFilter, dateFilter, idFilter, textFilter } from '../utils/table-filters'
-import RevertirAbonoButton from './RevertirAbonoButton'
+import RevertirAbonoButton, { RevertirAbonoDialog } from './RevertirAbonoButton'
+import { useAuthStore } from '@/features/core/store/auth-store'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildAbonosTools } from '../agent/compras-abonos-tools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   abonos: Abono[]
@@ -35,6 +39,9 @@ type Props = {
 export default function AbonosTable({ abonos }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  // Anulación abierta por el agente: otra instancia del mismo diálogo del botón, con la misma regla de visibilidad.
+  const [abonoAnular, setAbonoAnular] = useState<Abono | null>(null)
+  const user = useAuthStore((state) => state.user)
 
   const columns = useMemo<ColumnDef<Abono>[]>(() => [
     {
@@ -114,6 +121,19 @@ export default function AbonosTable({ abonos }: Props) {
     initialState: { pagination: { pageSize: 10 } },
   })
 
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-abonos_cliente', [paginationTool('abonos_cliente', 'los abonos del cliente', tablePagination(table))])
+
+  useAgentTools(
+    'abonos-cliente',
+    buildAbonosTools({
+      getAbonos: () => abonos,
+      getUser: () => user,
+      isDialogOpen: () => abonoAnular !== null,
+      openAnular: setAbonoAnular,
+    }),
+  )
+
   const hasFilters = columnFilters.length > 0
 
   if (abonos.length === 0) {
@@ -185,6 +205,14 @@ export default function AbonosTable({ abonos }: Props) {
       </div>
 
       <TablePagination table={table} />
+
+      {abonoAnular && (
+        <RevertirAbonoDialog
+          abono={abonoAnular}
+          open
+          onOpenChange={(open) => { if (!open) setAbonoAnular(null) }}
+        />
+      )}
     </>
   )
 }

@@ -19,6 +19,10 @@ import { queryKeys } from '@/lib/query-keys'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { getSucursales } from '@/features/admin/branches/services/sucursales-service'
 import { Select } from '@/components/ui/select'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildVentaClienteDialogTools } from '../agent/cliente-detail-tools'
+import type { VentaClienteFormValues } from '../agent/cliente-detail-forms'
 
 type PaymentMethod = 'efectivo' | 'credito'
 
@@ -31,10 +35,12 @@ type Props = {
   open: boolean
   idCliente: number
   clienteNombre: string
+  /** Valores con los que se abre (los usa el agente). */
+  initialValues?: Partial<VentaClienteFormValues>
   onClose: () => void
 }
 
-export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNombre, onClose }: Props) {
+export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNombre, initialValues, onClose }: Props) {
   const { mutateAsync: crearVenta, isPending } = useCreateVentaEncabezado()
   const user = useAuthStore(state => state.user)
   const necesitaSucursal = !user?.sucursalActual
@@ -55,15 +61,52 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
   const [observacion, setObservacion] = useState('')
   const [montoError, setMontoError] = useState('')
 
-  const handleSubmit = async () => {
+  // Al abrir con valores del agente se precargan los campos, en el mismo render en que `open` cambia
+  // (sin valores, el diálogo se abre como siempre).
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open && initialValues) {
+      setPaymentMethod(initialValues.forma_pago ?? 'efectivo')
+      setMonto(initialValues.monto !== undefined ? initialValues.monto.toFixed(2) : '0.00')
+      setObservacion(initialValues.observacion ?? '')
+      if (initialValues.sucursal_id !== undefined) setIdSucursal(String(initialValues.sucursal_id))
+    }
+  }
+
+  // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca registrar la venta).
+  useAgentTools(
+    'venta-cliente-dialog',
+    open
+      ? buildVentaClienteDialogTools({
+          // Solo se conoce la lista de sucursales cuando el diálogo la pide y ya cargó.
+          getSucursalIds: () =>
+            !necesitaSucursal ? [] : cargandoSucursales || errorSucursales ? undefined : sucursalesActivas.map((s) => s.id),
+          getValues: () => ({
+            forma_pago: paymentMethod,
+            monto: Number(monto),
+            observacion,
+            ...(necesitaSucursal && sucursalSeleccionada ? { sucursal_id: Number(sucursalSeleccionada) } : {}),
+          }),
+          setValues: (values) => {
+            if (values.forma_pago !== undefined) setPaymentMethod(values.forma_pago)
+            if (values.monto !== undefined) { setMonto(values.monto.toFixed(2)); setMontoError('') }
+            if (values.observacion !== undefined) setObservacion(values.observacion)
+            if (values.sucursal_id !== undefined) setIdSucursal(String(values.sucursal_id))
+          },
+        })
+      : null,
+  )
+
+  const handleSubmit = async (): Promise<boolean> => {
     if (necesitaSucursal && !sucursalSeleccionada) {
       toast.error('Selecciona la sucursal para registrar la venta')
-      return
+      return false
     }
     const montoNum = Number(monto)
     if (isNaN(montoNum) || montoNum < 0) {
       setMontoError('El monto debe ser un número válido mayor o igual a 0')
-      return
+      return false
     }
     setMontoError('')
 
@@ -84,10 +127,33 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
       setObservacion('')
       setPaymentMethod('efectivo')
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al crear la venta'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Registrar venta» tras un clic de confirmación.
+  useAgentTools(
+    'venta-cliente-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'confirmar_venta_cliente',
+            description: 'Registra la venta del formulario abierto en la ficha del cliente (presiona Registrar venta).',
+            validar: () => {
+              if (isPending) return 'Ya se esta registrando.'
+              if (necesitaSucursal && (cargandoSucursales || errorSucursales || !sucursalSeleccionada)) return 'Falta elegir la sucursal de la venta.'
+              const montoNum = Number(monto)
+              return isNaN(montoNum) || montoNum < 0 ? 'El monto debe ser un numero mayor o igual a 0.' : null
+            },
+            texto: () => `Registrar una venta de Q${Number(monto).toFixed(2)} (${paymentMethod}) a ${clienteNombre}`,
+            run: handleSubmit,
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
@@ -171,7 +237,7 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
           <Button variant="outline" type="button" onClick={onClose} disabled={isPending}>
             Cancelar
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={isPending || (necesitaSucursal && (cargandoSucursales || errorSucursales || !sucursalSeleccionada))}>
+          <Button type="button" onClick={() => { void handleSubmit() }} disabled={isPending || (necesitaSucursal && (cargandoSucursales || errorSucursales || !sucursalSeleccionada))}>
             {isPending && <Loader2 className="animate-spin" />}
             {isPending ? 'Registrando…' : 'Registrar venta'}
           </Button>

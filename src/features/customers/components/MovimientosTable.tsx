@@ -18,6 +18,8 @@ import type { MovimientoCliente, TipoMovimiento } from '../types/clientes'
 import { formatCurrency } from '../utils/venta-total'
 import { formatDisplayDateTime } from '@/lib/dates'
 import { textFilter } from '../utils/table-filters'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   movimientos: MovimientoCliente[]
@@ -86,6 +88,9 @@ export default function MovimientosTable({ movimientos }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   })
+
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-movimientos_cliente', [paginationTool('movimientos_cliente', 'los movimientos del cliente', tablePagination(table))])
 
   const visibleRows = table.getRowModel().rows
   const hasFilters = columnFilters.length > 0
