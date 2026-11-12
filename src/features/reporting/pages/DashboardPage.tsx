@@ -24,6 +24,8 @@ import { useTallas } from '@/features/catalog/hooks/useTallas'
 import { useSucursales } from '@/features/admin'
 import { useVariantes } from '@/features/catalog/hooks/useVariantes'
 import { useMediaQuery } from '@/features/core/hooks/useMediaQuery'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildDashboardTools } from '../agent/reportes-tools'
 import { getDashboardData, type DashboardFilters } from '../services/reportes-service'
 import type { DashboardData } from '../types/reportes'
 
@@ -173,6 +175,43 @@ export default function DashboardPage() {
       .map(id => ({ id, nombre: nombrePorId.get(id) ?? `#${id}` }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { numeric: true }))
   }, [variantes, tallas, filters.id_articulo])
+
+  // Tools del agente: escriben los mismos searchParams que los selectores (la talla se borra al cambiar de artículo).
+  useAgentTools(
+    'dashboard-page',
+    buildDashboardTools({
+      getFilters: () => ({
+        fecha_desde: filters.fecha_desde ?? def.fecha_desde,
+        fecha_hasta: filters.fecha_hasta ?? def.fecha_hasta,
+        sucursal_id: filters.id_sucursal,
+        articulo_id: filters.id_articulo,
+        talla_id: filters.id_talla,
+      }),
+      // Una sola escritura: setSearchParams no encola actualizaciones seguidas (cada una parte del render anterior).
+      apply: (changes) => {
+        setSearchParams((prev) => {
+          for (const [key, value] of Object.entries(changes)) {
+            if (value === null || value === undefined || value === '') prev.delete(key)
+            else prev.set(key, String(value))
+            if (key === 'articulo') prev.delete('talla') // talla depende del artículo
+          }
+          return prev
+        }, { replace: true })
+      },
+      clear: clearFilters,
+      getOptions: () => ({
+        sucursales: sucursales.map((s) => ({ id: s.id, nombre: s.nombre })),
+        articulos: articulos.filter((a) => a.activo !== false).map((a) => ({ id: a.id, titulo: a.titulo })),
+        tallasDe: (articuloId) => {
+          const nombrePorId = new Map(tallas.map((t) => [t.id, t.nombre]))
+          const ids = new Set(variantes.filter((v) => v.id_articulo === articuloId && v.activo).map((v) => v.id_talla))
+          return [...ids].map((id) => ({ id, nombre: nombrePorId.get(id) ?? `#${id}` }))
+        },
+      }),
+      getData: () => data,
+      isLoading: () => isLoading || isFetching,
+    }),
+  )
 
   const d = data ?? ({} as DashboardData)
   const r = d.resumen ?? ({} as DashboardData['resumen'])
