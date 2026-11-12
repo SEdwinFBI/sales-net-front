@@ -25,6 +25,8 @@ vi.mock('../hooks/useHorarioCobros', () => ({
   useUpdateHorarioCobros: () => ({ mutateAsync: state.save, isPending: false }),
 }))
 vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
+// El componente se invoca como función (sin renderizar): el registro de tools del agente usa hooks reales.
+vi.mock('@/features/agent/registry/useAgentTools', () => ({ useAgentTools: vi.fn() }))
 
 // Inspección del árbol y de los eventos del componente sin montar los controles de UI.
 type Props = { children?: ReactNode; [key: string]: unknown }

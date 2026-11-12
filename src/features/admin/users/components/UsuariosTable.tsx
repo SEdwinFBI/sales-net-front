@@ -26,6 +26,10 @@ import DeleteUsuarioDialog from './DeleteUsuarioDialog'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { useSucursales } from '../../branches/hooks/useSucursales'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildUsuariosTools, type UsuarioFormValues } from '../../agent/usuarios-tools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   data: Usuario[]
@@ -64,7 +68,9 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null)
   const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null)
+  const [dialogInitial, setDialogInitial] = useState<Partial<UsuarioFormValues> | undefined>(undefined)
   const { mutateAsync: updateUsuario, isPending: isUpdating } = useUpdateUsuario()
+  const { data: sucursales } = useSucursales()
 
   const evidenceCheckbox = (usuario: Usuario) => (
     <label className="inline-flex items-center gap-2 text-sm">
@@ -173,6 +179,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
             aria-label={`Editar ${row.original.fullName || row.original.username}`}
             onClick={() => {
               setSelectedUsuario(row.original)
+              setDialogInitial(undefined)
               setDialogOpen(true)
             }}
           >
@@ -204,6 +211,9 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
     initialState: { pagination: { pageSize: 10 } },
   })
 
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-usuarios', [paginationTool('usuarios', 'la tabla de usuarios', tablePagination(table))])
+
   const roleFilter = (table.getColumn('role')?.getFilterValue() as string | undefined) ?? 'all'
   const hasActiveFilters = globalFilter.length > 0 || columnFilters.length > 0
   const filteredCount = table.getFilteredRowModel().rows.length
@@ -212,6 +222,46 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
     setGlobalFilter('')
     setColumnFilters([])
   }
+
+  // Tools del agente: leen y filtran lo que la tabla ya muestra, abren sus diálogos (el usuario guarda) y
+  // cambian los permisos con la misma `updateUsuario` de los checkboxes. Ninguna toca contraseñas.
+  useAgentTools(
+    'usuarios-table',
+    buildUsuariosTools({
+      getUsuarios: () => data,
+      getFiltered: () => table.getFilteredRowModel().rows.map((row) => row.original),
+      getFilters: () => ({
+        texto: globalFilter,
+        rol: roleFilter === 'admin' || roleFilter === 'vendedor' ? roleFilter : 'todos',
+      }),
+      setFilters: ({ texto, rol }) => {
+        if (texto !== undefined) setGlobalFilter(texto)
+        if (rol !== undefined) table.getColumn('role')?.setFilterValue(rol === 'todos' ? undefined : rol)
+        table.setPageIndex(0)
+      },
+      getSucursalIds: () => sucursales?.map((s) => s.id),
+      isDialogOpen: () => dialogOpen,
+      isDeleteOpen: () => usuarioToDelete !== null,
+      openNew: (valores) => { setSelectedUsuario(null); setDialogInitial(valores); setDialogOpen(true) },
+      openEdit: (usuario, valores) => { setSelectedUsuario(usuario); setDialogInitial(valores); setDialogOpen(true) },
+      openDelete: setUsuarioToDelete,
+      updatePermisos: async (id, cambios) => {
+        try {
+          await updateUsuario({ id, ...cambios })
+          toast.success(
+            'puede_anular' in cambios
+              ? `Permiso de anulación ${cambios.puede_anular ? 'activado' : 'desactivado'}`
+              : `Evidencia fotográfica ${cambios.evidencia_fotografica ? 'activada' : 'desactivada'}`,
+          )
+          return true
+        } catch (error) {
+          toast.error(getApiErrorMessage(error, 'No se pudo actualizar el permiso'))
+          return false
+        }
+      },
+      isUpdating: () => isUpdating,
+    }),
+  )
 
   return (
     <>
@@ -254,7 +304,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
           </div>
           <Button
             className="w-full sm:w-auto"
-            onClick={() => { setSelectedUsuario(null); setDialogOpen(true) }}
+            onClick={() => { setSelectedUsuario(null); setDialogInitial(undefined); setDialogOpen(true) }}
           >
             <Plus />
             Nuevo usuario
@@ -305,6 +355,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
                       aria-label={`Editar ${usuario.fullName || usuario.username}`}
                       onClick={() => {
                         setSelectedUsuario(usuario)
+                        setDialogInitial(undefined)
                         setDialogOpen(true)
                       }}
                     >
@@ -398,6 +449,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
       <UsuarioDialog
         open={dialogOpen}
         usuario={selectedUsuario}
+        initialValues={dialogInitial}
         onClose={() => setDialogOpen(false)}
       />
 

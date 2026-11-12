@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -22,6 +22,9 @@ import type { Usuario } from '../types/usuario-types'
 import { useSucursales } from '@/features/admin'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { buildUsuarioDialogTools, type UsuarioFormValues } from '../../agent/usuarios-tools'
 
 const schema = z.object({
   first_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -39,10 +42,12 @@ type FormValues = z.infer<typeof schema>
 type Props = {
   open: boolean
   usuario?: Usuario | null
+  /** Valores que se superponen a los defaults o a los datos del usuario al abrir (los usa el agente). Nunca incluye contraseña. */
+  initialValues?: Partial<UsuarioFormValues>
   onClose: () => void
 }
 
-export default function UsuarioDialog({ open, usuario, onClose }: Props) {
+export default function UsuarioDialog({ open, usuario, initialValues, onClose }: Props) {
   const isEdit = !!usuario
   const { mutateAsync: createUsuario, isPending: isCreating } = useCreateUsuario()
   const { mutateAsync: updateUsuario, isPending: isUpdating } = useUpdateUsuario()
@@ -55,6 +60,8 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
     handleSubmit,
     reset,
     watch,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
@@ -62,16 +69,55 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
   })
   const role = watch('role')
 
+  // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto: solo se usa al abrir.
+  const initialRef = useRef(initialValues)
+  useEffect(() => {
+    initialRef.current = initialValues
+  })
+
   useEffect(() => {
     if (open) {
-      reset(
-        usuario
+      const { sucursales: sucursalesIniciales, ...camposIniciales } = initialRef.current ?? {}
+      reset({
+        ...(usuario
           ? { first_name: usuario.first_name, last_name: usuario.last_name, username: usuario.username, email: usuario.email, password: '', role: usuario.role as 'admin' | 'vendedor', hora_entrada: usuario.hora_entrada?.slice(0, 5) ?? '', hora_salida: usuario.hora_salida?.slice(0, 5) ?? '' }
-          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor', hora_entrada: '04:00', hora_salida: '16:00' }
-      )
-      setSucursalesSeleccionadas(new Set(usuario?.sucursales ?? []))
+          : { first_name: '', last_name: '', username: '', email: '', password: '', role: 'vendedor' as const, hora_entrada: '04:00', hora_salida: '16:00' }),
+        ...camposIniciales,
+      })
+      setSucursalesSeleccionadas(new Set(sucursalesIniciales ?? usuario?.sucursales ?? []))
     }
   }, [open, usuario, reset])
+
+  // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca guardarlo). La contraseña
+  // no existe para él: ni se llena ni se lee, y `getValues` la deja fuera de forma explícita.
+  useAgentTools(
+    'usuario-dialog',
+    open
+      ? buildUsuarioDialogTools({
+          getRole: () => getValues('role') ?? null,
+          getSucursalIds: () => sucursales?.map((s) => s.id),
+          getValues: () => {
+            const v = getValues()
+            return {
+              first_name: v.first_name,
+              last_name: v.last_name,
+              email: v.email,
+              username: v.username,
+              role: v.role,
+              hora_entrada: v.hora_entrada,
+              hora_salida: v.hora_salida,
+              sucursales: Array.from(sucursalesSeleccionadas),
+            }
+          },
+          setValues: (values) => {
+            for (const key of ['first_name', 'last_name', 'email', 'username', 'role', 'hora_entrada', 'hora_salida'] as const) {
+              if (key in values) setValue(key, values[key] as never, { shouldValidate: true, shouldDirty: true })
+            }
+            if (values.sucursales) setSucursalesSeleccionadas(new Set(values.sucursales))
+          },
+        })
+      : null,
+  )
 
   const toggleSucursal = (id: number, checked: boolean) => {
     setSucursalesSeleccionadas((current) => {
@@ -86,7 +132,7 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
     try {
       if (!isEdit && !values.password) {
         toast.error('La contraseña es requerida')
-        return
+        return false
       }
 
       const payload = {
@@ -108,10 +154,33 @@ export default function UsuarioDialog({ open, usuario, onClose }: Props) {
         toast.success('Usuario creado correctamente')
       }
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar el usuario'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona el botón tras un clic de confirmación.
+  // La contraseña la escribe siempre el usuario: aquí solo se comprueba si el campo está vacío.
+  useAgentTools(
+    'usuario-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'guardar_usuario',
+            description: 'Guarda el formulario de usuario abierto (crea el usuario o guarda los cambios). No escribe la contrasena: la escribe el usuario.',
+            validar: () => {
+              if (isPending) return 'Ya se esta guardando.'
+              if (!isEdit && !getValues('password')) return 'Falta que el usuario escriba la contraseña antes de guardar.'
+              return getValues('role') === 'vendedor' && sucursalesSeleccionadas.size === 0 ? 'Un vendedor debe tener al menos una sucursal asignada.' : null
+            },
+            texto: () => `${isEdit ? 'Guardar los cambios del usuario' : 'Crear el usuario'} ${getValues('username') || '(sin username)'} con rol ${getValues('role')}`,
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>

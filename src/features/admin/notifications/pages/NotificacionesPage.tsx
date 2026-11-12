@@ -45,6 +45,10 @@ import type {
   PreferenciaNotificacion,
 } from '../types/notificaciones-types'
 import HorarioCobrosSection from '../components/HorarioCobrosSection'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildDestinatarioDialogTools, buildDestinatariosTools } from '../../agent/notificaciones-tools'
+import { paginationTool } from '@/features/agent/pagination-tools'
 
 interface PreferenceConfig {
   key: PreferenciaNotificacion
@@ -171,7 +175,7 @@ export default function NotificacionesPage() {
     setDestinatarios(JSON.parse(initialSnapshot))
   }
 
-  const save = async () => {
+  const save = async (): Promise<boolean> => {
     try {
       await update({
         destinatarios: destinatarios.map((item) => ({
@@ -184,33 +188,155 @@ export default function NotificacionesPage() {
       })
       setInitialSnapshot(JSON.stringify(destinatarios))
       toast.success('Preferencias de notificación guardadas con éxito')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudieron guardar las preferencias'))
+      return false
     }
   }
 
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault()
+  const guardarDestinatario = async (): Promise<boolean> => {
     try {
       await create(form)
       toast.success('Destinatario registrado correctamente')
       setForm(EMPTY_FORM)
       setDialogOpen(false)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo registrar el destinatario'))
+      return false
     }
   }
 
-  const removeDestinatario = async () => {
-    if (!destinatarioAEliminar) return
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault()
+    void guardarDestinatario()
+  }
+
+  const removeDestinatario = async (): Promise<boolean> => {
+    if (!destinatarioAEliminar) return false
     try {
       await remove(destinatarioAEliminar.id)
       toast.success('Destinatario eliminado del sistema')
       setDestinatarioAEliminar(null)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo eliminar el destinatario'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona estos botones tras un clic de confirmación.
+  useAgentTools('notificaciones-guardar', [
+    ...(hasChanges
+      ? [
+          commitTool({
+            name: 'guardar_preferencias_destinatarios',
+            description: 'Guarda las preferencias editadas de los destinatarios de la pagina visible (presiona Guardar preferencias).',
+            validar: () => (isUpdating ? 'Ya se esta guardando.' : null),
+            texto: () => {
+              const antes = new Map((JSON.parse(initialSnapshot) as DestinatarioNotificacion[]).map((d) => [d.id, JSON.stringify(d)]))
+              const cambiados = destinatarios.filter((d) => antes.get(d.id) !== JSON.stringify(d)).map((d) => d.nombre_persona_email)
+              return `Guardar las preferencias de notificacion de: ${cambiados.join(', ') || 'los destinatarios visibles'}`
+            },
+            run: save,
+          }),
+        ]
+      : []),
+    ...(dialogOpen
+      ? [
+          commitTool({
+            name: 'guardar_destinatario',
+            description: 'Registra el destinatario del formulario abierto (presiona Guardar destinatario).',
+            validar: () => {
+              if (isCreating) return 'Ya se esta guardando.'
+              if (!form.nombre_persona_email.trim()) return 'Falta el nombre del destinatario.'
+              return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? null : 'El correo del destinatario no es valido.'
+            },
+            texto: () => `Registrar a ${form.nombre_persona_email} (${form.email}) como destinatario de notificaciones`,
+            run: guardarDestinatario,
+          }),
+        ]
+      : []),
+    ...(destinatarioAEliminar
+      ? [
+          commitTool({
+            name: 'confirmar_eliminar_destinatario',
+            description: 'Presiona Eliminar destinatario en la confirmacion abierta.',
+            validar: () => (isDeleting ? 'Ya se esta eliminando.' : null),
+            texto: () => `Eliminar al destinatario ${destinatarioAEliminar.nombre_persona_email} (${destinatarioAEliminar.email}): dejara de recibir avisos`,
+            run: removeDestinatario,
+          }),
+        ]
+      : []),
+  ])
+
+  // Tools del agente: leen la PÁGINA visible de destinatarios, cambian preferencias solo en el borrador y abren
+  // los diálogos existentes (el usuario guarda).
+  useAgentTools(
+    'notificaciones-page',
+    buildDestinatariosTools({
+      getVisible: () => destinatarios,
+      getTotal: () => count,
+      getPage: () => ({ page, totalPages }),
+      getTexto: () => search,
+      setTexto: (texto) => {
+        setSearch(texto)
+        setDebouncedSearch(texto)
+        setPage(1)
+      },
+      isLoading: () => isLoading,
+      hasUnsavedChanges: () => hasChanges,
+      setPreferencias: (id, cambios) =>
+        setDestinatarios((current) => current.map((item) => (item.id === id ? { ...item, ...cambios } : item))),
+      isDialogOpen: () => dialogOpen,
+      isDeleteOpen: () => destinatarioAEliminar !== null,
+      openNew: (valores) => {
+        const { nombre, ...resto } = valores ?? {}
+        setForm({
+          ...EMPTY_FORM,
+          ...resto,
+          ...(nombre !== undefined ? { nombre_persona_email: nombre } : {}),
+        })
+        setDialogOpen(true)
+      },
+      openDelete: setDestinatarioAEliminar,
+    }),
+  )
+
+  // Cambiar de página recarga la lista y descarta las preferencias sin guardar: por eso se bloquea.
+  useAgentTools('paginacion-destinatarios', [
+    paginationTool('destinatarios', 'los destinatarios de notificaciones', {
+      get: () => ({ pagina: page, paginas: totalPages, tamano: pageSize, total: count }),
+      setPagina: setPage,
+      setTamano: (tamano) => { setPageSize(tamano); setPage(1) },
+      tamanos: [5, 10, 25, 50],
+      bloqueo: () => (hasChanges ? 'Hay preferencias sin guardar: el usuario debe guardarlas o descartarlas antes de cambiar de pagina.' : null),
+    }),
+  ])
+
+  // Mientras el diálogo de nuevo destinatario está abierto, el agente puede llenarlo (nunca guardarlo).
+  useAgentTools(
+    'destinatario-dialog',
+    dialogOpen
+      ? buildDestinatarioDialogTools({
+          getValues: () => ({
+            nombre: form.nombre_persona_email,
+            email: form.email,
+            recibir_stock_bajo: form.recibir_stock_bajo,
+            recibir_abonos: form.recibir_abonos,
+            recibir_clientes_deudas: form.recibir_clientes_deudas,
+            recibir_ventas_realizadas: form.recibir_ventas_realizadas,
+          }),
+          setValues: ({ nombre, ...resto }) =>
+            setForm((current) => ({
+              ...current,
+              ...resto,
+              ...(nombre !== undefined ? { nombre_persona_email: nombre } : {}),
+            })),
+        })
+      : null,
+  )
 
   return (
     <PageTemplateSimple
@@ -422,7 +548,7 @@ export default function NotificacionesPage() {
                 <Button variant="outline" size="sm" onClick={resetChanges} disabled={isUpdating} className="h-9 px-3 text-sm">
                   Descartar
                 </Button>
-                <Button size="sm" onClick={save} disabled={isUpdating} className="h-9 gap-1.5 px-3 text-sm">
+                <Button size="sm" onClick={() => { void save() }} disabled={isUpdating} className="h-9 gap-1.5 px-3 text-sm">
                   {isUpdating ? <Loader2 className="size-3 animate-spin" /> : <Save className="size-3" />}
                   Guardar preferencias
                 </Button>
@@ -485,7 +611,7 @@ export default function NotificacionesPage() {
             <Button variant="outline" disabled={isDeleting} onClick={() => setDestinatarioAEliminar(null)}>
               Cancelar
             </Button>
-            <Button variant="destructive" disabled={isDeleting} onClick={removeDestinatario} className="gap-1.5">
+            <Button variant="destructive" disabled={isDeleting} onClick={() => { void removeDestinatario() }} className="gap-1.5">
               {isDeleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
               Eliminar destinatario
             </Button>

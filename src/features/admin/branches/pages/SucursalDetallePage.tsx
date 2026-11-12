@@ -14,6 +14,8 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { useUsuarios } from '@/features/admin'
 import { useSucursalDetalle } from '../hooks/useSucursalDetalle'
 import { useSetAccesoUsuarioSucursal } from '../hooks/useSetAccesoUsuarioSucursal'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildEquipoTools } from '../../agent/sucursales-tools'
 
 export default function SucursalDetallePage() {
   const { id } = useParams<{ id: string }>()
@@ -39,32 +41,64 @@ export default function SucursalDetallePage() {
     return usuarios.filter((u) => u.role === 'vendedor' && !asignadosIds.has(u.id))
   }, [usuarios, asignados])
 
-  const handleAgregar = async () => {
-    if (!nuevoUsuarioId) return
-    const idUsuario = Number(nuevoUsuarioId)
+  // Mismo flujo para el botón y para el agente: devuelve si salió bien (el error ya se muestra).
+  const agregarUsuario = async (idUsuario: number): Promise<boolean> => {
     setAccionandoId(idUsuario)
     try {
       await setAcceso({ idSucursal, idUsuario, activo: true })
       setNuevoUsuarioId('')
       toast.success('Usuario agregado a la sucursal')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al agregar el usuario'))
+      return false
     } finally {
       setAccionandoId(null)
     }
   }
 
-  const handleQuitar = async (idUsuario: number, nombre: string) => {
+  const quitarUsuario = async (idUsuario: number, nombre: string): Promise<boolean> => {
     setAccionandoId(idUsuario)
     try {
       await setAcceso({ idSucursal, idUsuario, activo: false })
       toast.success(`${nombre} ya no tiene acceso a esta sucursal`)
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al quitar el acceso'))
+      return false
     } finally {
       setAccionandoId(null)
     }
   }
+
+  const handleAgregar = async () => {
+    if (!nuevoUsuarioId) return
+    await agregarUsuario(Number(nuevoUsuarioId))
+  }
+
+  const handleQuitar = async (idUsuario: number, nombre: string) => {
+    await quitarUsuario(idUsuario, nombre)
+  }
+
+  // Tools del agente: leen el equipo y, con confirmación en el widget, agregan o quitan usuarios.
+  // Solo se registran cuando la sucursal ya cargó (las validaciones usan las opciones reales).
+  useAgentTools(
+    'sucursal-equipo',
+    sucursal
+      ? buildEquipoTools({
+          getSucursal: () => sucursal,
+          getAsignados: () => asignados,
+          getFiltrados: () => asignadosFiltrados,
+          getDisponibles: () => vendedoresDisponibles.map((u) => ({ id: u.id, nombre: u.fullName || u.username })),
+          getTexto: () => search,
+          setTexto: setSearch,
+          isLoading: () => isLoading,
+          isBusy: () => isPending,
+          agregar: agregarUsuario,
+          quitar: (idUsuario) => quitarUsuario(idUsuario, asignados.find((u) => u.id === idUsuario)?.full_name ?? 'El usuario'),
+        })
+      : null,
+  )
 
   return (
     <PageTemplateSimple

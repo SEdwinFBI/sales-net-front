@@ -9,6 +9,9 @@ import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useHorarioCobros, useUpdateHorarioCobros } from '../hooks/useHorarioCobros'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildCobrosScheduleTools } from '../../agent/notificaciones-tools'
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 const TODOS = [1, 2, 3, 4, 5, 6, 7]
@@ -44,17 +47,70 @@ export default function HorarioCobrosSection() {
     setSaveError(null)
   }
 
-  const save = async () => {
-    if (!hasChanges || !valid || update.isPending) return
+  const save = async (): Promise<boolean> => {
+    if (!hasChanges || !valid || update.isPending) return false
     setSaveError(null)
     try {
       const saved = await update.mutateAsync({ dias_notificacion: dias, horas_notificacion: [...horas].sort() })
       reset()
       toast.success(saved.dias_notificacion.length ? 'Configuración de cobros guardada' : 'Avisos de cobros pausados')
+      return true
     } catch (error) {
       setSaveError(getApiErrorMessage(error, 'No se pudo guardar la configuración de cobros'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar programación» tras un clic de confirmación.
+  useAgentTools(
+    'horario-cobros-guardar',
+    data && !isError
+      ? [
+          commitTool({
+            name: 'guardar_programacion_cobros',
+            description: 'Guarda la programacion global de cobros del borrador (presiona Guardar programacion).',
+            validar: () =>
+              update.isPending ? 'Ya se esta guardando.' : !hasChanges ? 'No hay cambios sin guardar.' : !valid ? 'Hay horarios incompletos o repetidos.' : null,
+            texto: () =>
+              activo
+                ? `Guardar la programacion de cobros: ${diasResumen}; ${horas.length ? `a las ${[...horas].sort().join(', ')}` : 'horario por defecto'}`
+                : 'Pausar los avisos de cobros de todos los clientes',
+            run: save,
+          }),
+        ]
+      : null,
+  )
+
+  // Tools del agente: leen la programación y solo modifican el BORRADOR (el usuario presiona Guardar programación).
+  // Se registran cuando la configuración ya cargó.
+  useAgentTools(
+    'horario-cobros',
+    data && !isError
+      ? buildCobrosScheduleTools({
+          getState: () => ({
+            dias,
+            horas,
+            horasGuardadas,
+            lastDias,
+            diasGuardados: data.dias_notificacion,
+            hasChanges,
+            valid,
+            zonaHoraria: data.zona_horaria,
+            ultimoEnvio: data.ultima_fecha_envio ?? null,
+          }),
+          apply: (plan) => {
+            if (plan.dias) {
+              if (plan.dias.length === 0 && dias.length > 0) setLastDias(dias)
+              changeDias(plan.dias)
+            }
+            if (plan.horas) {
+              setDraftHoras(plan.horas)
+              setSaveError(null)
+            }
+          },
+        })
+      : null,
+  )
 
   return (
     <section aria-labelledby="horario-cobros-title" className="space-y-5">
