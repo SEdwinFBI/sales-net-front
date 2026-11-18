@@ -1,5 +1,6 @@
 import type { Article } from '@/features/catalog/types/article-types'
 import type { ArticleVariant } from '@/features/catalog/types/article-variant-types'
+import { rankBySimilarity } from './fuzzy-search'
 
 /** Minúsculas y sin acentos: "Camisa" y "camísa" son lo mismo al buscar. */
 export function normalizeText(value: string): string {
@@ -27,10 +28,19 @@ export function searchCatalogArticles(
   const needle = normalizeText(text)
   if (!needle) return []
 
-  return articles
-    .filter((article) => normalizeText(article.title).includes(needle))
-    .slice(0, limit)
-    .map((article) => ({
+  return toResults(
+    articles.filter((article) => normalizeText(article.title).includes(needle)).slice(0, limit),
+    variants,
+  )
+}
+
+/** Sugerencias por parecido (errores de dictado) cuando la búsqueda exacta no encontró nada. */
+export function suggestCatalogArticles(articles: Article[], variants: ArticleVariant[], text: string): CatalogSearchResult[] {
+  return toResults(rankBySimilarity(articles, (article) => article.title, text), variants)
+}
+
+function toResults(articles: Article[], variants: ArticleVariant[]): CatalogSearchResult[] {
+  return articles.map((article) => ({
       id: article.id,
       nombre: article.title,
       variantes: variants

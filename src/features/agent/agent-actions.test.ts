@@ -354,6 +354,56 @@ describe('buscar_articulos', () => {
   })
 })
 
+describe('sugerencias por parecido (errores de dictado)', () => {
+  const marcador = { ...camisa, id: 9, name: 'Marcador con Brich', variants: camisa.variants.map((v) => ({ ...v, id: 91 })) }
+
+  it('con resultado exacto no pide sugerencias', async () => {
+    const suggestArticles = vi.fn(async () => [marcador])
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { suggestArticles })
+    expect(await actions.execute('buscar_articulos', { texto: 'camisa' })).toMatchObject({ ok: true, data: [{ id: 7 }] })
+    expect(suggestArticles).not.toHaveBeenCalled()
+  })
+
+  it('sin resultado exacto devuelve sugerencias con aviso y sirven para agregar_item', async () => {
+    const suggestArticles = vi.fn(async () => [marcador])
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles: vi.fn(async () => []), suggestArticles })
+    const result = await actions.execute('buscar_articulos', { texto: 'marcador con bridge' })
+    expect(result).toMatchObject({ ok: true, data: { aviso: expect.stringMatching(/pregunta/), sugerencias: [{ id: 9, nombre: 'Marcador con Brich' }] } })
+    expect(suggestArticles).toHaveBeenCalledWith('marcador con bridge')
+    expect((await actions.execute('agregar_item', { articulo_id: 9, variante_id: 91, cantidad: 1 })).ok).toBe(true)
+  })
+
+  it('sin resultado ni sugerencias devuelve la lista vacia', async () => {
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, {
+      searchArticles: vi.fn(async () => []),
+      suggestArticles: vi.fn(async () => []),
+    })
+    expect(await actions.execute('buscar_articulos', { texto: 'zzz' })).toEqual({ ok: true, data: [] })
+  })
+
+  it('el catalogo (admin) tambien sugiere', async () => {
+    const suggestCatalog = vi.fn(async () => [{ id: 9, nombre: 'Marcador con Brich', variantes: [] }])
+    const { actions } = setup('admin', '/home', allFeatureRoutes, { searchCatalog: vi.fn(async () => []), suggestCatalog })
+    expect(await actions.execute('buscar_articulos', { texto: 'bridge' })).toMatchObject({
+      ok: true,
+      data: { sugerencias: [{ id: 9 }] },
+    })
+  })
+
+  it('buscar_cliente sugiere y el id sugerido queda conocido para navegar a su ficha', async () => {
+    const { actions, navigate } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => []),
+      suggestClients: vi.fn(async () => [{ id: 33, nombre: 'Manuelito Perez' }]),
+    })
+    expect(await actions.execute('buscar_cliente', { texto: 'manuelito peres' })).toMatchObject({
+      ok: true,
+      data: { sugerencias: [{ id: 33, nombre: 'Manuelito Perez' }] },
+    })
+    await actions.execute('navegar', { ruta: '/clientes/listado/33' })
+    expect(navigate).toHaveBeenCalledWith('/clientes/listado/33')
+  })
+})
+
 describe('cambiar_tema y cerrar_sesion', () => {
   it('cambia el tema', async () => {
     const { actions, setTheme } = setup()
