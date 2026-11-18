@@ -52,6 +52,17 @@ function isLocalhost(): boolean {
   return hn === 'localhost' || hn === '127.0.0.1'
 }
 
+/**
+ * En Android (e iOS) el reconocedor de voz no comparte el micrófono: si la página ya lo tiene
+ * abierto con getUserMedia, el reconocedor recibe silencio. Ahí no se abre el medidor de nivel,
+ * y además el modo continuo duplica resultados, así que cada sesión es de una frase.
+ */
+export function isMobileBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const uaData = (navigator as Navigator & { userAgentData?: { mobile?: boolean } }).userAgentData
+  return uaData?.mobile === true || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
 type AudioMonitor = {
   ctx: AudioContext
   stream: MediaStream
@@ -142,6 +153,7 @@ export function useSpeechRecognition(options: {
     langIndex: 0,
     /** Invalida un arranque en curso (getUserMedia pendiente) si se pidió parar antes de que termine. */
     startSeq: 0,
+    mobile: isMobileBrowser(),
   })
 
 
@@ -185,9 +197,15 @@ export function useSpeechRecognition(options: {
     if (!Ctor) return
 
     const rec = new Ctor()
-    rec.continuous = true
+    rec.continuous = !s.mobile
     rec.interimResults = true
     rec.lang = s.langChain[Math.min(s.langIndex, s.langChain.length - 1)]
+
+    // Sin medidor (móvil), el nivel de la barra sale de los eventos del propio reconocedor.
+    if (s.mobile) {
+      rec.onspeechstart = () => { if (gen === s.generation) setAudioLevel(40) }
+      rec.onspeechend = () => { if (gen === s.generation) setAudioLevel(0) }
+    }
 
     rec.onresult = (event: SpeechRecognitionEvent) => {
       if (gen !== s.generation) return
@@ -311,6 +329,17 @@ export function useSpeechRecognition(options: {
 
     
     const seq = ++s.startSeq
+    if (s.mobile) {
+      // El permiso del micrófono lo pide el reconocedor (error not-allowed si se niega).
+      s.active = true
+      s.langIndex = 0
+      s.restarts = []
+      s.gotResultsSinceStorm = false
+      setIsListening(true)
+      setError(null)
+      spawnSession(s.generation)
+      return
+    }
     let monitor: AudioMonitor
     try {
       monitor = await createMonitor()
