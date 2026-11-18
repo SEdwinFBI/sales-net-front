@@ -14,20 +14,16 @@ import { useMayoreoTiers } from '../hooks/useMayoreoTiers'
 import { useSaveMayoreoTiers } from '../hooks/useSaveMayoreoTiers'
 import type { MayoreoTier } from '../types/pricing-types'
 import { mayoreoTiersSchema } from '../utils/pricing-schema'
+import { rowsToTiers, type TierRow } from '../utils/pricing-draft'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildMayoreoEditorTools } from '../agent/precios-tools'
 
 /** Defaults del negocio: 2 unidades → 50% del individual, 3+ → 100%. */
 const DEFAULT_TIER_ROWS: TierRow[] = [
   { min: '2', max: '2', sinLimite: false, modo: 'DERIVADO', factor: '50' },
   { min: '3', max: '', sinLimite: true, modo: 'DERIVADO', factor: '100' },
 ]
-
-type TierRow = {
-  min: string
-  max: string
-  sinLimite: boolean
-  modo: 'DERIVADO' | 'MONTO_ARTICULO'
-  factor: string
-}
 
 type Props = {
   sucursal: Sucursal
@@ -43,8 +39,6 @@ function toRows(tiers: MayoreoTier[]): TierRow[] {
     factor: String(Number(tier.factor_individual) * 100),
   }))
 }
-
-const percentToFactor = (value: string) => value === '' ? '1' : String(Number(value) / 100)
 
 export default function MayoreoTiersEditor({ sucursal, onGoToPrecios }: Props) {
   const { tiers, esDefault, isLoading } = useMayoreoTiers(sucursal.id)
@@ -85,29 +79,50 @@ export default function MayoreoTiersEditor({ sucursal, onGoToPrecios }: Props) {
     setRows(DEFAULT_TIER_ROWS)
   }
 
-  const handleSave = async () => {
-    const parsedTiers: MayoreoTier[] = currentRows.map((row) => ({
-      unidades_min: Number(row.min),
-      unidades_max: row.sinLimite || row.max === '' ? null : Number(row.max),
-      factor_individual: percentToFactor(row.factor),
-      usar_descuento_articulo: row.modo === 'MONTO_ARTICULO',
-    }))
+  const handleSave = async (): Promise<boolean> => {
+    const parsedTiers: MayoreoTier[] = rowsToTiers(currentRows)
 
     const validation = mayoreoTiersSchema.safeParse(
       parsedTiers.map((tier) => ({ ...tier, factor_individual: Number(tier.factor_individual) }))
     )
     if (!validation.success) {
       toast.error(validation.error.issues[0]?.message ?? 'Revisa los rangos configurados')
-      return
+      return false
     }
 
     try {
       await saveTiers({ userId: sucursal.id, tiers: parsedTiers })
       toast.success('Configuración de mayoreo guardada')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar la configuración de mayoreo'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar cambios» tras un clic de confirmación.
+  useAgentTools('mayoreo-editor-guardar', [
+    commitTool({
+      name: 'guardar_mayoreo',
+      description: 'Guarda los rangos de mayoreo del borrador (presiona Guardar cambios).',
+      validar: () => (isSaving ? 'Ya se esta guardando.' : isLoading ? 'Los rangos aun estan cargando.' : !isDirty ? 'No hay cambios sin guardar.' : null),
+      texto: () => `Guardar ${currentRows.length} rango(s) de mayoreo en ${sucursal.nombre}`,
+      run: handleSave,
+    }),
+  ])
+
+  // Tools del agente: leen los rangos y editan SOLO el borrador; el usuario presiona Guardar cambios.
+  useAgentTools(
+    'mayoreo-editor',
+    buildMayoreoEditorTools({
+      getSucursalName: () => sucursal.nombre,
+      isLoading: () => isLoading,
+      getRows: () => currentRows,
+      isDirty: () => isDirty,
+      isDefault: () => esDefault && !isDirty,
+      setRows,
+    }),
+  )
 
   if (isLoading) {
     return (
@@ -238,7 +253,7 @@ export default function MayoreoTiersEditor({ sucursal, onGoToPrecios }: Props) {
           <Plus />
           Agregar rango
         </Button>
-        <Button onClick={handleSave} disabled={isSaving || !isDirty}>
+        <Button onClick={() => { void handleSave() }} disabled={isSaving || !isDirty}>
           {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
           {isSaving ? 'Guardando…' : 'Guardar cambios'}
         </Button>

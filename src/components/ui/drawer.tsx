@@ -50,11 +50,22 @@ type DrawerContentProps = ComponentProps<typeof DrawerPrimitive.Content> & {
   showHandle?: boolean
 }
 
+/**
+ * El widget del agente vive fuera del drawer (z-[70]); tocarlo cuenta como "clic afuera"
+ * y cerraría el carrito. Se ignora ese caso y se deja pasar cualquier otro.
+ */
+function isFromAgentWidget(event: Event) {
+  const target = event.target as Element | null
+  return Boolean(target?.closest?.('[data-agent-widget]'))
+}
+
 function DrawerContent({
   className,
   children,
   overlayClassName,
   showHandle = true,
+  onPointerDownOutside,
+  onInteractOutside,
   ...props
 }: DrawerContentProps) {
   const { isDesktop, isTablet } = useDesktopMediaQuery()
@@ -70,6 +81,14 @@ function DrawerContent({
           className,
         )}
         {...props}
+        onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event)
+          if (isFromAgentWidget(event)) event.preventDefault()
+        }}
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event)
+          if (isFromAgentWidget(event)) event.preventDefault()
+        }}
       >
         {showHandle ? (
           <div

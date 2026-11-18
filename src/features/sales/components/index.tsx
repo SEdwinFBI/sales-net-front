@@ -21,6 +21,8 @@ import { Search, Store } from "lucide-react"
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { useCustomerPricesStore } from '@/features/customers/store/useCustomerPricesStore'
 import { usePreciosCliente } from '@/features/customers/hooks/usePreciosCliente'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool } from '@/features/agent/pagination-tools'
 
 const Sales = () => {
     const user = useAuthStore(state => state.user)
@@ -30,6 +32,21 @@ const Sales = () => {
     const [debouncedSearch, setDebouncedSearch] = useState('')
     const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch, String(user?.id))
     const { config: pricingConfig, isError: pricingError } = useEffectivePricing()
+
+    // Paginación de los productos del punto de venta para el agente.
+    useAgentTools('paginacion-productos', [
+        paginationTool('productos', 'los productos del punto de venta', {
+            get: () => ({
+                pagina: page,
+                paginas: pagination?.total_pages ?? 1,
+                tamano: pageSize,
+                total: pagination?.total ?? articles.length,
+            }),
+            setPagina: setPage,
+            setTamano: (tamano) => { setPageSize(tamano); setPage(1) },
+            getFilas: () => articles.map((a) => ({ id: a.id, nombre: a.name, tallas: a.variants.length })),
+        }),
+    ])
 
     const items = useSalesStore((state) => state.items)
     const applyPricing = useSalesStore((state) => state.applyPricing)

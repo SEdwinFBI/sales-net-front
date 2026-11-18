@@ -23,6 +23,8 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaItem } from '../types/reportes'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Row = ReporteVentaItem
 
@@ -77,6 +79,9 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   })
+
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-reporte_variantes', [paginationTool('reporte_variantes', 'las ventas por variante', tablePagination(table))])
 
   const hasFilters = columnFilters.length > 0
 

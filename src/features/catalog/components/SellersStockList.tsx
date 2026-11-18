@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import type { Sucursal } from '@/features/admin'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   isLoading: boolean
@@ -23,6 +25,9 @@ export default function SellersStockList({ isLoading, sucursales, onSelect }: Pr
   const totalPages = Math.max(Math.ceil(filteredSucursales.length / pageSize), 1)
   const safePage = Math.min(currentPage, totalPages)
   const paginatedSucursales = filteredSucursales.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  // Paginación para el agente (tamaño fijo, como en la pantalla).
+  useAgentTools('paginacion-sucursales', [paginationTool('sucursales', 'la lista de sucursales', slicePagination(filteredSucursales.length, pageSize, safePage, setCurrentPage))])
 
   if (isLoading) {
     return <EmptyState title="Cargando sucursales…" />

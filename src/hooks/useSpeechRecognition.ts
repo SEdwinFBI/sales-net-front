@@ -32,6 +32,8 @@ const WATCHDOG_TICK = 120
 const ZOMBIE_MS = 3500
 /** Rotación preventiva de sesión durante silencio (evita cortes a mitad de frase). */
 const ROTATE_MS = 40000
+/** Tras parar, plazo para que llegue el onend del navegador antes de cerrar la sesión a la fuerza. */
+const STOP_FORCE_CLOSE_MS = 1500
 /** Guard contra loops: máximo de reinicios en la ventana sin recibir resultados. */
 const STORM_MAX = 8
 const STORM_WINDOW_MS = 10000
@@ -138,9 +140,11 @@ export function useSpeechRecognition(options: {
     watchdog: null as ReturnType<typeof setInterval> | null,
     langChain: [...LANG_CHAIN],
     langIndex: 0,
+    /** Invalida un arranque en curso (getUserMedia pendiente) si se pidió parar antes de que termine. */
+    startSeq: 0,
   })
 
- 
+
   useEffect(() => {
     if (lang && lang !== r.current.langChain[0]) {
       r.current.langChain = [lang, ...LANG_CHAIN.filter((l) => l !== lang)]
@@ -306,9 +310,15 @@ export function useSpeechRecognition(options: {
     s.monitor = null
 
     
+    const seq = ++s.startSeq
     let monitor: AudioMonitor
     try {
       monitor = await createMonitor()
+      if (seq !== s.startSeq) {
+        // Se pidió parar (o arrancar de nuevo) mientras se concedía el micrófono.
+        destroyMonitor(monitor)
+        return
+      }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'NotAllowedError') {
         setError('Permiso de micrófono denegado.')
@@ -376,6 +386,7 @@ export function useSpeechRecognition(options: {
 
   const stopListening = useCallback(() => {
     const s = r.current
+    s.startSeq++
     s.active = false
     if (s.watchdog) { clearInterval(s.watchdog); s.watchdog = null }
     destroyMonitor(s.monitor)
@@ -384,8 +395,17 @@ export function useSpeechRecognition(options: {
     if (s.rec) {
       
       
-      try { s.rec.stop() } catch { /* noop */ }
+      const rec = s.rec
+      const seq = s.startSeq
+      try { rec.stop() } catch { /* noop */ }
       s.rec = null
+      // Si la sesión se estaba reiniciando, stop() puede no producir el onend final y
+      // isListening se quedaría pegado: pasado el plazo se aborta y se cierra a la fuerza.
+      setTimeout(() => {
+        if (s.active || s.startSeq !== seq) return
+        try { rec.abort() } catch { /* noop */ }
+        setIsListening(false)
+      }, STOP_FORCE_CLOSE_MS)
     } else {
       setIsListening(false)
     }

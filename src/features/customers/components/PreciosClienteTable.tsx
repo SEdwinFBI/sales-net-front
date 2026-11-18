@@ -49,6 +49,9 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildPreciosClienteTools, type VistaPrecios } from '../agent/precios-cliente-tools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   customerId: number
@@ -73,6 +76,8 @@ export default function PreciosClienteTable({
   const [globalFilter, setGlobalFilter] = useState('')
   const [tabFilter, setTabFilter] = useState<TabFilter>('todos')
   const [activeItem, setActiveItem] = useState<ClienteVariantePrecioResponse | null>(null)
+  /** Precio con el que el agente abre el diálogo (los botones normales lo abren con el actual). */
+  const [initialPrice, setInitialPrice] = useState<number | undefined>(undefined)
 
   // Conteos para los botones de pestañas
   const counts = useMemo(() => {
@@ -244,7 +249,7 @@ export default function PreciosClienteTable({
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    onClick={() => setActiveItem(v)}
+                    onClick={() => { setInitialPrice(undefined); setActiveItem(v) }}
                     title="Editar precio del cliente"
                     className="text-muted-foreground hover:text-primary cursor-pointer"
                   >
@@ -265,7 +270,7 @@ export default function PreciosClienteTable({
                 <Button
                   size="xs"
                   variant="outline"
-                  onClick={() => setActiveItem(v)}
+                  onClick={() => { setInitialPrice(undefined); setActiveItem(v) }}
                   className="gap-1 text-xs cursor-pointer hover:border-primary hover:text-primary"
                 >
                   <Plus className="size-3" />
@@ -311,6 +316,9 @@ export default function PreciosClienteTable({
     },
   })
 
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-precios_cliente', [paginationTool('precios_cliente', 'los precios del cliente', tablePagination(table))])
+
   const handleTabChange = (nextTab: TabFilter) => {
     setTabFilter(nextTab)
     if (nextTab === 'configurados') {
@@ -321,6 +329,36 @@ export default function PreciosClienteTable({
       table.getColumn('tiene_config')?.setFilterValue(undefined)
     }
   }
+
+  // Tools del agente: filtran y leen esta tabla; el admin además abre el diálogo de precio y elimina (con confirmación).
+  useAgentTools(
+    'precios-cliente',
+    buildPreciosClienteTools(
+      {
+        getCustomerName: () => customerName,
+        getVariants: () => variants,
+        getFiltered: () => table.getFilteredRowModel().rows.map((row) => row.original),
+        getFilters: () => ({
+          texto: globalFilter,
+          vista: tabFilter === 'configurados' ? 'personalizados' : tabFilter === 'sin_configurar' ? 'catalogo' : 'todos',
+        }),
+        setFilters: ({ texto, vista }) => {
+          if (texto !== undefined) setGlobalFilter(texto)
+          if (vista !== undefined) {
+            const map: Record<VistaPrecios, TabFilter> = { todos: 'todos', personalizados: 'configurados', catalogo: 'sin_configurar' }
+            handleTabChange(map[vista])
+          }
+        },
+        isDialogOpen: () => activeItem !== null,
+        openEdit: (variant, precio) => { setInitialPrice(precio); setActiveItem(variant) },
+        deletePrecio: async (variant) => {
+          await deleteMutation.mutateAsync(variant.id_variante)
+          removeLocalPrice(customerId, variant.id_variante)
+        },
+      },
+      isAdmin,
+    ),
+  )
 
   const renderSortIcon = (column: any) => {
     const isSorted = column.getIsSorted()
@@ -545,11 +583,12 @@ export default function PreciosClienteTable({
       {/* Modal de edición / asignación de precio pactado para Admin */}
       <EditCustomerPriceDialog
         open={Boolean(activeItem)}
-        onClose={() => setActiveItem(null)}
+        onClose={() => { setActiveItem(null); setInitialPrice(undefined) }}
         customerId={customerId}
         customerName={customerName}
         variantItem={activeItem}
-        onSuccess={() => setActiveItem(null)}
+        initialPrice={initialPrice}
+        onSuccess={() => { setActiveItem(null); setInitialPrice(undefined) }}
       />
     </div>
   )

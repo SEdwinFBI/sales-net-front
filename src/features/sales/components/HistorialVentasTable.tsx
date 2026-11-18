@@ -28,9 +28,13 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency } from '@/helpers/money'
 import type { Venta } from '../types/sales'
 import React from 'react'
-import RevertirVentaButton from './RevertirVentaButton'
+import RevertirVentaButton, { RevertirVentaDialog } from './RevertirVentaButton'
+import { useAuthStore } from '@/features/core/store/auth-store'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildHistorialTableTools } from '../agent/historial-tools'
 import VentaDetallesTable from './VentaDetallesTable'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   data: Venta[]
@@ -44,6 +48,9 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [fotoAbierta, setFotoAbierta] = useState<Venta | null>(null)
+  // Anulación abierta por el agente: otra instancia del mismo diálogo del botón, con la misma regla de visibilidad.
+  const [ventaAnular, setVentaAnular] = useState<Venta | null>(null)
+  const user = useAuthStore((state) => state.user)
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
     {
@@ -144,6 +151,9 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
     getRowCanExpand: () => true,
   })
 
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-historial', [paginationTool('historial', 'el historial de ventas', tablePagination(table))])
+
   // Reporta al padre las ventas visibles tras todos los filtros (pre-paginación).
   // Se keyea sobre la lista de IDs para no re-disparar en cada render.
   const filteredRows = table.getFilteredRowModel().rows
@@ -152,6 +162,26 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
     onFilteredChange?.(filteredRows.map((r) => r.original))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredIdsKey])
+
+  // Tools del agente sobre esta tabla: expandir el detalle, ver la foto y abrir la anulación (el usuario confirma).
+  useAgentTools(
+    'historial-table',
+    buildHistorialTableTools({
+      getVentas: () => data,
+      getUser: () => user,
+      isDialogOpen: () => fotoAbierta !== null || ventaAnular !== null,
+      showDetalle: (ventaId) => {
+        const rows = table.getPrePaginationRowModel().rows
+        const index = rows.findIndex((row) => row.original.id === ventaId)
+        if (index < 0) return false // la ocultan los filtros de columna
+        table.setPageIndex(Math.floor(index / table.getState().pagination.pageSize))
+        setExpanded((prev) => (prev === true ? prev : { ...prev, [rows[index].id]: true }))
+        return true
+      },
+      openFoto: setFotoAbierta,
+      openAnular: setVentaAnular,
+    }),
+  )
 
   if (isLoading) {
     return (
@@ -243,6 +273,14 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
         </Table>
       </div>
       <TablePagination table={table} />
+
+      {ventaAnular && (
+        <RevertirVentaDialog
+          venta={ventaAnular}
+          open
+          onOpenChange={(open) => { if (!open) setVentaAnular(null) }}
+        />
+      )}
 
       <Dialog open={fotoAbierta !== null} onOpenChange={(open) => { if (!open) setFotoAbierta(null) }}>
         <DialogContent>

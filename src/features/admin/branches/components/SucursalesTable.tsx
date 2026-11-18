@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 import type { Sucursal } from '../types/sucursal-types'
 import SucursalDialog from './SucursalDialog'
 import DeleteSucursalDialog from './DeleteSucursalDialog'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildSucursalesTools, type SucursalFormValues } from '../../agent/sucursales-tools'
 
 type Props = {
   data: Sucursal[]
@@ -22,6 +24,7 @@ export default function SucursalesTable({ data, isLoading }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedSucursal, setSelectedSucursal] = useState<Sucursal | null>(null)
   const [sucursalToDelete, setSucursalToDelete] = useState<Sucursal | null>(null)
+  const [dialogInitial, setDialogInitial] = useState<Partial<SucursalFormValues> | undefined>(undefined)
 
   const filtradas = data.filter((sucursal) => {
     const term = search.toLowerCase()
@@ -30,6 +33,24 @@ export default function SucursalesTable({ data, isLoading }: Props) {
       sucursal.direccion.toLowerCase().includes(term)
     )
   })
+
+  // Tools del agente: leen y filtran lo que la pantalla ya muestra y abren sus diálogos (el usuario guarda).
+  useAgentTools(
+    'sucursales-table',
+    buildSucursalesTools({
+      getSucursales: () => data,
+      getFiltered: () => filtradas,
+      getTexto: () => search,
+      setTexto: setSearch,
+      isLoading: () => isLoading,
+      isDialogOpen: () => dialogOpen,
+      isDeleteOpen: () => sucursalToDelete !== null,
+      openNew: (valores) => { setSelectedSucursal(null); setDialogInitial(valores); setDialogOpen(true) },
+      openEdit: (sucursal, valores) => { setSelectedSucursal(sucursal); setDialogInitial(valores); setDialogOpen(true) },
+      openDeactivate: setSucursalToDelete,
+      goToEquipo: (id) => navigate(`/administracion/sucursales/${id}`),
+    }),
+  )
 
   return (
     <>
@@ -59,7 +80,7 @@ export default function SucursalesTable({ data, isLoading }: Props) {
           </div>
           <Button
             className="w-full sm:w-auto"
-            onClick={() => { setSelectedSucursal(null); setDialogOpen(true) }}
+            onClick={() => { setSelectedSucursal(null); setDialogInitial(undefined); setDialogOpen(true) }}
           >
             <Plus />
             Nueva sucursal
@@ -128,7 +149,7 @@ export default function SucursalesTable({ data, isLoading }: Props) {
                     size="icon-sm"
                     variant="outline"
                     aria-label={`Editar ${sucursal.nombre}`}
-                    onClick={() => { setSelectedSucursal(sucursal); setDialogOpen(true) }}
+                    onClick={() => { setSelectedSucursal(sucursal); setDialogInitial(undefined); setDialogOpen(true) }}
                   >
                     <Pencil />
                   </Button>
@@ -157,6 +178,7 @@ export default function SucursalesTable({ data, isLoading }: Props) {
       <SucursalDialog
         open={dialogOpen}
         sucursal={selectedSucursal}
+        initialValues={dialogInitial}
         onClose={() => setDialogOpen(false)}
       />
 

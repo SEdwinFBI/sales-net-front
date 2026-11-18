@@ -14,6 +14,8 @@ import { toast } from 'sonner'
 import { getDefaultDateRange } from '@/lib/dates'
 import type { ReporteVentasFilters as Filters } from '../types/reportes'
 import { Card } from '@/components/ui/card'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildReporteVentasTools } from '../agent/reportes-tools'
 
 type Option = { id?: number; label: string }
 
@@ -64,6 +66,7 @@ function buildSearchParams(next: Filters): Record<string, string> {
 export default function ReporteVentasPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('variante')
   const [idArticulo, setIdArticulo] = useState<number | undefined>()
   const [idTalla, setIdTalla] = useState<number | undefined>()
   const [idSucursal, setIdSucursal] = useState<number | undefined>()
@@ -103,17 +106,43 @@ export default function ReporteVentasPage() {
     setIdSucursal(next.id_sucursal)
   }
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (): Promise<boolean> => {
     setPdfLoading(true)
     try {
       await downloadReporteVentasPdf(filters)
       toast.success('PDF descargado correctamente')
+      return true
     } catch {
       toast.error('Error al descargar el PDF')
+      return false
     } finally {
       setPdfLoading(false)
     }
   }
+
+  // Tools del agente: fechas en la URL y artículo/talla/sucursal en estado local, igual que el formulario de filtros.
+  useAgentTools(
+    'reporte-ventas-page',
+    buildReporteVentasTools({
+      getFilters: () => ({
+        fecha_desde: filters.fecha_desde ?? '',
+        fecha_hasta: filters.fecha_hasta ?? '',
+        id_sucursal: filters.id_sucursal,
+        id_articulo: filters.id_articulo,
+        id_talla: filters.id_talla,
+      }),
+      change: (next) => handleFiltersChange(next),
+      getOptions: () => ({ articulos: articuloOptions, tallas: tallaOptions, sucursales: sucursalOptions }),
+      getTab: () => (activeTab === 'sucursal' ? 'sucursal' : 'variante'),
+      setTab: setActiveTab,
+      getResumen: () => resumen,
+      getPorVariante: () => porVariante,
+      getPorSucursal: () => porSucursal,
+      isLoading: () => isLoading,
+      isDownloading: () => pdfLoading,
+      download: handleExportPdf,
+    }),
+  )
 
   return (
     <PageTemplateSimple title="Reporte de Ventas" description="Análisis de ventas del sistema.">
@@ -134,7 +163,7 @@ export default function ReporteVentasPage() {
           <div>
 
 
-            <Tabs defaultValue="variante">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(String(value))}>
               <TabsList className="h-auto w-full flex-wrap justify-start gap-1 sm:w-fit">
                 <TabsTrigger value="variante">Variantes</TabsTrigger>
                 <TabsTrigger value="sucursal">Sucursales</TabsTrigger>

@@ -15,6 +15,9 @@ import { useCustomers } from '@/features/customers'
 import { useCreateSale } from '../hooks/useCreateSale'
 import { formatCurrency } from '@/helpers/money'
 import { toast } from 'sonner'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildClienteRapidoOpenTools } from '../agent/pos-dialog-tools'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { selectTotal, selectTotalItems } from '../utils/utilsSales'
 import { useDeferredValue, useState, useEffect } from 'react'
@@ -82,10 +85,8 @@ const CheckoutDialog = () => {
   const totalsDiffer = serverTotal !== undefined && Math.abs(serverTotal - total) >= 0.01
 
   useEffect(() => {
-    if (activeDialog === 'checkout' && storeCustomerId && !selectedCustomerId) {
-      setSelectedCustomerId(storeCustomerId)
-    }
-  }, [activeDialog, storeCustomerId, selectedCustomerId])
+    if (activeDialog === 'checkout') setSelectedCustomerId(storeCustomerId)
+  }, [activeDialog, storeCustomerId])
 
   const handleCustomerChange = (id: string) => {
     setSelectedCustomerId(id)
@@ -96,8 +97,8 @@ const CheckoutDialog = () => {
   const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId && permiteCredito)
   const canConfirm = Boolean(pagoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
 
-  const handleConfirm = async () => {
-    if (!canConfirm) return
+  const handleConfirm = async (): Promise<boolean> => {
+    if (!canConfirm) return false
 
     try {
       const result = await createSale({
@@ -127,10 +128,64 @@ const CheckoutDialog = () => {
       voiceResetFn?.()
       setVentaFoto(null)
       openDialog('summary')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al registrar la venta'))
+      return false
     }
   }
+
+  // Dentro del cobro, el agente abre el formulario de cliente rápido igual que el selector de cliente.
+  useAgentTools(
+    'cliente-rapido-abrir-cobro',
+    activeDialog === 'checkout' && !quickCreateOpen
+      ? buildClienteRapidoOpenTools({ bloqueo: () => (isPending ? 'La venta se esta procesando.' : null), open: () => setQuickCreateOpen(true) })
+      : null,
+  )
+
+  // Con el cobro abierto, el agente puede elegir la forma de pago. Confirmar la venta solo existe con las
+  // acciones de guardado activadas y tras un clic de confirmación; la foto de entrega la toma siempre el usuario.
+  useAgentTools(
+    'checkout-dialog',
+    activeDialog === 'checkout' && !quickCreateOpen
+      ? [
+          {
+            name: 'elegir_forma_pago',
+            description: 'Elige la forma de pago del cobro abierto: efectivo o credito (credito exige un cliente con credito). No confirma la venta.',
+            parameters: {
+              type: 'object',
+              properties: { forma: { type: 'string', enum: ['efectivo', 'credito'] } },
+              required: ['forma'],
+              additionalProperties: false,
+            },
+            validar: (args) => {
+              if (args.forma !== 'efectivo' && args.forma !== 'credito') return "forma debe ser 'efectivo' o 'credito'."
+              if (args.forma === 'credito' && !selectedCustomerId) return 'Para vender a credito primero hay que seleccionar un cliente.'
+              return args.forma === 'credito' && !permiteCredito ? 'El cliente seleccionado no tiene credito habilitado.' : null
+            },
+            run: async (args) => {
+              setPaymentMethod(args.forma as PaymentMethod)
+              return { ok: true, data: { forma_pago: args.forma, mensaje: 'Forma de pago elegida. El usuario confirma la venta.' } }
+            },
+          },
+          commitTool({
+            name: 'confirmar_cobro',
+            description: 'Confirma la venta del cobro abierto (presiona Confirmar). Si se exige foto de entrega, el usuario debe tomarla antes.',
+            validar: () => {
+              if (isPending) return 'La venta ya se esta procesando.'
+              if (!pagoValido) return 'La forma de pago no es valida: el credito exige un cliente con credito habilitado.'
+              if (evidenciaFotografica && !ventaFoto) return 'Falta la foto de entrega: el usuario debe tomarla en el dialogo de cobro.'
+              return canConfirm ? null : 'El total aun se esta calculando o no se pudo cotizar; intenta de nuevo.'
+            },
+            texto: () => {
+              const cliente = customers?.find((c) => String(c.id) === selectedCustomerId)?.name
+              return `Confirmar la venta de ${totalItems} articulo(s) por Q${Number(serverTotal ?? total).toFixed(2)} (${paymentMethod})${cliente ? ` a ${cliente}` : ''}`
+            },
+            run: handleConfirm,
+          }),
+        ]
+      : null,
+  )
 
   return (
     <>
@@ -225,7 +280,7 @@ const CheckoutDialog = () => {
           <Button variant="outline" onClick={closeDialog}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={!canConfirm || isPending}>
+          <Button onClick={() => { void handleConfirm() }} disabled={!canConfirm || isPending}>
             {isPending && <Loader2 className="animate-spin" />}
             {isPending ? 'Procesando…' : 'Confirmar'}
           </Button>

@@ -10,10 +10,12 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { queryKeys } from '@/lib/query-keys'
 import { formatCurrency } from '@/helpers/money'
 import type { Venta } from '../types/sales'
+import { puedeAnularVenta } from '../utils/anulacion-rules'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
 
-export default function RevertirVentaButton({ venta }: { venta: Venta }) {
-  const [open, setOpen] = useState(false)
-  const user = useAuthStore((state) => state.user)
+/** Mutación de anulación y su aviso al usuario; la comparten el botón y el diálogo suelto. */
+function useRevertirVenta(venta: Venta) {
   const queryClient = useQueryClient()
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () => api.post(`/admin/venta/${venta.id}/revertir/`,
@@ -26,26 +28,51 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
       ].map((queryKey) => queryClient.invalidateQueries({ queryKey })))
     },
   })
-  if (user?.role !== 'admin' && user?.puede_anular === false) return null
-  if (venta.estado !== 'PENDIENTE' && venta.estado !== 'PAGADA') return null
 
+  /** true si se anuló; en caso contrario ya mostró el error. */
   const confirmar = async () => {
     try {
       await mutateAsync()
-      setOpen(false)
       toast.success('Venta revertida correctamente')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo revertir la venta'))
+      return false
     }
   }
 
-  return <>
-    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={isPending}
-      onClick={() => setOpen(true)}>
-      <Undo2 aria-hidden="true" />
-      Anular venta
-    </Button>
-    <Dialog open={open} onOpenChange={(value) => { if (!isPending) setOpen(value) }}>
+  return { isPending, confirmar }
+}
+
+type DialogViewProps = {
+  venta: Venta
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  isPending: boolean
+  /** true si se anuló. */
+  onConfirm: () => Promise<boolean>
+}
+
+function RevertirVentaDialogView({ venta, open, onOpenChange, isPending, onConfirm }: DialogViewProps) {
+  // Solo con las acciones de guardado activadas: el agente presiona «Confirmar anulación» tras un clic de confirmación.
+  useAgentTools(
+    `revertir-venta-${venta.id}`,
+    open
+      ? [
+          commitTool({
+            name: 'confirmar_anular_venta',
+            description: 'Presiona Confirmar anulacion en el dialogo abierto para anular la venta.',
+            validar: () => (isPending ? 'Ya se esta anulando.' : null),
+            texto: () =>
+              `Anular la venta #${venta.id} de ${formatCurrency(Number(venta.total_neto))}${Number(venta.abonado) > 0 ? ` (sus abonos de ${formatCurrency(Number(venta.abonado))} quedaran en cero)` : ''}`,
+            run: onConfirm,
+          }),
+        ]
+      : null,
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={(value) => { if (!isPending) onOpenChange(value) }}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Anular venta #{venta.id}</DialogTitle>
@@ -58,12 +85,58 @@ export default function RevertirVentaButton({ venta }: { venta: Venta }) {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" disabled={isPending} onClick={() => setOpen(false)}>Volver</Button>
-          <Button variant="destructive" disabled={isPending} onClick={() => void confirmar()}>
+          <Button variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>Volver</Button>
+          <Button variant="destructive" disabled={isPending} onClick={() => { void onConfirm() }}>
             {isPending ? 'Anulando…' : 'Confirmar anulación'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * Diálogo de anulación controlado desde fuera (lo abre, por ejemplo, el agente). Aplica la
+ * misma regla de visibilidad que el botón y sigue exigiendo el clic en «Confirmar anulación».
+ */
+export function RevertirVentaDialog({ venta, open, onOpenChange }: {
+  venta: Venta
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const user = useAuthStore((state) => state.user)
+  const { isPending, confirmar } = useRevertirVenta(venta)
+  if (!puedeAnularVenta(user, venta)) return null
+
+  return (
+    <RevertirVentaDialogView
+      venta={venta}
+      open={open}
+      onOpenChange={onOpenChange}
+      isPending={isPending}
+      onConfirm={() => confirmar().then((anulada) => { if (anulada) onOpenChange(false); return anulada })}
+    />
+  )
+}
+
+export default function RevertirVentaButton({ venta }: { venta: Venta }) {
+  const [open, setOpen] = useState(false)
+  const user = useAuthStore((state) => state.user)
+  const { isPending, confirmar } = useRevertirVenta(venta)
+  if (!puedeAnularVenta(user, venta)) return null
+
+  return <>
+    <Button variant="destructive" size="sm" className="border border-destructive/40 font-semibold" disabled={isPending}
+      onClick={() => setOpen(true)}>
+      <Undo2 aria-hidden="true" />
+      Anular venta
+    </Button>
+    <RevertirVentaDialogView
+      venta={venta}
+      open={open}
+      onOpenChange={setOpen}
+      isPending={isPending}
+      onConfirm={() => confirmar().then((anulada) => { if (anulada) setOpen(false); return anulada })}
+    />
   </>
 }
