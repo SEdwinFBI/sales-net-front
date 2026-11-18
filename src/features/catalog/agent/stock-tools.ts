@@ -1,4 +1,5 @@
 import { type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
+import { articleNameMismatch, rankBySimilarity } from '@/features/agent/fuzzy-search'
 import { MAX_READ_ROWS, NO_PARAMS, fail, fold, ok, positiveInt } from '@/features/agent/tool-helpers'
 import type { Article } from '../types/article-types'
 import type { ArticleVariant } from '../types/article-variant-types'
@@ -84,8 +85,9 @@ const MAX_QUANTITY = 1_000_000
 export type StockPlan = { changes: StockChange[] } | { errores: string[] }
 
 /**
- * Valida `cambios: [{variante_id, cantidad}]` contra las variantes de la sucursal. Todo o nada:
- * una cantidad entera >= 0, variantes que existan y sin repetir.
+ * Valida `cambios: [{variante_id, articulo, cantidad | sumar}]` contra las variantes de la sucursal.
+ * Todo o nada: variantes que existan, sin repetir, cuyo artículo coincida con el nombre que dio el
+ * modelo, y una cantidad final entera >= 0. `cantidad` fija el total; `sumar` suma (o resta) al borrador.
  */
 export function planStockChanges(
   raw: unknown,
@@ -94,7 +96,7 @@ export function planStockChanges(
   quantities: { saved: (variantId: number) => number; draft: (variantId: number) => number },
 ): StockPlan {
   if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_CHANGES) {
-    return { errores: [`cambios debe ser una lista de 1 a ${MAX_CHANGES} elementos {variante_id, cantidad}.`] }
+    return { errores: [`cambios debe ser una lista de 1 a ${MAX_CHANGES} elementos {variante_id, articulo, cantidad o sumar}.`] }
   }
 
   const byId = new Map(variants.map((variant) => [variant.id, variant]))
@@ -105,9 +107,9 @@ export function planStockChanges(
 
   raw.forEach((item, index) => {
     const label = `cambios[${index}]`
-    const entry = item as { variante_id?: unknown; cantidad?: unknown } | null
+    const entry = item as { variante_id?: unknown; articulo?: unknown; cantidad?: unknown; sumar?: unknown } | null
     if (typeof entry !== 'object' || entry === null) {
-      errores.push(`${label} debe ser un objeto {variante_id, cantidad}.`)
+      errores.push(`${label} debe ser un objeto {variante_id, articulo, cantidad o sumar}.`)
       return
     }
     const variantId = positiveInt(entry.variante_id)
@@ -121,18 +123,36 @@ export function planStockChanges(
       return
     }
     seen.add(variantId)
-    const cantidad = entry.cantidad
-    if (typeof cantidad !== 'number' || !Number.isInteger(cantidad) || cantidad < 0 || cantidad > MAX_QUANTITY) {
-      errores.push(`${label}.cantidad debe ser un entero entre 0 y ${MAX_QUANTITY}.`)
+    const articulo = titles.get(variant.articleId) ?? `Articulo ${variant.articleId}`
+    const mismatch = articleNameMismatch(entry.articulo, articulo, 'leer_stock texto')
+    if (mismatch) {
+      errores.push(`${label}: ${mismatch}`)
+      return
+    }
+    const borradorAntes = quantities.draft(variantId)
+    const hasTotal = entry.cantidad !== undefined
+    const hasDelta = entry.sumar !== undefined
+    if (hasTotal === hasDelta) {
+      errores.push(`${label}: indica cantidad (total) o sumar (suma o resta), no ambos.`)
+      return
+    }
+    const value = hasTotal ? entry.cantidad : entry.sumar
+    if (typeof value !== 'number' || !Number.isInteger(value)) {
+      errores.push(`${label}.${hasTotal ? 'cantidad' : 'sumar'} debe ser un entero.`)
+      return
+    }
+    const cantidad = hasTotal ? value : borradorAntes + value
+    if (cantidad < 0 || cantidad > MAX_QUANTITY) {
+      errores.push(`${label}: la cantidad final (${cantidad}) debe estar entre 0 y ${MAX_QUANTITY}.`)
       return
     }
     changes.push({
       variantId,
       articleId: variant.articleId,
-      articulo: titles.get(variant.articleId) ?? `Articulo ${variant.articleId}`,
+      articulo,
       talla: variant.size,
       guardado: quantities.saved(variantId),
-      borradorAntes: quantities.draft(variantId),
+      borradorAntes,
       cantidad,
     })
   })
@@ -164,7 +184,7 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
   return [
     {
       name: 'leer_stock',
-      description: `Lee el stock de la sucursal por articulo y talla (maximo ${MAX_READ_ROWS} variantes): cantidad guardada y del borrador. Opcional: texto para filtrar por titulo.`,
+      description: `Lee el stock por articulo y talla (maximo ${MAX_READ_ROWS} variantes): guardado y borrador. Para un articulo concreto usa texto; sin coincidencia exacta devuelve sugerencias.`,
       parameters: {
         type: 'object',
         properties: { texto: { type: 'string', description: 'Parte del titulo del articulo.' } },
@@ -172,13 +192,16 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
       },
       validar: (args) => ('texto' in args && typeof args.texto !== 'string' ? 'texto debe ser un texto.' : null),
       run: async (args) => {
-        const needle = typeof args.texto === 'string' ? fold(args.texto) : ''
+        const texto = typeof args.texto === 'string' ? args.texto : ''
+        const needle = fold(texto)
+        const sorted = [...ctx.getArticles()].sort((a, b) => a.title.localeCompare(b.title))
+        const exact = needle ? sorted.filter((article) => fold(article.title).includes(needle)) : sorted
+        // Sin coincidencia exacta (p. ej. error de dictado): los artículos más parecidos, como sugerencias.
+        const suggested = needle && exact.length === 0 ? rankBySimilarity(sorted, (a) => a.title, texto) : []
         const variants = ctx.getVariants()
         let remaining = MAX_READ_ROWS
         const articulos: unknown[] = []
-        const sorted = [...ctx.getArticles()].sort((a, b) => a.title.localeCompare(b.title))
-        for (const article of sorted) {
-          if (needle && !fold(article.title).includes(needle)) continue
+        for (const article of suggested.length > 0 ? suggested : exact) {
           const own = variants
             .filter((v) => v.articleId === article.id)
             .sort((a, b) => a.size.localeCompare(b.size, undefined, { numeric: true }))
@@ -200,6 +223,7 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
           sucursal: ctx.getSucursalName(),
           cargando: ctx.isLoading(),
           cambios_sin_guardar: ctx.hasUnsavedChanges(),
+          ...(suggested.length > 0 ? { aviso: 'Sin coincidencia exacta: son sugerencias, pregunta cual antes de editar.' } : {}),
           articulos,
         })
       },
@@ -207,7 +231,7 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
     {
       name: 'editar_stock',
       description:
-        'Cambia en el BORRADOR la cantidad de variantes: cambios=[{variante_id, cantidad}] (entero >= 0). No guarda: el usuario debe presionar Guardar.',
+        'Cambia en el BORRADOR el stock: cambios=[{variante_id, articulo, cantidad | sumar}]. cantidad fija el total; sumar suma o resta (agrega 1 = sumar 1). No guarda: el usuario debe presionar Guardar.',
       parameters: {
         type: 'object',
         properties: {
@@ -216,8 +240,13 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
             maxItems: MAX_CHANGES,
             items: {
               type: 'object',
-              properties: { variante_id: { type: 'integer' }, cantidad: { type: 'integer', minimum: 0 } },
-              required: ['variante_id', 'cantidad'],
+              properties: {
+                variante_id: { type: 'integer' },
+                articulo: { type: 'string', description: 'Nombre del articulo de leer_stock, sin la talla.' },
+                cantidad: { type: 'integer', minimum: 0 },
+                sumar: { type: 'integer' },
+              },
+              required: ['variante_id', 'articulo'],
               additionalProperties: false,
             },
           },

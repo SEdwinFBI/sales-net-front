@@ -1,4 +1,5 @@
 import { type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
+import { articleNameMismatch, rankBySimilarity } from '@/features/agent/fuzzy-search'
 import { MAX_READ_ROWS, NO_PARAMS, fail, fold, ok, positiveInt } from '@/features/agent/tool-helpers'
 import { formatCurrency } from '@/helpers/money'
 import type { UserVariantPricing } from '../types/pricing-types'
@@ -93,6 +94,8 @@ export function buildPricingEditorTools(ctx: PricingEditorAgentContext): AgentTo
   const parse = (args: Record<string, unknown>): { variant: UserVariantPricing; input: PriceEditInput } | { error: string } => {
     const variant = find(args)
     if (!variant) return { error: NOT_FOUND }
+    const mismatch = articleNameMismatch(args.articulo, variant.articulo, 'leer_precios_sucursal texto')
+    if (mismatch) return { error: mismatch }
     const input: PriceEditInput = {}
     if ('precio' in args) input.precio = args.precio as number | null
     if ('descuento_mayorista' in args) input.descuento_mayorista = args.descuento_mayorista as number | null
@@ -104,7 +107,7 @@ export function buildPricingEditorTools(ctx: PricingEditorAgentContext): AgentTo
   return [
     {
       name: 'leer_precios_sucursal',
-      description: `Lee los precios por talla de la sucursal (maximo ${MAX_READ_ROWS} variantes): precio, descuento mayorista y rangos individuales (borrador incluido). Opcional: texto del articulo.`,
+      description: `Lee los precios por talla (maximo ${MAX_READ_ROWS} variantes): precio, descuento mayorista y rangos (borrador incluido). Para un articulo concreto usa texto; sin coincidencia exacta devuelve sugerencias.`,
       parameters: {
         type: 'object',
         properties: { texto: { type: 'string', description: 'Parte del titulo del articulo.' } },
@@ -112,15 +115,25 @@ export function buildPricingEditorTools(ctx: PricingEditorAgentContext): AgentTo
       },
       validar: (args) => ('texto' in args && typeof args.texto !== 'string' ? 'texto debe ser un texto.' : null),
       run: async (args) => {
-        const needle = typeof args.texto === 'string' ? fold(args.texto) : ''
-        const variants = ctx
-          .getVariants()
-          .filter((v) => !needle || fold(v.articulo).includes(needle))
+        const texto = typeof args.texto === 'string' ? args.texto : ''
+        const needle = fold(texto)
+        const all = ctx.getVariants()
+        let matching = all.filter((v) => !needle || fold(v.articulo).includes(needle))
+        // Sin coincidencia exacta (p. ej. error de dictado): las variantes de los artículos más parecidos.
+        let sugerencias = false
+        if (needle && matching.length === 0) {
+          const articles = all.map((v) => ({ id: v.id_articulo, title: v.articulo }))
+          const ids = new Set(rankBySimilarity(articles, (a) => a.title, texto).map((a) => a.id))
+          matching = all.filter((v) => ids.has(v.id_articulo))
+          sugerencias = matching.length > 0
+        }
+        const variants = matching
           .sort((a, b) => a.articulo.localeCompare(b.articulo) || a.talla.localeCompare(b.talla, undefined, { numeric: true }))
         return ok({
           sucursal: ctx.getSucursalName(),
           cargando: ctx.isLoading(),
           cambios_sin_guardar: ctx.dirtyCount(),
+          ...(sugerencias ? { aviso: 'Sin coincidencia exacta: son sugerencias, pregunta cual antes de editar.' } : {}),
           total: variants.length,
           mostrando: Math.min(variants.length, MAX_READ_ROWS),
           variantes: variants.slice(0, MAX_READ_ROWS).map(describeRow),
@@ -135,6 +148,7 @@ export function buildPricingEditorTools(ctx: PricingEditorAgentContext): AgentTo
         type: 'object',
         properties: {
           variante_id: VARIANTE_ID,
+          articulo: { type: 'string', description: 'Nombre del articulo de leer_precios_sucursal, sin la talla.' },
           precio: { type: ['number', 'null'], description: 'Quetzales, 2 decimales; null = precio base.' },
           descuento_mayorista: { type: ['number', 'null'], description: 'Quetzales por unidad; null = heredar.' },
           rangos: {
@@ -153,7 +167,7 @@ export function buildPricingEditorTools(ctx: PricingEditorAgentContext): AgentTo
             },
           },
         },
-        required: ['variante_id'],
+        required: ['variante_id', 'articulo'],
         additionalProperties: false,
       },
       validar: (args) => {

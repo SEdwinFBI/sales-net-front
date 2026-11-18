@@ -101,6 +101,17 @@ export function rankBySimilarity<T extends { id: number }>(
     .map(({ item }) => item)
 }
 
+/**
+ * Guardia de las tools que cambian algo de un artículo: el modelo dice qué artículo cree que es y
+ * se compara con el real de ese id. Evita editar otro artículo con un id reutilizado o inventado.
+ * Devuelve el error para el modelo, o null si coincide.
+ */
+export function articleNameMismatch(said: unknown, real: string, searchHint: string): string | null {
+  if (typeof said !== 'string' || !said.trim()) return `Falta articulo (nombre del articulo, sin la talla). Busca con ${searchHint}.`
+  if (similarity(said, real) >= MIN_SIMILARITY) return null
+  return `Ese id es de "${real}", no de "${said.trim().slice(0, 60)}". Busca con ${searchHint} y usa sus ids.`
+}
+
 /** Prefijos (3 letras) de las palabras buscadas, para traer candidatos del servidor sin la palabra mal dictada. */
 export function candidatePrefixes(text: string, max = 3): string[] {
   return [...new Set(significantWords(text).filter((w) => w.length >= 3).map((w) => w.slice(0, 3)))].slice(0, max)
