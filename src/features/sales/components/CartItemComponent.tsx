@@ -1,4 +1,4 @@
-import type { FC } from "react"
+import { useState, type FC } from "react"
 import type { CartItem } from "../types/sales"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ type CartItemProps = {
 }
 
 const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDecrease, onSetQty }) => {
+    const [isQtyEmpty, setIsQtyEmpty] = useState(false)
     const isSpecialCustomerPrice = item.discountType === 'CLIENTE'
     const precioBase = item.basePrice ?? item.price
     const precioFinal = item.discount > 0
@@ -24,6 +25,9 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
     const subtotal = precioFinal * item.qty
     const ahorroCliente = isSpecialCustomerPrice && precioBase > item.price ? precioBase - item.price : 0
     const handleQtyChange = (value: string) => {
+        setIsQtyEmpty(value === '')
+        if (value === '') return
+
         const nextQty = Number(value)
 
         if (!Number.isFinite(nextQty)) return
@@ -70,8 +74,9 @@ const CartItemComponent: FC<CartItemProps> = ({ item, onRemove, onIncrease, onDe
                         min={1}
                         max={item.stock}
                         step={1}
-                        value={item.qty}
+                        value={isQtyEmpty ? '' : item.qty}
                         onChange={(event) => handleQtyChange(event.target.value)}
+                        onBlur={() => setIsQtyEmpty(false)}
                     />
                     <Button
                         size="icon-sm"

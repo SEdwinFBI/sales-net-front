@@ -199,6 +199,7 @@ export default function ClienteDetailPage() {
       <AbonarDialog
         open={abonarOpen}
         ventas={ventas}
+        balance={cliente.balance}
         idCliente={clienteId}
         initialValues={abonoInitial}
         onClose={() => { setAbonarOpen(false); setAbonoInitial(undefined) }}

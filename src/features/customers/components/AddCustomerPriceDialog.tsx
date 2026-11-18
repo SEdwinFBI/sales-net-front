@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { MoneyInput } from '@/components/ui/money-input'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { formatCurrency } from '@/helpers/money'
 import { useArticles } from '@/features/sales/hooks/useArticles'
@@ -204,12 +205,9 @@ export default function AddCustomerPriceDialog({
                 <FieldLabel>Precio del cliente (Q)</FieldLabel>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
+                  <MoneyInput
                     value={precioPactado}
-                    onChange={(e) => setPrecioPactado(e.target.value)}
+                    onValueChange={setPrecioPactado}
                     placeholder="0.00"
                     className="pl-9"
                   />
