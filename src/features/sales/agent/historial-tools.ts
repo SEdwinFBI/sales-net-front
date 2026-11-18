@@ -122,7 +122,7 @@ export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentTo
     },
     {
       name: 'leer_historial',
-      description: `Lista las ventas del historial tras los filtros (maximo ${MAX_READ_ROWS}): id, fecha, cliente, vendedor, sucursal, totales, abonado, saldo, estado, forma de pago y si tiene foto.`,
+      description: `Lista las ventas tras los filtros, de la mas reciente a la mas antigua (maximo ${MAX_READ_ROWS}; por defecto el mes actual): id, fecha, cliente, vendedor, sucursal, totales, saldo, estado, forma de pago, foto.`,
       parameters: NO_PARAMS,
       run: async () => {
         const ventas = ctx.getFilteredVentas()

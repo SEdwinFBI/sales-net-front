@@ -9,7 +9,8 @@ import { useSalesStore, type SalesState } from '@/features/sales/store/useSalesS
 import type { Product } from '@/features/sales/types/sales'
 import type { AppRoute } from '@/lib/app-routes'
 import { allFeatureRoutes } from '@/routes/feature-routes'
-import { searchCatalogArticles, type CatalogSearchResult } from './catalog-search'
+import { searchCatalogArticles, suggestCatalogArticles, type CatalogSearchResult } from './catalog-search'
+import { candidatePrefixes, rankBySimilarity } from './fuzzy-search'
 import { buildCartSnapshot } from './context-snapshot'
 import {
   useAgentToolRegistry,
@@ -46,6 +47,10 @@ export type AgentDeps = {
   searchClients: (text: string) => Promise<AgentClient[]>
   /** Búsqueda en el catálogo de administración (sin stock), para roles sin acceso al POS. */
   searchCatalog: (text: string) => Promise<CatalogSearchResult[]>
+  /** Sugerencias por parecido cuando la búsqueda exacta no encuentra nada (errores de dictado). Opcionales. */
+  suggestArticles?: (text: string) => Promise<Product[]>
+  suggestClients?: (text: string) => Promise<AgentClient[]>
+  suggestCatalog?: (text: string) => Promise<CatalogSearchResult[]>
   routes: AppRoute[]
   logout: () => void
   setTheme: (theme: 'light' | 'dark') => void
@@ -80,14 +85,22 @@ export function createDefaultDeps(
       return searchCatalogArticles(articles, variants, text)
     },
     searchArticles: async (text) => (await getArticles(1, 10, text)).data,
-    searchClients: async (text) => {
-      const { results } = await getClientes(1, 10, text, true)
-      return results.map((c) => ({
-        id: c.id,
-        nombre: c.nombre_completo,
-        telefono: c.telefono,
-        permiteCredito: c.permitir_credito,
-      }))
+    searchClients: async (text) => (await getClientes(1, 10, text, true)).results.map(toAgentClient),
+    suggestCatalog: async (text) => {
+      const [articles, variants] = await Promise.all([getCatalogArticles(), getArticleVariants()])
+      return suggestCatalogArticles(articles, variants, text)
+    },
+    // Candidatos: la primera página del POS y lo que coincide con el inicio de cada palabra dicha.
+    suggestArticles: async (text) => {
+      const pages = await Promise.all([
+        getArticles(1, 100),
+        ...candidatePrefixes(text).map((prefix) => getArticles(1, 30, prefix)),
+      ])
+      return rankBySimilarity(pages.flatMap((page) => page.data), (p) => p.name, text)
+    },
+    suggestClients: async (text) => {
+      const pages = await Promise.all(candidatePrefixes(text).map((prefix) => getClientes(1, 50, prefix, true)))
+      return rankBySimilarity(pages.flatMap((page) => page.results).map(toAgentClient), (c) => c.nombre, text)
     },
   }
 }
@@ -95,8 +108,16 @@ export function createDefaultDeps(
 type Args = Record<string, unknown>
 type Action = (args: Args) => Promise<ToolResult>
 
+function toAgentClient(c: Awaited<ReturnType<typeof getClientes>>['results'][number]): AgentClient {
+  return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito }
+}
+
 const fail = (error: string): ToolResult => ({ ok: false, error })
 const ok = (data: unknown): ToolResult => ({ ok: true, data })
+
+/** Respuesta cuando no hubo coincidencia exacta y se ofrecen parecidos (corta: cuida los tokens). */
+const SUGGESTION_NOTE = 'Sin coincidencia exacta (posible error de dictado). Ofrece estas opciones y pregunta cual.'
+const withSuggestions = (sugerencias: unknown[]): ToolResult => ok({ aviso: SUGGESTION_NOTE, sugerencias })
 
 function positiveInt(args: Args, key: string): number | null {
   const value = args[key]
@@ -212,19 +233,24 @@ export function createAgentActions(deps: AgentDeps) {
       // ni sirve para agregar_item: eso solo se hace con artículos de la búsqueda del POS.
       if (!canUsePos()) {
         if (!canAccess(CATALOGO_ARTICULOS_PATH)) return fail('Tu rol no tiene acceso a articulos.')
-        return ok(await deps.searchCatalog(texto))
+        const found = await deps.searchCatalog(texto)
+        if (found.length > 0 || !deps.suggestCatalog) return ok(found)
+        const similar = await deps.suggestCatalog(texto)
+        return similar.length > 0 ? withSuggestions(similar) : ok([])
       }
 
-      const products = (await deps.searchArticles(texto)).slice(0, 10)
+      let products = (await deps.searchArticles(texto)).slice(0, 10)
+      const exact = products.length > 0
+      if (!exact && deps.suggestArticles) products = await deps.suggestArticles(texto)
+      // Las sugerencias también van a la caché: si el usuario elige una, agregar_item no necesita otra búsqueda.
       products.forEach((product) => productCache.set(product.id, product))
-      return ok(
-        products.map((p) => ({
-          id: p.id,
-          nombre: p.name,
-          categoria: p.category,
-          variantes: p.variants.map((v) => ({ id: v.id, talla: v.size, stock: v.stock, precio: v.price })),
-        })),
-      )
+      const rows = products.map((p) => ({
+        id: p.id,
+        nombre: p.name,
+        categoria: p.category,
+        variantes: p.variants.map((v) => ({ id: v.id, talla: v.size, stock: v.stock, precio: v.price })),
+      }))
+      return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
 
     async agregar_item(args) {
@@ -305,16 +331,17 @@ export function createAgentActions(deps: AgentDeps) {
       const texto = textArg(args, 'texto')
       if (!texto) return fail('Indica el nombre a buscar.')
 
-      const clients = (await deps.searchClients(texto)).slice(0, 10)
+      let clients = (await deps.searchClients(texto)).slice(0, 10)
+      const exact = clients.length > 0
+      if (!exact && deps.suggestClients) clients = await deps.suggestClients(texto)
       clients.forEach((c) => knownClients.set(c.id, c.nombre))
-      return ok(
-        clients.map((c) => ({
-          id: c.id,
-          nombre: c.nombre,
-          ...(c.telefono ? { telefono: c.telefono } : {}),
-          ...(c.permiteCredito !== undefined ? { permite_credito: c.permiteCredito } : {}),
-        })),
-      )
+      const rows = clients.map((c) => ({
+        id: c.id,
+        nombre: c.nombre,
+        ...(c.telefono ? { telefono: c.telefono } : {}),
+        ...(c.permiteCredito !== undefined ? { permite_credito: c.permiteCredito } : {}),
+      }))
+      return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
 
     async seleccionar_cliente(args) {

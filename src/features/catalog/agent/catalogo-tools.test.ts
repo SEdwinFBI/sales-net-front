@@ -308,23 +308,23 @@ describe('planStockChanges', () => {
   const plan = (raw: unknown) => planStockChanges(raw, VARIANTS, ARTICLES, q)
 
   it('arma los cambios con artículo, talla, lo guardado y lo del borrador', () => {
-    expect(plan([{ variante_id: 11, cantidad: 7 }])).toEqual({
+    expect(plan([{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 7 }])).toEqual({
       changes: [{ variantId: 11, articleId: 1, articulo: 'Camisa Polo', talla: 'M', guardado: 10, borradorAntes: 10, cantidad: 7 }],
     })
   })
 
   it('acepta 0 y rechaza negativos, decimales, textos y exceso', () => {
-    expect('changes' in plan([{ variante_id: 11, cantidad: 0 }])).toBe(true)
+    expect('changes' in plan([{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 0 }])).toBe(true)
     for (const cantidad of [-1, 1.5, '5', NaN, 2_000_000, null]) {
-      expect('errores' in plan([{ variante_id: 11, cantidad }]), String(cantidad)).toBe(true)
+      expect('errores' in plan([{ variante_id: 11, articulo: 'Camisa Polo', cantidad }]), String(cantidad)).toBe(true)
     }
   })
 
   it('variantes ajenas, repetidas o entradas mal formadas: todo o nada', () => {
     expect('errores' in plan([{ variante_id: 999, cantidad: 1 }])).toBe(true)
-    expect('errores' in plan([{ variante_id: 11, cantidad: 1 }, { variante_id: 11, cantidad: 2 }])).toBe(true)
-    expect('errores' in plan([{ variante_id: 11, cantidad: 1 }, { variante_id: 999, cantidad: 2 }])).toBe(true)
-    for (const raw of [[], null, 'x', {}, [null], Array.from({ length: 51 }, () => ({ variante_id: 11, cantidad: 1 }))]) {
+    expect('errores' in plan([{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 1 }, { variante_id: 11, articulo: 'Camisa Polo', cantidad: 2 }])).toBe(true)
+    expect('errores' in plan([{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 1 }, { variante_id: 999, cantidad: 2 }])).toBe(true)
+    for (const raw of [[], null, 'x', {}, [null], Array.from({ length: 51 }, () => ({ variante_id: 11, articulo: 'Camisa Polo', cantidad: 1 }))]) {
       expect('errores' in plan(raw), JSON.stringify(raw)?.slice(0, 30)).toBe(true)
     }
   })
@@ -369,7 +369,7 @@ describe('tools del editor de stock', () => {
     it('modifica SOLO el borrador, expande los artículos afectados y dice que hay que guardar', async () => {
       const ctx = stockCtx()
       const result = await ejecutar(tool(buildStockEditorTools(ctx), 'editar_stock'), {
-        cambios: [{ variante_id: 12, cantidad: 4 }, { variante_id: 11, cantidad: 12 }],
+        cambios: [{ variante_id: 12, articulo: 'Camisa Polo', cantidad: 4 }, { variante_id: 11, articulo: 'Camisa Polo', cantidad: 12 }],
       })
       expect(ctx.applyDraft).toHaveBeenCalledWith(
         [{ variantId: 12, cantidad: 4 }, { variantId: 11, cantidad: 12 }],
@@ -385,7 +385,7 @@ describe('tools del editor de stock', () => {
     it('avisa del AJUSTE de inventario cuando una cantidad queda por debajo de la guardada', async () => {
       const ctx = stockCtx()
       const result = await ejecutar(tool(buildStockEditorTools(ctx), 'editar_stock'), {
-        cambios: [{ variante_id: 11, cantidad: 4 }, { variante_id: 21, cantidad: 9 }],
+        cambios: [{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 4 }, { variante_id: 21, articulo: 'Pantalón Jeans', cantidad: 9 }],
       })
       expect(result).toMatchObject({
         ok: true,
@@ -396,17 +396,57 @@ describe('tools del editor de stock', () => {
 
     it('comparar contra lo GUARDADO, no contra el borrador (subir y volver a bajar sigue siendo un ajuste)', async () => {
       const ctx = stockCtx({ getDraft: () => 50 }) // el borrador ya tenía 50 en todo
-      const result = await ejecutar(tool(buildStockEditorTools(ctx), 'editar_stock'), { cambios: [{ variante_id: 11, cantidad: 20 }] })
+      const result = await ejecutar(tool(buildStockEditorTools(ctx), 'editar_stock'), { cambios: [{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 20 }] })
       expect(result).not.toMatchObject({ data: { aviso: expect.anything() } }) // 20 > 10 guardado: no baja
     })
 
     it('un cambio inválido no aplica NINGUNO', async () => {
       const ctx = stockCtx()
       const def = tool(buildStockEditorTools(ctx), 'editar_stock')
-      expect((await ejecutar(def, { cambios: [{ variante_id: 11, cantidad: 3 }, { variante_id: 999, cantidad: 1 }] })).ok).toBe(false)
-      expect((await ejecutar(def, { cambios: [{ variante_id: 11, cantidad: -3 }] })).ok).toBe(false)
+      expect((await ejecutar(def, { cambios: [{ variante_id: 11, articulo: 'Camisa Polo', cantidad: 3 }, { variante_id: 999, cantidad: 1 }] })).ok).toBe(false)
+      expect((await ejecutar(def, { cambios: [{ variante_id: 11, articulo: 'Camisa Polo', cantidad: -3 }] })).ok).toBe(false)
       expect(ctx.applyDraft).not.toHaveBeenCalled()
     })
+  })
+
+  describe('editar_stock: guardia de nombre y sumar', () => {
+    it('rechaza un id de OTRO articulo (el caso del marcador) y no toca el borrador', async () => {
+      const ctx = stockCtx()
+      const result = await ejecutar(tool(buildStockEditorTools(ctx), 'editar_stock'), {
+        cambios: [{ variante_id: 11, articulo: 'marcador con brich', sumar: 1 }],
+      })
+      expect(result).toMatchObject({ ok: false, error: expect.stringMatching(/es de "Camisa Polo", no de "marcador con brich"/) })
+      expect(ctx.applyDraft).not.toHaveBeenCalled()
+    })
+
+    it('exige el nombre y acepta el nombre parcial o sin acentos', async () => {
+      const def = tool(buildStockEditorTools(stockCtx()), 'editar_stock')
+      expect((await ejecutar(def, { cambios: [{ variante_id: 21, cantidad: 3 }] })).ok).toBe(false)
+      expect((await ejecutar(def, { cambios: [{ variante_id: 21, articulo: 'pantalon', cantidad: 3 }] })).ok).toBe(true)
+    })
+
+    it('sumar suma al borrador (agrega uno = +1, no deja la talla en 1) y puede restar', async () => {
+      const ctx = stockCtx()
+      const def = tool(buildStockEditorTools(ctx), 'editar_stock')
+      await ejecutar(def, { cambios: [{ variante_id: 11, articulo: 'Camisa Polo', sumar: 1 }, { variante_id: 21, articulo: 'Pantalón Jeans', sumar: -2 }] })
+      expect(ctx.applyDraft).toHaveBeenCalledWith([{ variantId: 11, cantidad: 11 }, { variantId: 21, cantidad: 3 }], [1, 2])
+    })
+
+    it('rechaza cantidad y sumar juntos, ninguno, o un total negativo', async () => {
+      const def = tool(buildStockEditorTools(stockCtx()), 'editar_stock')
+      for (const cambio of [{ cantidad: 1, sumar: 1 }, {}, { sumar: -50 }, { sumar: 1.5 }]) {
+        const result = await ejecutar(def, { cambios: [{ variante_id: 11, articulo: 'Camisa Polo', ...cambio }] })
+        expect(result.ok, JSON.stringify(cambio)).toBe(false)
+      }
+    })
+  })
+
+  it('leer_stock con texto sin coincidencia exacta devuelve sugerencias con aviso', async () => {
+    const result = await tool(buildStockEditorTools(stockCtx()), 'leer_stock').run({ texto: 'camiza polo' })
+    expect(result).toMatchObject({ ok: true, data: { aviso: expect.stringMatching(/sugerencias/), articulos: [{ articulo: 'Camisa Polo' }] } })
+    const nada = await tool(buildStockEditorTools(stockCtx()), 'leer_stock').run({ texto: 'zzzz' })
+    expect(nada).toMatchObject({ ok: true, data: { articulos: [] } })
+    expect(nada).not.toMatchObject({ data: { aviso: expect.anything() } })
   })
 
   describe('volver_stock', () => {
@@ -475,7 +515,7 @@ function pricingCtx(overrides: Partial<PricingEditorAgentContext> = {}) {
 describe('tools de precios por artículo (/catalogo/precios)', () => {
   it('leer_precios_sucursal muestra precio, descuento, rangos y si está modificada', async () => {
     const ctx = pricingCtx()
-    await ejecutar(tool(buildPricingEditorTools(ctx), 'editar_precio_variante'), { variante_id: 12, precio: 80 })
+    await ejecutar(tool(buildPricingEditorTools(ctx), 'editar_precio_variante'), { variante_id: 12, articulo: 'Camisa Polo', precio: 80 })
     const result = await tool(buildPricingEditorTools(ctx), 'leer_precios_sucursal').run({})
     expect(result).toMatchObject({
       ok: true,
@@ -496,7 +536,7 @@ describe('tools de precios por artículo (/catalogo/precios)', () => {
 
     it('modifica SOLO el borrador, expande el artículo y dice que hay que guardar', async () => {
       const ctx = pricingCtx()
-      const result = await ejecutar(def(ctx), { variante_id: 12, precio: 75.5, descuento_mayorista: 5, rangos: [{ desde: 2, hasta: 3, descuento: 4 }] })
+      const result = await ejecutar(def(ctx), { variante_id: 12, articulo: 'Camisa Polo', precio: 75.5, descuento_mayorista: 5, rangos: [{ desde: 2, hasta: 3, descuento: 4 }] })
       expect(ctx.setRow).toHaveBeenCalledWith(12, { precio: '75.5', descuentoMayorista: '5', tiers: [{ desde: '2', hasta: '3', descuento: '4' }] }, 1)
       expect(result).toMatchObject({
         ok: true,
@@ -507,10 +547,19 @@ describe('tools de precios por artículo (/catalogo/precios)', () => {
 
     it('devuelve los errores de variantPricingRowSchema/validateTiers y no toca el borrador', async () => {
       const ctx = pricingCtx()
-      const caro = await ejecutar(def(ctx), { variante_id: 12, descuento_mayorista: 150 }) // precio base 100
+      const caro = await ejecutar(def(ctx), { variante_id: 12, articulo: 'Camisa Polo', descuento_mayorista: 150 }) // precio base 100
       expect(caro).toMatchObject({ ok: false, error: expect.stringMatching(/descuento_mayorista: El descuento no puede superar el precio/) })
-      const solapa = await ejecutar(def(ctx), { variante_id: 12, rangos: [{ desde: 1, hasta: 5, descuento: 2 }, { desde: 3, descuento: 2 }] })
+      const solapa = await ejecutar(def(ctx), { variante_id: 12, articulo: 'Camisa Polo', rangos: [{ desde: 1, hasta: 5, descuento: 2 }, { desde: 3, descuento: 2 }] })
       expect(solapa).toMatchObject({ ok: false, error: expect.stringMatching(/Se solapa/) })
+      expect(ctx.setRow).not.toHaveBeenCalled()
+    })
+
+    it('rechaza un id cuyo articulo no coincide con el nombre dicho', async () => {
+      const ctx = pricingCtx()
+      expect(await ejecutar(def(ctx), { variante_id: 12, articulo: 'Gorra', precio: 5 })).toMatchObject({
+        ok: false,
+        error: expect.stringMatching(/es de "Camisa Polo"/),
+      })
       expect(ctx.setRow).not.toHaveBeenCalled()
     })
 

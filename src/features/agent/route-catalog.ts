@@ -56,6 +56,7 @@ export type ListedRoute = { path: string; name: string; description?: string; ac
  * Rutas que se le describen al modelo: las que no llevan parámetros y, como plantilla
  * (`{id}`), las de detalle de cliente, a las que `navegar` sí puede ir con un id de
  * `buscar_cliente`. Las demás rutas con parámetros se omiten porque `navegar` las rechaza.
+ * `description` solo va si no hay `acciones` (que ya la cubre): ahorra tokens en cada llamada al modelo.
  */
 export function getListedRoutes(catalog: CatalogRoute[]): ListedRoute[] {
   return catalog
@@ -63,7 +64,7 @@ export function getListedRoutes(catalog: CatalogRoute[]): ListedRoute[] {
     .map(({ path, name, description, agentHint, hasParams }) => ({
       path: hasParams ? path.replace(/:[A-Za-z0-9_]+/g, '{id}') : path,
       name,
-      ...(description ? { description } : {}),
+      ...(description && !agentHint ? { description } : {}),
       ...(agentHint ? { acciones: agentHint } : {}),
       ...(hasParams ? { plantilla: true as const } : {}),
     }))
