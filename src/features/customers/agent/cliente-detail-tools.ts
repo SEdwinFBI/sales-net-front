@@ -63,7 +63,7 @@ const VENTA_PARAMETERS = {
     forma_pago: { type: 'string', enum: [...FORMAS_PAGO_VENTA] },
     monto: { type: 'number', minimum: 0 },
     observacion: { type: 'string' },
-    sucursal_id: { type: 'integer', description: 'Solo si el diálogo pide sucursal (administrador).' },
+    sucursal_id: { type: 'integer', description: 'id de leer_formulario_venta_cliente; solo si el dialogo pide sucursal (administrador).' },
   },
   additionalProperties: false,
 } as const
@@ -264,12 +264,27 @@ export function buildAjusteDialogTools(ctx: AjusteDialogAgentContext): AgentTool
 export type VentaClienteDialogAgentContext = {
   /** Sucursales activas ya cargadas (undefined mientras cargan o si el diálogo no pide sucursal). */
   getSucursalIds: () => readonly number[] | undefined
+  /** Las mismas sucursales con su nombre ([] si el diálogo no pide sucursal). */
+  getSucursales: () => { id: number; nombre: string }[] | undefined
   getValues: () => Partial<VentaClienteFormValues>
   setValues: (values: Partial<VentaClienteFormValues>) => void
 }
 
 export function buildVentaClienteDialogTools(ctx: VentaClienteDialogAgentContext): AgentToolDef[] {
   return [
+    {
+      name: 'leer_formulario_venta_cliente',
+      description: 'Lee el formulario de venta al cliente abierto: valores actuales y, si pide sucursal, las sucursales activas con su id.',
+      parameters: NO_PARAMS,
+      run: async () => {
+        const sucursales = ctx.getSucursales()
+        return ok({
+          valores: ctx.getValues(),
+          pide_sucursal: sucursales === undefined || sucursales.length > 0,
+          ...(sucursales === undefined ? { aviso: 'Las sucursales aun estan cargando.' } : { sucursales }),
+        })
+      },
+    },
     {
       name: 'llenar_formulario_venta_cliente',
       description:

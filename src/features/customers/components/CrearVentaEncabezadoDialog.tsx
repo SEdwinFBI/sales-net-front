@@ -80,6 +80,12 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
     open
       ? buildVentaClienteDialogTools({
           // Solo se conoce la lista de sucursales cuando el diálogo la pide y ya cargó.
+          getSucursales: () =>
+            !necesitaSucursal
+              ? []
+              : cargandoSucursales || errorSucursales
+                ? undefined
+                : sucursalesActivas.map((s) => ({ id: s.id, nombre: s.nombre })),
           getSucursalIds: () =>
             !necesitaSucursal ? [] : cargandoSucursales || errorSucursales ? undefined : sucursalesActivas.map((s) => s.id),
           getValues: () => ({

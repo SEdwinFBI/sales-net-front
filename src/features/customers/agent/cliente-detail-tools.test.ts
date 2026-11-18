@@ -166,7 +166,7 @@ describe('tools de la ficha del cliente', () => {
         const result = await ejecutar(tool(buildClienteDetailTools(ctx), name), { valores: {} })
         expect(result).toEqual({
           ok: false,
-          error: 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.',
+          error: 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.',
         })
         expect(ctx.openAbono).not.toHaveBeenCalled()
         expect(ctx.openAjuste).not.toHaveBeenCalled()
@@ -217,13 +217,27 @@ describe('tools de los diálogos abiertos', () => {
     expect(setValues).toHaveBeenCalledWith({ monto: 10, negativo: true })
   })
 
+  it('leer_formulario_venta_cliente da las sucursales con su id para elegir por nombre', async () => {
+    const tools = (getSucursales: () => { id: number; nombre: string }[] | undefined) =>
+      buildVentaClienteDialogTools({ getSucursalIds: () => [1], getSucursales, getValues: () => ({ monto: 50 }), setValues: vi.fn() })
+    const leer = (list: () => { id: number; nombre: string }[] | undefined) =>
+      tools(list).find((t) => t.name === 'leer_formulario_venta_cliente')!.run({})
+    expect(await leer(() => [{ id: 1, nombre: 'Centro' }])).toEqual({
+      ok: true,
+      data: { valores: { monto: 50 }, pide_sucursal: true, sucursales: [{ id: 1, nombre: 'Centro' }] },
+    })
+    expect(await leer(() => [])).toEqual({ ok: true, data: { valores: { monto: 50 }, pide_sucursal: false, sucursales: [] } })
+    expect(await leer(() => undefined)).toMatchObject({ ok: true, data: { pide_sucursal: true, aviso: 'Las sucursales aun estan cargando.' } })
+  })
+
   it('llenar_formulario_venta_cliente valida la sucursal contra las cargadas', async () => {
     const setValues = vi.fn()
-    const [def] = buildVentaClienteDialogTools({
+    const def = buildVentaClienteDialogTools({
       getSucursalIds: () => [1, 2],
+      getSucursales: () => [{ id: 1, nombre: 'Centro' }, { id: 2, nombre: 'Xela' }],
       getValues: () => ({}),
       setValues,
-    })
+    }).find((t) => t.name === 'llenar_formulario_venta_cliente')!
     expect((await def.run({ sucursal_id: 9 })).ok).toBe(false)
     expect((await def.run({ sucursal_id: 2, forma_pago: 'efectivo' })).ok).toBe(true)
     expect(setValues).toHaveBeenCalledTimes(1)

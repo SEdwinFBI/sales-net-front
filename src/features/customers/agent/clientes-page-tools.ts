@@ -159,7 +159,7 @@ export function buildClientesPageTools(ctx: ClientesPageAgentContext, isAdmin: b
         'Abre el formulario de edicion de un cliente (por id de leer_clientes o buscar_cliente), opcionalmente con valores nuevos precargados. No guarda.',
       parameters: {
         type: 'object',
-        properties: { cliente_id: { type: 'integer' }, valores: VALORES_SCHEMA },
+        properties: { cliente_id: { type: 'integer', description: 'id de leer_clientes o de buscar_cliente.' }, valores: VALORES_SCHEMA },
         required: ['cliente_id'],
         additionalProperties: false,
       },
@@ -191,7 +191,7 @@ export function buildClientesPageTools(ctx: ClientesPageAgentContext, isAdmin: b
         'Abre la confirmacion para eliminar (dejar inactivo) a un cliente. No elimina: el usuario presiona Eliminar.',
       parameters: {
         type: 'object',
-        properties: { cliente_id: { type: 'integer' } },
+        properties: { cliente_id: { type: 'integer', description: 'id de leer_clientes o de buscar_cliente.' } },
         required: ['cliente_id'],
         additionalProperties: false,
       },
