@@ -319,3 +319,11 @@ describe('tools de /inventario/resumen', () => {
     expect((await ejecutar(def('descargar_pdf_resumen', falla), {})).ok).toBe(false)
   })
 })
+
+describe('opciones_filtros_resumen', () => {
+  it('devuelve las sucursales con id para filtrar', async () => {
+    const tools = buildResumenTools(resCtx())
+    const def = tools.find((t) => t.name === 'opciones_filtros_resumen')!
+    expect(await def.run({})).toEqual({ ok: true, data: { sucursales: [{ id: 1, nombre: 'Centro' }] } })
+  })
+})

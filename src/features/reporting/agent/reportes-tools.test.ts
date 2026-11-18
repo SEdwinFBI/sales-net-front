@@ -293,3 +293,35 @@ describe('reporte de cobros', () => {
     expect(sucursales[0].usuarios).toHaveLength(30)
   })
 })
+
+describe('opciones de los filtros (de donde salen los ids)', () => {
+  it('opciones_filtros_dashboard da sucursales, articulos acotados por texto y las tallas del articulo filtrado', async () => {
+    const { ctx } = dashboardContext()
+    const def = tool(buildDashboardTools(ctx), 'opciones_filtros_dashboard')
+    expect(await def.run({ texto: 'panta' })).toEqual({
+      ok: true,
+      data: {
+        sucursales: [{ id: 1, nombre: 'Centro' }],
+        total_articulos: 1,
+        articulos: [{ id: 6, titulo: 'Pantalon' }],
+        tallas_del_articulo_filtrado: [
+          { id: 9, nombre: 'M' },
+          { id: 10, nombre: 'L' },
+        ],
+      },
+    })
+  })
+
+  it('opciones_filtros_reporte_ventas da articulos, tallas y sucursales con id', async () => {
+    const { ctx } = ventasContext()
+    expect(await tool(buildReporteVentasTools(ctx), 'opciones_filtros_reporte_ventas').run({})).toEqual({
+      ok: true,
+      data: {
+        total_articulos: 1,
+        articulos: [{ id: 5, nombre: 'Camisa' }],
+        tallas: [{ id: 9, nombre: 'M' }],
+        sucursales: [{ id: 1, nombre: 'Centro' }],
+      },
+    })
+  })
+})

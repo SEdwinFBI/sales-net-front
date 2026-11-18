@@ -20,6 +20,13 @@ import type {
 
 const TOP = 10
 
+/** Opciones de un selector, acotadas por texto: el catálogo de artículos puede ser largo. */
+function pickOptions<T>(options: readonly T[], label: (option: T) => string, texto: unknown) {
+  const needle = typeof texto === 'string' ? fold(texto.trim()) : ''
+  const matching = needle ? options.filter((option) => fold(label(option)).includes(needle)) : options
+  return { total: matching.length, lista: limitRows(matching) }
+}
+
 // -- Dashboard (/reportes/dashboard) ------------------------------------------------------------
 
 export type DashboardFiltersView = DateRange & { sucursal_id?: number; articulo_id?: number; talla_id?: number }
@@ -122,8 +129,8 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
         properties: {
           fecha_desde: { type: 'string', description: 'AAAA-MM-DD' },
           fecha_hasta: { type: 'string', description: 'AAAA-MM-DD' },
-          sucursal_id: { type: ['integer', 'null'] },
-          articulo_id: { type: ['integer', 'null'] },
+          sucursal_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_dashboard; null = todas.' },
+          articulo_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_dashboard; null = todos.' },
           talla: { type: ['string', 'integer', 'null'], description: 'Talla del articulo elegido (nombre o id).' },
         },
         additionalProperties: false,
@@ -137,6 +144,27 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
         if ('error' in parsed) return fail(parsed.error)
         ctx.apply(parsed.changes)
         return ok({ aplicado: parsed.changes, mensaje: 'Filtros aplicados. Usa leer_dashboard para ver el resultado (puede tardar un instante en cargar).' })
+      },
+    },
+    {
+      name: 'opciones_filtros_dashboard',
+      description:
+        'Devuelve los valores validos de los filtros del dashboard: sucursales y articulos (con id; texto acota los articulos) y las tallas del articulo filtrado.',
+      parameters: {
+        type: 'object',
+        properties: { texto: { type: 'string', description: 'Parte del nombre del articulo, para acotar la lista.' } },
+        additionalProperties: false,
+      },
+      run: async (args) => {
+        const options = ctx.getOptions()
+        const articulos = pickOptions(options.articulos, (a) => a.titulo, args.texto)
+        const articuloId = ctx.getFilters().articulo_id
+        return ok({
+          sucursales: limitRows(options.sucursales),
+          total_articulos: articulos.total,
+          articulos: articulos.lista,
+          ...(articuloId ? { tallas_del_articulo_filtrado: options.tallasDe(articuloId) } : {}),
+        })
       },
     },
     {
@@ -243,15 +271,15 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
     {
       name: 'filtrar_reporte_ventas',
       description:
-        'Filtra el reporte de ventas: fecha_desde y fecha_hasta (AAAA-MM-DD, siempre con valor), articulo_id, talla_id y sucursal_id (null = todos). Los ids salen de las opciones del reporte.',
+        'Filtra el reporte de ventas: fecha_desde y fecha_hasta (AAAA-MM-DD, siempre con valor), articulo_id, talla_id y sucursal_id (null = todos). Los ids salen de opciones_filtros_reporte_ventas.',
       parameters: {
         type: 'object',
         properties: {
           fecha_desde: { type: 'string', description: 'AAAA-MM-DD' },
           fecha_hasta: { type: 'string', description: 'AAAA-MM-DD' },
-          articulo_id: { type: ['integer', 'null'] },
-          talla_id: { type: ['integer', 'null'] },
-          sucursal_id: { type: ['integer', 'null'] },
+          articulo_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_reporte_ventas; null = todos.' },
+          talla_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_reporte_ventas; null = todas.' },
+          sucursal_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_reporte_ventas; null = todas.' },
         },
         additionalProperties: false,
       },
@@ -264,6 +292,27 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
         if ('error' in parsed) return fail(parsed.error)
         ctx.change(parsed.filters)
         return ok({ filtros: parsed.filters, mensaje: 'Filtros aplicados. Usa leer_reporte_ventas para ver el resultado (puede tardar un instante en cargar).' })
+      },
+    },
+    {
+      name: 'opciones_filtros_reporte_ventas',
+      description:
+        'Devuelve los valores validos de los filtros del reporte de ventas: articulos, tallas y sucursales con su id (texto acota los articulos).',
+      parameters: {
+        type: 'object',
+        properties: { texto: { type: 'string', description: 'Parte del nombre del articulo, para acotar la lista.' } },
+        additionalProperties: false,
+      },
+      run: async (args) => {
+        const options = ctx.getOptions()
+        const withId = (list: Option[]) => list.filter((o) => o.id !== undefined).map((o) => ({ id: o.id, nombre: o.label }))
+        const articulos = pickOptions(withId(options.articulos), (a) => a.nombre, args.texto)
+        return ok({
+          total_articulos: articulos.total,
+          articulos: articulos.lista,
+          tallas: limitRows(withId(options.tallas)),
+          sucursales: limitRows(withId(options.sucursales)),
+        })
       },
     },
     {
@@ -516,7 +565,10 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
       description: 'Descarga el PDF de cobros de un usuario de una sucursal (ids de leer_cobros; sucursal_id null = sin sucursal), con la fecha filtrada.',
       parameters: {
         type: 'object',
-        properties: { usuario_id: { type: 'integer' }, sucursal_id: { type: ['integer', 'null'] } },
+        properties: {
+          usuario_id: { type: 'integer', description: 'usuario_id de leer_cobros.' },
+          sucursal_id: { type: ['integer', 'null'], description: 'sucursal_id de leer_cobros; null = sin sucursal.' },
+        },
         required: ['usuario_id', 'sucursal_id'],
         additionalProperties: false,
       },

@@ -71,6 +71,12 @@ export function buildResumenTools(ctx: ResumenAgentContext): AgentToolDef[] {
 
   return [
     {
+      name: 'opciones_filtros_resumen',
+      description: 'Devuelve las sucursales (con id) para filtrar el resumen de existencias. El cliente se busca con buscar_cliente.',
+      parameters: NO_PARAMS,
+      run: async () => ok({ sucursales: limitRows(ctx.getSucursales()) }),
+    },
+    {
       name: 'filtrar_resumen',
       description:
         'Filtra el resumen de existencias: fecha_desde y fecha_hasta (AAAA-MM-DD, siempre con valor), sucursal_id y cliente_id (null = todos). Despues usa leer_resumen.',
@@ -79,8 +85,8 @@ export function buildResumenTools(ctx: ResumenAgentContext): AgentToolDef[] {
         properties: {
           fecha_desde: { type: 'string', description: 'AAAA-MM-DD' },
           fecha_hasta: { type: 'string', description: 'AAAA-MM-DD' },
-          sucursal_id: { type: ['integer', 'null'] },
-          cliente_id: { type: ['integer', 'null'], description: 'id de buscar_cliente.' },
+          sucursal_id: { type: ['integer', 'null'], description: 'id de opciones_filtros_resumen; null = todas.' },
+          cliente_id: { type: ['integer', 'null'], description: 'id de buscar_cliente; null = todos.' },
         },
         additionalProperties: false,
       },
