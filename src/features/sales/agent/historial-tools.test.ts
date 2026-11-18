@@ -189,7 +189,9 @@ function tableCtx(overrides: Partial<HistorialTableAgentContext> = {}) {
 describe('tools de la tabla del historial', () => {
   it('ver_detalle_venta expande la fila y avisa si los filtros de columna la ocultan', async () => {
     const ctx = tableCtx()
-    expect((await ejecutar(tool(buildHistorialTableTools(ctx), 'ver_detalle_venta'), { venta_id: 2 })).ok).toBe(true)
+    const result = await ejecutar(tool(buildHistorialTableTools(ctx), 'ver_detalle_venta'), { venta_id: 2 })
+    // Devuelve el detalle: sin él, el modelo no podría responder qué articulos llevó la venta.
+    expect(result).toMatchObject({ ok: true, data: { detalle: { venta_id: 2, articulos: [] } } })
     expect(ctx.showDetalle).toHaveBeenCalledWith(2)
 
     const oculta = tableCtx({ showDetalle: vi.fn(() => false) })
@@ -248,7 +250,7 @@ describe('tools de la tabla del historial', () => {
     const ctx = tableCtx({ isDialogOpen: () => true })
     expect(await ejecutar(tool(buildHistorialTableTools(ctx), name), { venta_id: 2 })).toMatchObject({
       ok: false,
-      error: 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.',
+      error: 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.',
     })
   })
 })

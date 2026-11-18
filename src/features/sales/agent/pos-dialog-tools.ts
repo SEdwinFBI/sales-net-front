@@ -20,7 +20,7 @@ export function buildDisponibilidadOpenTools(ctx: DisponibilidadAgentContext): A
         'Abre las existencias por talla de un articulo en cada sucursal (id de buscar_articulos). Despues usa leer_disponibilidad_sucursales.',
       parameters: {
         type: 'object',
-        properties: { articulo_id: { type: 'integer' } },
+        properties: { articulo_id: { type: 'integer', description: 'id de buscar_articulos.' } },
         required: ['articulo_id'],
         additionalProperties: false,
       },
@@ -250,7 +250,7 @@ export function buildPreciosVentaTools(ctx: PreciosVentaContext): AgentToolDef[]
     if ('cliente_id' in args) {
       const id = positiveInt(args.cliente_id)
       if (id === null || !ctx.getCustomers().some((c) => Number(c.id) === id)) {
-        return { error: 'cliente_id no esta entre los clientes cargados en el dialogo (ver buscar_cliente).' }
+        return { error: 'cliente_id no esta entre los clientes que lista el dialogo (los primeros 50 activos): pidele al usuario que lo busque en el selector de cliente.' }
       }
       plan.customerId = String(id)
     }
@@ -271,8 +271,8 @@ export function buildPreciosVentaTools(ctx: PreciosVentaContext): AgentToolDef[]
       parameters: {
         type: 'object',
         properties: {
-          variante_ids: { type: 'array', items: { type: 'integer' } },
-          cliente_id: { type: 'integer' },
+          variante_ids: { type: 'array', items: { type: 'integer' }, description: 'variante_id de leer_precios_venta.' },
+          cliente_id: { type: 'integer', description: 'id de buscar_cliente o de leer_precios_venta.' },
         },
         additionalProperties: false,
       },

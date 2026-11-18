@@ -1,5 +1,6 @@
 import { dialogAlreadyOpenError, type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
 import { MAX_READ_ROWS, NO_PARAMS, fail, limitRows, ok, positiveInt } from '@/features/agent/tool-helpers'
+import { describeVentaDetalle } from '@/features/sales/agent/venta-detalle'
 import { motivoNoAnulableVenta } from '@/features/sales/utils/anulacion-rules'
 import type { Venta } from '@/features/sales/types/sales'
 import type { AuthUser } from '@/features/core/store/auth-store'
@@ -56,7 +57,7 @@ export function buildComprasTools(ctx: ComprasAgentContext): AgentToolDef[] {
     },
     {
       name: 'abrir_detalle_compra',
-      description: 'Abre el detalle de una compra del cliente (articulos, totales, foto de entrega si hay).',
+      description: 'Abre el detalle de una compra del cliente y lo devuelve: articulos con talla, cantidad y precio, totales y saldo (la foto de entrega solo se ve en pantalla).',
       parameters: VENTA_ID,
       abreUi: true,
       validar: (args) => {
@@ -67,7 +68,7 @@ export function buildComprasTools(ctx: ComprasAgentContext): AgentToolDef[] {
         const venta = findVenta(args)
         if (!venta) return fail('No encontre esa compra.')
         ctx.openDetalle(venta)
-        return ok({ mensaje: `Detalle de la compra #${venta.id} abierto.` })
+        return ok({ mensaje: `Detalle de la compra #${venta.id} abierto.`, detalle: describeVentaDetalle(venta) })
       },
     },
     {

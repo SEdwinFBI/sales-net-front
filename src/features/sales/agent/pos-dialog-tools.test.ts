@@ -152,7 +152,7 @@ describe('guardar precios de la venta', () => {
     expect(ctx.setSelectedIds).toHaveBeenCalledWith(new Set(['b']))
     expect(ctx.setCustomerId).toHaveBeenCalledWith('5')
     expect(errorOf(await ejecutar(def, { variante_ids: [99] }))).toMatch(/no son de la venta/)
-    expect(errorOf(await ejecutar(def, { cliente_id: 77 }))).toMatch(/clientes cargados/)
+    expect(errorOf(await ejecutar(def, { cliente_id: 77 }))).toMatch(/primeros 50 activos/)
     expect((await ejecutar(def, {})).ok).toBe(false)
   })
 

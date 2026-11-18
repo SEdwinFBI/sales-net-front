@@ -13,6 +13,7 @@ import {
 import type { AuthUser } from '@/features/core/store/auth-store'
 import type { Venta } from '../types/sales'
 import { motivoNoAnulableVenta } from '../utils/anulacion-rules'
+import { describeVentaDetalle } from './venta-detalle'
 
 export type HistorialFilters = DateRange & {
   estado?: string
@@ -197,7 +198,7 @@ export function buildHistorialTableTools(ctx: HistorialTableAgentContext): Agent
   return [
     {
       name: 'ver_detalle_venta',
-      description: 'Expande el detalle de una venta del historial (articulos y totales) y mueve la tabla a su pagina.',
+      description: 'Expande una venta del historial (la tabla va a su pagina) y devuelve su detalle: articulos con talla, cantidad y precio, totales, saldo y observacion.',
       parameters: VENTA_ID,
       validar: (args) => (findVenta(args) ? null : NOT_FOUND),
       run: async (args) => {
@@ -206,7 +207,7 @@ export function buildHistorialTableTools(ctx: HistorialTableAgentContext): Agent
         if (!ctx.showDetalle(venta.id)) {
           return fail('Esa venta esta oculta por los filtros de columna de la tabla: quitalos para verla.')
         }
-        return ok({ mensaje: `Detalle de la venta #${venta.id} desplegado.` })
+        return ok({ mensaje: `Detalle de la venta #${venta.id} desplegado.`, detalle: describeVentaDetalle(venta) })
       },
     },
     {

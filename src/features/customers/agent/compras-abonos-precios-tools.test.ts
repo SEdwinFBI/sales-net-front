@@ -76,7 +76,7 @@ describe('tools de la pestaña Compras', () => {
   it('abrir_detalle_compra abre el detalle de una compra existente', async () => {
     const ctx = comprasCtx()
     const result = await ejecutar(tool(buildComprasTools(ctx), 'abrir_detalle_compra'), { venta_id: 2 })
-    expect(result.ok).toBe(true)
+    expect(result).toMatchObject({ ok: true, data: { detalle: { venta_id: 2 } } })
     expect(ctx.openDetalle).toHaveBeenCalledWith(venta(2, 'REVERTIDA'))
   })
 
@@ -118,7 +118,7 @@ describe('tools de la pestaña Compras', () => {
       for (const name of ['abrir_detalle_compra', 'abrir_anular_venta']) {
         expect(await ejecutar(tool(buildComprasTools(ctx), name), { venta_id: 1 })).toMatchObject({
           ok: false,
-          error: 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.',
+          error: 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.',
         })
       }
     })
