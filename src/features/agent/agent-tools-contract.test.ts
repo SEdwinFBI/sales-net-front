@@ -22,7 +22,12 @@ import {
 } from '@/features/catalog/agent/stock-tools'
 import { buildMovimientosTools, type MovimientosAgentContext } from '@/features/inventario/agent/movimientos-tools'
 import { buildResumenTools, type ResumenAgentContext } from '@/features/inventario/agent/resumen-tools'
-import { buildArqueosTools, type ArqueosAgentContext } from '@/features/cash/agent/arqueos-tools'
+import {
+  buildArqueosTools,
+  buildCajaDetalleTools,
+  type ArqueosAgentContext,
+  type CajaDetalleAgentContext,
+} from '@/features/cash/agent/arqueos-tools'
 import {
   buildMiCajaTools,
   buildMovimientoDialogTools,
@@ -116,7 +121,7 @@ const everythingTrue = <T>() => new Proxy({}, { get: () => () => true }) as unkn
 
 /** Tools estáticas del back (`agent/tools.py`): una pantalla no puede usar estos nombres. */
 const STATIC_TOOL_NAMES = [
-  'navegar', 'leer_estado', 'cambiar_tema', 'cerrar_sesion', 'buscar_articulos', 'agregar_item', 'cambiar_cantidad',
+  'navegar', 'leer_estado', 'cambiar_tema', 'cerrar_sesion', 'cerrar_dialogo', 'buscar_articulos', 'agregar_item', 'cambiar_cantidad',
   'quitar_item', 'vaciar_carrito', 'buscar_cliente', 'seleccionar_cliente', 'abrir_carrito', 'cerrar_carrito', 'abrir_checkout',
 ]
 
@@ -158,7 +163,13 @@ const screens: Screen[] = [
       ...buildMovimientoDialogTools(everythingTrue<MovimientoDialogAgentContext>()),
     ],
   },
-  { name: '/caja/arqueos', tools: buildArqueosTools(everythingTrue<ArqueosAgentContext>()) },
+  {
+    name: '/caja/arqueos',
+    tools: [
+      ...buildArqueosTools(everythingTrue<ArqueosAgentContext>()),
+      ...buildCajaDetalleTools(everythingTrue<CajaDetalleAgentContext>()),
+    ],
+  },
   {
     name: '/catalogo/productos',
     tools: [
@@ -305,6 +316,24 @@ describe('contrato de todas las tools de pantalla', () => {
       const names = screen.tools.map((t) => t.name)
       expect(new Set(names).size, `${screen.name}: ${names.join(', ')}`).toBe(names.length)
     }
+  })
+
+  it('todo parámetro *_id dice de qué herramienta sale el id (el modelo nunca debe inventarlos)', () => {
+    const sinOrigen: string[] = []
+    const visit = (schema: unknown, path: string, toolName: string) => {
+      const node = schema as { properties?: Record<string, unknown>; items?: unknown } | null
+      if (!node || typeof node !== 'object') return
+      for (const [key, value] of Object.entries(node.properties ?? {})) {
+        const description = (value as { description?: unknown }).description
+        if (/_ids?$/.test(key) && (typeof description !== 'string' || !/\b(de|del)\s+[a-z_]+/.test(description))) {
+          sinOrigen.push(`${toolName}: ${path}${key}`)
+        }
+        visit(value, `${path}${key}.`, toolName)
+      }
+      if (node.items) visit(node.items, `${path}[].`, toolName)
+    }
+    for (const { tool } of allTools) visit(tool.parameters, '', tool.name)
+    expect([...new Set(sinOrigen)]).toEqual([])
   })
 
   it('ninguna tool usa el nombre de una tool estática del back', () => {
