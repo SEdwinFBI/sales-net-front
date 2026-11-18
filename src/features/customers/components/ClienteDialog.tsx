@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -24,6 +24,11 @@ import type { Cliente } from '../types/clientes'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { DIAS_NOTIFICACION } from '../utils/dias-notificacion'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { useAuthStore } from '@/features/core/store/auth-store'
+import { buildClienteDialogTools } from '../agent/cliente-dialog-tools'
+import { CLIENTE_FORM_KEYS, type ClienteFormValues } from '../agent/cliente-form-values'
 
 const schema = z.object({
   dias_notificacion: z.array(z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6), z.literal(7)])).max(7),
@@ -49,6 +54,8 @@ type FormValues = z.infer<typeof schema>
 type Props = {
   open: boolean
   cliente?: Cliente | null
+  /** Valores que se superponen a los defaults o a los datos del cliente al abrir (los usa el agente). */
+  initialValues?: Partial<ClienteFormValues>
   onClose: () => void
 }
 
@@ -65,6 +72,7 @@ const EMPTY_FORM: FormValues = {
 export default function ClienteDialog({
   open,
   cliente,
+  initialValues,
   onClose,
 }: Props) {
   const isEdit = !!cliente
@@ -87,6 +95,7 @@ export default function ClienteDialog({
     reset,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
@@ -96,23 +105,46 @@ export default function ClienteDialog({
   const sinCredito = !watch('permitir_credito')
   const creditoBloqueado = !!cliente && Number(cliente.balance) !== 0
 
+  // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto
+  // (borraría lo que el usuario está escribiendo): solo se usa al abrir.
+  const initialRef = useRef(initialValues)
+  useEffect(() => {
+    initialRef.current = initialValues
+  })
+
   useEffect(() => {
     if (!open) return
 
-    reset(
-      cliente
-        ? {
-            permitir_credito: cliente.permitir_credito ?? true,
-            nombre_completo: cliente.nombre_completo,
-            direccion: cliente.direccion,
-            telefono: cliente.telefono,
-            balance: cliente.balance,
-            activo: cliente.activo,
-            dias_notificacion: cliente.dias_notificacion ?? [],
-          }
-        : EMPTY_FORM,
-    )
+    const base: FormValues = cliente
+      ? {
+          permitir_credito: cliente.permitir_credito ?? true,
+          nombre_completo: cliente.nombre_completo,
+          direccion: cliente.direccion,
+          telefono: cliente.telefono,
+          balance: cliente.balance,
+          activo: cliente.activo,
+          dias_notificacion: cliente.dias_notificacion ?? [],
+        }
+      : EMPTY_FORM
+    reset({ ...base, ...initialRef.current })
   }, [open, cliente, reset])
+
+  // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca guardarlo).
+  useAgentTools(
+    'cliente-dialog',
+    open
+      ? buildClienteDialogTools({
+          isAdmin: () => useAuthStore.getState().user?.role === 'admin',
+          getCliente: () => cliente ?? null,
+          getValues: () => getValues(),
+          setValues: (values) => {
+            CLIENTE_FORM_KEYS.forEach((key) => {
+              if (key in values) setValue(key, values[key] as never, { shouldValidate: true, shouldDirty: true })
+            })
+          },
+        })
+      : null,
+  )
 
   const onSubmit = async (values: FormValues) => {
     const data = values.permitir_credito
@@ -129,12 +161,30 @@ export default function ClienteDialog({
       }
 
       onClose()
+      return true
     } catch (error) {
       toast.error(
         getApiErrorMessage(error, 'Error al guardar el cliente'),
       )
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona el botón tras un clic de confirmación.
+  useAgentTools(
+    'cliente-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'guardar_cliente',
+            description: 'Guarda el formulario de cliente abierto (crea el cliente o guarda los cambios).',
+            validar: () => (isPending ? 'Ya se esta guardando.' : null),
+            texto: () => `${cliente ? 'Guardar los cambios del cliente' : 'Crear el cliente'} ${getValues('nombre_completo') || '(sin nombre)'}`,
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog

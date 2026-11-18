@@ -20,6 +20,8 @@ import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency } from '@/helpers/money'
 import type { ReporteDeudores } from '../types/reportes'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Row = ReporteDeudores['data']['clientes'][number]
 
@@ -66,6 +68,9 @@ export default function DeudoresTable({ data, isLoading }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   })
+
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-deudores', [paginationTool('deudores', 'la tabla de deudores', tablePagination(table))])
 
   if (isLoading) {
     return (

@@ -15,7 +15,10 @@ import { ArrowUpDown, Eye, Receipt } from 'lucide-react'
 import type { Venta } from '@/features/sales/types/sales'
 import { Button } from '@/components/ui/button'
 import CompraDetalleDialog from './CompraDetalleDialog'
-import RevertirVentaButton from '@/features/sales/components/RevertirVentaButton'
+import RevertirVentaButton, { RevertirVentaDialog } from '@/features/sales/components/RevertirVentaButton'
+import { useAuthStore } from '@/features/core/store/auth-store'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildComprasTools } from '../agent/compras-abonos-tools'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
@@ -30,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   ventas: Venta[]
@@ -39,6 +43,9 @@ export default function ComprasTable({ ventas }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [ventaDetalle, setVentaDetalle] = useState<Venta | null>(null)
+  // Anulación abierta por el agente: otra instancia del mismo diálogo del botón, con la misma regla de visibilidad.
+  const [ventaAnular, setVentaAnular] = useState<Venta | null>(null)
+  const user = useAuthStore((state) => state.user)
 
   const columns = useMemo<ColumnDef<Venta>[]>(() => [
     {
@@ -136,6 +143,20 @@ export default function ComprasTable({ ventas }: Props) {
     initialState: { pagination: { pageSize: 10 } },
   })
 
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-compras_cliente', [paginationTool('compras_cliente', 'las compras del cliente', tablePagination(table))])
+
+  useAgentTools(
+    'compras-cliente',
+    buildComprasTools({
+      getVentas: () => ventas,
+      getUser: () => user,
+      isDialogOpen: () => ventaDetalle !== null || ventaAnular !== null,
+      openDetalle: setVentaDetalle,
+      openAnular: setVentaAnular,
+    }),
+  )
+
   const hasFilters = columnFilters.length > 0
 
   if (ventas.length === 0) {
@@ -207,6 +228,13 @@ export default function ComprasTable({ ventas }: Props) {
       <TablePagination table={table} />
 
       <CompraDetalleDialog venta={ventaDetalle} onClose={() => setVentaDetalle(null)} />
+      {ventaAnular && (
+        <RevertirVentaDialog
+          venta={ventaAnular}
+          open
+          onOpenChange={(open) => { if (!open) setVentaAnular(null) }}
+        />
+      )}
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -18,6 +18,9 @@ import { getApiErrorMessage } from '@/lib/api-error'
 import { useCreateSucursal } from '../hooks/useCreateSucursal'
 import { useUpdateSucursal } from '../hooks/useUpdateSucursal'
 import type { Sucursal } from '../types/sucursal-types'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool, submitForm } from '@/features/agent/commit-tools'
+import { buildSucursalDialogTools, type SucursalFormValues } from '../../agent/sucursales-tools'
 
 const schema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -30,10 +33,12 @@ type FormValues = z.infer<typeof schema>
 type Props = {
   open: boolean
   sucursal?: Sucursal | null
+  /** Valores que se superponen a los defaults o a los datos de la sucursal al abrir (los usa el agente). */
+  initialValues?: Partial<SucursalFormValues>
   onClose: () => void
 }
 
-export default function SucursalDialog({ open, sucursal, onClose }: Props) {
+export default function SucursalDialog({ open, sucursal, initialValues, onClose }: Props) {
   const isEdit = !!sucursal
   const { mutateAsync: createSucursal, isPending: isCreating } = useCreateSucursal()
   const { mutateAsync: updateSucursal, isPending: isUpdating } = useUpdateSucursal()
@@ -43,21 +48,48 @@ export default function SucursalDialog({ open, sucursal, onClose }: Props) {
     register,
     handleSubmit,
     reset,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { nombre: '', direccion: '', telefono: '' },
   })
 
+  // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto: solo se usa al abrir.
+  const initialRef = useRef(initialValues)
+  useEffect(() => {
+    initialRef.current = initialValues
+  })
+
   useEffect(() => {
     if (open) {
-      reset(
-        sucursal
+      reset({
+        ...(sucursal
           ? { nombre: sucursal.nombre, direccion: sucursal.direccion, telefono: sucursal.telefono }
-          : { nombre: '', direccion: '', telefono: '' }
-      )
+          : { nombre: '', direccion: '', telefono: '' }),
+        ...initialRef.current,
+      })
     }
   }, [open, sucursal, reset])
+
+  // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca guardarlo).
+  useAgentTools(
+    'sucursal-dialog',
+    open
+      ? buildSucursalDialogTools({
+          getValues: () => {
+            const v = getValues()
+            return { nombre: v.nombre, direccion: v.direccion ?? '', telefono: v.telefono ?? '' }
+          },
+          setValues: (values) => {
+            for (const key of ['nombre', 'direccion', 'telefono'] as const) {
+              if (key in values) setValue(key, values[key] as string, { shouldValidate: true, shouldDirty: true })
+            }
+          },
+        })
+      : null,
+  )
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -69,10 +101,28 @@ export default function SucursalDialog({ open, sucursal, onClose }: Props) {
         toast.success('Sucursal creada correctamente')
       }
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar la sucursal'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona el botón tras un clic de confirmación.
+  useAgentTools(
+    'sucursal-dialog-guardar',
+    open
+      ? [
+          commitTool({
+            name: 'guardar_sucursal',
+            description: 'Guarda el formulario de sucursal abierto (crea la sucursal o guarda los cambios).',
+            validar: () => (isPending ? 'Ya se esta guardando.' : null),
+            texto: () => `${isEdit ? 'Guardar los cambios de la sucursal' : 'Crear la sucursal'} ${getValues('nombre') || '(sin nombre)'}`,
+            run: () => submitForm(handleSubmit, onSubmit),
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>

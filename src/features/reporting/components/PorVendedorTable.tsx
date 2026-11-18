@@ -22,6 +22,8 @@ import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaSucursal } from '../types/reportes'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Row = ReporteVentaSucursal
 
@@ -86,6 +88,9 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   })
+
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-reporte_sucursales', [paginationTool('reporte_sucursales', 'las ventas por sucursal', tablePagination(table))])
 
   const hasFilters = columnFilters.length > 0
 

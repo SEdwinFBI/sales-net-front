@@ -20,6 +20,9 @@ import CustomerSelect from './CustomerSelect'
 import { useCustomers } from '@/features/customers'
 import { savePreciosPostVenta } from '@/features/customers/services/clientePreciosService'
 import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildPreciosVentaTools } from '../agent/pos-dialog-tools'
 import { toast } from 'sonner'
 import { BookmarkCheck, Check, Sparkles, UserPlus } from 'lucide-react'
 
@@ -79,16 +82,16 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
   const selectedCustomerObj = customers?.find((c) => String(c.id) === selectedCustomerId)
   const currentCustomerName = selectedCustomerObj?.name ?? lastSale.customerName ?? 'Cliente'
 
-  const handleSave = () => {
+  const handleSave = (): boolean => {
     if (!selectedCustomerId) {
       toast.warning('Selecciona o crea un cliente para guardar los precios.')
-      return
+      return false
     }
 
     const customerIdNum = Number(selectedCustomerId)
     if (!customerIdNum) {
       toast.error('Identificador de cliente no válido.')
-      return
+      return false
     }
 
     const itemsToSave: CustomerProductPrice[] = lastSale.items
@@ -119,7 +122,7 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
 
     if (itemsToSave.length === 0) {
       toast.warning('Selecciona al menos un artículo para guardar.')
-      return
+      return false
     }
 
     // Persistir localmente para disponibilidad inmediata en el POS
@@ -145,7 +148,35 @@ export default function SaveCustomerPricesDialog({ open, onClose, lastSale }: Pr
     setTimeout(() => {
       onClose()
     }, 900)
+    return true
   }
+
+  // Con el diálogo abierto, el agente lee y elige qué precios guardar y para qué cliente. Guardarlos solo
+  // existe con las acciones de guardado activadas y tras un clic de confirmación.
+  useAgentTools(
+    'precios-venta-dialog',
+    open && !quickCreateOpen
+      ? [
+          ...buildPreciosVentaTools({
+            getItems: () => lastSale.items,
+            getSelectedIds: () => selectedItemIds,
+            setSelectedIds: setSelectedItemIds,
+            getCustomerId: () => selectedCustomerId,
+            getCustomers: () => customers ?? [],
+            setCustomerId: setSelectedCustomerId,
+            hasSaved: () => hasSaved,
+          }),
+          commitTool({
+            name: 'guardar_precios_venta',
+            description: 'Guarda para el cliente los precios marcados de la venta (presiona Guardar precios).',
+            validar: () =>
+              hasSaved ? 'Los precios ya se guardaron.' : !selectedCustomerId ? 'Falta elegir el cliente.' : selectedItemIds.size === 0 ? 'No hay articulos marcados.' : null,
+            texto: () => `Guardar ${selectedItemIds.size} precio(s) de la venta #${lastSale.idVenta} para ${currentCustomerName}`,
+            run: async () => handleSave(),
+          }),
+        ]
+      : null,
+  )
 
   const baseInputId = useId()
 

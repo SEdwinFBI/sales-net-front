@@ -29,6 +29,10 @@ import {
   getStockInputClass,
   getStockTextClass,
 } from '@/lib/stock-status'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
+import { buildStockEditorTools } from '../agent/stock-tools'
+import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
 
 const pageSize = 8
 
@@ -107,6 +111,9 @@ export default function SellerStockEditor({
   const safePage = Math.min(currentPage, totalPages)
   const paginatedRows = rows.slice((safePage - 1) * pageSize, safePage * pageSize)
 
+  // Paginación para el agente (tamaño fijo, como en la pantalla).
+  useAgentTools('paginacion-stock', [paginationTool('stock', 'los articulos del editor de stock', slicePagination(rows.length, pageSize, safePage, setCurrentPage))])
+
   const handleQuantityChange = (variantId: number, value: string) => {
     setEmptyQuantities((current) => ({ ...current, [variantId]: value === '' }))
     if (value === '') return
@@ -129,7 +136,38 @@ export default function SellerStockEditor({
     }))
   }
 
-  const handleSave = async () => {
+  // Tools del agente: leen el stock y editan SOLO el borrador; el usuario presiona Guardar.
+  useAgentTools(
+    'stock-editor',
+    buildStockEditorTools({
+      getSucursalName: () => sucursal.nombre,
+      isLoading: () => isLoading,
+      getArticles: () => articles,
+      getVariants: () => variants,
+      getSaved: (variantId) => stockByVariant[variantId] ?? 0,
+      getDraft: getQuantity,
+      hasUnsavedChanges: () =>
+        Object.entries(draftQuantities).some(([variantId, quantity]) => quantity !== (stockByVariant[Number(variantId)] ?? 0)),
+      applyDraft: (changes, articleIds) => {
+        setDraftQuantities((current) => ({
+          ...current,
+          ...Object.fromEntries(changes.map((change) => [change.variantId, change.cantidad])),
+        }))
+        // Si el usuario había vaciado el campo, el input mostraría '' en vez de la cantidad del agente.
+        setEmptyQuantities((current) => ({
+          ...current,
+          ...Object.fromEntries(changes.map((change) => [change.variantId, false])),
+        }))
+        setExpandedArticles((current) => ({
+          ...current,
+          ...Object.fromEntries(articleIds.map((articleId) => [articleId, true])),
+        }))
+      },
+      goBack: onBack,
+    }),
+  )
+
+  const handleSave = async (): Promise<boolean> => {
     const items = variants.map((variant) => ({
       variantId: variant.id,
       quantity: getQuantity(variant.id),
@@ -138,10 +176,23 @@ export default function SellerStockEditor({
     try {
       await saveStock({ sucursalId: sucursal.id, items })
       toast.success('Stock guardado correctamente')
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al guardar el stock'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Guardar» tras un clic de confirmación.
+  useAgentTools('stock-editor-guardar', [
+    commitTool({
+      name: 'guardar_stock',
+      description: 'Guarda el stock del editor abierto con los cambios del borrador (presiona Guardar).',
+      validar: () => (isPending ? 'Ya se esta guardando.' : isLoading ? 'El stock aun esta cargando.' : null),
+      texto: () => `Guardar el stock de ${sucursal.nombre} (${variants.length} variantes)`,
+      run: handleSave,
+    }),
+  ])
 
   return (
     <div className="space-y-4">
@@ -156,7 +207,7 @@ export default function SellerStockEditor({
           </div>
         </div>
 
-        <Button className="w-full sm:w-auto" onClick={handleSave} disabled={isPending || isLoading}>
+        <Button className="w-full sm:w-auto" onClick={() => { void handleSave() }} disabled={isPending || isLoading}>
           {isPending ? <Loader2 className="animate-spin" /> : <Save />}
           {isPending ? 'Guardando…' : 'Guardar'}
         </Button>

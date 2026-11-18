@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/dialog'
 import { useDeleteArticle } from '../hooks/useDeleteArticle'
 import type { Article } from '../types/article-types'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { commitTool } from '@/features/agent/commit-tools'
 
 type Props = {
   article: Article | null
@@ -20,17 +22,35 @@ type Props = {
 export default function DeleteArticleDialog({ article, onClose }: Props) {
   const { mutateAsync: deleteArticle, isPending } = useDeleteArticle()
 
-  const handleConfirm = async () => {
-    if (!article) return
+  const handleConfirm = async (): Promise<boolean> => {
+    if (!article) return false
 
     try {
       await deleteArticle(article.id)
       toast.success(`Articulo ${article.title} eliminado`)
       onClose()
+      return true
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'Error al eliminar el articulo'))
+      return false
     }
   }
+
+  // Solo con las acciones de guardado activadas: el agente presiona «Eliminar» tras un clic de confirmación.
+  useAgentTools(
+    'delete-articulo-dialog',
+    article
+      ? [
+          commitTool({
+            name: 'confirmar_eliminar_articulo',
+            description: 'Presiona Eliminar en la confirmacion abierta para eliminar el articulo.',
+            validar: () => (isPending ? 'Ya se esta eliminando.' : null),
+            texto: () => `Eliminar el articulo ${article.title}`,
+            run: handleConfirm,
+          }),
+        ]
+      : null,
+  )
 
   return (
     <Dialog open={!!article} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
@@ -45,7 +65,7 @@ export default function DeleteArticleDialog({ article, onClose }: Props) {
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={handleConfirm} disabled={isPending}>
+          <Button variant="destructive" onClick={() => { void handleConfirm() }} disabled={isPending}>
             {isPending ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </DialogFooter>

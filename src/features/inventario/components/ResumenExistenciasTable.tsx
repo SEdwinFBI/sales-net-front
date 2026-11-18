@@ -22,6 +22,8 @@ import {
 import { formatNumber } from '@/helpers/money'
 import { getStockTextClass } from '@/lib/stock-status'
 import type { ResumenFilaExistencias, ResumenTotales } from '../types/inventario'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
   data: ResumenFilaExistencias[]
@@ -95,6 +97,9 @@ export default function ResumenExistenciasTable({
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 25 } },
   })
+
+  // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
+  useAgentTools('paginacion-resumen', [paginationTool('resumen', 'el resumen de existencias', tablePagination(table))])
 
   if (isLoading) {
     return (

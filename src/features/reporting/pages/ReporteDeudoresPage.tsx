@@ -10,6 +10,8 @@ import { downloadReporteDeudoresPdf } from '../services/reportes-service'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import type { ReporteDeudoresFilters } from '../types/reportes'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildDeudoresTools } from '../agent/reportes-tools'
 
 export default function ReporteDeudoresPage() {
   const [filters, setFilters] = useState<ReporteDeudoresFilters>({})
@@ -22,17 +24,36 @@ export default function ReporteDeudoresPage() {
     setFilters((prev) => ({ ...prev, [key]: value !== undefined && value !== '' ? value : undefined }))
   }
 
-  const handleExportPdf = async () => {
+  const handleExportPdf = async (): Promise<boolean> => {
     setPdfLoading(true)
     try {
       await downloadReporteDeudoresPdf(activeFilters)
       toast.success('PDF descargado correctamente')
+      return true
     } catch {
       toast.error('Error al descargar el PDF')
+      return false
     } finally {
       setPdfLoading(false)
     }
   }
+
+  // Tools del agente: los filtros son estado local de esta pantalla (texto vacío = sin filtro).
+  useAgentTools(
+    'reporte-deudores-page',
+    buildDeudoresTools({
+      getFilters: () => ({ nombre: filters.nombre, lugar: filters.lugar }),
+      setFilters: ({ nombre, lugar }) => {
+        setFilter('nombre', nombre)
+        setFilter('lugar', lugar)
+      },
+      getClientes: () => clientes,
+      getResumen: () => resumen,
+      isLoading: () => isLoading,
+      isDownloading: () => pdfLoading,
+      download: handleExportPdf,
+    }),
+  )
 
   return (
     <PageTemplateSimple title="Reporte de Deudores" description="Clientes con saldo pendiente.">

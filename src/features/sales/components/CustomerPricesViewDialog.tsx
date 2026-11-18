@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import PreciosClienteTable from '@/features/customers/components/PreciosClienteTable'
+import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { buildPreciosClientePosTools } from '../agent/pos-dialog-tools'
 import { useSalesStore } from '../store/useSalesStore'
 import { useCustomers } from '@/features/customers'
 import { Tag } from 'lucide-react'
@@ -34,6 +36,19 @@ export default function CustomerPricesViewDialog({
   const handleClose = propOnClose ?? closeDialog
 
   const effectiveCustomerId = propCustomerId ?? (storeCustomerId ? Number(storeCustomerId) : 0)
+  const openDialog = useSalesStore((state) => state.openDialog)
+
+  // En el punto de venta (modo no controlado), el agente abre los precios del cliente seleccionado.
+  useAgentTools(
+    'precios-cliente-pos',
+    !isControlled && !open
+      ? buildPreciosClientePosTools({
+          getCustomerId: () => effectiveCustomerId,
+          isBusy: () => activeDialog !== null,
+          open: () => openDialog('customer-prices'),
+        })
+      : null,
+  )
 
   const { data: customers } = useCustomers({ pageSize: 50 })
   const storeCustomerObj = customers?.find((c) => String(c.id) === storeCustomerId)
