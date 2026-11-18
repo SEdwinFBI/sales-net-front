@@ -150,7 +150,7 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
       description: 'Abre el arqueo de una sucursal (ver sus usuarios y el saldo esperado de hoy). Usa el id de leer_arqueos.',
       parameters: {
         type: 'object',
-        properties: { sucursal_id: { type: 'integer' } },
+        properties: { sucursal_id: { type: 'integer', description: 'id de leer_arqueos (lista de sucursales).' } },
         required: ['sucursal_id'],
         additionalProperties: false,
       },
@@ -174,7 +174,7 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
       description: 'Abre el arqueo de un usuario de la sucursal seleccionada (sus cajas por dia). Usa el id de leer_arqueos.',
       parameters: {
         type: 'object',
-        properties: { usuario_id: { type: 'integer' } },
+        properties: { usuario_id: { type: 'integer', description: 'id de leer_arqueos (usuarios de la sucursal).' } },
         required: ['usuario_id'],
         additionalProperties: false,
       },
@@ -209,7 +209,7 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
       description: 'Abre el detalle de una caja diaria del usuario seleccionado (resumen y movimientos). Usa el caja_id de leer_arqueos.',
       parameters: {
         type: 'object',
-        properties: { caja_id: { type: 'integer' } },
+        properties: { caja_id: { type: 'integer', description: 'caja_id de leer_arqueos (cajas del usuario).' } },
         required: ['caja_id'],
         additionalProperties: false,
       },
@@ -235,6 +235,44 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
       parameters: NO_PARAMS,
       validar: () => (ctx.isDownloading() ? 'Ya se esta generando el reporte.' : null),
       run: async () => ((await ctx.download()) ? ok({ mensaje: 'Reporte descargado.' }) : fail('No se pudo descargar el reporte.')),
+    },
+  ]
+}
+
+/** Lo que el diálogo de detalle de caja le presta al agente mientras está abierto. */
+export type CajaDetalleAgentContext = {
+  /** La caja que muestra el diálogo; undefined mientras carga. */
+  getDetalle: () => Caja | undefined
+}
+
+/** Tool que existe mientras el detalle de una caja está abierto (lo abre ver_detalle_caja). */
+export function buildCajaDetalleTools(ctx: CajaDetalleAgentContext): AgentToolDef[] {
+  return [
+    {
+      name: 'leer_detalle_caja',
+      description: `Lee la caja abierta en el detalle: usuario, sucursal, fecha, totales y sus movimientos (maximo ${MAX_READ_ROWS}) con tipo, monto y observacion.`,
+      parameters: NO_PARAMS,
+      run: async () => {
+        const caja = ctx.getDetalle()
+        if (!caja) return fail('El detalle de la caja aun esta cargando; intenta de nuevo.')
+        const movimientos = caja.movimientos ?? []
+        return ok({
+          caja_id: caja.id,
+          fecha: caja.fecha,
+          usuario: caja.usuario.nombre,
+          sucursal: caja.sucursal.nombre,
+          ...sumCajas([caja]),
+          total_movimientos: movimientos.length,
+          mostrando: Math.min(movimientos.length, MAX_READ_ROWS),
+          movimientos: limitRows(movimientos).map((m) => ({
+            fecha: m.fecha,
+            tipo: m.tipo,
+            monto: Number(m.monto),
+            observacion: m.observacion,
+            usuario: m.usuario.nombre,
+          })),
+        })
+      },
     },
   ]
 }

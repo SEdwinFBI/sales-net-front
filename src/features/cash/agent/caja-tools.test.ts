@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
 import type { Caja } from '../types/cash'
-import { buildArqueosTools, type ArqueosAgentContext } from './arqueos-tools'
+import { buildArqueosTools, buildCajaDetalleTools, type ArqueosAgentContext } from './arqueos-tools'
 import {
   buildMiCajaTools,
   buildMovimientoDialogTools,
@@ -332,7 +332,7 @@ describe('tools de /caja/arqueos', () => {
     const ctx = userCtx({ isDialogOpen: () => true })
     expect(await ejecutar(tool(buildArqueosTools(ctx), name), args)).toMatchObject({
       ok: false,
-      error: 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.',
+      error: 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.',
     })
   })
 
@@ -353,5 +353,36 @@ describe('tools de /caja/arqueos', () => {
         error: 'No se pudo descargar el reporte.',
       })
     })
+  })
+})
+
+describe('leer_detalle_caja (diálogo de detalle abierto)', () => {
+  it('devuelve los totales y los movimientos de la caja abierta', async () => {
+    const result = await ejecutar(tool(buildCajaDetalleTools({ getDetalle: () => caja(9) }), 'leer_detalle_caja'), {})
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        caja_id: 9,
+        fecha: '2026-10-14',
+        usuario: 'Ana Pérez',
+        sucursal: 'Centro',
+        entradas: 200,
+        gastos: 50,
+        resto: 150,
+        ventas_efectivo: 300,
+        saldo_esperado: 450,
+        total_movimientos: 2,
+        mostrando: 2,
+        movimientos: [
+          { fecha: '2026-10-14T08:00', tipo: 'ENTRADA', monto: 200, observacion: 'inicial', usuario: 'Ana' },
+          { fecha: '2026-10-14T13:00', tipo: 'SALIDA', monto: 50, observacion: 'almuerzo', usuario: 'Ana' },
+        ],
+      },
+    })
+  })
+
+  it('mientras carga lo dice en vez de responder vacio', async () => {
+    const result = await ejecutar(tool(buildCajaDetalleTools({ getDetalle: () => undefined }), 'leer_detalle_caja'), {})
+    expect(result).toEqual({ ok: false, error: 'El detalle de la caja aun esta cargando; intenta de nuevo.' })
   })
 })

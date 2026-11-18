@@ -23,7 +23,7 @@ import type { Caja } from '../types/cash'
 import { downloadCashReport } from '../services/cash-service'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
-import { buildArqueosTools } from '../agent/arqueos-tools'
+import { buildArqueosTools, buildCajaDetalleTools } from '../agent/arqueos-tools'
 
 type Totals = Pick<Caja, 'entradas' | 'salidas' | 'ventas_efectivo' | 'efectivo_esperado'>
 
@@ -125,6 +125,9 @@ export default function CashAuditsPage() {
       download: downloadReport,
     }),
   )
+
+  // Con el detalle de una caja abierto, el agente puede leer sus movimientos.
+  useAgentTools('arqueos-detalle-caja', cashId !== null ? buildCajaDetalleTools({ getDetalle: () => detalle }) : null)
 
   const resetReportFilters = () => {
     setFilters(getDefaultDateRange())
