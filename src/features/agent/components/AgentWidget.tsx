@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { useSalesStore } from '@/features/sales/store/useSalesStore'
-import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
+import { isMobileBrowser, useSpeechRecognition } from '@/hooks/useSpeechRecognition'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 
 import { createAgentActions, createDefaultDeps } from '../agent-actions'
@@ -203,11 +203,19 @@ export default function AgentWidget({ onLogout }: Props) {
       if (!event.repeat) holdHandlers.current.toggle()
     }
     const onBlur = () => holdHandlers.current.finish()
+    const onVisibility = () => {
+      if (document.hidden) holdHandlers.current.finish()
+    }
+    // En el teléfono el aviso de permiso del micrófono quita el foco a la ventana: ahí solo
+    // se apaga al salir de la página, o el micrófono se cerraría en cuanto se pide.
+    const stopOnBlur = !isMobileBrowser()
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('blur', onBlur)
+    if (stopOnBlur) window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', onVisibility)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('blur', onBlur)
+      if (stopOnBlur) window.removeEventListener('blur', onBlur)
+      document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [])
 
