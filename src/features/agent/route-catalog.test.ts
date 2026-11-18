@@ -74,6 +74,17 @@ describe('catálogo de rutas del agente', () => {
     ])
   })
 
+  it('omite description cuando hay acciones (ahorro de tokens) y la conserva si no hay', () => {
+    const rutas: AppRoute[] = [
+      { path: 'a', meta: { name: 'A', description: 'Desc A', agentHint: 'Hace A.', lazy } },
+      { path: 'b', meta: { name: 'B', description: 'Desc B', lazy } },
+    ]
+    expect(getListedRoutes(getCatalogRoutes(rutas, []))).toEqual([
+      { path: '/a', name: 'A', acciones: 'Hace A.' },
+      { path: '/b', name: 'B', description: 'Desc B' },
+    ])
+  })
+
   it.each([['admin'], ['vendedor']] as const)('con las rutas reales, toda ruta del catálogo de %s tiene agentHint de 1 a 160 caracteres', (role) => {
     const catalog = getCatalogRoutes(allFeatureRoutes, [role])
     expect(catalog.length).toBeGreaterThan(5)
