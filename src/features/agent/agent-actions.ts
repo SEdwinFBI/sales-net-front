@@ -12,6 +12,7 @@ import { allFeatureRoutes } from '@/routes/feature-routes'
 import { searchCatalogArticles, suggestCatalogArticles, type CatalogSearchResult } from './catalog-search'
 import { candidatePrefixes, rankBySimilarity } from './fuzzy-search'
 import { buildCartSnapshot } from './context-snapshot'
+import { closeTopDialog, type CloseDialogOutcome } from './dialog-control'
 import {
   useAgentToolRegistry,
   waitForRegistryChange,
@@ -34,6 +35,9 @@ const GLOBAL_CONFIRMATION: Record<string, string> = {
 /** Máximo de unidades que el agente agrega en una sola acción (evita errores de dictado como "mil"). */
 const MAX_QTY_PER_ACTION = 999
 const NAVIGATION_TIMEOUT_MS = 3000
+/** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
+const CONFIRM_MARGIN_MS = 3000
+const MIN_CONFIRM_MS = 5000
 
 export type AgentClient = { id: number; nombre: string; telefono?: string; permiteCredito?: boolean }
 
@@ -54,8 +58,13 @@ export type AgentDeps = {
   routes: AppRoute[]
   logout: () => void
   setTheme: (theme: 'light' | 'dark') => void
-  /** Muestra la tarjeta «Confirmar / Cancelar» del widget; true solo si el usuario hizo clic en Confirmar. */
-  requestConfirmation: (texto: string) => Promise<boolean>
+  /**
+   * Muestra la tarjeta «Confirmar / Cancelar» del widget; true solo si el usuario hizo clic en Confirmar.
+   * Con `timeoutMs` la tarjeta caduca sola (el back ya no espera la respuesta).
+   */
+  requestConfirmation: (texto: string, timeoutMs?: number) => Promise<boolean>
+  /** Cierra el diálogo o drawer de más arriba sin guardar (como el X del usuario). Opcional en tests. */
+  closeDialog?: () => Promise<CloseDialogOutcome>
   getRegisteredTools: () => AgentToolDef[]
   getRegistryVersion: () => number
   /** Opciones de la espera del registro tras navegar o abrir UI (los tests acortan los tiempos). */
@@ -77,7 +86,8 @@ export function createDefaultDeps(
     getSales: () => useSalesStore.getState(),
     routes: allFeatureRoutes,
     setTheme: (theme) => useThemeStore.getState().setTheme(theme),
-    requestConfirmation: (texto) => useAgentStore.getState().requestConfirmation(texto),
+    requestConfirmation: (texto, timeoutMs) => useAgentStore.getState().requestConfirmation(texto, timeoutMs),
+    closeDialog: () => closeTopDialog(),
     getRegisteredTools: () => useAgentToolRegistry.getState().getAll(),
     getRegistryVersion: () => useAgentToolRegistry.getState().version,
     searchCatalog: async (text) => {
@@ -217,6 +227,19 @@ export function createAgentActions(deps: AgentDeps) {
       if (tema !== 'claro' && tema !== 'oscuro') return fail("El tema debe ser 'claro' u 'oscuro'.")
       deps.setTheme(tema === 'oscuro' ? 'dark' : 'light')
       return ok({ tema })
+    },
+
+    async cerrar_dialogo() {
+      if (!deps.closeDialog) return fail('No se pueden cerrar dialogos desde el asistente.')
+      const before = deps.getRegistryVersion()
+      const { resultado, titulo } = await deps.closeDialog()
+      const cual = titulo ? ` "${titulo}"` : ''
+      if (resultado === 'sin_dialogo') return fail('No hay ningun dialogo abierto.')
+      if (resultado === 'ocupado') return fail(`El dialogo${cual} esta procesando; espera a que termine.`)
+      if (resultado === 'no_cerro') return fail(`El dialogo${cual} no se cerro; pidele al usuario que lo cierre.`)
+      // Al cerrarse, el diálogo quita sus tools (y puede volver a registrar las de la pantalla).
+      await settleRegistry(before)
+      return ok({ mensaje: `Dialogo${cual} cerrado sin guardar.` })
     },
 
     async cerrar_sesion() {
@@ -389,20 +412,27 @@ export function createAgentActions(deps: AgentDeps) {
   }
 
   return {
-    async execute(name: string, rawArgs: Args): Promise<ToolResult> {
+    /**
+     * `confirmTimeoutMs`: cuánto espera el back la respuesta de esta tool. La tarjeta de confirmación
+     * caduca un poco antes, para que un clic tardío nunca ejecute algo que el modelo dio por fallido.
+     */
+    async execute(name: string, rawArgs: Args, { confirmTimeoutMs }: { confirmTimeoutMs?: number } = {}): Promise<ToolResult> {
       if (!deps.getUser()) return fail('No hay una sesion activa.')
       const args: Args = rawArgs && typeof rawArgs === 'object' ? rawArgs : {}
+      const confirmFor = confirmTimeoutMs && confirmTimeoutMs > 0
+        ? Math.max(confirmTimeoutMs - CONFIRM_MARGIN_MS, MIN_CONFIRM_MS)
+        : undefined
 
       try {
         // Las globales van primero: una pantalla no puede pisarlas.
         const action = Object.hasOwn(actions, name) ? actions[name] : undefined
         if (action) {
           const question = GLOBAL_CONFIRMATION[name]
-          if (question && !(await deps.requestConfirmation(question))) return fail(CANCELLED)
+          if (question && !(await deps.requestConfirmation(question, confirmFor))) return fail(CANCELLED)
           return await action(args)
         }
 
-        const def = deps.getRegisteredTools().find((tool) => tool.name === name)
+        let def = deps.getRegisteredTools().find((tool) => tool.name === name)
         if (!def) return fail(`Accion desconocida: ${name}`)
 
         // Primero se valida: el usuario nunca debe confirmar algo que va a fallar por argumentos
@@ -414,7 +444,13 @@ export function createAgentActions(deps: AgentDeps) {
           // Solo el clic del usuario en el widget confirma; el modelo y la voz no pueden.
           const texto = def.textoConfirmacion?.(args)
           if (!texto) return fail('No se pudo preparar la confirmacion de esta accion.')
-          if (!(await deps.requestConfirmation(texto))) return fail(CANCELLED)
+          if (!(await deps.requestConfirmation(texto, confirmFor))) return fail(CANCELLED)
+
+          // Mientras el usuario decidía pudo cerrar el diálogo o cambiar de pantalla: se vuelve a buscar y validar.
+          def = deps.getRegisteredTools().find((tool) => tool.name === name)
+          if (!def) return fail('La pantalla cambio mientras se confirmaba; la accion no se ejecuto.')
+          const stale = def.validar?.(args)
+          if (stale) return fail(stale)
         }
 
         const before = deps.getRegistryVersion()

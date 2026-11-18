@@ -4,6 +4,7 @@ import { useSalesStore } from '@/features/sales/store/useSalesStore'
 import type { Product } from '@/features/sales/types/sales'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import { POS_PATH, createAgentActions, type AgentDeps } from './agent-actions'
+import type { CloseDialogOutcome } from './dialog-control'
 import { useAgentToolRegistry, type AgentToolDef } from './registry/agent-tool-registry'
 import type { ToolResult } from './types'
 
@@ -57,7 +58,7 @@ function setup(
   ])
   const logout = vi.fn()
   const setTheme = vi.fn()
-  const requestConfirmation = vi.fn<(texto: string) => Promise<boolean>>(async () => true)
+  const requestConfirmation = vi.fn<(texto: string, timeoutMs?: number) => Promise<boolean>>(async () => true)
   const deps: AgentDeps = {
     navigate,
     getPathname: () => path,
@@ -436,6 +437,35 @@ describe('cambiar_tema y cerrar_sesion', () => {
   })
 })
 
+describe('cerrar_dialogo', () => {
+  const conCierre = (resultado: CloseDialogOutcome['resultado'], titulo?: string) =>
+    vi.fn(async (): Promise<CloseDialogOutcome> => ({ resultado, titulo }))
+
+  it('cierra el diálogo y espera a que la pantalla actualice sus tools', async () => {
+    const closeDialog = conCierre('cerrado', 'Nuevo cliente')
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { closeDialog })
+    expect(await actions.execute('cerrar_dialogo', {})).toEqual({
+      ok: true,
+      data: { mensaje: 'Dialogo "Nuevo cliente" cerrado sin guardar.' },
+    })
+    expect(closeDialog).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    ['sin_dialogo', 'No hay ningun dialogo abierto.'],
+    ['ocupado', 'El dialogo esta procesando; espera a que termine.'],
+    ['no_cerro', 'El dialogo no se cerro; pidele al usuario que lo cierre.'],
+  ] as const)('%s se informa como fallo', async (resultado, error) => {
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { closeDialog: conCierre(resultado) })
+    expect(await actions.execute('cerrar_dialogo', {})).toEqual({ ok: false, error })
+  })
+
+  it('sin control de diálogos (entorno sin DOM) falla en vez de fingir que cerró', async () => {
+    const { actions } = setup()
+    expect((await actions.execute('cerrar_dialogo', {})).ok).toBe(false)
+  })
+})
+
 describe('tools registradas por las pantallas', () => {
   it('ejecuta una tool del registro y devuelve su resultado', async () => {
     const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true, data: { hecho: true } }))
@@ -505,7 +535,7 @@ describe('tools registradas por las pantallas', () => {
       const { actions, requestConfirmation } = setup()
 
       const result = await actions.execute('borrar_precio', { variante_id: 5 })
-      expect(requestConfirmation).toHaveBeenCalledWith('Eliminar el precio de la variante 5')
+      expect(requestConfirmation).toHaveBeenCalledWith('Eliminar el precio de la variante 5', undefined)
       expect(result).toEqual({ ok: true, data: { borrado: true } })
       expect(run).toHaveBeenCalledOnce()
     })
@@ -557,6 +587,43 @@ describe('tools registradas por las pantallas', () => {
       requestConfirmation.mockImplementationOnce(async () => { orden.push('confirmar'); return true })
       await actions.execute('borrar_precio', { variante_id: 5 })
       expect(orden).toEqual(['confirmar', 'run'])
+    })
+
+    it('la tarjeta caduca antes de que el back deje de esperar', async () => {
+      registrar('pantalla', borrar(async () => ({ ok: true, data: {} })))
+      const { actions, requestConfirmation } = setup()
+      await actions.execute('borrar_precio', { variante_id: 5 }, { confirmTimeoutMs: 90_000 })
+      expect(requestConfirmation).toHaveBeenLastCalledWith('Eliminar el precio de la variante 5', 87_000)
+      await actions.execute('borrar_precio', { variante_id: 5 }, { confirmTimeoutMs: 1000 })
+      expect(requestConfirmation).toHaveBeenLastCalledWith('Eliminar el precio de la variante 5', 5000)
+    })
+
+    it('si el diálogo se cerró mientras el usuario confirmaba, no se ejecuta', async () => {
+      const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true, data: {} }))
+      registrar('pantalla', borrar(run))
+      const { actions, requestConfirmation } = setup()
+      requestConfirmation.mockImplementationOnce(async () => {
+        useAgentToolRegistry.getState().unregister('pantalla')
+        return true
+      })
+      expect(await actions.execute('borrar_precio', { variante_id: 5 })).toEqual({
+        ok: false,
+        error: 'La pantalla cambio mientras se confirmaba; la accion no se ejecuto.',
+      })
+      expect(run).not.toHaveBeenCalled()
+    })
+
+    it('se vuelve a validar tras la confirmación (los datos pudieron cambiar)', async () => {
+      const run = vi.fn(async (): Promise<ToolResult> => ({ ok: true, data: {} }))
+      let existe = true
+      registrar('pantalla', borrar(run, { validar: () => (existe ? null : 'Ya no existe esa variante.') }))
+      const { actions, requestConfirmation } = setup()
+      requestConfirmation.mockImplementationOnce(async () => {
+        existe = false
+        return true
+      })
+      expect(await actions.execute('borrar_precio', { variante_id: 5 })).toEqual({ ok: false, error: 'Ya no existe esa variante.' })
+      expect(run).not.toHaveBeenCalled()
     })
   })
 

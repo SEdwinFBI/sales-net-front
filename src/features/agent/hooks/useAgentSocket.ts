@@ -33,6 +33,29 @@ const ACTION_LABELS: Record<string, string> = {
   abrir_carrito: 'Abriendo el carrito…',
   cerrar_carrito: 'Cerrando el carrito…',
   abrir_checkout: 'Abriendo el cobro…',
+  cerrar_dialogo: 'Cerrando el diálogo…',
+}
+
+/** Etiqueta de las tools de pantalla según su prefijo (las convenciones del manual). */
+const PREFIX_LABELS: [string, string][] = [
+  ['leer_', 'Leyendo la pantalla…'],
+  ['opciones_', 'Leyendo las opciones…'],
+  ['filtrar_', 'Aplicando filtros…'],
+  ['limpiar_filtros_', 'Quitando filtros…'],
+  ['paginar_', 'Revisando la paginación…'],
+  ['abrir_', 'Abriendo…'],
+  ['ver_', 'Abriendo…'],
+  ['cambiar_pestana_', 'Cambiando de pestaña…'],
+  ['llenar_', 'Llenando el formulario…'],
+  ['editar_', 'Editando el borrador…'],
+  ['elegir_', 'Eligiendo…'],
+  ['descargar_', 'Descargando…'],
+  ['guardar_', 'Esperando tu confirmación…'],
+  ['confirmar_', 'Esperando tu confirmación…'],
+]
+
+export function actionLabel(name: string): string {
+  return ACTION_LABELS[name] ?? PREFIX_LABELS.find(([prefix]) => name.startsWith(prefix))?.[1] ?? 'Ejecutando…'
 }
 
 type Options = {
@@ -40,11 +63,17 @@ type Options = {
   enabled: boolean
   /** Access token vigente: al renovarse (interceptor de axios) el socket se reconecta con el nuevo. */
   token: string | null
-  executeTool: (name: string, args: Record<string, unknown>) => Promise<ToolResult>
+  executeTool: (
+    name: string,
+    args: Record<string, unknown>,
+    options: { confirmTimeoutMs?: number },
+  ) => Promise<ToolResult>
   getContext: () => AgentContext
   /** Tools que registran las pantallas montadas; se mandan con cada mensaje y con cada tool_result. */
   getTools: () => ContextTool[]
   onAssistantDone?: (text: string) => void
+  /** El back cerró el turno: ya no espera ningún tool_result (p. ej. una confirmación pendiente). */
+  onTurnEnd?: () => void
 }
 
 /**
@@ -52,7 +81,7 @@ type Options = {
  * `usePresenceSocket`, más el bucle de mensajes: el back manda `tool_call`,
  * aquí se ejecutan con `executeTool` y se responde con `tool_result`.
  */
-export function useAgentSocket({ enabled, token, executeTool, getContext, getTools, onAssistantDone }: Options) {
+export function useAgentSocket({ enabled, token, executeTool, getContext, getTools, onAssistantDone, onTurnEnd }: Options) {
   const [status, setStatus] = useState<AgentStatus>('idle')
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [busy, setBusy] = useState(false)
@@ -63,9 +92,9 @@ export function useAgentSocket({ enabled, token, executeTool, getContext, getToo
   const assistantText = useRef('')
 
   // Los callbacks cambian en cada render; el socket debe ver siempre los últimos.
-  const latest = useRef({ executeTool, getContext, getTools, onAssistantDone })
+  const latest = useRef({ executeTool, getContext, getTools, onAssistantDone, onTurnEnd })
   useEffect(() => {
-    latest.current = { executeTool, getContext, getTools, onAssistantDone }
+    latest.current = { executeTool, getContext, getTools, onAssistantDone, onTurnEnd }
   })
 
   const pushMessage = useCallback((role: ChatMessage['role'], text: string) => {
@@ -103,14 +132,16 @@ export function useAgentSocket({ enabled, token, executeTool, getContext, getToo
           streamingId.current = null
           assistantText.current = ''
           setBusy(false)
+          latest.current.onTurnEnd?.()
           if (text.trim()) latest.current.onAssistantDone?.(text)
           break
         }
         case 'tool_call': {
           // Cada tool_call arranca un mensaje nuevo del asistente si vuelve a hablar.
           streamingId.current = null
-          pushMessage('action', ACTION_LABELS[message.name] ?? 'Ejecutando…')
-          void latest.current.executeTool(message.name, message.args ?? {}).then((result) => {
+          pushMessage('action', actionLabel(message.name))
+          const options = { confirmTimeoutMs: typeof message.timeout_ms === 'number' ? message.timeout_ms : undefined }
+          void latest.current.executeTool(message.name, message.args ?? {}, options).then((result) => {
             // La lista de tools va con cada resultado: si la acción cambió de pantalla, el modelo
             // ve las tools nuevas dentro del mismo turno.
             send(ws, { type: 'tool_result', id: message.id, ...result, tools: latest.current.getTools() })

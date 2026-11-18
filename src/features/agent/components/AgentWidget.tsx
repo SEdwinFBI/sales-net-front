@@ -102,6 +102,8 @@ export default function AgentWidget({ onLogout }: Props) {
     onAssistantDone: (text) => {
       if (speakRef.current) speak(text)
     },
+    // Con el turno cerrado nadie espera la respuesta: una tarjeta que quedara abierta ejecutaría a ciegas.
+    onTurnEnd: cancelConfirmation,
   })
 
   const connected = status === 'open'

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAgentStore } from './useAgentStore'
 
 const store = () => useAgentStore.getState()
@@ -53,6 +53,31 @@ describe('confirmación del usuario', () => {
 
     store().cancelConfirmation()
     expect(await second).toBe(false)
+  })
+
+  describe('caducidad', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('con plazo, la tarjeta se cancela sola al vencer', async () => {
+      const answer = store().requestConfirmation('¿Guardar?', 1000)
+      vi.advanceTimersByTime(999)
+      expect(store().pendingConfirm?.texto).toBe('¿Guardar?')
+      vi.advanceTimersByTime(1)
+      expect(await answer).toBe(false)
+      expect(store().pendingConfirm).toBeNull()
+    })
+
+    it('un clic a tiempo gana y el plazo ya no cancela nada después', async () => {
+      const answer = store().requestConfirmation('¿Guardar?', 1000)
+      store().resolveConfirm(store().pendingConfirm!.id, true)
+      expect(await answer).toBe(true)
+      const next = store().requestConfirmation('otra')
+      vi.advanceTimersByTime(5000)
+      expect(store().pendingConfirm?.texto).toBe('otra')
+      store().cancelConfirmation()
+      expect(await next).toBe(false)
+    })
   })
 
   it('no se puede resolver dos veces', async () => {

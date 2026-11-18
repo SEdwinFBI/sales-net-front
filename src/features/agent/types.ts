@@ -25,7 +25,8 @@ export type AgentContext = {
 export type ServerMessage =
   | { type: 'assistant_delta'; text: string }
   | { type: 'assistant_done' }
-  | { type: 'tool_call'; id: string; name: string; args: Record<string, unknown> }
+  /** `timeout_ms`: cuánto espera el back el resultado (la confirmación del widget caduca antes). */
+  | { type: 'tool_call'; id: string; name: string; args: Record<string, unknown>; timeout_ms?: number }
   | { type: 'error'; message: string }
 
 /** Tools que registran las pantallas montadas; el back las ofrece al modelo junto con las estáticas. */

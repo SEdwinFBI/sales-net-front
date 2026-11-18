@@ -220,7 +220,7 @@ describe('tools de /catalogo/productos', () => {
 
   describe('con un diálogo ya abierto', () => {
     const FORM = 'El formulario ya está abierto: usa llenar_formulario_articulo para cambiar campos.'
-    const GENERICO = 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.'
+    const GENERICO = 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.'
 
     it('el formulario abierto apunta a llenar_formulario_articulo (nuevo y editar)', async () => {
       const ctx = articulosCtx({ isDialogOpen: () => true })

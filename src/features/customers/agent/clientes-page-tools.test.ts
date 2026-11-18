@@ -254,7 +254,7 @@ describe('tools de /clientes/listado', () => {
         const result = await tool(tools, name).run(args)
         expect(result, name).toEqual({
           ok: false,
-          error: 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.',
+          error: 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.',
         })
       }
       expect(ctx.openNew).not.toHaveBeenCalled()

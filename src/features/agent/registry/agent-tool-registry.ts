@@ -78,7 +78,7 @@ export function validateToolDef(def: AgentToolDef): string | null {
 export function dialogAlreadyOpenError(fillToolName?: string): string {
   return fillToolName
     ? `El formulario ya está abierto: usa ${fillToolName} para cambiar campos.`
-    : 'Ya hay un diálogo abierto en esta pantalla: el usuario debe cerrarlo antes.'
+    : 'Ya hay un diálogo abierto en esta pantalla: ciérralo con cerrar_dialogo si el usuario quiere, o pídele que lo cierre.'
 }
 
 type RegistryState = {
