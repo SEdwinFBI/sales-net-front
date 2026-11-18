@@ -331,7 +331,7 @@ export function buildDestinatariosTools(ctx: DestinatariosAgentContext): AgentTo
         'Cambia en el BORRADOR las preferencias de un destinatario de la pagina visible (recibir_stock_bajo, recibir_abonos, recibir_clientes_deudas, recibir_ventas_realizadas). No guarda: el usuario debe presionar Guardar preferencias.',
       parameters: {
         type: 'object',
-        properties: { destinatario_id: { type: 'integer' }, ...PREF_PROPS },
+        properties: { destinatario_id: { type: 'integer', description: 'id de leer_notificaciones (pagina visible).' }, ...PREF_PROPS },
         required: ['destinatario_id'],
         additionalProperties: false,
       },
@@ -382,7 +382,7 @@ export function buildDestinatariosTools(ctx: DestinatariosAgentContext): AgentTo
         'Abre la confirmacion existente para eliminar un destinatario de la pagina visible. No elimina: el usuario presiona Eliminar destinatario.',
       parameters: {
         type: 'object',
-        properties: { destinatario_id: { type: 'integer' } },
+        properties: { destinatario_id: { type: 'integer', description: 'id de leer_notificaciones (pagina visible).' } },
         required: ['destinatario_id'],
         additionalProperties: false,
       },

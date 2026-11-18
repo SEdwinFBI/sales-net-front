@@ -116,6 +116,8 @@ export function sanitizeUsuarioValues(
 
 const credentialExtras = (s: SanitizedUsuario) => (s.credenciales.length ? { credenciales_descartadas: s.credenciales, aviso: CREDENTIAL_NOTICE } : {})
 
+const USUARIO_ID = { type: 'integer', description: 'id de leer_usuarios.' } as const
+
 /** Lo que UsuariosTable le presta al agente. */
 export type UsuariosAgentContext = {
   getUsuarios: () => Usuario[]
@@ -125,6 +127,8 @@ export type UsuariosAgentContext = {
   setFilters: (filters: Partial<{ texto: string; rol: 'todos' | 'admin' | 'vendedor' }>) => void
   /** Sucursales existentes (para validar `sucursales`); undefined si aún no cargan. */
   getSucursalIds: () => readonly number[] | undefined
+  /** Las mismas sucursales con su nombre, para que el modelo elija por nombre. */
+  getSucursalOptions: () => { id: number; nombre: string }[] | undefined
   /** El formulario de usuario (nuevo o edición) está abierto. */
   isDialogOpen: () => boolean
   isDeleteOpen: () => boolean
@@ -185,7 +189,7 @@ const FORM_PROPERTIES = {
   role: { type: 'string', enum: ['admin', 'vendedor'] },
   hora_entrada: { type: 'string', description: 'HH:MM' },
   hora_salida: { type: 'string', description: 'HH:MM' },
-  sucursales: { type: 'array', items: { type: 'integer' }, description: 'Ids de sucursal (solo vendedores).' },
+  sucursales: { type: 'array', items: { type: 'integer' }, description: 'Ids de sucursales_disponibles de leer_usuarios (solo vendedores).' },
 } as const
 
 /** Tools de /administracion/usuarios. Ninguna recibe ni devuelve contraseñas. */
@@ -250,7 +254,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
     },
     {
       name: 'leer_usuarios',
-      description: `Lista los usuarios tras los filtros (maximo ${MAX_READ_ROWS}): id, nombre, username, rol, evidencia fotografica y si puede anular.`,
+      description: `Lista los usuarios tras los filtros (maximo ${MAX_READ_ROWS}): id, nombre, username, rol, evidencia fotografica y si puede anular, mas las sucursales disponibles para asignar.`,
       parameters: NO_PARAMS,
       run: async () => {
         const filtrados = ctx.getFiltered()
@@ -266,6 +270,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
             rol: u.role ?? null,
             ...permisosActuales(u),
           })),
+          sucursales_disponibles: limitRows(ctx.getSucursalOptions() ?? []),
         })
       },
     },
@@ -293,7 +298,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
         'Abre el formulario de edicion de un usuario (por id de leer_usuarios), opcionalmente con valores nuevos. No guarda: el usuario revisa y guarda.',
       parameters: {
         type: 'object',
-        properties: { usuario_id: { type: 'integer' }, ...FORM_PROPERTIES },
+        properties: { usuario_id: USUARIO_ID, ...FORM_PROPERTIES },
         required: ['usuario_id'],
         additionalProperties: false,
       },
@@ -319,7 +324,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
       description: 'Abre la confirmacion existente para eliminar un usuario. No elimina: el usuario presiona Eliminar.',
       parameters: {
         type: 'object',
-        properties: { usuario_id: { type: 'integer' } },
+        properties: { usuario_id: USUARIO_ID },
         required: ['usuario_id'],
         additionalProperties: false,
       },
@@ -342,7 +347,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
       parameters: {
         type: 'object',
         properties: {
-          usuario_id: { type: 'integer' },
+          usuario_id: USUARIO_ID,
           evidencia_fotografica: { type: 'boolean' },
           puede_anular: { type: 'boolean' },
         },

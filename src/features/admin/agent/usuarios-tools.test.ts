@@ -55,6 +55,7 @@ function context(over: Partial<UsuariosAgentContext> = {}) {
     getFilters: () => ({ texto: '', rol: 'todos' as const }),
     setFilters: vi.fn(),
     getSucursalIds: () => [1, 2],
+    getSucursalOptions: () => [{ id: 1, nombre: 'Centro' }, { id: 2, nombre: 'Xela' }],
     isDialogOpen: () => false,
     isDeleteOpen: () => false,
     openNew: vi.fn(),
@@ -162,6 +163,11 @@ describe('leer_usuarios', () => {
     expect(Object.keys(lista[0]).sort()).toEqual(['evidencia_fotografica', 'id', 'nombre', 'puede_anular', 'rol', 'username'])
     // El admin siempre puede anular, aunque el dato guardado diga otra cosa.
     expect(lista[1]).toMatchObject({ rol: 'admin', puede_anular: true })
+  })
+
+  it('incluye las sucursales disponibles con su id, para asignarlas por nombre', async () => {
+    const result = await tool(buildUsuariosTools(context()), 'leer_usuarios').run({})
+    expect(result).toMatchObject({ ok: true, data: { sucursales_disponibles: [{ id: 1, nombre: 'Centro' }, { id: 2, nombre: 'Xela' }] } })
   })
 
   it('acota a 30 filas', async () => {

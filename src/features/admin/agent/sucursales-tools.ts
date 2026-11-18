@@ -168,7 +168,7 @@ export function buildSucursalesTools(ctx: SucursalesAgentContext): AgentToolDef[
       description: 'Abre el formulario de edicion de una sucursal (por id de leer_sucursales), opcionalmente con valores nuevos. No guarda: el usuario presiona Guardar cambios.',
       parameters: {
         type: 'object',
-        properties: { sucursal_id: { type: 'integer' }, ...FORM_PROPERTIES },
+        properties: { sucursal_id: { type: 'integer', description: 'id de leer_sucursales.' }, ...FORM_PROPERTIES },
         required: ['sucursal_id'],
         additionalProperties: false,
       },
@@ -193,7 +193,7 @@ export function buildSucursalesTools(ctx: SucursalesAgentContext): AgentToolDef[
       description: 'Abre la confirmacion existente para desactivar una sucursal (se conservan inventario, ventas y precios). No desactiva: el usuario presiona Desactivar.',
       parameters: {
         type: 'object',
-        properties: { sucursal_id: { type: 'integer' } },
+        properties: { sucursal_id: { type: 'integer', description: 'id de leer_sucursales.' } },
         required: ['sucursal_id'],
         additionalProperties: false,
       },
@@ -216,7 +216,7 @@ export function buildSucursalesTools(ctx: SucursalesAgentContext): AgentToolDef[
       description: 'Abre el equipo (usuarios asignados) de una sucursal de la lista. Despues se registran las herramientas del equipo.',
       parameters: {
         type: 'object',
-        properties: { sucursal_id: { type: 'integer' } },
+        properties: { sucursal_id: { type: 'integer', description: 'id de leer_sucursales.' } },
         required: ['sucursal_id'],
         additionalProperties: false,
       },

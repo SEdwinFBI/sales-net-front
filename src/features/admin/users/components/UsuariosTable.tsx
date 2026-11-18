@@ -240,6 +240,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
         table.setPageIndex(0)
       },
       getSucursalIds: () => sucursales?.map((s) => s.id),
+      getSucursalOptions: () => sucursales?.map((s) => ({ id: s.id, nombre: s.nombre })),
       isDialogOpen: () => dialogOpen,
       isDeleteOpen: () => usuarioToDelete !== null,
       openNew: (valores) => { setSelectedUsuario(null); setDialogInitial(valores); setDialogOpen(true) },
