@@ -17,7 +17,7 @@ export const adminRoutes: AppRoute[] = [
           description: 'Gestión de sucursales',
           icon: Store,
           permissions: ['admin'],
-          agentHint: 'Sucursales (puestos): listar, buscar, crear, editar y desactivar; ir a una sucursal o ver sus vendedores con ver_equipo_sucursal.',
+          agentHint: 'Sucursales (puestos): listar, buscar, crear, editar y desactivar; ver los vendedores asignados con ver_equipo_sucursal.',
           lazy: () => import('./branches/pages/SucursalesPage'),
         },
       },
