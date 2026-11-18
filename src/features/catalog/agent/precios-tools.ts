@@ -279,10 +279,14 @@ export function buildMayoreoEditorTools(ctx: MayoreoEditorAgentContext): AgentTo
             items: {
               type: 'object',
               properties: {
-                min: { type: 'integer', minimum: 1 },
+                min: { type: 'integer', minimum: 1, description: 'Unidades en el carrito desde las que aplica.' },
                 max: { type: ['integer', 'null'], minimum: 1 },
                 sin_limite: { type: 'boolean', description: 'Solo el ultimo rango puede quedar sin limite.' },
-                modo: { type: 'string', enum: ['DERIVADO', 'MONTO_ARTICULO'] },
+                modo: {
+                  type: 'string',
+                  enum: ['DERIVADO', 'MONTO_ARTICULO'],
+                  description: 'DERIVADO = factor % del descuento individual; MONTO_ARTICULO = descuento mayorista configurado en cada articulo.',
+                },
                 factor: { type: 'number', minimum: 0, maximum: 100, description: 'Solo DERIVADO; por defecto 100.' },
               },
               required: ['min', 'modo'],

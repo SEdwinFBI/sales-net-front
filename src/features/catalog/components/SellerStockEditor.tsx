@@ -153,6 +153,11 @@ export default function SellerStockEditor({
           ...current,
           ...Object.fromEntries(changes.map((change) => [change.variantId, change.cantidad])),
         }))
+        // Si el usuario había vaciado el campo, el input mostraría '' en vez de la cantidad del agente.
+        setEmptyQuantities((current) => ({
+          ...current,
+          ...Object.fromEntries(changes.map((change) => [change.variantId, false])),
+        }))
         setExpandedArticles((current) => ({
           ...current,
           ...Object.fromEntries(articleIds.map((articleId) => [articleId, true])),

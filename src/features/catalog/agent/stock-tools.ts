@@ -241,7 +241,7 @@ export function buildStockEditorTools(ctx: StockEditorAgentContext): AgentToolDe
             items: {
               type: 'object',
               properties: {
-                variante_id: { type: 'integer' },
+                variante_id: { type: 'integer', description: 'variante_id de leer_stock.' },
                 articulo: { type: 'string', description: 'Nombre del articulo de leer_stock, sin la talla.' },
                 cantidad: { type: 'integer', minimum: 0 },
                 sumar: { type: 'integer' },

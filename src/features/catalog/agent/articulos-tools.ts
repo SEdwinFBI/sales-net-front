@@ -112,7 +112,7 @@ const VALORES_SCHEMA = {
   additionalProperties: false,
 } as const
 
-const ARTICULO_ID = { type: 'integer', description: 'articulo_id de leer_articulos.' } as const
+const ARTICULO_ID = { type: 'integer', description: 'id de leer_articulos.' } as const
 
 const IMAGE_NOTICE =
   'La imagen del articulo la selecciona el usuario con el campo de archivo del formulario; el asistente no puede subirla.'
