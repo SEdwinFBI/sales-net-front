@@ -20,7 +20,8 @@ Piezas, todas en `src/features/agent/`:
 | `tool-helpers.ts` | `ok`, `fail`, `NO_PARAMS`, `positiveInt`, `cleanText`, `isIsoDate`, `mergeDateRange`, `matchOption`, `limitRows`, `isCredentialKey` |
 | `commit-tools.ts` | `commitTool` y `submitForm`: tools que presionan Guardar/Cobrar/Anular/Eliminar |
 | `pagination-tools.ts` | `paginationTool` (`paginar_<tabla>`), con adaptadores `tablePagination` y `slicePagination` |
-| `agent-actions.ts` | Tools estáticas (navegar, carrito, tema, sesión) |
+| `agent-actions.ts` | Tools estáticas (navegar, carrito, tema, sesión, `cerrar_dialogo`) |
+| `dialog-control.ts` | Cierra el diálogo de más arriba como el X del usuario (lo usa `cerrar_dialogo`) |
 | `route-catalog.ts` | Rutas que ve el modelo; `acciones` sale de `meta.agentHint` |
 | `agent-tools-contract.test.ts` | Contrato que recorre todas las tools de todas las pantallas |
 
@@ -60,6 +61,7 @@ Si tienes el kit de skills del agente, úsalo; tiene los pasos detallados con pl
 | `abrir_*`, `ver_*`, `cambiar_pestana_*` | Abre diálogo o cambia de vista | `abreUi: true`; con un diálogo ya abierto falla con `dialogAlreadyOpenError` |
 | `llenar_*` | Llena el formulario abierto | Solo existe con el diálogo abierto; valida con un `sanitize…` y nunca guarda |
 | `editar_*` | Cambia un borrador | La descripción dice `BORRADOR` y qué botón de Guardar presiona el usuario |
+| `opciones_filtros_*` | Valores válidos (con id) de los filtros | Cuando un filtro pide ids que ningún `leer_*` muestra |
 | `paginar_*` | Lee la paginación y las filas visibles; cambia página o tamaño | Una por tabla, con `paginationTool`; el sufijo debe ser único en la pantalla |
 | `guardar_*`, `confirmar_*` | Presiona el botón que guarda, cobra, anula o elimina | **Siempre con `commitTool`** (ver abajo) |
 
@@ -69,6 +71,9 @@ Reglas para todas:
   las estáticas del back. `description` ≤ 300 caracteres, sin acentos. `parameters`: JSON Schema
   de tipo `object` con `additionalProperties: false`.
 - Los ids se validan contra datos ya cargados (`validar`), nunca se confía en lo que diga el modelo.
+- **El modelo no ve la pantalla.** Todo parámetro `*_id` lleva `description` con la tool de donde sale
+  (`'id de leer_usuarios.'`; el contrato lo exige), y alguna tool debe listar esos ids con su nombre. Si
+  un `abrir_*`/`ver_*` muestra datos, devuélvelos o registra un `leer_*` mientras el diálogo esté abierto.
 - `requiere_confirmacion: true` obliga a definir `validar` y `textoConfirmacion`; el texto se arma
   con datos reales (nombre del cliente, monto), no con texto del modelo.
 - Los mensajes de error le dicen al modelo qué hacer después (p. ej. "ver leer_usuarios").
@@ -120,13 +125,17 @@ En el back: `venv/Scripts/python.exe manage.py test agent --settings=tipicos.tes
 Las 23 rutas con página tienen tools, salvo `/administracion/passkeys` y
 `/administracion/patron-acceso`, que son solo de navegación a propósito.
 
+La confirmación con clic caduca sola poco antes de que el back deje de esperar (`timeout_ms` del
+`tool_call`) y al cerrarse el turno; tras el clic, la tool se vuelve a buscar y validar.
+
 Interacciones que aún no existen:
 
-- Cerrar o cancelar un diálogo abierto.
 - Manejar el selector de tallas (`VariantSelectionDrawer`): no hace falta, `agregar_item` ya recibe
   la variante.
 - Paginar las tablas de cobros por usuario (hay una por sucursal y chocarían los nombres);
   `leer_cobros` ya devuelve esos datos.
+- En «Guardar precios» de la venta, `elegir_precios_venta` solo acepta clientes que el selector ya
+  cargó (los primeros 50 activos); para otro, el usuario lo busca en el selector.
 - `AddCustomerPriceDialog` no está montado en ninguna pantalla. Un precio nuevo se asigna con
   `abrir_editar_precio_cliente` sobre una variante sin precio.
 
