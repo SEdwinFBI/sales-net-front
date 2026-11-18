@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import { Bot, Loader2, Mic, Send, Trash2, Volume2, VolumeX, X } from 'lucide-react'
 
@@ -20,7 +20,7 @@ import type { AgentContext, ContextTool } from '../types'
 const SPEAK_PREF_KEY = 'agent-speak-replies'
 /** Si el navegador no avisa del fin del dictado, se envía lo capturado pasado este tiempo. */
 const VOICE_FLUSH_FALLBACK_MS = 2500
-/** Atajo global de pulsar-para-hablar: funciona aunque un diálogo o drawer tenga el foco atrapado. */
+/** Atajo global del micrófono (interruptor): funciona aunque un diálogo o drawer tenga el foco atrapado. */
 const PUSH_TO_TALK_KEY = 'F2'
 
 /** Ruta ya confirmada por el navegador (la navegación de React Router es asíncrona). */
@@ -112,7 +112,7 @@ export default function AgentWidget({ onLogout }: Props) {
   }, [open, status, cancelConfirmation])
   useEffect(() => cancelConfirmation, [cancelConfirmation])
 
-  // --- voz: pulsar para hablar ------------------------------------------------
+  // --- voz: un toque prende, otro apaga y envía --------------------------------
   const speech = useSpeechRecognition({ enabled: holding })
   const setAgentListening = useAgentStore((state) => state.setListening)
   const pendingVoiceSend = useRef(false)
@@ -169,46 +169,50 @@ export default function AgentWidget({ onLogout }: Props) {
     setHolding(true)
   }
 
-  const finishHold = () => {
+  /** Apaga el micrófono. `send`: envía lo dictado; si no, lo descarta (panel cerrado o sin conexión). */
+  const finishHold = (send = true) => {
     if (!holdingRef.current) return
     holdingRef.current = false
     setHolding(false)
+    if (!send) {
+      pendingVoiceSend.current = false
+      resetTranscriptRef.current()
+      return
+    }
     pendingVoiceSend.current = true
-    window.setTimeout(flushVoice, VOICE_FLUSH_FALLBACK_MS)
+    const { transcript, interim } = voiceText.current
+    // Sin esperar el cierre del navegador (hasta 1,5 s): si ya hay texto, se envía al instante.
+    if (`${transcript} ${interim}`.trim()) flushVoice()
+    else window.setTimeout(flushVoice, VOICE_FLUSH_FALLBACK_MS)
   }
 
-  const startHold = (event: PointerEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
-    beginHold()
-  }
+  /** Un toque prende el micrófono y otro lo apaga y envía. */
+  const toggleHold = () => (holdingRef.current ? finishHold() : beginHold())
 
-  // F2 mantenido = pulsar para hablar, aunque haya un diálogo modal con el foco atrapado.
-  const holdHandlers = useRef({ begin: beginHold, finish: finishHold })
+  // F2 = mismo interruptor, aunque haya un diálogo modal con el foco atrapado.
+  const holdHandlers = useRef({ toggle: toggleHold, finish: finishHold })
   useEffect(() => {
-    holdHandlers.current = { begin: beginHold, finish: finishHold }
+    holdHandlers.current = { toggle: toggleHold, finish: finishHold }
   })
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== PUSH_TO_TALK_KEY) return
       event.preventDefault()
-      if (!event.repeat) holdHandlers.current.begin()
-    }
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.key !== PUSH_TO_TALK_KEY) return
-      event.preventDefault()
-      holdHandlers.current.finish()
+      if (!event.repeat) holdHandlers.current.toggle()
     }
     const onBlur = () => holdHandlers.current.finish()
     window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
     window.addEventListener('blur', onBlur)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('blur', onBlur)
     }
   }, [])
+
+  // Con el interruptor, el micrófono podría quedar abierto: se apaga sin enviar al cerrar el panel o perder la conexión.
+  useEffect(() => {
+    if (!open || !connected) holdHandlers.current.finish(false)
+  }, [open, connected])
 
   // --- chat -------------------------------------------------------------------
   const endRef = useRef<HTMLDivElement>(null)
@@ -248,8 +252,9 @@ export default function AgentWidget({ onLogout }: Props) {
       : status === 'error'
         ? 'No disponible'
         : null
-  const listening = holding || speech.isListening
   const heard = `${speech.transcript} ${speech.interimTranscript}`.trim()
+  /** El botón del micrófono crece con el volumen de la voz (audioLevel 0-100). */
+  const micScale = holding ? 1 + Math.min(speech.audioLevel, 60) / 200 : 1
 
   return (
     <>
@@ -297,7 +302,7 @@ export default function AgentWidget({ onLogout }: Props) {
               {messages.length === 0 && (
                 <p className="text-muted-foreground">
                   Pídeme cosas como «ve a historial», «agrega 2 camisas M al carrito» o «abre el carrito». Escribe o
-                  mantén pulsado el micrófono (o la tecla {PUSH_TO_TALK_KEY}) para hablar.
+                  toca el micrófono (o la tecla {PUSH_TO_TALK_KEY}) para hablar y otra vez para enviar.
                 </p>
               )}
               {messages.map((message) => (
@@ -322,12 +327,6 @@ export default function AgentWidget({ onLogout }: Props) {
               <div ref={endRef} />
             </div>
 
-            {listening && (
-              <p className="border-t border-border px-3 py-1.5 text-xs text-muted-foreground" aria-live="polite">
-                <Mic className="mr-1 inline size-3 text-primary" aria-hidden />
-                {heard || 'Escuchando…'}
-              </p>
-            )}
             {speech.error && <p className="px-3 pb-1 text-xs text-destructive">{speech.error}</p>}
 
             {pendingConfirm && (
@@ -357,29 +356,36 @@ export default function AgentWidget({ onLogout }: Props) {
 
             <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border p-2">
               <input
-                value={input}
+                // Mientras se dicta, la caja muestra en gris lo que se va escuchando (no se edita).
+                value={holding ? heard : input}
                 onChange={(event) => setInput(event.target.value)}
-                placeholder={connected ? 'Escribe una instrucción…' : 'Conectando…'}
+                readOnly={holding}
+                aria-live={holding ? 'polite' : undefined}
+                placeholder={holding ? 'Escuchando…' : connected ? 'Escribe una instrucción…' : 'Conectando…'}
                 disabled={!connected}
                 maxLength={500}
-                className="h-9 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+                className={cn(
+                  'h-9 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50',
+                  holding && 'italic text-muted-foreground',
+                )}
               />
               <Button
                 type="button"
                 variant={holding ? 'default' : 'outline'}
                 size="icon-lg"
-                disabled={!connected || busy || !speech.isSupported}
+                disabled={!holding && (!connected || busy || !speech.isSupported)}
                 title={
                   speech.isSupported
-                    ? `Mantén pulsado para hablar (o mantén ${PUSH_TO_TALK_KEY})`
+                    ? holding
+                      ? `Toca para enviar (o ${PUSH_TO_TALK_KEY})`
+                      : `Toca para hablar (o ${PUSH_TO_TALK_KEY})`
                     : 'Tu navegador no soporta dictado por voz'
                 }
-                aria-label={`Mantén pulsado para hablar (o mantén ${PUSH_TO_TALK_KEY})`}
-                className={cn('touch-none select-none', holding && 'animate-pulse')}
-                onPointerDown={startHold}
-                onPointerUp={finishHold}
-                onPointerCancel={finishHold}
-                onContextMenu={(event) => event.preventDefault()}
+                aria-label={holding ? 'Detener y enviar dictado' : 'Hablar'}
+                aria-pressed={holding}
+                className="select-none transition-transform duration-100"
+                style={{ transform: `scale(${micScale})` }}
+                onClick={toggleHold}
               >
                 <Mic />
               </Button>
@@ -402,15 +408,23 @@ export default function AgentWidget({ onLogout }: Props) {
       </div>
 
       {/* Fuera del contenedor del widget (otro contexto de apilamiento) para quedar sobre los diálogos (z-80). */}
-      {listening && (modalOpen || !open) && (
-        <div
-          role="status"
+      {holding && (modalOpen || !open) && (
+        <button
+          type="button"
           aria-live="polite"
-          className="pointer-events-none fixed bottom-6 left-1/2 z-[90] max-w-[90vw] -translate-x-1/2 truncate rounded-full bg-foreground px-4 py-2 text-sm text-background shadow-lg"
+          aria-label="Detener y enviar dictado"
+          data-agent-widget
+          // Sin esto el diálogo abierto lo tomaría como clic afuera y se cerraría (y el foco saldría de él).
+          onPointerDown={(event) => {
+            event.stopPropagation()
+            event.preventDefault()
+          }}
+          onClick={() => finishHold()}
+          className="pointer-events-auto fixed bottom-6 left-1/2 z-[90] max-w-[90vw] -translate-x-1/2 truncate rounded-full bg-foreground px-4 py-2 text-sm text-background shadow-lg"
         >
-          <Mic className="mr-1.5 inline size-3.5" aria-hidden />
-          Escuchando… {heard}
-        </div>
+          <Mic className="mr-1.5 inline size-3.5" style={{ transform: `scale(${micScale})` }} aria-hidden />
+          {heard || 'Escuchando…'} <span className="opacity-60">· toca para enviar</span>
+        </button>
       )}
     </>
   )
