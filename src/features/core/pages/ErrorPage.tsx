@@ -1,24 +1,27 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { Link, useRouteError } from 'react-router'
 
 export default function ErrorPage() {
   const error = useRouteError() as { statusText?: string; message?: string } | undefined
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary px-4 py-6">
-      <div className="max-w-xl rounded-2xl border border-border/70 bg-card/95 p-8 text-center shadow-sm">
-        <AlertTriangle className="mx-auto size-12 text-danger" />
-        <h1 className="mt-6 text-3xl font-semibold text-neutral sm:text-4xl">Ruta no disponible</h1>
-        <p className="mt-4 text-sm leading-7 text-neutral/75">
-          {error?.statusText ?? error?.message ?? 'La ruta solicitada no existe o fallo durante la carga.'}
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md rounded-3xl border border-border/80 bg-card p-8 text-center shadow-elevated sm:p-10">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/10 text-destructive">
+          <AlertTriangle className="size-7" aria-hidden="true" />
+        </div>
+        <h1 className="mt-6 font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Ruta no disponible
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          {error?.statusText ?? error?.message ?? 'La ruta solicitada no existe o ocurrió un problema durante la carga.'}
         </p>
         <Link
           to="/"
-          className="mt-8 inline-flex rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-complement"
+          className="mt-7 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-complement focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
         >
-          <p>
-            Volver al inicio
-          </p>
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Volver al inicio
         </Link>
       </div>
     </div>

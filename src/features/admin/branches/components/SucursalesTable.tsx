@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Pencil, Phone, Plus, Search, Store, Trash2, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Sucursal } from '../types/sucursal-types'
@@ -89,7 +90,11 @@ export default function SucursalesTable({ data, isLoading }: Props) {
 
         {/* Grid de tarjetas */}
         {isLoading ? (
-          <EmptyState title="Cargando sucursales…" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-2xl" />
+            ))}
+          </div>
         ) : filtradas.length === 0 ? (
           <EmptyState icon={Store} title={search ? 'No se encontraron sucursales.' : 'Aún no hay sucursales registradas.'} />
         ) : (
@@ -98,13 +103,13 @@ export default function SucursalesTable({ data, isLoading }: Props) {
               <Card
                 key={sucursal.id}
                 className={cn(
-                  'border-l-4 bg-card p-4 shadow-sm transition-shadow hover:shadow-md',
+                  'border-l-4 bg-card p-4 transition-[transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:shadow-card-hover',
                   sucursal.activo ? 'border-l-primary' : 'border-l-muted-foreground/30 opacity-70'
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-start gap-2.5">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
                       <Store className="size-4.5" />
                     </div>
                     <div className="min-w-0">

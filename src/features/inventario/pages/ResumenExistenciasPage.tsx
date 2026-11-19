@@ -79,7 +79,7 @@ export default function ResumenExistenciasPage() {
     >
       <Card className="mx-auto p-3.5 sm:p-5">
         <div className="space-y-5 sm:space-y-6">
-          <div className="grid grid-cols-1 items-end gap-3 min-[480px]:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 items-end gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-4">
             <div className="min-w-0">
               <label htmlFor="resumen-desde" className="mb-1 block text-xs text-muted-foreground">
                 Desde <span className="text-destructive">*</span>

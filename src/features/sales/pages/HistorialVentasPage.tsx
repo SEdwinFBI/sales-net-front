@@ -162,9 +162,13 @@ export default function HistorialVentasPage() {
     <PageTemplateSimple title="Historial de Ventas" description="Todas las ventas registradas en el sistema.">
       <div className="space-y-5">
         <Card className="p-3.5 sm:p-5">
-          <div className="grid grid-cols-1 items-end gap-3 rounded-2xl  p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6 shadow-sm">
+          <div
+            className={`grid grid-cols-1 items-end gap-3 rounded-2xl border border-border/70 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 ${
+              hasFilters ? 'lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]' : 'lg:grid-cols-5'
+            }`}
+          >
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha desde</label>
               <Input
                 type="date"
                 value={filters.fecha_desde ?? ''}
@@ -173,7 +177,7 @@ export default function HistorialVentasPage() {
               />
             </div>
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Fecha hasta</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha hasta</label>
               <Input
                 type="date"
                 value={filters.fecha_hasta ?? ''}
@@ -182,7 +186,7 @@ export default function HistorialVentasPage() {
               />
             </div>
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Estado</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Estado</label>
               <Select
                 value={filters.estado ?? ''}
                 onChange={(e) => setFilters((prev) => ({ ...prev, estado: e.target.value || undefined }))}
@@ -193,7 +197,7 @@ export default function HistorialVentasPage() {
               </Select>
             </div>
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Forma de pago</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Forma de pago</label>
               <Select
                 value={formaPagoFilter}
                 onChange={(e) => setFormaPagoFilter(e.target.value)}
@@ -204,7 +208,7 @@ export default function HistorialVentasPage() {
               </Select>
             </div>
             <div className="min-w-0">
-              <label className="mb-1 block text-xs text-muted-foreground">Buscar</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Buscar</label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -218,15 +222,16 @@ export default function HistorialVentasPage() {
 
             {hasFilters && (
               <div className="min-w-0 self-end">
-                <Button variant="secondary" size="sm" onClick={clearFilters} className="h-9 w-full">
-                  <RotateCcw />
+                <Button variant="outline" size="sm" onClick={clearFilters} className="h-9 w-full" aria-label="Limpiar filtros">
+                  <RotateCcw className="size-3.5" />
+                  Limpiar
                 </Button>
               </div>
             )}
           </div>
 
-          <div className="mb-3 flex items-center justify-end gap-3">
-            <span className="text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {filteredVentas.length} {filteredVentas.length === 1 ? 'venta' : 'ventas'} para exportar
             </span>
             <Button

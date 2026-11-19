@@ -268,7 +268,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
     <>
       <div className="space-y-4">
         {/* Toolbar */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid w-full gap-2 sm:grid-cols-[minmax(220px,1fr)_180px_auto] lg:min-w-[560px] lg:max-w-3xl">
             <div className="relative">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -378,7 +378,7 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
           )}
         </div>
 
-        <div className="hidden overflow-hidden rounded-xl border border-border bg-card shadow-sm md:block">
+        <div className="hidden overflow-hidden rounded-2xl border border-border/80 bg-card shadow-card md:block">
           <Table className="min-w-[640px]">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

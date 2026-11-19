@@ -14,17 +14,20 @@ export function Breadcrumb({
   return (
     <nav
       aria-label="Ruta de navegación"
-      className={cn('flex items-center gap-1 text-xs text-muted-foreground', className)}
+      className={cn('flex flex-wrap items-center gap-1 text-xs text-muted-foreground', className)}
     >
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-1">
-          {i > 0 && <ChevronRight className="size-3 opacity-50" aria-hidden="true" />}
+          {i > 0 && <ChevronRight className="size-3.5 opacity-45" aria-hidden="true" />}
           {item.href ? (
-            <Link to={item.href} className="transition-colors hover:text-foreground">
+            <Link
+              to={item.href}
+              className="rounded-md px-1.5 py-0.5 transition-colors hover:bg-muted hover:text-foreground"
+            >
               {item.label}
             </Link>
           ) : (
-            <span className="font-medium text-foreground">{item.label}</span>
+            <span className="px-1 font-semibold text-foreground">{item.label}</span>
           )}
         </span>
       ))}

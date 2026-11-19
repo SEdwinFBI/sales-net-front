@@ -24,7 +24,7 @@ import { useDeferredValue, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { cotizarCarrito } from '@/features/catalog/services/pricing-service'
 import type { PaymentMethod } from '../types/sales'
-import { Wallet, CreditCard, Loader2 } from 'lucide-react'
+import { Wallet, CreditCard, Loader2, Check } from 'lucide-react'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import QuickClienteDialog from '@/features/customers/components/QuickClienteDialog'
 import { useCliente } from '@/features/customers/hooks/useCliente'
@@ -234,15 +234,23 @@ const CheckoutDialog = () => {
                   <button
                     key={opt.value}
                     type="button"
+                    aria-pressed={selected}
                     disabled={opt.value === 'credito' && Boolean(selectedCustomerId) && !permiteCredito}
                     onClick={() => setPaymentMethod(opt.value)}
-                    className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${selected
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-border bg-background text-muted-foreground hover:border-muted-foreground/30'
+                    className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring disabled:opacity-45 disabled:cursor-not-allowed ${selected
+                      ? 'border-primary bg-primary/[0.08] text-primary shadow-xs'
+                      : 'border-border/80 bg-muted/25 text-muted-foreground hover:border-primary/35 hover:bg-muted/50 hover:text-foreground'
                       }`}
                   >
-                    <Icon className="size-6" />
-                    <span className="text-sm font-medium">{opt.label}</span>
+                    {selected && (
+                      <span className="absolute top-2 right-2 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <Check className="size-3" aria-hidden="true" />
+                      </span>
+                    )}
+                    <span className={`flex size-10 items-center justify-center rounded-xl ${selected ? 'bg-primary/15 text-primary' : 'bg-card text-muted-foreground'}`}>
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <span className="text-sm font-semibold">{opt.label}</span>
                   </button>
                 )
               })}

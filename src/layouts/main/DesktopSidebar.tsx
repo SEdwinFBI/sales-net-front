@@ -1,70 +1,92 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router'
-import NavBarDesktop, { isItemOrDescendantActive } from "@/components/navbar/NavBarDesktop"
-import { cn } from "@/lib/utils"
-import type { SidebarItem } from "@/lib/app-routes"
+import NavBarDesktop, { isItemOrDescendantActive } from '@/components/navbar/NavBarDesktop'
+import { cn } from '@/lib/utils'
+import type { SidebarItem } from '@/lib/app-routes'
 
 const NAV_EXPANDED_KEY = 'sales-net-nav-expanded'
 
 type DesktopSidebarProps = {
-    expanded: boolean
-    items: SidebarItem[]
-    onMouseEnter: () => void
-    onMouseLeave: () => void
+  expanded: boolean
+  items: SidebarItem[]
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+  onExpandRequest?: () => void
 }
 
 /**
  * Sidebar de escritorio. Los módulos expandidos se persisten en localStorage
- * y, al montar, se auto-expanden los que contienen la ruta activa.
+ * y el módulo de la ruta activa se mantiene visible salvo cierre manual.
  */
-function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave }: DesktopSidebarProps) {
-    const location = useLocation()
-    const [expandedModules, setExpandedModules] = useState<string[]>(() => {
-        const activeIds = items
-            .filter((item) => item.children.length > 0 && isItemOrDescendantActive(item, location.pathname))
-            .map((item) => item.id)
-        try {
-            const saved = JSON.parse(localStorage.getItem(NAV_EXPANDED_KEY) ?? '[]') as string[]
-            return Array.from(new Set([...saved, ...activeIds]))
-        } catch {
-            return activeIds
-        }
-    })
-
-    const toggleModule = (moduleId: string) => {
-        setExpandedModules((prev) => {
-            const next = prev.includes(moduleId)
-                ? prev.filter((id) => id !== moduleId)
-                : [...prev, moduleId]
-            try {
-                localStorage.setItem(NAV_EXPANDED_KEY, JSON.stringify(next))
-            } catch {
-                /* localStorage no disponible */
-            }
-            return next
-        })
+function DesktopSidebar({ expanded, items, onMouseEnter, onMouseLeave, onExpandRequest }: DesktopSidebarProps) {
+  const location = useLocation()
+  const [savedModules, setSavedModules] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(NAV_EXPANDED_KEY) ?? '[]') as string[]
+    } catch {
+      return []
     }
+  })
+  const [collapsedManually, setCollapsedManually] = useState<string[]>([])
 
-    return (
-        <aside
-            id="app-sidebar"
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            className={cn(
-                'sticky top-4 hidden h-[calc(100vh-2rem)] overflow-hidden rounded-2xl border p-3 contain-layout contain-paint transition-[width,background-color,border-color] duration-150 ease-out will-change-[width] lg:block',
-                expanded
-                    ? 'w-64 border-sidebar-border bg-sidebar shadow-sm'
-                    : 'w-24 border-sidebar-border/70 bg-sidebar/90 shadow-sm',
-            )}
-        >
-            <NavBarDesktop
-                items={items}
-                expanded={expanded}
-                expandedModules={expandedModules}
-                onToggleModule={toggleModule}
-            />
-        </aside>
+  const activeIds = useMemo(
+    () =>
+      items
+        .filter((item) => item.children.length > 0 && isItemOrDescendantActive(item, location.pathname))
+        .map((item) => item.id),
+    [items, location.pathname],
+  )
+
+  const expandedModules = useMemo(
+    () =>
+      Array.from(
+        new Set([
+          ...savedModules,
+          ...activeIds.filter((id) => !collapsedManually.includes(id)),
+        ]),
+      ),
+    [savedModules, activeIds, collapsedManually],
+  )
+
+  const toggleModule = (moduleId: string) => {
+    const isCurrentlyExpanded = expandedModules.includes(moduleId)
+    const nextSaved = isCurrentlyExpanded
+      ? savedModules.filter((id) => id !== moduleId)
+      : Array.from(new Set([...savedModules, moduleId]))
+
+    setSavedModules(nextSaved)
+    setCollapsedManually((prev) =>
+      isCurrentlyExpanded
+        ? Array.from(new Set([...prev, moduleId]))
+        : prev.filter((id) => id !== moduleId),
     )
+
+    try {
+      localStorage.setItem(NAV_EXPANDED_KEY, JSON.stringify(nextSaved))
+    } catch {
+      /* localStorage no disponible */
+    }
+  }
+
+  return (
+    <aside
+      id="app-sidebar"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={cn(
+        'sticky top-3 hidden h-[calc(100vh-1.5rem)] overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar p-2.5 shadow-card contain-layout contain-paint transition-[width,box-shadow] duration-200 ease-out will-change-[width] lg:block',
+        expanded ? 'w-64' : 'w-[4.75rem]',
+      )}
+    >
+      <NavBarDesktop
+        items={items}
+        expanded={expanded}
+        onExpandRequest={onExpandRequest}
+        expandedModules={expandedModules}
+        onToggleModule={toggleModule}
+      />
+    </aside>
+  )
 }
 
 export default DesktopSidebar

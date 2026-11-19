@@ -44,9 +44,13 @@ export default function ReporteVentasFilters({
     || filters.id_talla !== undefined
 
   return (
-    <div className="grid w-full grid-cols-1 items-end gap-3 rounded-xl  p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 lg:grid-cols-6 shadow-sm">
+    <div
+      className={`grid w-full grid-cols-1 items-end gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 md:grid-cols-3 ${
+        hasFilters ? 'lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]' : 'lg:grid-cols-5'
+      }`}
+    >
       <div className="min-w-0">
-        <label className="mb-1 block text-xs text-muted-foreground">Fecha desde</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha desde</label>
         <Input
           type="date"
           value={filters.fecha_desde ?? ''}
@@ -55,7 +59,7 @@ export default function ReporteVentasFilters({
         />
       </div>
       <div className="min-w-0">
-        <label className="mb-1 block text-xs text-muted-foreground">Fecha hasta</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha hasta</label>
         <Input
           type="date"
           value={filters.fecha_hasta ?? ''}
@@ -64,7 +68,7 @@ export default function ReporteVentasFilters({
         />
       </div>
       <div className="min-w-0">
-        <label className="mb-1  text-xs text-muted-foreground">Artículo</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Artículo</label>
         <SearchableSelect
           value={filters.id_articulo}
           onChange={(v) => set('id_articulo', v ? Number(v) : undefined)}
@@ -74,7 +78,7 @@ export default function ReporteVentasFilters({
         />
       </div>
       <div className="min-w-0">
-        <label className="mb-1  text-xs text-muted-foreground">Talla</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Talla</label>
         <SearchableSelect
           value={filters.id_talla}
           onChange={(v) => set('id_talla', v ? Number(v) : undefined)}
@@ -84,7 +88,7 @@ export default function ReporteVentasFilters({
         />
       </div>
       <div className="min-w-0">
-        <label className="mb-1  text-xs text-muted-foreground">Sucursal</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Sucursal</label>
         <SearchableSelect
           value={filters.id_sucursal}
           onChange={(v) => set('id_sucursal', v ? Number(v) : undefined)}
@@ -95,8 +99,9 @@ export default function ReporteVentasFilters({
       </div>
       {hasFilters && (
         <div className="min-w-0 self-end">
-          <Button variant="secondary" size="sm" onClick={clear} className="h-9 w-full self-end">
-            <RotateCcw />
+          <Button variant="outline" size="sm" onClick={clear} className="h-9 w-full self-end">
+            <RotateCcw className="size-3.5" />
+            Limpiar
           </Button>
         </div>
       )}

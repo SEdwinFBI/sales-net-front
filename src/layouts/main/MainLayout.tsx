@@ -36,7 +36,7 @@ export default function MainLayout() {
 
   const sidebarItems = useMemo(
     () => (user ? buildSidebarItems(allFeatureRoutes, user.permissions) : []),
-    [user]
+    [user],
   )
 
   const clearSidebarHoverTimer = useCallback(() => {
@@ -66,6 +66,10 @@ export default function MainLayout() {
     setIsMobileSidebarOpen(false)
   }, [])
 
+  const handleExpandSidebar = useCallback(() => {
+    if (isDesktop) setIsSidebarPinned(true)
+  }, [isDesktop])
+
   const handleDesktopSidebarMouseEnter = useCallback(() => {
     if (!SIDEBAR_HOVER_EXPAND) return
     clearSidebarHoverTimer()
@@ -91,7 +95,14 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary text-neutral">
+    <div className="min-h-screen text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
+      >
+        Ir al contenido principal
+      </a>
+
       {!isDesktop && (
         <MobileSidebar
           items={sidebarItems}
@@ -100,13 +111,14 @@ export default function MainLayout() {
         />
       )}
 
-      <div className="grid min-h-screen grid-cols-1 gap-3 px-2.5 py-2.5 sm:gap-4 sm:px-4 lg:grid-cols-[auto_1fr]">
+      <div className="grid min-h-screen grid-cols-1 gap-3 px-2.5 py-2.5 sm:gap-4 sm:px-4 sm:py-3 lg:grid-cols-[auto_1fr]">
         {isDesktop && (
           <DesktopSidebar
             expanded={isDesktopSidebarExpanded}
             items={sidebarItems}
             onMouseEnter={handleDesktopSidebarMouseEnter}
             onMouseLeave={handleDesktopSidebarMouseLeave}
+            onExpandRequest={handleExpandSidebar}
           />
         )}
 
@@ -117,18 +129,19 @@ export default function MainLayout() {
             isMobileSidebarOpen={isMobileSidebarOpen}
             isSidebarExpanded={isDesktopSidebarExpanded}
             isSidebarPinned={isSidebarPinned}
+            sidebarItems={sidebarItems}
             user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
             onSettings={() => navigate('/administracion/notificaciones')}
           />
 
-          <main className="min-w-0 flex-1 py-2 pb-8 sm:py-3">
+          <main id="main-content" className="min-w-0 flex-1 py-3 pb-10 sm:py-4">
             <Outlet />
           </main>
 
-          <footer className="pb-4 text-[12px] text-neutral/75 self-center">
-            &copy; {new Date().getFullYear()} Code QX.  Código que construye el futuro, Todos los derechos reservados.
+          <footer className="pb-4 pt-1 text-center text-[11px] font-medium text-muted-foreground/75">
+            &copy; {new Date().getFullYear()} Code QX · Código que construye el futuro. Todos los derechos reservados.
           </footer>
         </div>
       </div>

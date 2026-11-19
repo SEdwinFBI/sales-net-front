@@ -115,57 +115,69 @@ export default function ClienteDetailPage() {
           <ClienteInfo cliente={cliente} />
 
           {resumen && !sinCredito && (
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="rounded-xl bg-card p-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Total ventas</p>
-                <p className="text-xl font-bold">{resumen.total_ventas}</p>
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-muted/25 p-3.5 pl-4">
+                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-muted-foreground/40" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total ventas</p>
+                <p className="mt-1 font-heading text-xl font-bold text-foreground tabular-nums">{resumen.total_ventas}</p>
               </div>
-              <div className="rounded-xl bg-card p-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Total general</p>
-                <p className="text-xl font-bold text-primary">{formatCurrency(resumen.total_general)}</p>
+              <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-muted/25 p-3.5 pl-4">
+                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-primary" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total general</p>
+                <p className="mt-1 font-heading text-xl font-bold text-primary tabular-nums">{formatCurrency(resumen.total_general)}</p>
               </div>
-              <div className="rounded-xl bg-card p-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Pagado</p>
-                <p className="text-xl font-bold text-successful">{formatCurrency(resumen.total_pagado)}</p>
+              <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-muted/25 p-3.5 pl-4">
+                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-emerald-500" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pagado</p>
+                <p className="mt-1 font-heading text-xl font-bold text-successful tabular-nums">{formatCurrency(resumen.total_pagado)}</p>
               </div>
-              <div className="rounded-xl bg-card p-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Abonado</p>
-                <p className="text-xl font-bold text-warning">{formatCurrency(resumen.total_abonado)}</p>
+              <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-muted/25 p-3.5 pl-4">
+                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-amber-500" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Abonado</p>
+                <p className="mt-1 font-heading text-xl font-bold text-warning tabular-nums">{formatCurrency(resumen.total_abonado)}</p>
               </div>
-              <div className="rounded-xl bg-card p-4 shadow-sm">
-                <p className="text-xs text-muted-foreground">Balance (deuda)</p>
-                <p className="text-xl font-bold text-destructive">{formatCurrency(resumen.balance)}</p>
+              <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-muted/25 p-3.5 pl-4">
+                <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-destructive" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Balance (deuda)</p>
+                <p className="mt-1 font-heading text-xl font-bold text-destructive tabular-nums">{formatCurrency(resumen.balance)}</p>
               </div>
             </div>
           )}
 
-          {sinCredito && <p className="text-sm text-muted-foreground">Este cliente compra únicamente al contado.</p>}
+          {sinCredito && (
+            <p className="rounded-xl border border-border/70 bg-muted/30 px-3.5 py-2.5 text-sm text-muted-foreground">
+              Este cliente compra únicamente al contado.
+            </p>
+          )}
           <Tabs key={creditKey} value={activeTab} onValueChange={(value) => setTabSelection({ creditKey, value: String(value) })}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList className="w-full sm:w-fit">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <TabsList className="w-full max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-fit">
                 {!sinCredito && <TabsTrigger value="movimientos">Movimientos generales</TabsTrigger>}
                 {!sinCredito && <TabsTrigger value="abonos">Abonos</TabsTrigger>}
                 <TabsTrigger value="compras">Compras</TabsTrigger>
                 <TabsTrigger value="precios">Precios del cliente</TabsTrigger>
               </TabsList>
-              {!sinCredito && <>
-              <Button onClick={() => { setVentaInitial(undefined); setVentaDialogOpen(true) }} size="sm" className="w-full sm:w-auto">
-                <Plus />
-                Registrar venta
-              </Button>
-              <Button onClick={() => { setAbonoInitial(undefined); setAbonarOpen(true) }} size="sm" className="w-full sm:w-auto">
-                <Plus />
-                Registrar abono
-              </Button>
-              <Button
-                onClick={() => { setAjusteInitial(undefined); setAjusteOpen(true) }}
-                size="sm"
-                className="w-full bg-red-500 text-white hover:bg-red-600 sm:w-auto"
-              >
-                <Plus />
-                Registrar ajuste
-              </Button>
-              </>}
+              {!sinCredito && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button onClick={() => { setVentaInitial(undefined); setVentaDialogOpen(true) }} size="sm" className="flex-1 sm:flex-none">
+                    <Plus />
+                    Registrar venta
+                  </Button>
+                  <Button onClick={() => { setAbonoInitial(undefined); setAbonarOpen(true) }} size="sm" variant="outline" className="flex-1 sm:flex-none">
+                    <Plus />
+                    Registrar abono
+                  </Button>
+                  <Button
+                    onClick={() => { setAjusteInitial(undefined); setAjusteOpen(true) }}
+                    size="sm"
+                    variant="destructive"
+                    className="flex-1 sm:flex-none"
+                  >
+                    <Plus />
+                    Registrar ajuste
+                  </Button>
+                </div>
+              )}
             </div>
 
             <TabsContent value="movimientos" className="mt-4">
