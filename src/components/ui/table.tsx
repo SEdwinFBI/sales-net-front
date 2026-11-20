@@ -21,7 +21,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b [&_tr]:bg-muted/50", className)}
+      className={cn("[&_tr]:bg-muted/65 dark:[&_tr]:bg-muted/40", className)}
       {...props}
     />
   )
@@ -31,7 +31,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn("[&_tr:last-child_td]:border-b-0", className)}
       {...props}
     />
   )
@@ -42,7 +42,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        "bg-muted/50 font-medium [&_td]:border-t [&_td]:border-border/70 [&_tr:last-child_td]:border-b-0",
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors duration-200 hover:bg-primary/5 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-primary/10",
+        "transition-colors duration-150 hover:bg-primary/[0.045] has-aria-expanded:bg-muted/50 data-[state=selected]:bg-primary/10",
         className
       )}
       {...props}
@@ -68,7 +68,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-11 px-3 text-left align-middle text-xs font-semibold uppercase tracking-wide whitespace-nowrap text-muted-foreground first:rounded-tl-2xl last:rounded-tr-2xl [&:has([role=checkbox])]:pr-0",
+        "h-11 border-b border-border/80 px-3.5 text-left align-middle text-[11px] font-semibold uppercase tracking-[0.06em] whitespace-nowrap text-muted-foreground first:rounded-tl-xl last:rounded-tr-xl [&:has([role=checkbox])]:pr-0 [&_input[data-slot=input]]:bg-transparent [&_input[data-slot=input]]:shadow-none dark:[&_input[data-slot=input]]:bg-transparent",
         className
       )}
       {...props}
@@ -81,7 +81,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "border-b border-border/50 px-3.5 py-3 align-middle whitespace-nowrap tabular-nums [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

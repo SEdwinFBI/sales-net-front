@@ -16,9 +16,9 @@ export default function ReporteCobrosFilters({ filters, onChange }: Props) {
   const hasFilters = Boolean(filters.nombre || filters.fecha)
 
   return (
-    <div className="grid w-full grid-cols-1 items-end gap-3 rounded-xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto] shadow-sm">
+    <div className="grid w-full grid-cols-1 items-end gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto]">
       <div className="min-w-0">
-        <label className="mb-1 block text-xs text-muted-foreground">Nombre</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Nombre</label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -30,7 +30,7 @@ export default function ReporteCobrosFilters({ filters, onChange }: Props) {
         </div>
       </div>
       <div className="min-w-0">
-        <label className="mb-1 block text-xs text-muted-foreground">Fecha</label>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha</label>
         <Input
           type="date"
           value={filters.fecha ?? ''}
@@ -40,8 +40,9 @@ export default function ReporteCobrosFilters({ filters, onChange }: Props) {
       </div>
       {hasFilters && (
         <div className="min-w-0 self-end">
-          <Button variant="secondary" size="sm" onClick={() => onChange({})} className="h-9 w-full self-end">
-            <RotateCcw />
+          <Button variant="outline" size="sm" onClick={() => onChange({})} className="h-9 w-full self-end">
+            <RotateCcw className="size-3.5" />
+            Limpiar
           </Button>
         </div>
       )}

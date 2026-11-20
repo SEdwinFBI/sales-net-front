@@ -6,7 +6,7 @@ import {
 } from 'recharts'
 import { useQuery } from '@tanstack/react-query'
 import {
-  AlertTriangle, BarChart3, CalendarDays, Package, RotateCcw,
+  AlertTriangle, BarChart3, CalendarDays, CheckCircle2, Package, RotateCcw,
   ShoppingCart, TrendingDown, TrendingUp, Users, Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,12 +30,34 @@ import { getDashboardData, type DashboardFilters } from '../services/reportes-se
 import type { DashboardData } from '../types/reportes'
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6']
+
 const Q = (v: number) => formatCurrency(v)
 const P = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`
 const money = (v: unknown) => formatCurrency(Number(v ?? 0))
 
-const CHART_AXIS = { fontSize: 10, fill: '#94a3b8' }
-const CHART_HEIGHT = 230
+const CHART_AXIS = { fontSize: 10, fill: 'var(--muted-foreground)' }
+const CHART_HEIGHT = 240
+
+const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+  backgroundColor: 'var(--popover)',
+  borderColor: 'var(--border)',
+  borderRadius: '12px',
+  boxShadow: 'var(--app-shadow-elevated)',
+  color: 'var(--popover-foreground)',
+  fontSize: '12px',
+  padding: '8px 12px',
+}
+
+const TOOLTIP_LABEL_STYLE: React.CSSProperties = {
+  color: 'var(--popover-foreground)',
+  fontWeight: 600,
+  marginBottom: '4px',
+}
+
+const TOOLTIP_ITEM_STYLE: React.CSSProperties = {
+  color: 'var(--muted-foreground)',
+  padding: '1px 0',
+}
 
 const truncateLabel = (value: unknown, maxLength: number) => {
   const text = String(value ?? '')
@@ -59,59 +81,85 @@ function getDefaultDateRange() {
   return { fecha_desde: start, fecha_hasta: end }
 }
 
-// ─── KPI compacto con acento de color ───
+// ─── KPI ejecutivo con acento de color tematizable ───
 function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
   label: string
   value: string
   sub?: string
   icon: React.ComponentType<{ className?: string }>
-  accent: string // ej: 'blue'
+  accent: string
   trend?: number
   /** Mini leyenda del indicador, ej. "vs mes anterior" */
   trendLabel?: string
 }) {
-  const accents: Record<string, { border: string; chip: string; icon: string }> = {
-    blue: { border: 'border-l-blue-500', chip: 'bg-blue-50', icon: 'text-blue-600' },
-    green: { border: 'border-l-emerald-500', chip: 'bg-emerald-50', icon: 'text-emerald-600' },
-    amber: { border: 'border-l-amber-500', chip: 'bg-amber-50', icon: 'text-amber-600' },
-    red: { border: 'border-l-red-500', chip: 'bg-red-50', icon: 'text-red-600' },
-    purple: { border: 'border-l-violet-500', chip: 'bg-violet-50', icon: 'text-violet-600' },
-    cyan: { border: 'border-l-cyan-500', chip: 'bg-cyan-50', icon: 'text-cyan-600' },
+  const accents: Record<string, { bar: string; chip: string; icon: string }> = {
+    blue: { bar: 'bg-primary', chip: 'bg-primary/12 dark:bg-primary/20', icon: 'text-primary' },
+    green: { bar: 'bg-emerald-500', chip: 'bg-emerald-500/12 dark:bg-emerald-500/20', icon: 'text-emerald-600 dark:text-emerald-400' },
+    amber: { bar: 'bg-amber-500', chip: 'bg-amber-500/12 dark:bg-amber-500/20', icon: 'text-amber-600 dark:text-amber-400' },
+    red: { bar: 'bg-rose-500', chip: 'bg-rose-500/12 dark:bg-rose-500/20', icon: 'text-rose-600 dark:text-rose-400' },
+    purple: { bar: 'bg-violet-500', chip: 'bg-violet-500/12 dark:bg-violet-500/20', icon: 'text-violet-600 dark:text-violet-400' },
+    cyan: { bar: 'bg-sky-500', chip: 'bg-sky-500/12 dark:bg-sky-500/20', icon: 'text-sky-600 dark:text-sky-400' },
   }
   const a = accents[accent] ?? accents.blue
   return (
-    <div className={cn('rounded-lg border border-l-[3px] border-border/60 bg-card px-3 py-2.5 shadow-sm', a.border)}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-        <div className={cn('flex size-6 shrink-0 items-center justify-center rounded-md', a.chip)}>
-          <Icon className={cn('size-3', a.icon)} />
+    <div className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-3.5 shadow-card transition-[box-shadow,border-color] duration-150 hover:border-border hover:shadow-card-hover">
+      <span aria-hidden="true" className={cn('absolute inset-y-0 left-0 w-1', a.bar)} />
+      <div className="flex items-center justify-between gap-2 pl-1">
+        <p className="truncate text-[10.5px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">
+          {label}
+        </p>
+        <div className={cn('flex size-7 shrink-0 items-center justify-center rounded-lg', a.chip)}>
+          <Icon className={cn('size-3.5', a.icon)} />
         </div>
       </div>
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
-        <p className="text-lg font-bold leading-none tabular-nums">{value}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 pl-1">
+        <p className="font-heading text-xl font-bold leading-none tracking-tight text-foreground tabular-nums">
+          {value}
+        </p>
         {trend !== undefined && trend !== 0 && (
-          <span className={cn('flex items-center gap-0.5 text-[10px] font-semibold', trend >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+          <span
+            className={cn(
+              'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums',
+              trend >= 0
+                ? 'bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+                : 'bg-rose-500/12 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+            )}
+          >
             {trend >= 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
             {P(trend)}
-            {trendLabel && (
-              <span className="font-normal text-muted-foreground">{trendLabel}</span>
-            )}
           </span>
         )}
       </div>
-      {sub && <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{sub}</p>}
+      {(sub || (trend !== undefined && trend !== 0 && trendLabel)) && (
+        <p className="mt-1.5 truncate pl-1 text-[11px] text-muted-foreground">
+          {trend !== undefined && trend !== 0 && trendLabel ? `${trendLabel} · ` : ''}
+          {sub}
+        </p>
+      )}
     </div>
   )
 }
 
 // ─── Card de gráfico uniforme ───
-function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+function ChartCard({ title, badge, children, className }: {
+  title: string
+  badge?: string
+  children: React.ReactNode
+  className?: string
+}) {
   return (
-    <div className={cn('min-w-0 overflow-hidden rounded-lg border border-border/60 bg-card shadow-sm', className)}>
-      <div className="border-b border-border/40 bg-muted/20 px-3 py-2">
-        <h3 className="text-[11px] font-semibold uppercase tracking-wide text-foreground/80">{title}</h3>
+    <div className={cn('min-w-0 overflow-hidden rounded-2xl border border-border/80 bg-card shadow-card', className)}>
+      <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-4 py-2.5">
+        <h3 className="truncate font-heading text-xs font-semibold uppercase tracking-[0.06em] text-foreground/85">
+          {title}
+        </h3>
+        {badge && (
+          <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums">
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="min-w-0 overflow-hidden p-2">{children}</div>
+      <div className="min-w-0 overflow-hidden p-3">{children}</div>
     </div>
   )
 }
@@ -217,141 +265,202 @@ export default function DashboardPage() {
   const r = d.resumen ?? ({} as DashboardData['resumen'])
   const cmp = d.comparacion ?? ({} as DashboardData['comparacion'])
   const vhoy = d.ventas_hoy ?? ({} as DashboardData['ventas_hoy'])
-  const chartHeight = isMobile ? 198 : CHART_HEIGHT
+  const chartHeight = isMobile ? 204 : CHART_HEIGHT
   const chartAxis = isMobile ? { ...CHART_AXIS, fontSize: 8 } : CHART_AXIS
   const chartMargin = isMobile
     ? { top: 6, right: 4, bottom: 6, left: -16 }
-    : { right: 8 }
+    : { top: 6, right: 10, bottom: 0, left: 0 }
   const verticalChartMargin = isMobile
-    ? { top: 6, right: 4, bottom: 6, left: -20 }
-    : { left: 0, right: 8 }
+    ? { top: 6, right: 6, bottom: 6, left: -18 }
+    : { top: 6, left: 4, right: 12, bottom: 0 }
   const xAxisHeight = isMobile ? 28 : undefined
-  const axisMoney = (v: unknown) => formatAxisMoney(v, isMobile)
-  const pieLabel = (p: { name?: string; percent?: number }) => {
-    const percent = `${((p.percent ?? 0) * 100).toFixed(0)}%`
-    return isMobile ? percent : `${truncateLabel(p.name, 16)} ${percent}`
-  }
+  const axisMoney = (v: unknown) => formatAxisMoney(v, true)
+  const formaPagoTotal = useMemo(
+    () => (d.formas_pago ?? []).reduce((acc, item) => acc + Number(item.total_neto ?? 0), 0),
+    [d.formas_pago],
+  )
+  const pieData = useMemo(
+    () =>
+      (d.formas_pago ?? []).map((item) => {
+        const pct = formaPagoTotal > 0 ? Math.round((Number(item.total_neto ?? 0) / formaPagoTotal) * 100) : 0
+        return { ...item, displayName: `${item.nombre} (${pct}%)` }
+      }),
+    [d.formas_pago, formaPagoTotal],
+  )
+  const row1Count =
+    Number((d.top_articulos?.length ?? 0) > 0) +
+    Number((d.top_tallas?.length ?? 0) > 0) +
+    Number((d.ventas_por_dia_semana?.length ?? 0) > 0)
+  const row2Count =
+    Number((d.top_sucursales?.length ?? 0) > 0) +
+    Number((d.formas_pago?.length ?? 0) > 0) +
+    Number((d.ventas_acumuladas_mes?.length ?? 0) > 0)
 
   const sinDatos = !isLoading && !(d.top_articulos?.length) && !(d.ventas_por_dia?.length)
 
   if (isLoading) {
     return (
-      <div className="space-y-3 animate-pulse">
-        <Skeleton className="h-14 rounded-lg" />
-        <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[74px] rounded-lg" />)}
+      <div className="space-y-4">
+        <Skeleton className="h-[76px] rounded-2xl" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[92px] rounded-2xl" />)}
         </div>
-        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-64 rounded-lg" />)}
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-72 rounded-2xl" />)}
         </div>
       </div>
     )
   }
 
   return (
-    <div className={cn('space-y-3 transition-opacity', isFetching && 'opacity-70')}>
+    <div className={cn('space-y-4 transition-opacity duration-200', isFetching && 'opacity-70')}>
       {/* ─── Header + Filtros siempre visibles ─── */}
-      <div className="rounded-lg border border-border/60 bg-card px-3 py-2.5 shadow-sm">
-        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
-          <div className="mr-auto">
-            <h2 className="text-sm font-bold leading-tight">Dashboard</h2>
-            <p className="text-[10px] text-muted-foreground">{d.periodo ?? ''}</p>
+      <div className="rounded-2xl border border-border/80 bg-card p-3.5 shadow-card sm:p-4">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-heading text-base font-bold leading-tight text-foreground">
+              Resumen ejecutivo
+            </h2>
+            {d.periodo ? (
+              <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground tabular-nums">
+                <CalendarDays className="size-3.5 text-primary/75" aria-hidden="true" />
+                {d.periodo}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-muted-foreground">Indicadores comerciales del período</p>
+            )}
           </div>
-          <div>
-            <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Desde</label>
-            <Input type="date" className="h-8 w-[140px] text-xs"
-              value={filters.fecha_desde ?? ''}
-              onChange={e => setFilter('fecha_desde', e.target.value)} />
+
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-end">
+            <div className="min-w-0">
+              <label htmlFor="dash-desde" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                Desde
+              </label>
+              <Input
+                id="dash-desde"
+                type="date"
+                className="h-8.5 w-full text-xs sm:w-[142px]"
+                value={filters.fecha_desde ?? ''}
+                onChange={e => setFilter('fecha_desde', e.target.value)}
+              />
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="dash-hasta" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                Hasta
+              </label>
+              <Input
+                id="dash-hasta"
+                type="date"
+                className="h-8.5 w-full text-xs sm:w-[142px]"
+                value={filters.fecha_hasta ?? ''}
+                onChange={e => setFilter('fecha_hasta', e.target.value)}
+              />
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="dash-sucursal" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                Sucursal
+              </label>
+              <Select
+                id="dash-sucursal"
+                className="h-8.5 w-full text-xs sm:w-[152px]"
+                value={searchParams.get('sucursal') ?? ''}
+                onChange={e => setFilter('sucursal', e.target.value)}
+              >
+                <option value="">Todas</option>
+                {sucursales.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="dash-articulo" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                Artículo
+              </label>
+              <Select
+                id="dash-articulo"
+                className="h-8.5 w-full text-xs sm:w-[168px]"
+                value={searchParams.get('articulo') ?? ''}
+                onChange={e => setFilter('articulo', e.target.value)}
+              >
+                <option value="">Todos</option>
+                {articulos.filter(a => a.activo !== false).map(a => (
+                  <option key={a.id} value={a.id}>{a.titulo}</option>
+                ))}
+              </Select>
+            </div>
+            <div className="min-w-0">
+              <label htmlFor="dash-talla" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                Talla
+              </label>
+              <Select
+                id="dash-talla"
+                className="h-8.5 w-full text-xs disabled:opacity-50 sm:w-[108px]"
+                value={searchParams.get('talla') ?? ''}
+                onChange={e => setFilter('talla', e.target.value)}
+                disabled={!filters.id_articulo}
+              >
+                <option value="">Todas</option>
+                {tallasDelArticulo.map(t => (
+                  <option key={t.id} value={t.id}>{t.nombre}</option>
+                ))}
+              </Select>
+            </div>
+            {hasCustomFilters && (
+              <Button size="sm" variant="outline" className="h-8.5 self-end text-xs" onClick={clearFilters}>
+                <RotateCcw className="size-3.5" /> Limpiar
+              </Button>
+            )}
           </div>
-          <div>
-            <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Hasta</label>
-            <Input type="date" className="h-8 w-[140px] text-xs"
-              value={filters.fecha_hasta ?? ''}
-              onChange={e => setFilter('fecha_hasta', e.target.value)} />
-          </div>
-          <div>
-            <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Sucursal</label>
-            <Select className="h-8 w-[150px] text-xs"
-              value={searchParams.get('sucursal') ?? ''}
-              onChange={e => setFilter('sucursal', e.target.value)}>
-              <option value="">Todas</option>
-              {sucursales.map(s => (
-                <option key={s.id} value={s.id}>{s.nombre}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Artículo</label>
-            <Select className="h-8 w-[170px] text-xs"
-              value={searchParams.get('articulo') ?? ''}
-              onChange={e => setFilter('articulo', e.target.value)}>
-              <option value="">Todos</option>
-              {articulos.filter(a => a.activo !== false).map(a => (
-                <option key={a.id} value={a.id}>{a.titulo}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className="mb-0.5 block text-[10px] font-medium text-muted-foreground">Talla</label>
-            <Select className="h-8 w-[110px] text-xs disabled:opacity-50"
-              value={searchParams.get('talla') ?? ''}
-              onChange={e => setFilter('talla', e.target.value)}
-              disabled={!filters.id_articulo}>
-              <option value="">Todas</option>
-              {tallasDelArticulo.map(t => (
-                <option key={t.id} value={t.id}>{t.nombre}</option>
-              ))}
-            </Select>
-          </div>
-          {hasCustomFilters && (
-            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={clearFilters}>
-              <RotateCcw className="size-3" /> Limpiar
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* ─── KPIs compactos ─── */}
-      <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
-        <Kpi label="Total Neto del Mes" value={Q(r.total_neto ?? 0)} accent="blue" icon={ShoppingCart}
+      {/* ─── KPIs ejecutivos ─── */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <Kpi label="Total neto" value={Q(r.total_neto ?? 0)} accent="blue" icon={ShoppingCart}
           trend={cmp.ven_mes_anterior} trendLabel="vs mes anterior"
           sub={`Bruto ${Q(r.total_bruto ?? 0)} · Desc ${Q(r.total_descuento ?? 0)}`} />
         <Kpi label="Ventas" value={formatNumber(r.cantidad_ventas ?? 0)} accent="green" icon={BarChart3}
-          sub={`${formatNumber(r.cantidad_unidades ?? 0)} unidades · Prom ${Q(r.promedio_por_venta ?? 0)}`} />
+          sub={`${formatNumber(r.cantidad_unidades ?? 0)} uds · Prom ${Q(r.promedio_por_venta ?? 0)}`} />
         <Kpi label="Hoy" value={Q(vhoy.total_neto ?? 0)} accent="cyan" icon={CalendarDays}
           trend={vhoy.variacion_ayer} trendLabel="vs ayer"
           sub={`${formatNumber(vhoy.cantidad_ventas ?? 0)} ventas hoy`} />
-        <Kpi label="Por Cobrar" value={Q(r.total_adeudado ?? 0)} accent="amber" icon={Wallet}
+        <Kpi label="Por cobrar" value={Q(r.total_adeudado ?? 0)} accent="amber" icon={Wallet}
           sub={`${formatNumber(r.total_deudores ?? 0)} deudores`} />
-        <Kpi label="Stock Bajo" value={formatNumber(r.stock_bajo ?? 0)} accent="red" icon={AlertTriangle}
+        <Kpi label="Stock bajo" value={formatNumber(r.stock_bajo ?? 0)} accent="red" icon={AlertTriangle}
           sub="Tallas con menos de 5 uds" />
         <Kpi label="Negocio" value={formatNumber(r.total_clientes ?? 0)} accent="purple" icon={Users}
-          sub={`clientes · ${formatNumber(r.total_articulos ?? 0)} artículos · ${formatNumber(r.total_sucursales ?? 0)} sucursales`} />
+          sub={`clientes · ${formatNumber(r.total_articulos ?? 0)} arts · ${formatNumber(r.total_sucursales ?? 0)} suc`} />
       </div>
 
       {sinDatos ? (
         <EmptyState icon={Package} title="Sin ventas en este período"
-          description="Cambiá las fechas o quitá filtros para ver datos." />
+          description="Cambia el rango de fechas o limpia los filtros activos para consultar otros resultados." />
       ) : (
         <>
           {/* ─── Fila 1: Artículos + Tallas + Día de semana ─── */}
-          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          <div className={cn('grid gap-4', row1Count === 1 ? 'grid-cols-1' : row1Count === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3')}>
             {(d.top_articulos?.length ?? 0) > 0 && (
-              <ChartCard title="Top artículos por venta">
+              <ChartCard title="Top artículos por venta" badge={`Top ${d.top_articulos?.length ?? 0}`}>
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_articulos} layout="vertical" margin={verticalChartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" horizontal={false} />
-                    <XAxis type="number" tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                    <XAxis type="number" tick={chartAxis} stroke="var(--border)" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
                     <YAxis
                       type="category"
                       dataKey="articulo"
                       tick={chartAxis}
-                      stroke="#e2e8f0"
-                      width={isMobile ? 72 : 105}
+                      stroke="var(--border)"
+                      width={isMobile ? 72 : 108}
                       tickFormatter={v => truncateLabel(v, isMobile ? 11 : 18)}
                     />
-                    <Tooltip formatter={v => [money(v), 'Neto']} />
-                    <Bar dataKey="total_neto" radius={[0, 3, 3, 0]} barSize={isMobile ? 10 : 14}>
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ fill: 'var(--muted)', opacity: 0.45 }}
+                      formatter={v => [money(v), 'Neto']}
+                    />
+                    <Bar dataKey="total_neto" radius={[0, 6, 6, 0]} barSize={isMobile ? 10 : 14}>
                       {(d.top_articulos ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Bar>
                   </BarChart>
@@ -363,13 +472,19 @@ export default function DashboardPage() {
               <ChartCard title="Ventas por talla">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_tallas} margin={chartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="talla" tick={chartAxis} stroke="#e2e8f0" height={xAxisHeight} tickMargin={isMobile ? 6 : 3} />
-                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
-                    <Tooltip formatter={(v, name) => name === 'Unidades' ? [v, name] : [money(v), name]} />
-                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
-                    <Bar dataKey="total_neto" name="Neto" fill="#8b5cf6" radius={[3, 3, 0, 0]} barSize={isMobile ? 10 : 18} />
-                    <Bar dataKey="unidades" name="Unidades" fill="#c4b5fd" radius={[3, 3, 0, 0]} barSize={isMobile ? 10 : 18} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="talla" tick={chartAxis} stroke="var(--border)" height={xAxisHeight} tickMargin={isMobile ? 6 : 4} />
+                    <YAxis tick={chartAxis} stroke="var(--border)" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ fill: 'var(--muted)', opacity: 0.45 }}
+                      formatter={(v, name) => name === 'Unidades' ? [v, name] : [money(v), name]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '10px' : '11px', color: 'var(--muted-foreground)' }} />
+                    <Bar dataKey="total_neto" name="Neto" fill="#8b5cf6" radius={[5, 5, 0, 0]} barSize={isMobile ? 10 : 18} />
+                    <Bar dataKey="unidades" name="Unidades" fill="#c4b5fd" radius={[5, 5, 0, 0]} barSize={isMobile ? 10 : 18} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -379,20 +494,33 @@ export default function DashboardPage() {
               <ChartCard title="Ventas por día de la semana">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.ventas_por_dia_semana} margin={chartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
                       dataKey="dia"
-                      tick={{ ...chartAxis, fontSize: isMobile ? 8 : 9 }}
-                      stroke="#e2e8f0"
+                      tick={{ ...chartAxis, fontSize: isMobile ? 9 : 11 }}
+                      stroke="var(--border)"
                       height={xAxisHeight}
-                      tickMargin={isMobile ? 6 : 3}
-                      tickFormatter={v => truncateLabel(v, isMobile ? 3 : 12)}
+                      tickMargin={isMobile ? 6 : 4}
+                      tickFormatter={v => String(v ?? '').slice(0, 3)}
                     />
-                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
-                    <Tooltip formatter={v => [money(v), 'Neto']} />
-                    <Bar dataKey="total_neto" radius={[3, 3, 0, 0]} barSize={isMobile ? 14 : 22}>
+                    <YAxis tick={chartAxis} stroke="var(--border)" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ fill: 'var(--muted)', opacity: 0.45 }}
+                      formatter={v => [money(v), 'Neto']}
+                    />
+                    <Bar dataKey="total_neto" radius={[6, 6, 0, 0]} barSize={isMobile ? 14 : 24}>
                       {(d.ventas_por_dia_semana ?? []).map((row, i) => (
-                        <Cell key={i} fill={row.total_neto === Math.max(...(d.ventas_por_dia_semana ?? []).map(x => x.total_neto)) ? '#f59e0b' : '#06b6d4'} />
+                        <Cell
+                          key={i}
+                          fill={
+                            row.total_neto === Math.max(...(d.ventas_por_dia_semana ?? []).map(x => x.total_neto))
+                              ? '#f59e0b'
+                              : '#06b6d4'
+                          }
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -402,44 +530,63 @@ export default function DashboardPage() {
           </div>
 
           {/* ─── Fila 2: Sucursales + Pago + Acumulado ─── */}
-          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+          <div className={cn('grid gap-4', row2Count === 1 ? 'grid-cols-1' : row2Count === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3')}>
             {(d.top_sucursales?.length ?? 0) > 0 && (
               <ChartCard title="Sucursales — bruto vs neto">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_sucursales} margin={chartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
                       dataKey="nombre"
-                      tick={{ ...chartAxis, fontSize: isMobile ? 8 : 9 }}
-                      stroke="#e2e8f0"
+                      tick={{ ...chartAxis, fontSize: isMobile ? 8 : 10 }}
+                      stroke="var(--border)"
                       height={xAxisHeight}
-                      tickMargin={isMobile ? 6 : 3}
-                      tickFormatter={v => truncateLabel(v, isMobile ? 6 : 12)}
+                      tickMargin={isMobile ? 6 : 4}
+                      tickFormatter={v => truncateLabel(v, isMobile ? 8 : 18)}
                     />
-                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
-                    <Tooltip formatter={v => [money(v), '']} />
-                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
-                    <Bar dataKey="total_bruto" name="Bruto" fill="#3b82f6" radius={[3, 3, 0, 0]} barSize={isMobile ? 9 : 14} />
-                    <Bar dataKey="total_neto" name="Neto" fill="#22c55e" radius={[3, 3, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    <YAxis tick={chartAxis} stroke="var(--border)" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      cursor={{ fill: 'var(--muted)', opacity: 0.45 }}
+                      formatter={v => [money(v), '']}
+                    />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '10px' : '11px' }} />
+                    <Bar dataKey="total_bruto" name="Bruto" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    <Bar dataKey="total_neto" name="Neto" fill="#22c55e" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             )}
 
             {(d.formas_pago?.length ?? 0) > 0 && (
-              <ChartCard title="Forma de pago">
+              <ChartCard title="Forma de pago" badge={Q(formaPagoTotal)}>
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
-                  <PieChart margin={isMobile ? { top: 2, right: 4, bottom: 18, left: 4 } : { top: 4, right: 8, bottom: 4, left: 8 }}>
-                    <Pie data={d.formas_pago} dataKey="total_neto" nameKey="nombre"
-                      cx="50%" cy={isMobile ? '43%' : '50%'} outerRadius={isMobile ? 56 : 80} innerRadius={isMobile ? 34 : 48} paddingAngle={2}
-                      label={pieLabel}
-                      labelLine={!isMobile}>
-                      {(d.formas_pago ?? []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  <PieChart margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                    <Pie
+                      data={pieData}
+                      dataKey="total_neto"
+                      nameKey="displayName"
+                      cx="50%"
+                      cy="45%"
+                      outerRadius={isMobile ? 60 : 78}
+                      innerRadius={isMobile ? 38 : 50}
+                      paddingAngle={pieData.length > 1 ? 3 : 0}
+                      stroke="var(--card)"
+                      strokeWidth={2}
+                    >
+                      {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
-                    <Tooltip formatter={v => [money(v), '']} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      formatter={v => [money(v), '']}
+                    />
                     <Legend
                       verticalAlign="bottom"
-                      wrapperStyle={{ fontSize: isMobile ? '9px' : '10px', lineHeight: isMobile ? '12px' : '14px' }}
+                      wrapperStyle={{ fontSize: isMobile ? '10.5px' : '11.5px', lineHeight: '16px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -450,17 +597,44 @@ export default function DashboardPage() {
               <ChartCard title="Acumulado del mes vs mes anterior">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <LineChart data={d.ventas_acumuladas_mes} margin={chartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" vertical={false} />
-                    <XAxis dataKey="fecha" tick={{ ...chartAxis, fontSize: 8 }} stroke="#e2e8f0"
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis
+                      dataKey="fecha"
+                      tick={{ ...chartAxis, fontSize: 9 }}
+                      stroke="var(--border)"
                       height={xAxisHeight}
-                      tickMargin={isMobile ? 6 : 3}
+                      tickMargin={isMobile ? 6 : 4}
                       minTickGap={isMobile ? 12 : 5}
-                      tickFormatter={v => String(v).slice(8)} />
-                    <YAxis tick={chartAxis} stroke="#e2e8f0" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
-                    <Tooltip formatter={v => [money(v), '']} />
-                    <Legend wrapperStyle={{ fontSize: isMobile ? '9px' : '10px' }} />
-                    <Line type="monotone" dataKey="acumulado" name="Este mes" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="acumulado_mes_anterior" name="Mes anterior" stroke="#cbd5e1" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                      tickFormatter={v => String(v).slice(8)}
+                    />
+                    <YAxis tick={chartAxis} stroke="var(--border)" tickFormatter={axisMoney} tickCount={isMobile ? 3 : 5} />
+                    <Tooltip
+                      contentStyle={TOOLTIP_CONTENT_STYLE}
+                      labelStyle={TOOLTIP_LABEL_STYLE}
+                      itemStyle={TOOLTIP_ITEM_STYLE}
+                      formatter={v => [money(v), '']}
+                    />
+                    <Legend wrapperStyle={{ fontSize: isMobile ? '10px' : '11px' }} />
+                    <Line
+                      type="monotone"
+                      dataKey="acumulado"
+                      name="Este mes"
+                      stroke="#3b82f6"
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4, strokeWidth: 0 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="acumulado_mes_anterior"
+                      name="Mes anterior"
+                      stroke="var(--muted-foreground)"
+                      strokeOpacity={0.55}
+                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      activeDot={{ r: 3.5, strokeWidth: 0 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -468,36 +642,52 @@ export default function DashboardPage() {
           </div>
 
           {/* ─── Fila 3: Stock bajo + Deudores ─── */}
-          <div className="grid gap-3 lg:grid-cols-2">
-            <ChartCard title={`Stock bajo (${formatNumber(r.stock_bajo ?? 0)} tallas)`}>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartCard title="Stock bajo" badge={`${formatNumber(r.stock_bajo ?? 0)} tallas`}>
               {(d.stock_bajo?.length ?? 0) > 0 ? (
-                <div className="max-h-[210px] overflow-y-auto">
-                  <table className="w-full text-[11px]">
-                    <thead className="sticky top-0 bg-card">
-                      <tr className="border-b text-muted-foreground">
-                        <th className="px-2 py-1.5 text-left font-medium">Artículo</th>
-                        <th className="px-2 py-1.5 text-left font-medium">Sucursal</th>
-                        <th className="px-2 py-1.5 text-center font-medium">Talla</th>
-                        <th className="px-2 py-1.5 text-right font-medium">Precio</th>
-                        <th className="px-2 py-1.5 text-right font-medium">Stock</th>
-                        <th className="px-2 py-1.5 text-center font-medium">Estado</th>
+                <div className="max-h-[240px] overflow-auto rounded-xl border border-border/50">
+                  <table className="w-full border-separate border-spacing-0 text-xs">
+                    <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-xs">
+                      <tr className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                        <th className="border-b border-border/70 px-3 py-2 text-left font-semibold">Artículo</th>
+                        <th className="border-b border-border/70 px-2.5 py-2 text-left font-semibold">Sucursal</th>
+                        <th className="border-b border-border/70 px-2 py-2 text-center font-semibold">Talla</th>
+                        <th className="border-b border-border/70 px-2.5 py-2 text-right font-semibold">Precio</th>
+                        <th className="border-b border-border/70 px-2.5 py-2 text-right font-semibold">Stock</th>
+                        <th className="border-b border-border/70 px-3 py-2 text-center font-semibold">Estado</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(d.stock_bajo ?? []).map((s, i) => (
-                        <tr key={`${s.id_variante}-${s.id_sucursal}`} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
-                          <td className="px-2 py-1.5">{s.articulo}</td>
-                          <td className="px-2 py-1.5 text-muted-foreground">
-                            {s.sucursal || '-'}
+                        <tr
+                          key={`${s.id_variante}-${s.id_sucursal}`}
+                          className={cn(
+                            'transition-colors hover:bg-primary/[0.04]',
+                            i % 2 === 1 && 'bg-muted/20',
+                          )}
+                        >
+                          <td className="border-b border-border/40 px-3 py-2 font-medium text-foreground">{s.articulo}</td>
+                          <td className="border-b border-border/40 px-2.5 py-2 text-muted-foreground">
+                            {s.sucursal || '—'}
                           </td>
-                          <td className="px-2 py-1.5 text-center text-muted-foreground">{s.talla}</td>
-                          <td className="px-2 py-1.5 text-right">{Q(s.precio)}</td>
-                          <td className="px-2 py-1.5 text-right font-bold">{formatNumber(s.total_stock)}</td>
-                          <td className="px-2 py-1.5 text-center">
-                            <span className={cn(
-                              'inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold',
-                              s.total_stock <= 2 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                            )}>
+                          <td className="border-b border-border/40 px-2 py-2 text-center font-medium text-muted-foreground">
+                            {s.talla}
+                          </td>
+                          <td className="border-b border-border/40 px-2.5 py-2 text-right tabular-nums text-muted-foreground">
+                            {Q(s.precio)}
+                          </td>
+                          <td className="border-b border-border/40 px-2.5 py-2 text-right font-bold tabular-nums text-foreground">
+                            {formatNumber(s.total_stock)}
+                          </td>
+                          <td className="border-b border-border/40 px-3 py-2 text-center">
+                            <span
+                              className={cn(
+                                'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                                s.total_stock <= 2
+                                  ? 'bg-rose-500/14 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300'
+                                  : 'bg-amber-500/14 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
+                              )}
+                            >
                               {s.total_stock <= 2 ? 'Crítico' : 'Bajo'}
                             </span>
                           </td>
@@ -507,29 +697,42 @@ export default function DashboardPage() {
                   </table>
                 </div>
               ) : (
-                <p className="py-8 text-center text-[11px] text-muted-foreground">Sin alertas de stock ✓</p>
+                <div className="flex flex-col items-center justify-center gap-1.5 py-10 text-center text-muted-foreground">
+                  <CheckCircle2 className="size-6 text-emerald-500/80" aria-hidden="true" />
+                  <p className="text-xs font-medium">Sin alertas de stock bajo</p>
+                </div>
               )}
             </ChartCard>
 
-            <ChartCard title="Top deudores">
+            <ChartCard title="Top deudores" badge={`${d.top_deudores?.length ?? 0} clientes`}>
               {(d.top_deudores?.length ?? 0) > 0 ? (
-                <div className="max-h-[210px] overflow-y-auto">
-                  <table className="w-full text-[11px]">
-                    <thead className="sticky top-0 bg-card">
-                      <tr className="border-b text-muted-foreground">
-                        <th className="px-2 py-1.5 text-left font-medium">Cliente</th>
-                        <th className="px-2 py-1.5 text-left font-medium">Teléfono</th>
-                        <th className="px-2 py-1.5 text-right font-medium">Balance</th>
-                        <th className="px-2 py-1.5 text-right font-medium">Últ. compra</th>
+                <div className="max-h-[300px] overflow-auto rounded-xl border border-border/50">
+                  <table className="w-full border-separate border-spacing-0 text-xs">
+                    <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur-xs">
+                      <tr className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                        <th className="border-b border-border/70 px-3 py-2 text-left font-semibold">Cliente</th>
+                        <th className="border-b border-border/70 px-2.5 py-2 text-left font-semibold">Teléfono</th>
+                        <th className="border-b border-border/70 px-2.5 py-2 text-right font-semibold">Balance</th>
+                        <th className="border-b border-border/70 px-3 py-2 text-right font-semibold">Últ. compra</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(d.top_deudores ?? []).map((c, i) => (
-                        <tr key={c.id_cliente} className={cn('border-b border-border/30', i % 2 === 1 && 'bg-muted/10')}>
-                          <td className="px-2 py-1.5 font-medium">{c.nombre}</td>
-                          <td className="px-2 py-1.5 text-muted-foreground">{c.telefono || '—'}</td>
-                          <td className="px-2 py-1.5 text-right font-bold text-red-600">{Q(c.balance)}</td>
-                          <td className="px-2 py-1.5 text-right text-muted-foreground">
+                        <tr
+                          key={c.id_cliente}
+                          className={cn(
+                            'transition-colors hover:bg-primary/[0.04]',
+                            i % 2 === 1 && 'bg-muted/20',
+                          )}
+                        >
+                          <td className="border-b border-border/40 px-3 py-2 font-medium text-foreground">{c.nombre}</td>
+                          <td className="border-b border-border/40 px-2.5 py-2 tabular-nums text-muted-foreground">
+                            {c.telefono || '—'}
+                          </td>
+                          <td className="border-b border-border/40 px-2.5 py-2 text-right font-bold tabular-nums text-destructive">
+                            {Q(c.balance)}
+                          </td>
+                          <td className="border-b border-border/40 px-3 py-2 text-right tabular-nums text-muted-foreground">
                             {c.ultima_compra ? c.ultima_compra.slice(0, 10) : 'N/A'}
                           </td>
                         </tr>
@@ -538,7 +741,10 @@ export default function DashboardPage() {
                   </table>
                 </div>
               ) : (
-                <p className="py-8 text-center text-[11px] text-muted-foreground">Sin deudores ✓</p>
+                <div className="flex flex-col items-center justify-center gap-1.5 py-10 text-center text-muted-foreground">
+                  <CheckCircle2 className="size-6 text-emerald-500/80" aria-hidden="true" />
+                  <p className="text-xs font-medium">Sin clientes con saldo pendiente</p>
+                </div>
               )}
             </ChartCard>
           </div>

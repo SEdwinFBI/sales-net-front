@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
 import { cn } from '@/lib/utils'
 import logoImage from '@/assets/logo.jpg'
@@ -7,8 +8,10 @@ type NavBarDesktopProps = {
   items: SidebarItem[]
   expanded?: boolean
   onNavigate?: () => void
+  onExpandRequest?: () => void
   expandedModules?: string[]
   onToggleModule?: (moduleId: string) => void
+  headerAction?: React.ReactNode
 }
 
 /** Concatena el path del item con el de su padre para armar la ruta absoluta. */
@@ -24,7 +27,7 @@ export function isItemOrDescendantActive(item: SidebarItem, currentPathname: str
   return item.children.some((child) => isItemOrDescendantActive(child, currentPathname, fullPath))
 }
 
-/** Sub-items de un módulo expandido, con la línea guía que marca la jerarquía activa. */
+/** Sub-items de un módulo expandido, con una guía vertical limpia que marca la jerarquía activa. */
 function SubItems({
   items,
   expanded,
@@ -43,38 +46,20 @@ function SubItems({
   depth: number
 }) {
   const location = useLocation()
-  const guideLeft = `${4 + depth * 12}px`
-  const connectorWidth = `${8}px`
 
-  const hasActiveInLevel = items.some((item) => {
-    const fullPath = buildFullPath(item, parentPath)
-    const isActive = location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`)
-    if (isActive) return true
-    if (item.children.length > 0) {
-      const checkDesc = (children: SidebarItem[], pp: string): boolean => {
-        return children.some((c) => {
-          const cp = buildFullPath(c, pp)
-          if (location.pathname === cp || location.pathname.startsWith(`${cp}/`)) return true
-          return c.children.length > 0 && checkDesc(c.children, cp)
-        })
-      }
-      if (checkDesc(item.children, fullPath)) return true
-    }
-    return false
-  })
+  const hasActiveInLevel = items.some((item) =>
+    isItemOrDescendantActive(item, location.pathname, parentPath),
+  )
 
   return (
-    <div className={cn('relative ml-3', depth > 0 && 'mt-1')}>
-      {/* Línea guía vertical */}
-      <div
-        className={cn(
-          'absolute top-0 bottom-0 w-0.5 rounded-full transition-colors duration-150',
-          hasActiveInLevel ? 'bg-sidebar-primary' : 'bg-sidebar-border',
-        )}
-        style={{ left: guideLeft }}
-      />
-
-      <div className="space-y-1.5">
+    <div
+      className={cn(
+        'relative ml-4 pl-3 before:absolute before:top-1.5 before:bottom-1.5 before:left-0 before:w-px before:rounded-full before:transition-colors before:duration-150',
+        hasActiveInLevel ? 'before:bg-white/45' : 'before:bg-white/18',
+        depth > 0 && 'mt-1',
+      )}
+    >
+      <div className="space-y-0.5 py-0.5">
         {items.map((item) => {
           const Icon = item.icon
           const hasChildren = item.children.length > 0
@@ -82,11 +67,6 @@ function SubItems({
           const isLeaf = !!item.lazy && !hasChildren
           const isItemExpanded = expandedModules?.includes(item.id) ?? false
           const isActiveItem = location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`)
-
-          const lineClass = isActiveItem ? 'bg-sidebar-primary' : 'bg-sidebar-border'
-          const dotClass = isActiveItem ? 'bg-sidebar-primary' : 'bg-sidebar-border'
-          const textClass = isActiveItem ? 'text-sidebar-foreground font-semibold text-xs' : 'text-sidebar-foreground/65 group-hover:text-sidebar-foreground text-xs'
-          const iconClass = isActiveItem ? 'text-sidebar-primary' : 'text-sidebar-foreground/45 group-hover:text-sidebar-foreground/70'
 
           if (isLeaf) {
             return (
@@ -96,90 +76,83 @@ function SubItems({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    'group relative flex items-center gap-1 rounded-lg border border-sidebar-border px-5 py-0.5 transition-[background-color,border-color,color] duration-150 ease-out',
-                    'bg-sidebar-accent/25',
-                    isActive && 'bg-sidebar-primary/20', textClass
-
+                    'group relative flex min-h-8.5 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[0.8125rem] transition-[background-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                    isActive
+                      ? 'bg-white/22 font-semibold text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]'
+                      : 'font-medium text-white/85 hover:bg-white/14 hover:text-white',
                   )
                 }
               >
-                {/* Conector horizontal */}
-                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-150', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
-
-                {Icon && (
-                  <div className={cn(
-                    'flex size-5 shrink-0 items-center justify-center rounded transition-colors duration-150',
-                    iconClass,
-                  )}>
-                    <Icon className="size-3" />
-                  </div>
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-1/2 -left-3 h-4 w-0.5 -translate-y-1/2 rounded-full bg-white"
+                      />
+                    )}
+                    {Icon ? (
+                      <Icon
+                        aria-hidden="true"
+                        className={cn(
+                          'size-3.5 shrink-0 transition-colors duration-150',
+                          isActive ? 'text-white' : 'text-white/55 group-hover:text-white/85',
+                        )}
+                      />
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'size-1.5 shrink-0 rounded-full transition-colors duration-150',
+                          isActive ? 'bg-white' : 'bg-white/35 group-hover:bg-white/70',
+                        )}
+                      />
+                    )}
+                    <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                  </>
                 )}
-                {!Icon && (
-                  <span className={cn(
-                    'mt-px size-1 shrink-0 rounded-full transition-colors duration-150',
-                    dotClass,
-                  )} />
-                )}
-                <div className="min-w-0 flex-1">
-                  <span className={cn(
-                    'block truncate transition-colors duration-150',
-                    textClass,
-                  )}>
-                    {item.name}
-                  </span>
-                  {/* {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-muted-foreground mt-0.5">
-                      {item.description}
-                    </span>
-                  )} */}
-                </div>
               </NavLink>
             )
           }
 
-          // Seccion intermedia
           return (
             <div key={item.id}>
               <button
                 type="button"
+                aria-expanded={isItemExpanded}
                 onClick={() => onToggleModule?.(item.id)}
                 className={cn(
-                  'group relative flex w-full items-center gap-2 rounded-lg border border-sidebar-border px-2 py-1.5 transition-[background-color,border-color,color] duration-150 ease-out',
-                  'hover:bg-sidebar-accent/60',
-                  isActiveItem && 'bg-sidebar-primary/20',
-
+                  'group relative flex min-h-8.5 w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[0.8125rem] transition-[background-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                  isActiveItem
+                    ? 'bg-white/14 font-semibold text-white'
+                    : 'font-medium text-white/75 hover:bg-white/10 hover:text-white',
                 )}
               >
-                {/* Conector horizontal */}
-                <div className={cn('absolute top-1/2 h-0.5 rounded-full transition-colors duration-150', lineClass)} style={{ left: guideLeft, width: connectorWidth }} />
-
-                {Icon && (
-                  <div className={cn(
-                    'flex size-5 shrink-0 items-center justify-center rounded transition-colors duration-150',
-                    iconClass,
-                  )}>
-                    <Icon className="size-3" />
-                  </div>
+                {Icon ? (
+                  <Icon
+                    aria-hidden="true"
+                    className={cn(
+                      'size-3.5 shrink-0 transition-colors duration-150',
+                      isActiveItem ? 'text-white' : 'text-white/55 group-hover:text-white/85',
+                    )}
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'size-1.5 shrink-0 rounded-full',
+                      isActiveItem ? 'bg-white' : 'bg-white/35',
+                    )}
+                  />
                 )}
-                {!Icon && (
-                  <span className={cn(
-                    'mt-px size-1 shrink-0 rounded-full transition-colors duration-150',
-                    dotClass,
-                  )} />
-                )}
-                <div className="min-w-0 flex-1 text-left">
-                  <span className={cn(
-                    'block truncate transition-colors duration-150',
-                    textClass,
-                  )}>
-                    {item.name}
-                  </span>
-                  {/* {item.description && depth === 0 && (
-                    <span className="block truncate text-[0.63rem] text-muted-foreground mt-0.5">
-                      {item.description}
-                    </span>
-                  )} */}
-                </div>
+                <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className={cn(
+                    'size-3.5 shrink-0 text-white/55 transition-transform duration-150',
+                    isItemExpanded && 'rotate-90 text-white/85',
+                  )}
+                />
               </button>
 
               {isItemExpanded && (
@@ -205,8 +178,10 @@ export default function NavBarDesktop({
   items,
   expanded = false,
   onNavigate,
+  onExpandRequest,
   expandedModules = [],
   onToggleModule,
+  headerAction,
 }: NavBarDesktopProps) {
   const location = useLocation()
 
@@ -215,32 +190,33 @@ export default function NavBarDesktop({
       {/* Branding */}
       <div
         className={cn(
-          'flex items-center rounded-xl border border-white/15 bg-primary-complement py-3 text-white shadow-sm transition-[background-color,border-color,box-shadow] duration-150 ease-out',
-          expanded ? 'justify-start gap-3 px-4' : 'justify-center px-3',
+          'flex items-center rounded-xl border border-white/15 bg-white/10 py-2.5 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)] backdrop-blur-xs transition-[padding,gap] duration-150 ease-out',
+          expanded ? 'justify-between gap-2.5 px-3' : 'justify-center px-1.5',
         )}
       >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/20 bg-white/10 ring-1 ring-white/10">
-          <img src={logoImage} alt="Logo del cliente" className="h-full w-full object-contain p-1" />
-        </div>
-        <div
-          className={cn(
-            'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-            expanded ? 'w-40 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
-          )}
-        >
-          <div className="flex flex-col justify-center gap-0.5 overflow-hidden">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-secondary leading-none">
-              Distribuidora MZ
-            </p>
-            <p className="text-[0.78rem] font-medium text-white/75 leading-tight">
-              Gestión de ventas
-            </p>
+        <div className={cn('flex min-w-0 items-center', expanded ? 'gap-2.5' : 'justify-center')}>
+          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-xs ring-1 ring-white/30">
+            <img src={logoImage} alt="Logo Distribuidora MZ" className="h-full w-full object-contain" />
           </div>
+          {expanded && (
+            <div className="min-w-0">
+              <p className="truncate font-heading text-[0.75rem] font-bold uppercase tracking-[0.16em] text-white">
+                Distribuidora MZ
+              </p>
+              <p className="truncate text-[0.72rem] font-medium text-white/70">
+                Gestión comercial
+              </p>
+            </div>
+          )}
         </div>
+        {expanded && headerAction}
       </div>
 
       {/* Navigation */}
-      <nav className="mt-5 min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav
+        aria-label="Navegación principal"
+        className="mt-4 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {items.map((item) => {
           const Icon = item.icon
           const hasChildren = item.children.length > 0
@@ -248,79 +224,92 @@ export default function NavBarDesktop({
           const isActiveModule = hasChildren && isItemOrDescendantActive(item, location.pathname)
           const showChildren = hasChildren && isModuleExpanded
 
-          // Modulo nivel raiz
           if (hasChildren) {
             return (
-              <div key={item.id} className="space-y-1.5">
+              <div key={item.id} className="space-y-1">
                 <button
                   type="button"
-                  onClick={() => onToggleModule?.(item.id)}
+                  title={!expanded ? item.name : undefined}
+                  aria-label={!expanded ? item.name : undefined}
+                  aria-expanded={expanded ? isModuleExpanded : false}
+                  onClick={() => {
+                    if (!expanded) {
+                      onExpandRequest?.()
+                      if (!isModuleExpanded) onToggleModule?.(item.id)
+                      return
+                    }
+                    onToggleModule?.(item.id)
+                  }}
                   className={cn(
-                    'flex w-full items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
-                    expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
+                    'group relative flex w-full cursor-pointer items-center rounded-xl border py-2 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                    expanded ? 'justify-start gap-2.5 px-2.5' : 'justify-center px-1',
                     isActiveModule
-                      ? 'border-sidebar-primary/40 bg-sidebar-accent shadow-sm'
-                      : 'border-sidebar-border bg-transparent text-sidebar-foreground/65 hover:border-sidebar-primary/30 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                      ? 'border-white/20 bg-white/15 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.14)]'
+                      : 'border-transparent bg-transparent text-white/85 hover:border-white/15 hover:bg-white/12 hover:text-white',
                   )}
                 >
-                  <>
-                    <div
-                      className={cn(
-                        'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
-                        isActiveModule ? 'bg-sidebar-primary/25 ring-1 ring-sidebar-primary/30' : 'bg-sidebar-accent/60',
-                      )}
-                    >
-                      {Icon && <Icon className={cn('size-4', isActiveModule ? 'text-sidebar-primary' : 'text-sidebar-foreground/60')} />}
-                    </div>
-                    <div
-                      className={cn(
-                        'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-                        expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
-                      )}
-                    >
-                      <p className={cn('text-sm font-semibold whitespace-nowrap', isActiveModule ? 'text-sidebar-primary' : 'text-sidebar-foreground')}>
-                        {item.name}
-                      </p>
-                      {item.description && (
-                        <p className={cn('text-[0.7rem] whitespace-nowrap', isActiveModule ? 'text-sidebar-primary/80' : 'text-sidebar-foreground/55')}>
-                          {item.description}
+                  <div
+                    className={cn(
+                      'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
+                      isActiveModule
+                        ? 'bg-white text-sidebar-primary-foreground shadow-xs dark:bg-sidebar-primary dark:text-sidebar-primary-foreground'
+                        : 'bg-white/10 text-white/80 group-hover:bg-white/16 group-hover:text-white',
+                    )}
+                  >
+                    {Icon && <Icon className="size-4" aria-hidden="true" />}
+                  </div>
+                  {expanded && (
+                    <>
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="truncate text-[0.84rem] font-semibold leading-tight text-white">
+                          {item.name}
                         </p>
-                      )}
-                    </div>
-                  </>
+                        {item.description && (
+                          <p className="mt-0.5 truncate text-[0.68rem] text-white/75">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronRight
+                        aria-hidden="true"
+                        className={cn(
+                          'size-4 shrink-0 text-white/55 transition-transform duration-150',
+                          isModuleExpanded && 'rotate-90 text-white',
+                        )}
+                      />
+                    </>
+                  )}
                 </button>
 
-                {/* Hijos como sub-items */}
                 {showChildren && expanded && (
-                  <div className="overflow-hidden pl-3">
-                    <SubItems
-                      items={item.children}
-                      expanded={expanded}
-                      onNavigate={onNavigate}
-                      expandedModules={expandedModules}
-                      onToggleModule={onToggleModule}
-                      parentPath={`/${item.path}`}
-                      depth={0}
-                    />
-                  </div>
+                  <SubItems
+                    items={item.children}
+                    expanded={expanded}
+                    onNavigate={onNavigate}
+                    expandedModules={expandedModules}
+                    onToggleModule={onToggleModule}
+                    parentPath={`/${item.path}`}
+                    depth={0}
+                  />
                 )}
               </div>
             )
           }
 
-          // Pagina simple
           return (
             <NavLink
               key={item.id}
               to={`/${item.path}`}
+              title={!expanded ? item.name : undefined}
+              aria-label={!expanded ? item.name : undefined}
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center rounded-xl border py-1.5 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99]',
-                  expanded ? 'justify-start gap-3 px-3.5' : 'justify-center gap-0 px-1',
+                  'group relative flex items-center rounded-xl border py-2 transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                  expanded ? 'justify-start gap-2.5 px-2.5' : 'justify-center px-1',
                   isActive
-                    ? 'border-sidebar-primary/40 bg-sidebar-accent shadow-sm'
-                    : 'border-sidebar-border bg-transparent text-sidebar-foreground/65 hover:border-sidebar-primary/30 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                    ? 'border-white/25 bg-white/18 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.16)]'
+                    : 'border-transparent bg-transparent text-white/85 hover:border-white/15 hover:bg-white/12 hover:text-white',
                 )
               }
             >
@@ -328,27 +317,26 @@ export default function NavBarDesktop({
                 <>
                   <div
                     className={cn(
-                      'rounded-xl p-2 transition-[background-color,color,box-shadow] duration-150 ease-out',
-                      isActive ? 'bg-sidebar-primary/25 ring-1 ring-sidebar-primary/30' : 'bg-sidebar-accent/60',
+                      'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150',
+                      isActive
+                        ? 'bg-white text-sidebar-primary-foreground shadow-xs dark:bg-sidebar-primary dark:text-sidebar-primary-foreground'
+                        : 'bg-white/10 text-white/80 group-hover:bg-white/16 group-hover:text-white',
                     )}
                   >
-                    {Icon && <Icon className={cn('size-4', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/60')} />}
+                    {Icon && <Icon className="size-4" aria-hidden="true" />}
                   </div>
-                  <div
-                    className={cn(
-                      'overflow-hidden transition-[opacity,transform] duration-150 ease-out',
-                      expanded ? 'w-32 translate-x-0 opacity-100' : 'w-0 -translate-x-1 opacity-0',
-                    )}
-                  >
-                    <p className={cn('text-sm font-semibold whitespace-nowrap', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground')}>
-                      {item.name}
-                    </p>
-                    {item.description && (
-                      <p className={cn('text-[0.7rem] whitespace-nowrap', isActive ? 'text-sidebar-primary/80' : 'text-sidebar-foreground/55')}>
-                        {item.description}
+                  {expanded && (
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-[0.84rem] font-semibold leading-tight text-white">
+                        {item.name}
                       </p>
-                    )}
-                  </div>
+                      {item.description && (
+                        <p className="mt-0.5 truncate text-[0.68rem] text-white/75">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </NavLink>

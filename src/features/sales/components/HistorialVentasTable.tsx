@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -185,9 +186,10 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-card">
         <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-8 rounded-lg " />)}
+          <Skeleton className="h-9 w-full rounded-xl" />
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-xl" />)}
         </div>
       </div>
     )
@@ -195,7 +197,7 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-card">
         {columnFilters.length > 0 && (
           <div className="flex items-center gap-2 border-b border-border/50 bg-primary/5 px-4 py-1.5">
             <SearchX className="size-3.5 text-primary" />

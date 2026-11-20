@@ -9,7 +9,7 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
+} from '@/components/ui/field'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
 import {
   Fingerprint,
@@ -24,10 +24,6 @@ import type { PatternLoginCredentials } from '../types/pattern'
 import PatternLoginForm from './PatternLoginForm'
 import { supportsPasskeys } from '../services/passkey-service'
 import PasskeyErrorAlert from './PasskeyErrorAlert'
-import RotateHover from '@/components/motion/RotateHover'
-
-
-
 
 type LoginFormProps = {
   onSubmit: (values: LoginFormValues) => Promise<void>
@@ -49,10 +45,8 @@ export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }
     defaultValues: {
       username: '',
       password: '',
-
     },
   })
-
 
   const handleFormSubmit = handleSubmit(onSubmit)
 
@@ -63,110 +57,183 @@ export default function LoginForm({ onSubmit, onPatternSubmit, onPasskeySubmit }
   return (
     <>
       <div className="space-y-1.5">
-        <h1 className="font-heading text-2xl font-semibold text-neutral">
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-[1.65rem]">
           Bienvenido de nuevo
         </h1>
         <p className="text-sm text-muted-foreground">
-          Ingresa con tus credenciales para acceder al sistema
+          Ingresa con tus credenciales para continuar
         </p>
       </div>
 
-      <form className="mt-7 flex flex-col gap-6" onSubmit={handleFormSubmit}>
-              <fieldset disabled={passkeyPending} className="min-w-0"><FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="username">Usuario</FieldLabel>
-                  <InputGroup >
-                    <InputGroupInput
-                      {...register('username')}
-                      id="username"
-                      type="text"
-                      placeholder="usuario"
-                      aria-invalid={!!errors.username} />
-                    <InputGroupAddon>
-                      <User/>
-                    </InputGroupAddon>
+      <form className="mt-6 flex flex-col gap-5" onSubmit={handleFormSubmit}>
+        <fieldset disabled={passkeyPending} className="min-w-0">
+          <FieldGroup className="gap-4">
+            <Field>
+              <FieldLabel htmlFor="username">Usuario</FieldLabel>
+              <InputGroup className="h-11">
+                <InputGroupInput
+                  {...register('username')}
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  placeholder="Tu nombre de usuario"
+                  aria-invalid={!!errors.username}
+                />
+                <InputGroupAddon>
+                  <User aria-hidden="true" />
+                </InputGroupAddon>
+              </InputGroup>
+              {errors.username ? (
+                <FieldDescription role="alert" className="text-xs font-medium text-destructive">
+                  {errors.username.message}
+                </FieldDescription>
+              ) : null}
+            </Field>
 
-                  </InputGroup>
-                  {errors.username ?
-                    <FieldDescription className="text-sm text-destructive">{errors.username.message}
-                    </FieldDescription> : null}
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                  <InputGroup >
-                    <InputGroupInput
-                      {...register('password')}
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      aria-invalid={!!errors.password} />
-                    <InputGroupAddon>
-                      <LockKeyhole />
-                    </InputGroupAddon>
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        className={"hover:bg-transparent hover:shadow-none active:bg-transparent active:scale-100 transition-none"}
-                        aria-label={showPassword ? 'Ocultar clave' : 'Mostrar clave'}
-                        aria-pressed={showPassword}
-                        onClick={() => setShowPassword((current) => !current)}
-                      >
-                        {showPassword ? <EyeOff /> : <Eye />}
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  </InputGroup>
+            <Field>
+              <FieldLabel htmlFor="password">Contraseña</FieldLabel>
+              <InputGroup className="h-11">
+                <InputGroupInput
+                  {...register('password')}
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  aria-invalid={!!errors.password}
+                />
+                <InputGroupAddon>
+                  <LockKeyhole aria-hidden="true" />
+                </InputGroupAddon>
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    className="text-muted-foreground hover:bg-transparent hover:text-foreground"
+                    aria-label={showPassword ? 'Ocultar clave' : 'Mostrar clave'}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((current) => !current)}
+                  >
+                    {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
+              {errors.password ? (
+                <FieldDescription role="alert" className="text-xs font-medium text-destructive">
+                  {errors.password.message}
+                </FieldDescription>
+              ) : null}
+            </Field>
+          </FieldGroup>
+        </fieldset>
 
-                  {errors.password ? <FieldDescription className="text-sm text-destructive">{errors.password.message}</FieldDescription> : null}
-                </Field>
-              </FieldGroup></fieldset>
-              <RotateHover rotate={0.7}>
-                <Button className={"w-full font-bold!"} type='submit' size={'lg'} disabled={isSubmitting || passkeyPending}>
-                  {isSubmitting ? 'Iniciando…' : 'Ingresar'} {isSubmitting ? <Loader2 className="animate-spin" /> : <MoveRight />}
-                </Button>
-              </RotateHover>
-
+        <Button
+          className="group/submit w-full font-semibold"
+          type="submit"
+          size="lg"
+          disabled={isSubmitting || passkeyPending}
+        >
+          <span>{isSubmitting ? 'Iniciando sesión…' : 'Ingresar'}</span>
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" aria-hidden="true" />
+          ) : (
+            <MoveRight
+              aria-hidden="true"
+              className="transition-transform duration-150 group-hover/submit:translate-x-1"
+            />
+          )}
+        </Button>
       </form>
-      <div className="mt-6 border-t border-border pt-5">
-        <p className="mb-3 text-center text-xs text-muted-foreground">Otros tipos de acceso</p>
+
+      <div className="mt-6 space-y-2.5">
+        <div className="relative flex items-center py-1">
+          <div className="flex-1 border-t border-border/80" />
+          <span className="px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Otros accesos
+          </span>
+          <div className="flex-1 border-t border-border/80" />
+        </div>
+
         <Button
           type="button"
           variant="outline"
-          className="group/passkey mb-3 h-auto min-h-16 w-full justify-start gap-3 whitespace-normal rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-primary-complement/5 p-3 text-primary-complement shadow-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:text-primary-complement hover:shadow-md focus-visible:ring-primary/30 motion-reduce:transition-none"
+          className="group/passkey h-auto min-h-14 w-full justify-start gap-3 whitespace-normal rounded-2xl border-border/90 bg-muted/30 p-3 text-foreground shadow-none transition-all hover:border-primary/45 hover:bg-primary/[0.06] hover:shadow-xs focus-visible:ring-primary/30 motion-reduce:transition-none"
           disabled={!supportsPasskeys() || isSubmitting || passkeyPending}
           aria-busy={passkeyPending}
           onClick={async () => {
             setPasskeyPending(true)
             setPasskeyError(null)
-            try { await onPasskeySubmit() }
-            catch (error) { setPasskeyError(error) }
-            finally { setPasskeyPending(false) }
-          }}>
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-colors group-hover/passkey:bg-primary-complement">
-            {passkeyPending ? <Loader2 aria-hidden="true" className="size-6 animate-spin motion-reduce:animate-none" /> : <Fingerprint aria-hidden="true" className="size-6" />}
+            try {
+              await onPasskeySubmit()
+            } catch (error) {
+              setPasskeyError(error)
+            } finally {
+              setPasskeyPending(false)
+            }
+          }}
+        >
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-colors group-hover/passkey:bg-primary group-hover/passkey:text-primary-foreground">
+            {passkeyPending ? (
+              <Loader2 aria-hidden="true" className="size-5 animate-spin motion-reduce:animate-none" />
+            ) : (
+              <Fingerprint aria-hidden="true" className="size-5" />
+            )}
           </span>
-          <span className="flex-1 text-left font-semibold">
-            {passkeyPending ? 'Esperando tu dispositivo…' : 'Ingresar con mi dispositivo'}
+          <span className="flex-1 text-left">
+            <span className="block text-sm font-semibold leading-tight text-foreground">
+              {passkeyPending ? 'Esperando tu dispositivo…' : 'Ingresar con mi dispositivo'}
+            </span>
+            <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+              Huella digital, rostro o PIN
+            </span>
           </span>
-          <MoveRight aria-hidden="true" className="size-4 transition-transform group-hover/passkey:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none" />
+          <MoveRight
+            aria-hidden="true"
+            className="size-4 text-muted-foreground transition-transform group-hover/passkey:translate-x-1 group-hover/passkey:text-primary motion-reduce:transform-none motion-reduce:transition-none"
+          />
         </Button>
-        {!supportsPasskeys() && <p className="mb-3 text-xs text-muted-foreground">El acceso con dispositivo requiere un navegador compatible y una conexión segura.</p>}
-        <div className="empty:hidden mb-3"><PasskeyErrorAlert error={passkeyError} /></div>
+
+        {!supportsPasskeys() && (
+          <p className="text-xs text-muted-foreground">
+            El acceso con dispositivo requiere un navegador compatible y una conexión segura.
+          </p>
+        )}
+        <div className="empty:hidden">
+          <PasskeyErrorAlert error={passkeyError} />
+        </div>
+
         <Button
-          className="group/pattern h-auto min-h-16 w-full justify-start gap-3 whitespace-normal rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 to-primary-complement/5 p-3 text-primary-complement shadow-sm transition-all hover:border-primary/50 hover:bg-primary/15 hover:text-primary-complement hover:shadow-md focus-visible:ring-primary/30 motion-reduce:transition-none"
+          className="group/pattern h-auto min-h-14 w-full justify-start gap-3 whitespace-normal rounded-2xl border-border/90 bg-muted/30 p-3 text-foreground shadow-none transition-all hover:border-primary/45 hover:bg-primary/[0.06] hover:shadow-xs focus-visible:ring-primary/30 motion-reduce:transition-none"
           type="button"
           variant="outline"
           disabled={isSubmitting || passkeyPending}
           onClick={() => setUsePattern(true)}
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-colors group-hover/pattern:bg-primary-complement">
-            <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="currentColor">
-              <path d="M5 5H12L5 12H19L12 19" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              {[5, 12, 19].flatMap((cy) => [5, 12, 19].map((cx) => (
-                <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.8" />
-              )))}
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-colors group-hover/pattern:bg-primary group-hover/pattern:text-primary-foreground">
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="currentColor">
+              <path
+                d="M5 5H12L5 12H19L12 19"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {[5, 12, 19].flatMap((cy) =>
+                [5, 12, 19].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.8" />),
+              )}
             </svg>
           </span>
-          <span className="flex-1 text-left font-semibold">Ingresar mediante patrón</span>
-          <MoveRight aria-hidden="true" className="size-4 transition-transform group-hover/pattern:translate-x-1 motion-reduce:transform-none motion-reduce:transition-none" />
+          <span className="flex-1 text-left">
+            <span className="block text-sm font-semibold leading-tight text-foreground">
+              Ingresar mediante patrón
+            </span>
+            <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+              Conecta tus puntos de acceso
+            </span>
+          </span>
+          <MoveRight
+            aria-hidden="true"
+            className="size-4 text-muted-foreground transition-transform group-hover/pattern:translate-x-1 group-hover/pattern:text-primary motion-reduce:transform-none motion-reduce:transition-none"
+          />
         </Button>
       </div>
     </>

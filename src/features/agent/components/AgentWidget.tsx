@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { Bot, Loader2, Mic, Send, Trash2, Volume2, VolumeX, X } from 'lucide-react'
+import { AlertCircle, Bot, Mic, Send, Sparkles, Trash2, Volume2, VolumeX, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,12 @@ const SPEAK_PREF_KEY = 'agent-speak-replies'
 const VOICE_FLUSH_FALLBACK_MS = 2500
 /** Atajo global del micrófono (interruptor): funciona aunque un diálogo o drawer tenga el foco atrapado. */
 const PUSH_TO_TALK_KEY = 'F2'
+
+const QUICK_PROMPTS = [
+  'Ve al historial de ventas',
+  'Abre el carrito',
+  '¿Qué hay en esta pantalla?',
+]
 
 /** Ruta ya confirmada por el navegador (la navegación de React Router es asíncrona). */
 const getPathname = () => window.location.pathname
@@ -67,6 +73,7 @@ export default function AgentWidget({ onLogout }: Props) {
   const [holding, setHolding] = useState(false)
   /** Había un diálogo/drawer modal al empezar a hablar: el panel queda tapado y se muestra la píldora. */
   const [modalOpen, setModalOpen] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const pendingConfirm = useAgentStore((state) => state.pendingConfirm)
   const resolveConfirm = useAgentStore((state) => state.resolveConfirm)
@@ -228,7 +235,7 @@ export default function AgentWidget({ onLogout }: Props) {
   const endRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages, open])
+  }, [messages, open, busy])
 
   const toggleOpen = () => {
     if (open) cancelConfirmation()
@@ -261,7 +268,13 @@ export default function AgentWidget({ onLogout }: Props) {
       ? 'Conectando…'
       : status === 'error'
         ? 'No disponible'
-        : null
+        : 'En línea'
+  const statusDotClass =
+    status === 'open'
+      ? 'bg-emerald-500'
+      : status === 'error'
+        ? 'bg-destructive'
+        : 'bg-amber-400 animate-pulse'
   const heard = `${speech.transcript} ${speech.interimTranscript}`.trim()
   /** El botón del micrófono crece con el volumen de la voz (audioLevel 0-100). */
   const micScale = holding ? 1 + Math.min(speech.audioLevel, 60) / 200 : 1
@@ -279,73 +292,149 @@ export default function AgentWidget({ onLogout }: Props) {
         {open && (
           <section
             aria-label="Asistente"
-            className="pointer-events-auto flex h-[min(70vh,32rem)] w-[min(92vw,24rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl"
+            className="pointer-events-auto flex h-[min(72vh,34rem)] w-[min(92vw,24.5rem)] flex-col overflow-hidden rounded-3xl border border-border/80 bg-card/95 text-foreground shadow-elevated backdrop-blur-xl animate-in fade-in-0 zoom-in-95 duration-150"
           >
-            <header className="flex items-center gap-2 border-b border-border px-3 py-2">
-              <Bot className="size-4 text-primary" aria-hidden />
-              <h2 className="flex-1 text-sm font-semibold">Asistente</h2>
-              {statusText && <span className="text-xs text-muted-foreground">{statusText}</span>}
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={toggleSpeak}
-                aria-label={speakReplies ? 'Silenciar respuestas' : 'Leer respuestas en voz alta'}
-                aria-pressed={speakReplies}
-              >
-                {speakReplies ? <Volume2 /> : <VolumeX />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={clearMessages}
-                disabled={messages.length === 0}
-                aria-label="Limpiar conversación"
-              >
-                <Trash2 />
-              </Button>
-              <Button variant="ghost" size="icon-sm" onClick={toggleOpen} aria-label="Cerrar asistente">
-                <X />
-              </Button>
+            <header className="flex items-center gap-2.5 border-b border-border/70 bg-muted/35 px-3.5 py-3">
+              <div className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
+                <Bot className="size-4.5" aria-hidden="true" />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full ring-2 ring-card',
+                    statusDotClass,
+                  )}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading text-sm font-semibold leading-tight text-foreground">
+                  Asistente MZ
+                </h2>
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  {holding ? 'Escuchando tu voz…' : statusText}
+                </p>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={toggleSpeak}
+                  title={speakReplies ? 'Silenciar respuestas' : 'Leer respuestas en voz alta'}
+                  aria-label={speakReplies ? 'Silenciar respuestas' : 'Leer respuestas en voz alta'}
+                  aria-pressed={speakReplies}
+                  className={cn(speakReplies && 'text-primary')}
+                >
+                  {speakReplies ? <Volume2 /> : <VolumeX />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={clearMessages}
+                  disabled={messages.length === 0}
+                  title="Limpiar conversación"
+                  aria-label="Limpiar conversación"
+                >
+                  <Trash2 />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={toggleOpen}
+                  title="Cerrar asistente"
+                  aria-label="Cerrar asistente"
+                >
+                  <X />
+                </Button>
+              </div>
             </header>
 
-            <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3 text-sm" aria-live="polite">
+            <div className="flex-1 space-y-2.5 overflow-y-auto px-3.5 py-3.5 text-sm" aria-live="polite">
               {messages.length === 0 && (
-                <p className="text-muted-foreground">
-                  Pídeme cosas como «ve a historial», «agrega 2 camisas M al carrito» o «abre el carrito». Escribe o
-                  toca el micrófono (o la tecla {PUSH_TO_TALK_KEY}) para hablar y otra vez para enviar.
-                </p>
+                <div className="flex h-full flex-col justify-between gap-4 py-2">
+                  <div className="space-y-2 rounded-2xl border border-border/60 bg-muted/35 p-3.5">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                      <Sparkles className="size-3" aria-hidden="true" />
+                      Voz y chat
+                    </div>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Puedo navegar pantallas, consultar datos, filtrar tablas o agregar productos al carrito.
+                      Escribe o toca el micrófono (<kbd className="rounded bg-card px-1 py-0.5 font-mono text-[10px] text-foreground shadow-2xs ring-1 ring-border">{PUSH_TO_TALK_KEY}</kbd>) para dictar.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <p className="px-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Sugerencias rápidas
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_PROMPTS.map((prompt) => (
+                        <button
+                          key={prompt}
+                          type="button"
+                          onClick={() => {
+                            setInput(prompt)
+                            inputRef.current?.focus()
+                          }}
+                          className="cursor-pointer rounded-full border border-border/80 bg-card px-3 py-1.5 text-xs font-medium text-foreground/85 transition-colors hover:border-primary/40 hover:bg-primary/[0.06] hover:text-primary"
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
+
               {messages.map((message) => (
                 <div
                   key={message.id}
                   className={cn(
-                    'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2',
-                    message.role === 'user' && 'ml-auto bg-primary text-primary-foreground',
-                    message.role === 'assistant' && 'bg-muted text-foreground',
-                    message.role === 'action' && 'bg-transparent px-1 py-0 text-xs text-muted-foreground italic',
-                    message.role === 'error' && 'bg-destructive/10 text-destructive',
+                    'whitespace-pre-wrap leading-relaxed',
+                    message.role === 'user' &&
+                      'ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-[0.84rem] text-primary-foreground shadow-xs',
+                    message.role === 'assistant' &&
+                      'max-w-[88%] rounded-2xl rounded-bl-md border border-border/60 bg-muted/60 px-3.5 py-2 text-[0.84rem] text-foreground',
+                    message.role === 'action' &&
+                      'inline-flex max-w-full items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground',
+                    message.role === 'error' &&
+                      'max-w-[90%] rounded-2xl border border-destructive/25 bg-destructive/10 px-3.5 py-2 text-xs font-medium text-destructive',
                   )}
                 >
-                  {message.text}
+                  {message.role === 'action' && (
+                    <Sparkles className="size-3 shrink-0 text-primary/75" aria-hidden="true" />
+                  )}
+                  <span>{message.text}</span>
                 </div>
               ))}
+
               {busy && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" aria-hidden /> Pensando…
+                <div className="inline-flex items-center gap-2 rounded-2xl rounded-bl-md border border-border/60 bg-muted/50 px-3.5 py-2 text-xs font-medium text-muted-foreground">
+                  <span className="flex items-center gap-1" aria-hidden="true">
+                    <span className="size-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.2s]" />
+                    <span className="size-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.1s]" />
+                    <span className="size-1.5 animate-bounce rounded-full bg-primary" />
+                  </span>
+                  Pensando…
                 </div>
               )}
               <div ref={endRef} />
             </div>
 
-            {speech.error && <p className="px-3 pb-1 text-xs text-destructive">{speech.error}</p>}
+            {speech.error && (
+              <p className="mx-3.5 mb-2 flex items-center gap-1.5 rounded-xl bg-destructive/10 px-2.5 py-1.5 text-xs font-medium text-destructive">
+                <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+                {speech.error}
+              </p>
+            )}
 
             {pendingConfirm && (
               <div
                 role="alertdialog"
                 aria-label="Confirmar acción"
-                className="border-t border-border bg-muted/60 px-3 py-2 text-sm"
+                className="border-t border-amber-500/30 bg-amber-500/10 px-3.5 py-3 text-sm dark:bg-amber-500/12"
               >
-                <p className="mb-2 font-medium">{pendingConfirm.texto}</p>
+                <p className="mb-2.5 text-xs font-semibold leading-snug text-foreground">
+                  {pendingConfirm.texto}
+                </p>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" size="sm" onClick={() => resolveConfirm(pendingConfirm.id, false)}>
                     Cancelar
@@ -364,8 +453,9 @@ export default function AgentWidget({ onLogout }: Props) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border p-2">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border/70 bg-muted/25 p-2.5">
               <input
+                ref={inputRef}
                 // Mientras se dicta, la caja muestra en gris lo que se va escuchando (no se edita).
                 value={holding ? heard : input}
                 onChange={(event) => setInput(event.target.value)}
@@ -375,13 +465,13 @@ export default function AgentWidget({ onLogout }: Props) {
                 disabled={!connected}
                 maxLength={500}
                 className={cn(
-                  'h-9 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50',
-                  holding && 'italic text-muted-foreground',
+                  'h-10 min-w-0 flex-1 rounded-xl border border-input bg-card px-3 text-sm text-foreground outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/75 focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-ring/60 disabled:opacity-50',
+                  holding && 'border-destructive/40 italic text-muted-foreground',
                 )}
               />
               <Button
                 type="button"
-                variant={holding ? 'default' : 'outline'}
+                variant={holding ? 'destructive' : 'outline'}
                 size="icon-lg"
                 disabled={!holding && (!connected || busy || !speech.isSupported)}
                 title={
@@ -393,13 +483,22 @@ export default function AgentWidget({ onLogout }: Props) {
                 }
                 aria-label={holding ? 'Detener y enviar dictado' : 'Hablar'}
                 aria-pressed={holding}
-                className="select-none transition-transform duration-100"
+                className={cn(
+                  'select-none rounded-xl transition-transform duration-100',
+                  holding && 'border-destructive bg-destructive text-white hover:bg-destructive/90',
+                )}
                 style={{ transform: `scale(${micScale})` }}
                 onClick={toggleHold}
               >
                 <Mic />
               </Button>
-              <Button type="submit" size="icon-lg" disabled={!connected || busy || !input.trim()} aria-label="Enviar">
+              <Button
+                type="submit"
+                size="icon-lg"
+                className="rounded-xl"
+                disabled={!connected || busy || !input.trim()}
+                aria-label="Enviar"
+              >
                 <Send />
               </Button>
             </form>
@@ -408,12 +507,21 @@ export default function AgentWidget({ onLogout }: Props) {
 
         <Button
           size="icon-lg"
-          className="pointer-events-auto size-12 rounded-full shadow-lg"
+          className={cn(
+            'pointer-events-auto relative size-13 rounded-full shadow-elevated transition-transform duration-150 hover:scale-105 active:scale-95',
+            holding && 'ring-4 ring-destructive/35',
+          )}
           onClick={toggleOpen}
           aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'}
           aria-expanded={open}
         >
           {open ? <X className="size-5" /> : <Bot className="size-5" />}
+          {!open && holding && (
+            <span
+              aria-hidden="true"
+              className="absolute -top-0.5 -right-0.5 size-3.5 animate-ping rounded-full bg-destructive"
+            />
+          )}
         </Button>
       </div>
 
@@ -430,10 +538,13 @@ export default function AgentWidget({ onLogout }: Props) {
             event.preventDefault()
           }}
           onClick={() => finishHold()}
-          className="pointer-events-auto fixed bottom-6 left-1/2 z-[90] max-w-[90vw] -translate-x-1/2 truncate rounded-full bg-foreground px-4 py-2 text-sm text-background shadow-lg"
+          className="pointer-events-auto fixed bottom-6 left-1/2 z-[90] flex max-w-[90vw] -translate-x-1/2 cursor-pointer items-center gap-2 truncate rounded-full border border-white/15 bg-slate-900/95 px-4 py-2.5 text-sm font-medium text-white shadow-elevated backdrop-blur-md"
         >
-          <Mic className="mr-1.5 inline size-3.5" style={{ transform: `scale(${micScale})` }} aria-hidden />
-          {heard || 'Escuchando…'} <span className="opacity-60">· toca para enviar</span>
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-destructive text-white">
+            <Mic className="size-3.5" style={{ transform: `scale(${micScale})` }} aria-hidden />
+          </span>
+          <span className="truncate">{heard || 'Escuchando…'}</span>
+          <span className="shrink-0 text-xs text-white/60">· toca para enviar</span>
         </button>
       )}
     </>

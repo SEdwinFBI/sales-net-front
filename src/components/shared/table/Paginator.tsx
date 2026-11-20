@@ -40,64 +40,66 @@ export default function Paginator({ page, totalPages, onPageChange, className }:
 
   return (
     <div className={cn('flex flex-wrap items-center justify-center gap-1 sm:justify-end', className)}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Primera página"
-        disabled={isFirst}
-        onClick={() => go(1)}
-      >
-        <ChevronsLeft />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Página anterior"
-        disabled={isFirst}
-        onClick={() => go(current - 1)}
-      >
-        <ChevronLeft />
-      </Button>
-
-      {getVisiblePages(current, totalPages).map((p) => (
+      <div className="inline-flex items-center gap-0.5 rounded-xl border border-border/70 bg-muted/40 p-1">
         <Button
-          key={p}
           type="button"
-          variant={p === current ? 'default' : 'ghost'}
+          variant="ghost"
           size="icon-sm"
-          aria-label={`Página ${p}`}
-          aria-current={p === current ? 'page' : undefined}
-          onClick={() => go(p)}
-          className="tabular-nums"
+          aria-label="Primera página"
+          disabled={isFirst}
+          onClick={() => go(1)}
         >
-          {p}
+          <ChevronsLeft />
         </Button>
-      ))}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Página anterior"
+          disabled={isFirst}
+          onClick={() => go(current - 1)}
+        >
+          <ChevronLeft />
+        </Button>
 
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Página siguiente"
-        disabled={isLast}
-        onClick={() => go(current + 1)}
-      >
-        <ChevronRight />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Última página"
-        disabled={isLast}
-        onClick={() => go(totalPages)}
-      >
-        <ChevronsRight />
-      </Button>
+        {getVisiblePages(current, totalPages).map((p) => (
+          <Button
+            key={p}
+            type="button"
+            variant={p === current ? 'default' : 'ghost'}
+            size="icon-sm"
+            aria-label={`Página ${p}`}
+            aria-current={p === current ? 'page' : undefined}
+            onClick={() => go(p)}
+            className="tabular-nums font-semibold"
+          >
+            {p}
+          </Button>
+        ))}
 
-      <span className="ml-2 whitespace-nowrap text-xs text-muted-foreground">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Página siguiente"
+          disabled={isLast}
+          onClick={() => go(current + 1)}
+        >
+          <ChevronRight />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Última página"
+          disabled={isLast}
+          onClick={() => go(totalPages)}
+        >
+          <ChevronsRight />
+        </Button>
+      </div>
+
+      <span className="ml-2 whitespace-nowrap text-xs font-medium text-muted-foreground tabular-nums">
         Página {current} de {totalPages}
       </span>
     </div>

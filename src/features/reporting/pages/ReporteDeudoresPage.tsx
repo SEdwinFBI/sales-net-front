@@ -60,9 +60,9 @@ export default function ReporteDeudoresPage() {
 
       <Card className="p-3.5 sm:p-5">
 
-        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto] shadow-sm">
+        <div className="grid grid-cols-1 items-end gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(2,minmax(0,1fr))_auto]">
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Nombre</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Nombre</label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -74,21 +74,22 @@ export default function ReporteDeudoresPage() {
             </div>
           </div>
           <div className="min-w-0">
-            <label className="mb-1 block text-xs text-muted-foreground">Lugar</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Lugar</label>
             <div className="relative">
               <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={filters.lugar ?? ''}
                 onChange={(e) => setFilter('lugar', e.target.value)}
-                placeholder="Direccion o lugar..."
+                placeholder="Dirección o lugar..."
                 className="w-full pl-9"
               />
             </div>
           </div>
           <div className="flex min-w-0 gap-2 self-end">
             {hasFilters && (
-              <Button variant="secondary" size="sm" onClick={() => setFilters({})} className="h-9 shrink-0">
-                <RotateCcw />
+              <Button variant="outline" size="sm" onClick={() => setFilters({})} className="h-9 shrink-0" aria-label="Limpiar filtros">
+                <RotateCcw className="size-3.5" />
+                Limpiar
               </Button>
             )}
             <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 flex-1">

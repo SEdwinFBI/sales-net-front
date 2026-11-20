@@ -95,7 +95,7 @@ export default function SearchableSelect({ value, onChange, options, placeholder
         <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
       </div>
       {open && (
-        <div id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-border bg-card shadow-lg">
+        <div id={listboxId} role="listbox" className="absolute z-30 mt-1.5 max-h-52 w-full overflow-auto rounded-xl border border-border/80 bg-popover p-1 shadow-elevated">
           {filtered.length === 0 ? (
             <div className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</div>
           ) : (
@@ -109,7 +109,7 @@ export default function SearchableSelect({ value, onChange, options, placeholder
                   aria-selected={isSelected}
                   key={i}
                   onClick={() => handleSelect(opt)}
-                  className={`w-full text-left px-3 py-1.5 text-xs hover:bg-muted/60 transition-colors ${isSelected ? 'bg-primary/10 font-medium' : ''}`}
+                  className={`w-full cursor-pointer rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-muted/70 ${isSelected ? 'bg-primary/12 font-semibold text-primary' : 'text-popover-foreground'}`}
                 >
                   {opt.label}
                 </button>
