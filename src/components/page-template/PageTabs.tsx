@@ -17,18 +17,18 @@ export default function PageTabs({ tabs }: PageTabsProps) {
   }
 
   return (
-    <div className="-mx-3 -mt-1 mb-4 border-b border-border px-3 md:hidden">
-      <div className="flex gap-5 overflow-x-auto">
+    <div className="mb-4 overflow-x-auto pb-1 md:hidden">
+      <div className="inline-flex gap-1.5 rounded-xl border border-border/70 bg-card p-1 shadow-xs">
         {tabs.map((tab) => (
           <NavLink
             key={tab.id}
             to={tab.to}
             className={({ isActive }) =>
               cn(
-                'border-b-2 px-1 py-3 text-sm transition-colors',
+                'whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors',
                 isActive
-                  ? 'border-primary font-semibold text-primary'
-                  : 'border-transparent font-medium text-neutral/70',
+                  ? 'bg-primary font-semibold text-primary-foreground shadow-2xs'
+                  : 'font-medium text-muted-foreground hover:bg-muted hover:text-foreground',
               )
             }
           >

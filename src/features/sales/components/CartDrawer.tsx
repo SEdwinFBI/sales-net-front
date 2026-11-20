@@ -162,25 +162,29 @@ const CartDrawer = ({ pricing }: Props) => {
         closeCart()
       }}
     >
-      <DrawerContent className='w-full'>
+      <DrawerContent className="w-full">
         <DrawerHeader className="mx-auto w-full max-w-2xl">
-          <DrawerTitle>Carrito de Compras</DrawerTitle>
-          <DrawerDescription>
-            {totalItems > 0
-              ? `${totalItems} unidad${totalItems === 1 ? '' : 'es'} en la venta`
-              : 'El carrito está vacío.'}
-          </DrawerDescription>
-          {activeTier && (
-            <Badge className="w-fit border-transparent bg-warning/10 text-warning">
-              <PackageOpen className="size-3.5" />
-              Mayoreo activo: {activeTier.unidades_min}
-              {activeTier.unidades_max === null
-                ? '+ unidades'
-                : activeTier.unidades_max === activeTier.unidades_min
-                  ? ' unidades'
-                  : `–${activeTier.unidades_max} unidades`}
-            </Badge>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <DrawerTitle>Carrito de compras</DrawerTitle>
+              <DrawerDescription className="mt-0.5 tabular-nums">
+                {totalItems > 0
+                  ? `${totalItems} unidad${totalItems === 1 ? '' : 'es'} en la venta`
+                  : 'El carrito está vacío.'}
+              </DrawerDescription>
+            </div>
+            {activeTier && (
+              <Badge className="w-fit border-amber-500/25 bg-amber-500/12 text-amber-800 dark:text-amber-300">
+                <PackageOpen className="size-3.5" />
+                Mayoreo: {activeTier.unidades_min}
+                {activeTier.unidades_max === null
+                  ? '+ uds'
+                  : activeTier.unidades_max === activeTier.unidades_min
+                    ? ' uds'
+                    : `–${activeTier.unidades_max} uds`}
+              </Badge>
+            )}
+          </div>
         </DrawerHeader>
 
         {/* Transcripción  */}
@@ -284,12 +288,12 @@ const CartDrawer = ({ pricing }: Props) => {
         {nextTierHint && items.length > 0 && (
           <div
             aria-live="polite"
-            className="mx-auto w-full max-w-2xl px-4"
+            className="mx-auto w-full max-w-2xl px-5 pb-2"
           >
-            <div className="flex items-center gap-2 rounded-xl bg-primary/5 px-3 py-2 text-sm text-primary">
+            <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/[0.06] px-3.5 py-2.5 text-xs font-medium text-primary">
               <Sparkles className="size-4 shrink-0" />
               <span>
-                Agrega {nextTierHint.unitsMissing} unidad{nextTierHint.unitsMissing === 1 ? '' : 'es'} más
+                Agrega <strong>{nextTierHint.unitsMissing}</strong> unidad{nextTierHint.unitsMissing === 1 ? '' : 'es'} más
                 y activas el descuento mayorista.
               </span>
             </div>
@@ -298,10 +302,10 @@ const CartDrawer = ({ pricing }: Props) => {
 
         <DrawerFooter className="mx-auto w-full max-w-2xl justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-xl  text-primary font-bold">{formatCurrency(total)}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total a cobrar</p>
+            <p className="font-heading text-2xl font-bold text-primary tabular-nums">{formatCurrency(total)}</p>
             {totalDiscount > 0 && (
-              <p className="text-xs font-medium text-successful">
+              <p className="text-xs font-semibold text-successful tabular-nums">
                 Ahorro total: −{formatCurrency(totalDiscount)}
               </p>
             )}
@@ -316,6 +320,7 @@ const CartDrawer = ({ pricing }: Props) => {
               Vaciar
             </Button>
             <Button
+              className="px-5 font-semibold"
               onClick={() => openDialog('checkout')}
               disabled={items.length === 0}
             >

@@ -39,7 +39,7 @@ function DrawerOverlay({
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
-      className={cn('fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]', className)}
+      className={cn('fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[2px]', className)}
       {...props}
     />
   )
@@ -69,15 +69,16 @@ function DrawerContent({
   ...props
 }: DrawerContentProps) {
   const { isDesktop, isTablet } = useDesktopMediaQuery()
+  const isSide = isDesktop || isTablet
   return (
-    <DrawerPortal >
+    <DrawerPortal>
       <DrawerOverlay className={overlayClassName} />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          isDesktop || isTablet ?
-            'fixed right-0 top-0 z-50 flex min-h-screen w-full max-w-md flex-col rounded-l-[28px] border border-border/50 bg-background outline-none' :
-            'fixed right-0 bottom-0 left-0 z-50 mt-24 flex max-h-[85vh] flex-col rounded-t-[28px] border border-border/50 bg-background outline-none',
+          isSide
+            ? 'fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md flex-col rounded-l-3xl border-l border-border/80 bg-card shadow-elevated outline-none'
+            : 'fixed right-0 bottom-0 left-0 z-50 mt-20 flex max-h-[88dvh] flex-col rounded-t-3xl border-t border-border/80 bg-card shadow-elevated outline-none',
           className,
         )}
         {...props}
@@ -90,10 +91,10 @@ function DrawerContent({
           if (isFromAgentWidget(event)) event.preventDefault()
         }}
       >
-        {showHandle ? (
+        {showHandle && !isSide ? (
           <div
             aria-hidden
-            className="mx-auto mt-10 mb-2 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/25 "
+            className="mx-auto mt-3 mb-1.5 h-1.5 w-11 shrink-0 rounded-full bg-muted-foreground/25"
           />
         ) : null}
         {children}
@@ -109,7 +110,7 @@ function DrawerHeader({
   return (
     <div
       data-slot="drawer-header"
-      className={cn('flex flex-col gap-1.5 px-4 pt-2 pb-4', className)}
+      className={cn('flex flex-col gap-1 border-b border-border/60 px-5 pt-5 pb-4', className)}
       {...props}
     />
   )
@@ -122,7 +123,7 @@ function DrawerBody({
   return (
     <div
       data-slot="drawer-body"
-      className={cn('min-h-0 flex-1 overflow-y-auto px-4 pb-4', className)}
+      className={cn('min-h-0 flex-1 overflow-y-auto px-5 py-4', className)}
       {...props}
     />
   )
@@ -135,7 +136,7 @@ function DrawerFooter({
   return (
     <div
       data-slot="drawer-footer"
-      className={cn('mt-auto flex items-center gap-3 border-t border-border/60 px-4 py-4', className)}
+      className={cn('mt-auto flex items-center gap-3 border-t border-border/70 bg-muted/35 px-5 py-4', className)}
       {...props}
     />
   )
@@ -148,7 +149,7 @@ function DrawerTitle({
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('text-lg text-center font-semibold text-foreground', className)}
+      className={cn('font-heading text-lg font-semibold tracking-tight text-foreground', className)}
       {...props}
     />
   )

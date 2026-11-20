@@ -10,9 +10,9 @@ type EmptyStateProps = {
 }
 
 const sizeMap = {
-  sm: 'p-6 text-sm',
-  md: 'p-10 sm:p-12',
-  lg: 'p-14 sm:p-16',
+  sm: 'px-6 py-7 text-sm',
+  md: 'px-8 py-11 sm:px-12',
+  lg: 'px-10 py-14 sm:px-16',
 }
 
 export function EmptyState({
@@ -25,14 +25,18 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-center text-muted-foreground',
+        'flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border/90 bg-muted/25 text-center text-muted-foreground',
         sizeMap[size],
         className,
       )}
     >
-      {Icon && <Icon className="size-8 opacity-40" aria-hidden="true" />}
-      {title && <p className="text-sm font-medium">{title}</p>}
-      {description && <p className="text-xs">{description}</p>}
+      {Icon && (
+        <div className="mb-0.5 flex size-12 items-center justify-center rounded-2xl border border-border/70 bg-card text-muted-foreground/75 shadow-xs">
+          <Icon className="size-5" aria-hidden="true" />
+        </div>
+      )}
+      {title && <p className="text-sm font-semibold text-foreground/85">{title}</p>}
+      {description && <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">{description}</p>}
     </div>
   )
 }

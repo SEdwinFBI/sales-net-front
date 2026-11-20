@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Sucursal } from '@/features/admin'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
@@ -30,7 +31,13 @@ export default function SellersStockList({ isLoading, sucursales, onSelect }: Pr
   useAgentTools('paginacion-sucursales', [paginationTool('sucursales', 'la lista de sucursales', slicePagination(filteredSucursales.length, pageSize, safePage, setCurrentPage))])
 
   if (isLoading) {
-    return <EmptyState title="Cargando sucursales…" />
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 rounded-2xl" />
+        ))}
+      </div>
+    )
   }
 
   if (sucursales.length === 0) {
@@ -59,7 +66,7 @@ export default function SellersStockList({ isLoading, sucursales, onSelect }: Pr
           {paginatedSucursales.map((sucursal) => (
             <Card
               key={sucursal.id}
-              className="group border-l-4 border-l-primary bg-card p-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
+              className="group border-l-4 border-l-primary bg-card p-0 transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 hover:shadow-card-hover focus-within:shadow-card-hover"
             >
               <button
                 type="button"
@@ -67,14 +74,14 @@ export default function SellersStockList({ isLoading, sucursales, onSelect }: Pr
                 onClick={() => onSelect(sucursal)}
               >
                 <div className="flex w-full min-w-0 items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                     <Store className="size-5" />
                   </div>
                   <CardHeader className="min-w-0 p-0">
                     <CardTitle className="break-words text-base leading-snug">{sucursal.nombre}</CardTitle>
                   </CardHeader>
                 </div>
-                <span className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[0.8rem] font-medium text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary sm:h-7 sm:w-auto">
+                <span className="inline-flex h-8 w-full shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 px-3 text-xs font-semibold text-foreground transition-colors group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary sm:h-7.5 sm:w-auto">
                   Abrir
                 </span>
               </button>

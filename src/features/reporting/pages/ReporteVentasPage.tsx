@@ -164,14 +164,16 @@ export default function ReporteVentasPage() {
 
 
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(String(value))}>
-              <TabsList className="h-auto w-full flex-wrap justify-start gap-1 sm:w-fit">
-                <TabsTrigger value="variante">Variantes</TabsTrigger>
-                <TabsTrigger value="sucursal">Sucursales</TabsTrigger>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <TabsList className="w-full sm:w-fit">
+                  <TabsTrigger value="variante">Variantes</TabsTrigger>
+                  <TabsTrigger value="sucursal">Sucursales</TabsTrigger>
+                </TabsList>
                 <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 w-full shrink-0 sm:w-auto">
                   <FileDown />
                   {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
                 </Button>
-              </TabsList>
+              </div>
 
               <TabsContent value="variante" className="mt-4">
                 <PorVarianteTable data={porVariante} isLoading={isLoading} />

@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/helpers/money'
 import type { Article } from '../types/article-types'
@@ -108,7 +109,7 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="grid w-full gap-2.5 sm:grid-cols-2 lg:min-w-[680px] lg:max-w-4xl lg:grid-cols-[minmax(220px,1fr)_150px_170px_auto]">
             <div className="relative">
               <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -170,7 +171,17 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
         </div>
 
         {isLoading ? (
-          <EmptyState title="Cargando artículos…" className="bg-card" />
+          <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card">
+                <Skeleton className="h-36 w-full rounded-none" />
+                <div className="space-y-2.5 p-3.5">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : filteredData.length === 0 ? (
           <EmptyState icon={Package} title="No hay artículos registrados." className="bg-card" />
         ) : (
@@ -195,19 +206,19 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                 <Card
                   key={article.id}
                   size="sm"
-                  className="group overflow-hidden bg-card py-0 shadow-sm transition-shadow hover:shadow-md focus-within:shadow-md"
+                  className="group gap-0 overflow-hidden bg-card py-0 data-[size=sm]:py-0 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-card-hover focus-within:shadow-card-hover"
                 >
-                  <div className="relative overflow-hidden">
+                  <div className="relative overflow-hidden bg-muted/40">
                     <ArticleImage
-                      className="h-32 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-36"
+                      className="h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 group-focus-within:scale-105 sm:h-40"
                       src={article.image}
                       alt={article.title}
                     />
-                    <div className="absolute inset-x-0 top-0 flex justify-end bg-gradient-to-b from-black/35 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                    <div className="absolute inset-x-0 top-0 flex justify-end gap-1 bg-gradient-to-b from-slate-950/50 to-transparent p-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       <Button
-                        size="icon-sm"
+                        size="icon-xs"
                         variant="ghost"
-                        className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
+                        className="bg-white/95 text-slate-800 shadow-xs hover:bg-white focus-visible:ring-white/70"
                         aria-label={`Editar ${article.title}`}
                         onClick={() => {
                           setSelectedArticle(article)
@@ -218,9 +229,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         <Pencil />
                       </Button>
                       <Button
-                        size="icon-sm"
+                        size="icon-xs"
                         variant="ghost"
-                        className="mr-1 bg-white/95 text-slate-700 shadow-sm hover:bg-white focus-visible:ring-white/70"
+                        className="bg-white/95 text-slate-800 shadow-xs hover:bg-white focus-visible:ring-white/70"
                         aria-label={`Precios por usuario de ${article.title}`}
                         title="Precios por usuario"
                         onClick={() => navigate(`/catalogo/precios?articulo=${article.id}`)}
@@ -228,9 +239,9 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                         <Tags />
                       </Button>
                       <Button
-                        size="icon-sm"
+                        size="icon-xs"
                         variant="ghost"
-                        className="bg-white/95 text-destructive shadow-sm hover:bg-white hover:text-destructive/80 focus-visible:ring-white/70"
+                        className="bg-white/95 text-rose-600 shadow-xs hover:bg-white hover:text-rose-700 focus-visible:ring-white/70"
                         aria-label={`Eliminar ${article.title}`}
                         onClick={() => setArticleToDelete(article)}
                       >
@@ -238,13 +249,13 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
                       </Button>
                     </div>
                   </div>
-                  <CardHeader className="px-3 pb-3">
+                  <CardHeader className="px-3.5 py-3">
                     <CardTitle className="break-words text-sm leading-snug">{article.title}</CardTitle>
-                    <div className="mt-2 flex flex-col gap-1 border-t border-border/50 pt-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
-                      <p className="break-words text-sm font-semibold text-primary">
+                    <div className="mt-2 flex flex-col gap-1 border-t border-border/60 pt-2 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
+                      <p className="break-words font-heading text-sm font-bold text-primary tabular-nums">
                         {priceLabel}
                       </p>
-                      <span className="shrink-0 text-xs text-muted-foreground">
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
                         {articleSizes.length > 0 ? `${articleSizes.length} tallas` : 'Sin tallas'}
                       </span>
                     </div>

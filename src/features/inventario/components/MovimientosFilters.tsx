@@ -38,7 +38,11 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
   const hayFiltrosExtra = Boolean(filters.tipo || filters.id_sucursal || filters.id_usuario)
 
   return (
-    <div className="grid w-full grid-cols-1 items-end gap-3 rounded-xl p-3 min-[480px]:grid-cols-2 sm:p-4 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]">
+    <div
+      className={`grid w-full grid-cols-1 items-end gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3 min-[480px]:grid-cols-2 sm:p-4 ${
+        hayFiltrosExtra ? 'lg:grid-cols-[repeat(5,minmax(0,1fr))_auto]' : 'lg:grid-cols-5'
+      }`}
+    >
       <div className="min-w-0">
         <label htmlFor="mov-desde" className="mb-1 block text-xs text-muted-foreground">
           Desde <span className="text-destructive">*</span>
@@ -116,7 +120,7 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
       {hayFiltrosExtra && (
         <div className="min-w-0 self-end">
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={() => onChange({
               ...filters,
@@ -129,7 +133,8 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
             className="h-9 w-full"
             aria-label="Limpiar filtros"
           >
-            <RotateCcw />
+            <RotateCcw className="size-3.5" />
+            Limpiar
           </Button>
         </div>
       )}

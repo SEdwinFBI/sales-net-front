@@ -112,15 +112,15 @@ export default function MyCashPage() {
     <PageTemplateSimple title="Mi caja" description="Entradas y gastos de efectivo del día.">
       <Card className="mx-auto p-3.5 sm:p-5">
         <div className="space-y-5 sm:space-y-6">
-          <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-primary-nav/35 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-2xl border border-border/75 bg-muted/35 p-3.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 text-sm">
-              <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                <CalendarDays className="size-4" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                <CalendarDays className="size-5" aria-hidden="true" />
               </div>
               <div>
-                <p className="font-medium">Caja de hoy</p>
+                <p className="font-heading font-semibold text-foreground">Caja de hoy</p>
                 {caja ? (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-muted-foreground">
                     {caja.sucursal.nombre} · {formatDisplayDate(caja.fecha)}
                   </p>
                 ) : (

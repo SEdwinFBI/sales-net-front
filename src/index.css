@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -16,6 +15,7 @@
   --app-successful: #006C49;
   --app-warning: #b45309;
   --app-neutral: #3f4252;
+
   /* Alias legacy: apuntan a los tokens tematizables para que también
      cambien al activar .dark (antes quedaban fijos al valor claro). */
   --color-primary: var(--primary);
@@ -26,9 +26,11 @@
   --color-warning: var(--warning);
   --color-neutral: var(--foreground);
   --warning: var(--app-warning);
-  font-family: 'Roboto', 'Segoe UI', sans-serif;
+
+  font-family: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--color-secondary);
   color: var(--color-neutral);
+
   --background: #f6f9fc;
   --foreground: var(--app-neutral);
   --card: #f6f9fc;
@@ -48,13 +50,21 @@
   --border: #bccddf;
   --input: #c4d3e3;
   --ring: rgb(79 143 201 / 28%);
+
   --chart-1: var(--app-primary);
   --chart-2: #21a08b;
   --chart-3: #d8902f;
   --chart-4: #7a8294;
   --chart-5: #b24a65;
-  --radius: 0.5rem;
-  /* Sidebar en modo claro: el celeste de marca solido (ver .dark para la
+
+  --radius: 0.625rem;
+
+  /* Elevaciones refinadas */
+  --app-shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 14px -2px rgb(15 23 42 / 0.04);
+  --app-shadow-card-hover: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 10px 24px -6px rgb(15 23 42 / 0.06);
+  --app-shadow-elevated: 0 14px 36px -6px rgb(15 23 42 / 0.16), 0 4px 12px -2px rgb(15 23 42 / 0.06);
+
+  /* Sidebar en modo claro: el celeste de marca sólido (ver .dark para la
      variante marino de modo oscuro). */
   --sidebar: var(--app-primary);
   --sidebar-foreground: #ffffff;
@@ -66,41 +76,9 @@
   --sidebar-ring: rgb(255 255 255 / 45%);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: var(--color-secondary);
-  color: var(--color-neutral);
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-#root {
-  min-height: 100vh;
-}
-
 @theme inline {
-  --font-heading: 'Geist Variable', 'Roboto', 'Segoe UI', sans-serif;
-  --font-sans: 'Roboto', 'Segoe UI', sans-serif;
+  --font-heading: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -145,6 +123,9 @@ a {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-card: var(--app-shadow-card);
+  --shadow-card-hover: var(--app-shadow-card-hover);
+  --shadow-elevated: var(--app-shadow-elevated);
 }
 
 /* Paleta oscura armonizada al celeste de marca (#4f8fc9): mismos matices
@@ -158,6 +139,7 @@ a {
   --popover: #1a2330;
   --popover-foreground: #dce4ee;
   --primary: #6ba6d9;
+  --primary-complement: #5492ca;
   --primary-foreground: #0e1620;
   --secondary: #0f151d;
   --secondary-foreground: #dce4ee;
@@ -171,13 +153,19 @@ a {
   --border: rgb(255 255 255 / 12%);
   --input: rgb(255 255 255 / 16%);
   --ring: rgb(107 166 217 / 36%);
+
   --chart-1: #6ba6d9;
   --chart-2: #4fc2ad;
   --chart-3: #e0a458;
   --chart-4: #93a0b4;
   --chart-5: #d97a92;
+
+  --app-shadow-card: 0 1px 2px rgb(0 0 0 / 0.28), 0 6px 18px -4px rgb(0 0 0 / 0.34);
+  --app-shadow-card-hover: 0 10px 26px -6px rgb(0 0 0 / 0.5), 0 2px 6px rgb(0 0 0 / 0.3);
+  --app-shadow-elevated: 0 20px 44px -8px rgb(0 0 0 / 0.6), 0 4px 14px rgb(0 0 0 / 0.38);
+
   /* Sidebar en modo oscuro: marino oscurecido a partir del mismo celeste de
-     marca (#4f8fc9), en vez del celeste solido que se usa en modo claro. */
+     marca (#4f8fc9), en vez del celeste sólido que se usa en modo claro. */
   --sidebar: #1c3654;
   --sidebar-foreground: #e8f1fa;
   --sidebar-primary: var(--app-primary);
@@ -188,17 +176,77 @@ a {
   --sidebar-ring: rgb(255 255 255 / 30%);
 }
 
+@keyframes ui-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in srgb, var(--muted) 55%, var(--card)) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: ui-shimmer 1.6s ease-in-out infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply text-foreground;
+    box-sizing: border-box;
   }
 
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply text-foreground;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: var(--color-secondary);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 22%, transparent);
+    color: var(--foreground);
+  }
+
+  /* WCAG 2.2 (2.4.11): evita que el header sticky tape elementos con foco */
+  :focus-visible {
+    scroll-margin-top: 5.5rem;
+    scroll-margin-bottom: 4.5rem;
   }
 
   select {
@@ -213,5 +261,40 @@ a {
   optgroup {
     background-color: var(--card);
     color: var(--card-foreground);
+  }
+
+  /* Scrollbars sutiles */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted-foreground) 26%, transparent);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
