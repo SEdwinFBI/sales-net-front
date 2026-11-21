@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '@/lib/api'
+import { closePdfPreview, usePdfPreviewStore } from '@/lib/pdf-preview'
 import type { ReporteDeudores, ReporteDeudoresFilters } from '../types/reportes'
 import { downloadReporteDeudoresPdf, getReporteDeudores } from './reportes-service'
 
-vi.mock('@/lib/api', () => ({ api: { get: vi.fn() } }))
+vi.mock('@/lib/api', () => ({ api: { get: vi.fn(), request: vi.fn() } }))
 
 const reporte: ReporteDeudores['data'] = {
   clientes: [{
@@ -21,7 +22,7 @@ const filters: ReporteDeudoresFilters & { dia_notificacion: number } = {
 
 describe('reporte de deudores con programación general', () => {
   beforeEach(() => vi.clearAllMocks())
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => { vi.unstubAllGlobals(); closePdfPreview() })
 
   it('conserva los deudores cuando los avisos están pausados, sin enviar el filtro antiguo', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: { status: 'success', data: reporte } })
@@ -42,14 +43,16 @@ describe('reporte de deudores con programación general', () => {
     const revokeObjectURL = vi.fn()
     vi.stubGlobal('window', { URL: { createObjectURL: vi.fn(() => 'blob:reporte'), revokeObjectURL } })
     vi.stubGlobal('document', { createElement: vi.fn(() => link), body: { appendChild: vi.fn() } })
-    vi.mocked(api.get).mockResolvedValue({ data: new Blob(['pdf']) })
+    vi.mocked(api.request).mockResolvedValue({ data: new Blob(['pdf']), headers: {} })
     await downloadReporteDeudoresPdf(filters)
-    expect(api.get).toHaveBeenCalledWith('/reportes/deudores', {
+    expect(api.request).toHaveBeenCalledWith({
+      url: '/reportes/deudores', method: 'get', data: undefined,
       params: { nombre: 'Cliente', search: 'Cliente', lugar: 'Zona 1', output: 'pdf' },
       responseType: 'blob',
     })
-    expect(link.download).toMatch(/^reporte_deudores_.*\.pdf$/)
-    expect(link.click).toHaveBeenCalledOnce()
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:reporte')
+    expect(usePdfPreviewStore.getState().document?.filename).toMatch(/^reporte_deudores_.*\.pdf$/)
+    expect(usePdfPreviewStore.getState().document?.blob.type).toBe('application/pdf')
+    expect(link.click).not.toHaveBeenCalled()
+    expect(revokeObjectURL).not.toHaveBeenCalled()
   })
 })

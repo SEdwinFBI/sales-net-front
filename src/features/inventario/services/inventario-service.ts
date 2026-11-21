@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import { triggerBlobDownload } from '@/lib/download-blob'
+import { previewReport } from '@/lib/report-pdf'
 import type { ApiResponse } from '@/features/sales/types/sales'
 import type {
   MovimientosFilters,
@@ -43,20 +43,14 @@ export const downloadMovimientosPdf = async (
   delete sinPaginar.page
   delete sinPaginar.page_size
 
-  const response = await api.get('/movimientos', {
+  const sufijo = agruparPorVendedor ? '_por_vendedor' : ''
+  await previewReport('/movimientos', `movimientos_stock${sufijo}_${new Date().toISOString().slice(0, 10)}.pdf`, {
     params: {
       ...limpiar(sinPaginar),
       output: 'pdf',
       ...(agruparPorVendedor ? { agrupar: 'vendedor' } : {}),
     },
-    responseType: 'blob',
   })
-
-  const sufijo = agruparPorVendedor ? '_por_vendedor' : ''
-  triggerBlobDownload(
-    new Blob([response.data], { type: 'application/pdf' }),
-    `movimientos_stock${sufijo}_${new Date().toISOString().slice(0, 10)}.pdf`,
-  )
 }
 
 /** Resumen por variante: había, entradas, salidas, vendido y hay. */
@@ -69,12 +63,7 @@ export const getResumenExistencias = async (filters?: ResumenFilters): Promise<R
 
 /** PDF del resumen de existencias, con los mismos filtros que la pantalla. */
 export const downloadResumenPdf = async (filters?: ResumenFilters, incluirDetalle = false) => {
-  const response = await api.get('/stock/movimientos/resumen', {
+  await previewReport('/stock/movimientos/resumen', `movimientos_stock_${new Date().toISOString().slice(0, 10)}.pdf`, {
     params: { ...limpiar(filters), output: 'pdf', ...(incluirDetalle ? { incluir_detalle: 1 } : {}) },
-    responseType: 'blob',
   })
-  triggerBlobDownload(
-    new Blob([response.data], { type: 'application/pdf' }),
-    `movimientos_stock_${new Date().toISOString().slice(0, 10)}.pdf`,
-  )
 }

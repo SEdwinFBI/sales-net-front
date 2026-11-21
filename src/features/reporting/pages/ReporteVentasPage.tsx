@@ -110,10 +110,10 @@ export default function ReporteVentasPage() {
     setPdfLoading(true)
     try {
       await downloadReporteVentasPdf(filters)
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch {
-      toast.error('Error al descargar el PDF')
+      toast.error('No se pudo preparar el reporte')
       return false
     } finally {
       setPdfLoading(false)
@@ -171,7 +171,7 @@ export default function ReporteVentasPage() {
                 </TabsList>
                 <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 w-full shrink-0 sm:w-auto">
                   <FileDown />
-                  {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
+                  {pdfLoading ? 'Preparando...' : 'Configurar reporte'}
                 </Button>
               </div>
 
