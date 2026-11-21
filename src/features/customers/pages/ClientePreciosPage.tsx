@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { useCliente } from '../hooks/useCliente'
@@ -8,12 +9,26 @@ import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { ArrowLeft } from 'lucide-react'
 import { formatCurrency } from '@/helpers/money'
 import CreditoClienteBadge from '../components/CreditoClienteBadge'
+import { useActivityStore } from '@/features/core/store/useActivityStore'
 
 export default function ClientePreciosPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const clienteId = Number(id)
   const { data: cliente, isLoading, isError } = useCliente(clienteId)
+  const setScreenContext = useActivityStore((state) => state.setScreenContext)
+  const clearScreenContext = useActivityStore((state) => state.clearScreenContext)
+
+  useEffect(() => {
+    if (!cliente) return
+    setScreenContext({
+      entityType: 'cliente',
+      entityId: cliente.id,
+      entityLabel: cliente.nombre_completo,
+      detail: 'Consultando precios del cliente',
+    })
+    return () => clearScreenContext()
+  }, [cliente, setScreenContext, clearScreenContext])
 
   if (isLoading) {
     return (

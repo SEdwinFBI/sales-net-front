@@ -1,12 +1,14 @@
 import { useMemo } from 'react'
 import { useLocation } from 'react-router'
-import { LogOut, Moon, PanelLeftClose, PanelLeftOpen, Settings, Store, Sun, X } from 'lucide-react'
+import { LogOut, Mic, MicOff, Moon, PanelLeftClose, PanelLeftOpen, Settings, Store, Sun, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { initials } from '@/helpers/string'
-import type { AppRoute, SidebarItem } from '@/lib/app-routes'
+import type { SidebarItem } from '@/lib/app-routes'
+import { findActiveRouteTrail } from '@/lib/route-trail'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import type { User } from '@/features/auth/types/auth'
 import { useThemeStore } from '@/features/core/store/theme-store'
+import { useMicArbitratorStore, type MicPermissionStatus } from '@/features/core/store/useMicArbitratorStore'
 
 type LayoutHeaderProps = {
   hasSidebarNavigation: boolean
@@ -21,47 +23,54 @@ type LayoutHeaderProps = {
   onSettings: () => void
 }
 
-function segmentMatches(routeSeg: string, pathSeg: string): boolean {
-  return routeSeg.startsWith(':') || routeSeg === pathSeg
-}
-
-function matchPathPrefix(pattern: string, pathname: string): { exact: boolean; prefix: boolean } {
-  const pSegs = pattern.split('/').filter(Boolean)
-  const uSegs = pathname.split('/').filter(Boolean)
-  if (uSegs.length < pSegs.length) return { exact: false, prefix: false }
-  for (let i = 0; i < pSegs.length; i++) {
-    if (!segmentMatches(pSegs[i], uSegs[i])) return { exact: false, prefix: false }
-  }
-  return { exact: uSegs.length === pSegs.length, prefix: true }
-}
-
-function findActiveRouteTrail(
-  routes: AppRoute[],
-  pathname: string,
-  parentPath = '',
-): string[] {
-  let fallback: { trail: string[]; score: number } | null = null
-
-  for (const route of routes) {
-    const fullPath = parentPath ? `${parentPath}/${route.path}` : `/${route.path}`
-    const label = route.meta?.name ?? route.path
-    if (route.children?.length) {
-      const childTrail = findActiveRouteTrail(route.children, pathname, fullPath)
-      if (childTrail.length > 0) return [label, ...childTrail]
-    }
-    const { exact, prefix } = matchPathPrefix(fullPath, pathname)
-    if (exact) {
-      return [label]
-    }
-    if (prefix && !route.children?.length) {
-      const score = fullPath.split('/').filter(Boolean).length
-      if (!fallback || score > fallback.score) {
-        fallback = { trail: [label], score }
+function getSellerMicIndicator(status: MicPermissionStatus, isStreaming: boolean) {
+  switch (status) {
+    case 'granted':
+      return {
+        label: isStreaming ? 'Audio en vivo' : 'Audio activo',
+        title: isStreaming
+          ? 'Un administrador está escuchando tu audio en vivo'
+          : 'Micrófono activo para comunicación en vivo',
+        className: 'border-emerald-500/30 bg-emerald-500/12 text-emerald-700 dark:text-emerald-300',
+        blocked: false,
       }
-    }
+    case 'paused_for_speech':
+      return {
+        label: 'Dictado activo',
+        title: 'Audio en pausa temporal mientras usas el dictado por voz',
+        className: 'border-primary/30 bg-primary/12 text-primary',
+        blocked: false,
+      }
+    case 'prompt':
+      return {
+        label: 'Permitir mic',
+        title: 'Haz clic o toca para conceder el permiso de micrófono',
+        className: 'border-amber-500/35 bg-amber-500/15 text-amber-800 dark:text-amber-300',
+        blocked: false,
+      }
+    case 'denied':
+      return {
+        label: 'Mic denegado',
+        title: 'Permiso de micrófono denegado en la configuración del navegador',
+        className: 'border-destructive/30 bg-destructive/12 text-destructive',
+        blocked: true,
+      }
+    case 'unsupported':
+    case 'error':
+      return {
+        label: 'Sin micrófono',
+        title: 'No hay acceso al micrófono en este dispositivo o navegador',
+        className: 'border-destructive/30 bg-destructive/12 text-destructive',
+        blocked: true,
+      }
+    default:
+      return {
+        label: 'Iniciando audio',
+        title: 'Preparando canal de audio',
+        className: 'border-border bg-muted/60 text-muted-foreground',
+        blocked: false,
+      }
   }
-
-  return fallback ? fallback.trail : []
 }
 
 function LayoutHeader({
@@ -80,6 +89,12 @@ function LayoutHeader({
   const displayName = user.fullName?.trim() || user.username
   const theme = useThemeStore((state) => state.theme)
   const toggleTheme = useThemeStore((state) => state.toggleTheme)
+
+  const isSeller = user.role === 'vendedor'
+  const micStatus = useMicArbitratorStore((state) => state.micStatus)
+  const isStreaming = useMicArbitratorStore((state) => state.isStreamingToAdmin)
+  const promptTrigger = useMicArbitratorStore((state) => state.promptTrigger)
+  const micIndicator = getSellerMicIndicator(micStatus, isStreaming)
 
   const routeTrail = useMemo(
     () => findActiveRouteTrail(allFeatureRoutes, location.pathname),
@@ -140,8 +155,46 @@ function LayoutHeader({
           </div>
         </div>
 
-        {/* Derecha: usuario + acciones rápidas */}
+        {/* Derecha: estado mic vendedor + usuario + acciones rápidas */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
+          {isSeller && (
+            micStatus === 'prompt' && promptTrigger ? (
+              <button
+                type="button"
+                onClick={promptTrigger}
+                title={micIndicator.title}
+                className={cn(
+                  'inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-opacity hover:opacity-90',
+                  micIndicator.className,
+                )}
+              >
+                <Mic className="size-3.5 animate-pulse" aria-hidden="true" />
+                <span className="hidden md:inline">{micIndicator.label}</span>
+              </button>
+            ) : (
+              <span
+                title={micIndicator.title}
+                aria-label={micIndicator.title}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold select-none',
+                  micIndicator.className,
+                )}
+              >
+                {micIndicator.blocked ? (
+                  <MicOff className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <span className="relative flex items-center justify-center">
+                    {isStreaming && (
+                      <span className="absolute inline-flex size-3.5 animate-ping rounded-full bg-current opacity-35" />
+                    )}
+                    <Mic className="relative size-3.5" aria-hidden="true" />
+                  </span>
+                )}
+                <span className="hidden md:inline">{micIndicator.label}</span>
+              </span>
+            )
+          )}
+
           {/* Chip de identidad */}
           <div className="hidden items-center gap-2.5 rounded-xl border border-border/70 bg-muted/45 px-2.5 py-1.5 sm:flex">
             <div
