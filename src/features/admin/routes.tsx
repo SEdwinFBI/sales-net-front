@@ -1,4 +1,4 @@
-import { Fingerprint, Settings, ShieldCheck, Store, Users } from 'lucide-react'
+import { Fingerprint, Radio, Settings, ShieldCheck, Store, Users } from 'lucide-react'
 import type { AppRoute } from '@/lib/app-routes'
 
 export const adminRoutes: AppRoute[] = [
@@ -41,6 +41,17 @@ export const adminRoutes: AppRoute[] = [
           permissions: ['admin'],
           agentHint: 'Usuarios y vendedores: buscar, crear, editar, eliminar y cambiar permisos de evidencia y anulacion. Nunca maneja contrasenas.',
           lazy: () => import('./users/pages/UsuariosPage'),
+        },
+      },
+      {
+        path: 'auditoria',
+        meta: {
+          name: 'Auditoría en vivo',
+          description: 'Actividad y audio en vivo de vendedores',
+          icon: Radio,
+          permissions: ['admin'],
+          agentHint: 'Auditoria en vivo: ver usuarios conectados, modulo/carrito abierto, permiso de microfono y escuchar audio en vivo.',
+          lazy: () => import('@/features/audit/pages/AuditoriaPage'),
         },
       },
       {

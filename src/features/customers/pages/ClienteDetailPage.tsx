@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { formatCurrency } from '../utils/venta-total'
 import { useParams, useNavigate } from 'react-router'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
@@ -22,6 +22,14 @@ import { Breadcrumb } from '@/components/ui/breadcrumb'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildClienteDetailTools, type ClienteTab } from '../agent/cliente-detail-tools'
 import type { AbonoFormValues, AjusteFormValues, VentaClienteFormValues } from '../agent/cliente-detail-forms'
+import { useActivityStore } from '@/features/core/store/useActivityStore'
+
+const TAB_LABELS: Record<string, string> = {
+  movimientos: 'Movimientos',
+  abonos: 'Abonos',
+  compras: 'Compras',
+  precios: 'Precios',
+}
 
 export default function ClienteDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -45,6 +53,28 @@ export default function ClienteDetailPage() {
 
   const creditKey = String(cliente?.permitir_credito)
   const activeTab = tabSelection?.creditKey === creditKey ? tabSelection.value : sinCredito ? 'precios' : 'movimientos'
+
+  const setScreenContext = useActivityStore((state) => state.setScreenContext)
+  const clearScreenContext = useActivityStore((state) => state.clearScreenContext)
+
+  useEffect(() => {
+    if (!cliente) return
+    const detail = ventaDialogOpen
+      ? 'Registrando venta'
+      : abonarOpen
+        ? 'Registrando abono'
+        : ajusteOpen
+          ? 'Registrando ajuste'
+          : `Pestaña: ${TAB_LABELS[activeTab] ?? activeTab}`
+    setScreenContext({
+      entityType: 'cliente',
+      entityId: cliente.id,
+      entityLabel: cliente.nombre_completo,
+      detail,
+    })
+  }, [cliente, activeTab, ventaDialogOpen, abonarOpen, ajusteOpen, setScreenContext])
+
+  useEffect(() => () => clearScreenContext(), [clearScreenContext])
 
   // Tools del agente: leen la ficha, cambian de pestaña y abren los formularios (el usuario guarda).
   useAgentTools(

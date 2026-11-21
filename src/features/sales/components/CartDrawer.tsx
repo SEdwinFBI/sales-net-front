@@ -137,7 +137,7 @@ const CartDrawer = ({ pricing }: Props) => {
     }
   }, [remoteCustomerPrices, selectedCustomerId, selectedCustomerObj, saveLocalPrices])
 
-  const speech = useSpeechRecognition({ enabled: cartOpen && !agentListening })
+  const speech = useSpeechRecognition({ enabled: cartOpen && !agentListening, source: 'cart' })
 
   useEffect(() => {
     setVoiceTranscript(speech.transcript)

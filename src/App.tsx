@@ -8,7 +8,7 @@ import { useThemeStore } from './features/core/store/theme-store'
 export default function App() {
   const token = useAuthStore((state) => state.token)
   const theme = useThemeStore((state) => state.theme)
-  usePresenceSocket(token)
+  usePresenceSocket(token, router)
 
   return (
     <>
