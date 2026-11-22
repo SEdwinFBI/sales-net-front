@@ -9,6 +9,8 @@ export type Usuario = {
   is_active: boolean
   puede_anular: boolean
   evidencia_fotografica: boolean
+  transmision_audio: boolean
+  agente_ia: boolean
   created_at: string
   hora_entrada: string | null
   hora_salida: string | null
@@ -40,5 +42,7 @@ export type UpdateUsuarioPayload = {
   hora_entrada?: string
   hora_salida?: string
   puede_anular?: boolean
+  transmision_audio?: boolean
+  agente_ia?: boolean
   sucursales?: number[]
 }

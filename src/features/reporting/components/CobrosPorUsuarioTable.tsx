@@ -134,10 +134,10 @@ export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserP
               if (!idUsuario) return
               onDownloadUserPdf({ id_usuario: idUsuario, fecha })
             }}
-            aria-label={`Descargar reporte de ${row.original.nombre}`}
+            aria-label={`Configurar reporte de ${row.original.nombre}`}
           >
             <FileDown />
-            {pdfUserLoading === idUsuario ? 'Descargando...' : 'PDF'}
+            {pdfUserLoading === idUsuario ? 'Preparando...' : 'Configurar reporte'}
           </Button>
         )
       },

@@ -17,12 +17,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Pencil, Trash2, Plus, ChevronLeft, ChevronRight, Search, X, Users } from 'lucide-react'
+import { Pencil, Trash2, Plus, ChevronLeft, ChevronRight, Search, X, Users, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/empty-state'
 import type { Usuario } from '../types/usuario-types'
 import UsuarioDialog from './UsuarioDialog'
 import DeleteUsuarioDialog from './DeleteUsuarioDialog'
+import PermisosDrawer from './PermisosDrawer'
+import { PERMISOS, resumenPermisos, type PermisoDef } from '../permisos'
 import { useUpdateUsuario } from '../hooks/useUpdateUsuario'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
@@ -30,6 +32,7 @@ import { useSucursales } from '../../branches/hooks/useSucursales'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildUsuariosTools, type UsuarioFormValues } from '../../agent/usuarios-tools'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
+import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
 type Props = {
   data: Usuario[]
@@ -64,6 +67,8 @@ function PresenceDot({ sessions }: { sessions: number }) {
 
 export default function UsuariosTable({ data, isLoading, online }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
+  // La busqueda rapida del encabezado abre la lista ya filtrada.
+  useBuscarParam(setGlobalFilter)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null)
@@ -72,49 +77,33 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
   const { mutateAsync: updateUsuario, isPending: isUpdating } = useUpdateUsuario()
   const { data: sucursales } = useSucursales()
 
-  const evidenceCheckbox = (usuario: Usuario) => (
-    <label className="inline-flex items-center gap-2 text-sm">
-      <input
-        type="checkbox"
-        className="size-4 accent-primary"
-        checked={usuario.evidencia_fotografica ?? true}
-        disabled={isUpdating}
-        aria-label={`Evidencia fotográfica de ${usuario.fullName || usuario.username}`}
-        onChange={async (event) => {
-          const enabled = event.target.checked
-          try {
-            await updateUsuario({ id: usuario.id, evidencia_fotografica: enabled })
-            toast.success(`Evidencia fotográfica ${enabled ? 'activada' : 'desactivada'}`)
-          } catch (error) {
-            toast.error(getApiErrorMessage(error, 'No se pudo actualizar la evidencia fotográfica'))
-          }
-        }}
-      />
-      <span className="md:hidden">Evidencia fotográfica</span>
-    </label>
-  )
+  // Panel de permisos del telefono: se guarda el id y el usuario sale de la lista, que se refresca al guardar.
+  const [permisosId, setPermisosId] = useState<number | null>(null)
+  const permisosDe = permisosId === null ? null : data.find((u) => u.id === permisosId) ?? null
 
-  const anulacionesCheckbox = (usuario: Usuario) => (
-    <label className="inline-flex items-center gap-2 text-sm">
+  const cambiarPermiso = async (usuario: Usuario, permiso: PermisoDef, enabled: boolean) => {
+    try {
+      await updateUsuario({ id: usuario.id, [permiso.key]: enabled })
+      toast.success(`${permiso.label}: ${enabled ? 'activado' : 'desactivado'}`)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, `No se pudo actualizar: ${permiso.label.toLowerCase()}`))
+    }
+  }
+
+  const permisoCheckbox = (usuario: Usuario, permiso: PermisoDef) => {
+    const bloqueo = permiso.bloqueo(usuario)
+    return (
       <input
         type="checkbox"
         className="size-4 accent-primary"
-        checked={usuario.role === 'admin' || (usuario.puede_anular ?? true)}
-        disabled={isUpdating || usuario.role === 'admin'}
-        aria-label={`Permitir anular ventas y abonos de ${usuario.fullName || usuario.username}`}
-        onChange={async (event) => {
-          const enabled = event.target.checked
-          try {
-            await updateUsuario({ id: usuario.id, puede_anular: enabled })
-            toast.success(`Permiso de anulación ${enabled ? 'activado' : 'desactivado'}`)
-          } catch (error) {
-            toast.error(getApiErrorMessage(error, 'No se pudo actualizar el permiso de anulación'))
-          }
-        }}
+        checked={permiso.valor(usuario)}
+        disabled={isUpdating || bloqueo !== null}
+        title={bloqueo ?? undefined}
+        aria-label={`${permiso.label} de ${usuario.fullName || usuario.username}`}
+        onChange={(event) => cambiarPermiso(usuario, permiso, event.target.checked)}
       />
-      <span className="md:hidden">Anular ventas y abonos</span>
-    </label>
-  )
+    )
+  }
 
   const columns: ColumnDef<Usuario>[] = [
     {
@@ -158,16 +147,11 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
         </Badge>
       ),
     },
-    {
-      id: 'evidencia_fotografica',
-      header: 'Evidencia fotográfica',
-      cell: ({ row }) => evidenceCheckbox(row.original),
-    },
-    {
-      id: 'puede_anular',
-      header: 'Anular ventas y abonos',
-      cell: ({ row }) => anulacionesCheckbox(row.original),
-    },
+    ...PERMISOS.map((permiso): ColumnDef<Usuario> => ({
+      id: permiso.key,
+      header: permiso.label,
+      cell: ({ row }) => permisoCheckbox(row.original, permiso),
+    })),
     {
       id: 'actions',
       header: 'Acciones',
@@ -249,11 +233,9 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
       updatePermisos: async (id, cambios) => {
         try {
           await updateUsuario({ id, ...cambios })
-          toast.success(
-            'puede_anular' in cambios
-              ? `Permiso de anulación ${cambios.puede_anular ? 'activado' : 'desactivado'}`
-              : `Evidencia fotográfica ${cambios.evidencia_fotografica ? 'activada' : 'desactivada'}`,
-          )
+          const [key, enabled] = Object.entries(cambios)[0] ?? []
+          const permiso = PERMISOS.find((p) => p.key === key)
+          toast.success(permiso ? `${permiso.label}: ${enabled ? 'activado' : 'desactivado'}` : 'Permiso actualizado')
           return true
         } catch (error) {
           toast.error(getApiErrorMessage(error, 'No se pudo actualizar el permiso'))
@@ -347,30 +329,37 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
                     </Badge>
                   </div>
 
-                  <div className="mt-4">{evidenceCheckbox(usuario)}</div>
-                  <div className="mt-2">{anulacionesCheckbox(usuario)}</div>
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Button
-                      size="icon-sm"
-                      variant="outline"
-                      aria-label={`Editar ${usuario.fullName || usuario.username}`}
-                      onClick={() => {
-                        setSelectedUsuario(usuario)
-                        setDialogInitial(undefined)
-                        setDialogOpen(true)
-                      }}
-                    >
-                      <Pencil />
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setPermisosId(usuario.id)}>
+                      <ShieldCheck />
+                      Permisos
+                      <span className="text-muted-foreground">
+                        {resumenPermisos(usuario).activos} de {resumenPermisos(usuario).total}
+                      </span>
                     </Button>
-                    <Button
-                      size="icon-sm"
-                      variant="outline"
-                      className="text-destructive hover:text-destructive"
-                      aria-label={`Eliminar ${usuario.fullName || usuario.username}`}
-                      onClick={() => setUsuarioToDelete(usuario)}
-                    >
-                      <Trash2 />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="icon-sm"
+                        variant="outline"
+                        aria-label={`Editar ${usuario.fullName || usuario.username}`}
+                        onClick={() => {
+                          setSelectedUsuario(usuario)
+                          setDialogInitial(undefined)
+                          setDialogOpen(true)
+                        }}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        size="icon-sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        aria-label={`Eliminar ${usuario.fullName || usuario.username}`}
+                        onClick={() => setUsuarioToDelete(usuario)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )
@@ -457,6 +446,12 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
       <DeleteUsuarioDialog
         usuario={usuarioToDelete}
         onClose={() => setUsuarioToDelete(null)}
+      />
+      <PermisosDrawer
+        usuario={permisosDe}
+        onClose={() => setPermisosId(null)}
+        onChange={cambiarPermiso}
+        disabled={isUpdating}
       />
     </>
   )

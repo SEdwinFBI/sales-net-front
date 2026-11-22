@@ -10,7 +10,7 @@ import type { Product } from '@/features/sales/types/sales'
 import type { AppRoute } from '@/lib/app-routes'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import { searchCatalogArticles, suggestCatalogArticles, type CatalogSearchResult } from './catalog-search'
-import { candidatePrefixes, rankBySimilarity } from './fuzzy-search'
+import { MIN_SIMILARITY, candidatePrefixes, rankBySimilarity, similarity } from './fuzzy-search'
 import { buildCartSnapshot } from './context-snapshot'
 import { closeTopDialog, type CloseDialogOutcome } from './dialog-control'
 import {
@@ -20,6 +20,7 @@ import {
 } from './registry/agent-tool-registry'
 import { getCatalogRoutes, resolveNavigation, type CatalogRoute } from './route-catalog'
 import { useAgentStore } from './store/useAgentStore'
+import { fold } from './tool-helpers'
 import type { ToolResult } from './types'
 
 export const POS_PATH = '/venta/punto-de-venta'
@@ -34,12 +35,28 @@ const GLOBAL_CONFIRMATION: Record<string, string> = {
 
 /** Máximo de unidades que el agente agrega en una sola acción (evita errores de dictado como "mil"). */
 const MAX_QTY_PER_ACTION = 999
+/** Productos distintos por llamada a agregar_al_carrito. */
+const MAX_ITEMS_PER_ACTION = 10
+/** Ventaja minima de parecido para elegir un producto entre varios sin preguntar. */
+const CLEAR_MARGIN = 0.15
+/** Espera maxima para que el cobro cargue el credito del cliente antes de elegir la forma de pago. */
+const PAYMENT_WAIT_MS = 2000
+/** Espera maxima a que la ficha del cliente cargue y registre sus formularios. */
+const SCREEN_TOOL_WAIT_MS = 4000
+const LOADED_GRACE_MS = 300
+const CLIENT_DETAIL_ROUTE = '/clientes/listado/:id'
+/** Tool de la ficha del cliente que abre cada formulario de abrir_formulario_cliente. */
+const CLIENT_FORM_TOOLS: Record<string, string> = {
+  abono: 'abrir_registrar_abono',
+  venta: 'abrir_registrar_venta_cliente',
+  ajuste: 'abrir_registrar_ajuste',
+}
 const NAVIGATION_TIMEOUT_MS = 3000
 /** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
 const CONFIRM_MARGIN_MS = 3000
 const MIN_CONFIRM_MS = 5000
 
-export type AgentClient = { id: number; nombre: string; telefono?: string; permiteCredito?: boolean }
+export type AgentClient = { id: number; nombre: string; telefono?: string; permiteCredito?: boolean; saldo?: number }
 
 /** Dependencias externas de las acciones; se inyectan para poder probarlas sin red ni router. */
 export type AgentDeps = {
@@ -119,7 +136,29 @@ type Args = Record<string, unknown>
 type Action = (args: Args) => Promise<ToolResult>
 
 function toAgentClient(c: Awaited<ReturnType<typeof getClientes>>['results'][number]): AgentClient {
-  return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito }
+  return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito, saldo: Number(c.balance) || 0 }
+}
+
+type CartRequest = { producto: string; talla?: string; cantidad: number }
+
+/** Valida items=[{producto, talla?, cantidad}] de agregar_al_carrito; devuelve el error si no sirve. */
+function parseCartRequests(raw: unknown): CartRequest[] | string {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_ITEMS_PER_ACTION) {
+    return `items debe ser una lista de 1 a ${MAX_ITEMS_PER_ACTION} productos {producto, talla, cantidad}.`
+  }
+  const pedidos: CartRequest[] = []
+  for (const item of raw) {
+    const entry = (item ?? {}) as { producto?: unknown; talla?: unknown; cantidad?: unknown }
+    const producto = typeof entry.producto === 'string' ? entry.producto.trim().slice(0, 100) : ''
+    const cantidad = entry.cantidad
+    if (!producto) return 'Cada item necesita producto (el nombre que dijo el usuario).'
+    if (typeof cantidad !== 'number' || !Number.isInteger(cantidad) || cantidad < 1 || cantidad > MAX_QTY_PER_ACTION) {
+      return `cantidad de ${producto} debe ser un entero entre 1 y ${MAX_QTY_PER_ACTION}.`
+    }
+    if (entry.talla !== undefined && typeof entry.talla !== 'string') return `talla de ${producto} debe ser un texto.`
+    pedidos.push({ producto, cantidad, ...(typeof entry.talla === 'string' && entry.talla.trim() ? { talla: entry.talla.trim() } : {}) })
+  }
+  return pedidos
 }
 
 const fail = (error: string): ToolResult => ({ ok: false, error })
@@ -148,7 +187,6 @@ const itemKey = (productId: number, variantId: number) => `${productId}::${varia
  * modelo solo pueda actuar sobre ids que las búsquedas realmente devolvieron.
  */
 export function createAgentActions(deps: AgentDeps) {
-  const productCache = new Map<number, Product>()
   const knownClients = new Map<number, string>()
   const pollMs = deps.pollMs ?? 50
 
@@ -192,8 +230,96 @@ export function createAgentActions(deps: AgentDeps) {
   const posGuard = (): ToolResult | null =>
     canUsePos() ? null : fail('Tu rol no tiene acceso al punto de venta.')
 
+  /** Cliente por nombre: exacto, unico o claramente mas parecido; si no, error con las opciones. */
+  const resolveClient = async (texto: string): Promise<{ client: AgentClient } | { error: string }> => {
+    const found = (await deps.searchClients(texto)).slice(0, 10)
+    const candidates = found.length > 0 ? found : deps.suggestClients ? await deps.suggestClients(texto) : []
+    if (candidates.length === 0) return { error: `No encontre al cliente ${texto}.` }
+    candidates.forEach((c) => knownClients.set(c.id, c.nombre))
+    const scored = candidates
+      .map((client) => ({ client, score: similarity(texto, client.nombre) }))
+      .sort((a, b) => b.score - a.score)
+    const exact = found.find((c) => fold(c.nombre) === fold(texto))
+    const clear = found.length > 0 && (scored.length === 1 || scored[0].score - scored[1].score >= CLEAR_MARGIN)
+    const client = exact ?? (clear ? scored[0].client : undefined)
+    if (client) return { client }
+    return { error: `Cual cliente: ${scored.slice(0, 5).map((s) => s.client.nombre).join(', ')}? Pregunta al usuario.` }
+  }
+
+  /**
+   * Elige la forma de pago con la tool del cobro abierto (vive en CheckoutDialog). El credito del
+   * cliente se carga al abrir el cobro, asi que se reintenta la validacion un momento.
+   * Devuelve un aviso si no se pudo, o null si quedo elegida.
+   */
+  const choosePayment = async (forma: string): Promise<string | null> => {
+    const deadline = Date.now() + PAYMENT_WAIT_MS
+    for (;;) {
+      const tool = deps.getRegisteredTools().find((t) => t.name === 'elegir_forma_pago')
+      const args = { forma }
+      const invalid = tool ? tool.validar?.(args) ?? null : 'No pude elegir la forma de pago: usa elegir_forma_pago.'
+      if (tool && !invalid) {
+        const result = await tool.run(args)
+        return result.ok ? null : result.error
+      }
+      if (Date.now() >= deadline) return invalid
+      await sleep(pollMs)
+    }
+  }
+
+  /**
+   * Espera a que una pantalla registre `name`. Si aparece `loadedMarker` y `name` no, la pantalla ya
+   * cargo y no la ofrece: se deja de esperar. Devuelve la tool o undefined.
+   */
+  const waitForTool = async (name: string, loadedMarker: string): Promise<AgentToolDef | undefined> => {
+    const deadline = Date.now() + SCREEN_TOOL_WAIT_MS
+    let markerSince: number | null = null
+    for (;;) {
+      const tools = deps.getRegisteredTools()
+      const found = tools.find((t) => t.name === name)
+      if (found) return found
+      if (tools.some((t) => t.name === loadedMarker)) markerSince ??= Date.now()
+      // Con la pantalla ya cargada se da un margen corto por si registra sus formularios despues.
+      if (Date.now() >= deadline || (markerSince !== null && Date.now() - markerSince >= LOADED_GRACE_MS)) return undefined
+      await sleep(pollMs)
+    }
+  }
+
   const cartLine = (productId: number, variantId: number) =>
     deps.getSales().items.find((item) => item.id === itemKey(productId, variantId))
+
+  /**
+   * Identifica producto y talla de un pedido por nombre. Solo elige sin preguntar si no hay duda:
+   * nombre exacto, una sola coincidencia, o una claramente mas parecida. Las sugerencias por error
+   * de dictado y las tallas faltantes vuelven como opciones para que el usuario elija.
+   */
+  const resolveCartRequest = async (
+    pedido: CartRequest,
+  ): Promise<{ product: Product; variant: Product['variants'][number] } | { motivo: string; opciones?: string[] }> => {
+    const found = (await deps.searchArticles(pedido.producto)).slice(0, 10)
+    if (found.length === 0) {
+      const similar = deps.suggestArticles ? await deps.suggestArticles(pedido.producto) : []
+      return similar.length > 0
+        ? { motivo: 'Sin coincidencia exacta; quizas quiso decir', opciones: similar.map((p) => p.name) }
+        : { motivo: 'No encontre ese producto.' }
+    }
+    const scored = found
+      .map((product) => ({ product, score: similarity(pedido.producto, product.name) }))
+      .sort((a, b) => b.score - a.score)
+    const exact = found.find((product) => fold(product.name) === fold(pedido.producto))
+    const clear = scored.length === 1 || (scored[0].score >= MIN_SIMILARITY && scored[0].score - scored[1].score >= CLEAR_MARGIN)
+    const product = exact ?? (clear ? scored[0].product : undefined)
+    if (!product) return { motivo: 'Hay varios productos con ese nombre; cual', opciones: scored.slice(0, 5).map((s) => s.product.name) }
+
+    const conStock = product.variants.filter((v) => v.stock > 0)
+    if (conStock.length === 0) return { motivo: `${product.name} no tiene stock.` }
+    const variant = pedido.talla
+      ? product.variants.find((v) => fold(v.size) === fold(pedido.talla ?? ''))
+      : product.variants.length === 1 ? product.variants[0] : undefined
+    const tallas = conStock.map((v) => v.size)
+    if (!variant) return { motivo: `${product.name}: ${pedido.talla ? 'esa talla no existe' : 'falta la talla'}; tallas con stock`, opciones: tallas }
+    if (variant.stock <= 0) return { motivo: `${product.name} talla ${variant.size} no tiene stock; tallas con stock`, opciones: tallas }
+    return { product, variant }
+  }
 
   const readState = () => {
     const sales = deps.getSales()
@@ -216,6 +342,34 @@ export function createAgentActions(deps: AgentDeps) {
       if (!(await waitForPath(resolved.path))) return fail('No se pudo completar la navegacion.')
       await settleRegistry(before)
       return ok({ ruta: resolved.path })
+    },
+
+    async abrir_formulario_cliente(args) {
+      const tipo = typeof args.tipo === 'string' ? args.tipo : ''
+      const toolName = CLIENT_FORM_TOOLS[tipo]
+      if (!toolName) return fail("tipo debe ser 'abono', 'venta' o 'ajuste'.")
+      const texto = textArg(args, 'cliente')
+      if (!texto) return fail('Indica el cliente por su nombre.')
+      if (!catalog().some((r) => r.path === CLIENT_DETAIL_ROUTE)) return fail('Tu rol no tiene acceso a la ficha de clientes.')
+      const resolved = await resolveClient(texto)
+      if ('error' in resolved) return fail(resolved.error)
+      const { client } = resolved
+
+      const path = `${CLIENTES_PATH}/${client.id}`
+      if (deps.getPathname() !== path) {
+        const moved = await actions.navegar({ ruta: path })
+        if (!moved.ok) return moved
+      }
+      // La ficha registra sus formularios al cargar al cliente, y solo si tiene credito.
+      const def = await waitForTool(toolName, 'leer_cliente')
+      if (!def) return fail(`${client.nombre} no tiene credito: no admite ${tipo}s. Su ficha quedo abierta.`)
+      const formArgs = args.valores && typeof args.valores === 'object' ? { valores: args.valores } : {}
+      const invalid = def.validar?.(formArgs)
+      if (invalid) return fail(invalid)
+      const before = deps.getRegistryVersion()
+      const result = await def.run(formArgs)
+      if (result.ok) await settleRegistry(before)
+      return result.ok ? ok({ cliente: client.nombre, saldo: client.saldo, ...(result.data as object) }) : result
     },
 
     async leer_estado() {
@@ -253,7 +407,7 @@ export function createAgentActions(deps: AgentDeps) {
       if (!texto) return fail('Indica el texto a buscar.')
 
       // Sin POS (p. ej. el admin) se busca en el catálogo de administración, que no trae stock
-      // ni sirve para agregar_item: eso solo se hace con artículos de la búsqueda del POS.
+      // ni sirve para el carrito.
       if (!canUsePos()) {
         if (!canAccess(CATALOGO_ARTICULOS_PATH)) return fail('Tu rol no tiene acceso a articulos.')
         const found = await deps.searchCatalog(texto)
@@ -265,8 +419,6 @@ export function createAgentActions(deps: AgentDeps) {
       let products = (await deps.searchArticles(texto)).slice(0, 10)
       const exact = products.length > 0
       if (!exact && deps.suggestArticles) products = await deps.suggestArticles(texto)
-      // Las sugerencias también van a la caché: si el usuario elige una, agregar_item no necesita otra búsqueda.
-      products.forEach((product) => productCache.set(product.id, product))
       const rows = products.map((p) => ({
         id: p.id,
         nombre: p.name,
@@ -276,36 +428,43 @@ export function createAgentActions(deps: AgentDeps) {
       return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
 
-    async agregar_item(args) {
+    async agregar_al_carrito(args) {
       const blocked = posGuard()
       if (blocked) return blocked
-      const productId = positiveInt(args, 'articulo_id')
-      const variantId = positiveInt(args, 'variante_id')
-      const cantidad = positiveInt(args, 'cantidad')
-      if (!productId || !variantId || !cantidad) return fail('Argumentos invalidos.')
-      if (cantidad > MAX_QTY_PER_ACTION) return fail(`La cantidad maxima por accion es ${MAX_QTY_PER_ACTION}.`)
+      const pedidos = parseCartRequests(args.items)
+      if (typeof pedidos === 'string') return fail(pedidos)
 
-      const product = productCache.get(productId)
-      if (!product) return fail('Articulo desconocido: busca primero con buscar_articulos.')
-      const variant = product.variants.find((v) => v.id === variantId)
-      if (!variant) return fail('Esa variante no pertenece al articulo.')
-      if (variant.stock <= 0) return fail(`${product.name} talla ${variant.size} no tiene stock.`)
-
-      const sales = deps.getSales()
-      const previous = cartLine(productId, variantId)?.qty ?? 0
-      // addItem exige el Product y suma de 1 en 1: crea la linea y setQty fija el total pedido.
-      if (!previous) sales.addItem(product, variantId)
-      const target = previous + cantidad
-      deps.getSales().setQty(itemKey(productId, variantId), target)
-
-      const line = cartLine(productId, variantId)
-      if (!line) return fail('No se pudo agregar al carrito.')
+      // Se resuelven todos los nombres en paralelo; luego se agregan en orden.
+      const resueltos = await Promise.all(pedidos.map((pedido) => resolveCartRequest(pedido)))
+      const agregados: unknown[] = []
+      const pendientes: unknown[] = []
+      resueltos.forEach((resuelto, index) => {
+        const pedido = pedidos[index]
+        if ('motivo' in resuelto) {
+          pendientes.push({ pedido: pedido.producto, ...resuelto })
+          return
+        }
+        const { product, variant } = resuelto
+        const previous = cartLine(product.id, variant.id)?.qty ?? 0
+        // addItem exige el Product y suma de 1 en 1: crea la linea y setQty fija el total pedido.
+        if (!previous) deps.getSales().addItem(product, variant.id)
+        const target = previous + pedido.cantidad
+        deps.getSales().setQty(itemKey(product.id, variant.id), target)
+        const line = cartLine(product.id, variant.id)
+        if (!line) {
+          pendientes.push({ pedido: pedido.producto, motivo: 'No se pudo agregar al carrito.' })
+          return
+        }
+        agregados.push({
+          producto: product.name,
+          talla: line.size,
+          cantidad_en_carrito: line.qty,
+          ...(line.qty < target ? { ajustado_por_stock: true } : {}),
+        })
+      })
       return ok({
-        articulo: product.name,
-        talla: line.size,
-        cantidad_en_carrito: line.qty,
-        ajustado_por_stock: line.qty < target,
-        stock: line.stock,
+        agregados,
+        ...(pendientes.length > 0 ? { pendientes, aviso: 'Pregunta al usuario por los pendientes con sus opciones.' } : {}),
       })
     },
 
@@ -363,6 +522,8 @@ export function createAgentActions(deps: AgentDeps) {
         nombre: c.nombre,
         ...(c.telefono ? { telefono: c.telefono } : {}),
         ...(c.permiteCredito !== undefined ? { permite_credito: c.permiteCredito } : {}),
+        // Lo que debe: responde "cuanto debe X" sin navegar a su ficha ni a reportes.
+        ...(c.saldo !== undefined ? { saldo: c.saldo } : {}),
       }))
       return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
@@ -398,16 +559,42 @@ export function createAgentActions(deps: AgentDeps) {
       return ok({ carrito_abierto: false })
     },
 
-    async abrir_checkout() {
+    async preparar_venta(args) {
       const blocked = posGuard()
       if (blocked) return blocked
-      if (deps.getSales().items.length === 0) return fail('El carrito esta vacio.')
+      if (deps.getSales().items.length === 0) return fail('El carrito esta vacio: agrega productos con agregar_al_carrito.')
+      const forma = args.forma_pago
+      if (forma !== undefined && forma !== 'efectivo' && forma !== 'credito') return fail("forma_pago debe ser 'efectivo' o 'credito'.")
+
+      let cliente: AgentClient | undefined
+      if (args.cliente !== undefined) {
+        const texto = textArg(args, 'cliente')
+        if (!texto) return fail('cliente debe ser el nombre del cliente.')
+        const resolved = await resolveClient(texto)
+        if ('error' in resolved) return fail(resolved.error)
+        cliente = resolved.client
+        if (forma === 'credito' && cliente.permiteCredito === false) {
+          return fail(`${cliente.nombre} no tiene credito habilitado: ofrece efectivo.`)
+        }
+        // Igual que seleccionar_cliente: no toca el modo de precios por cliente.
+        deps.getSales().setSelectedCustomerId(String(cliente.id))
+      }
+      if (forma === 'credito' && !deps.getSales().selectedCustomerId) return fail('Para vender a credito indica el cliente.')
+
       const moved = await ensureOnPos()
       if (moved) return moved
-
-      // Solo abre el cobro: la venta la confirma el usuario con el boton del dialogo.
-      deps.getSales().openDialog('checkout')
-      return ok({ mensaje: 'Cobro abierto. El usuario debe confirmar la venta con el boton del dialogo.' })
+      if (deps.getSales().activeDialog !== 'checkout') {
+        const before = deps.getRegistryVersion()
+        deps.getSales().openDialog('checkout')
+        await settleRegistry(before)
+      }
+      const aviso = forma ? await choosePayment(forma) : null
+      return ok({
+        ...(cliente ? { cliente: cliente.nombre } : {}),
+        ...(forma && !aviso ? { forma_pago: forma } : {}),
+        ...(aviso ? { aviso } : {}),
+        mensaje: 'Cobro abierto. El usuario revisa y confirma la venta con el boton del dialogo.',
+      })
     },
   }
 

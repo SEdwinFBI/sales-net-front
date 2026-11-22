@@ -21,6 +21,7 @@ import { useCustomerPricesStore } from '@/features/customers/store/useCustomerPr
 import { usePreciosCliente } from '@/features/customers/hooks/usePreciosCliente'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { paginationTool } from '@/features/agent/pagination-tools'
+import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
 const Sales = () => {
   const user = useAuthStore(state => state.user)
@@ -28,6 +29,12 @@ const Sales = () => {
   const [pageSize, setPageSize] = useState(10)
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  // La busqueda rapida del encabezado abre el POS con el producto ya buscado.
+  useBuscarParam((texto) => {
+    setSearchInput(texto)
+    setDebouncedSearch(texto)
+    setPage(1)
+  })
   const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch, String(user?.id))
   const { config: pricingConfig, isError: pricingError } = useEffectivePricing()
 

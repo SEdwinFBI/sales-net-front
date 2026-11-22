@@ -34,9 +34,11 @@ async function queryMicrophonePermission(): Promise<PermissionState | null> {
 export function useSellerLiveAudio() {
   const token = useAuthStore((state) => state.token)
   const role = useAuthStore((state) => state.user?.role)
+  // Solo transmite si el admin le encendio la transmision de audio.
+  const permitido = useAuthStore((state) => state.user?.transmision_audio === true)
 
   useEffect(() => {
-    if (!token || role !== 'vendedor') {
+    if (!token || role !== 'vendedor' || !permitido) {
       useMicArbitratorStore.getState().resetTelemetry()
       return
     }
@@ -373,5 +375,5 @@ export function useSellerLiveAudio() {
       void stopCaptureInternal(false)
       useMicArbitratorStore.getState().resetTelemetry()
     }
-  }, [token, role])
+  }, [token, role, permitido])
 }

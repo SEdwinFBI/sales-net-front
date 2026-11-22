@@ -10,6 +10,7 @@ import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
 import AgentWidget from '@/features/agent/components/AgentWidget'
+import PdfWorkspaceNavigation from '@/components/shared/PdfWorkspaceNavigation'
 import { useSellerLiveAudio } from '@/features/audit/hooks/useSellerLiveAudio'
 
 export default function MainLayout() {
@@ -98,6 +99,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen text-foreground">
+      <PdfWorkspaceNavigation />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"
@@ -135,7 +137,7 @@ export default function MainLayout() {
             user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
-            onSettings={() => navigate('/administracion/notificaciones')}
+            onSettings={() => navigate('/administracion/configuracion')}
           />
 
           <main id="main-content" className="min-w-0 flex-1 py-3 pb-10 sm:py-4">
@@ -148,7 +150,8 @@ export default function MainLayout() {
         </div>
       </div>
 
-      <AgentWidget onLogout={handleLogout} />
+      {/* El asistente es un permiso por usuario que enciende el admin. */}
+      {user.agente_ia === true && <AgentWidget onLogout={handleLogout} />}
     </div>
   )
 }

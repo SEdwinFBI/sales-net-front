@@ -17,6 +17,9 @@ export type User = {
   role: AppRole,
   permissions: AppRole[],
   puede_anular?: boolean,
+  /** Permisos que enciende el admin por usuario (apagados por defecto). */
+  transmision_audio?: boolean,
+  agente_ia?: boolean,
   username: string,
   sucursalActual: Sucursal | null,
 }

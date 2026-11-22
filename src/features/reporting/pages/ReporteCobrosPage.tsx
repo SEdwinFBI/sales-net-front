@@ -24,10 +24,10 @@ export default function ReporteCobrosPage() {
     setPdfLoading(true)
     try {
       await downloadReporteCobrosPdf(activeFilters)
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch {
-      toast.error('Error al descargar el PDF')
+      toast.error('No se pudo preparar el reporte')
       return false
     } finally {
       setPdfLoading(false)
@@ -39,10 +39,10 @@ export default function ReporteCobrosPage() {
     setPdfUserLoading(userFilters.id_usuario)
     try {
       await downloadReporteCobrosPdf(userFilters)
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch {
-      toast.error('Error al descargar el PDF')
+      toast.error('No se pudo preparar el reporte')
       return false
     } finally {
       setPdfUserLoading(null)
@@ -80,7 +80,7 @@ export default function ReporteCobrosPage() {
             <div className="mb-4 flex justify-start">
               <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 w-full shrink-0 sm:w-auto">
                 <FileDown />
-                {pdfLoading ? 'Descargando...' : 'Descargar reporte'}
+                {pdfLoading ? 'Preparando...' : 'Configurar reporte'}
               </Button>
             </div>
             <CobrosPorSucursal

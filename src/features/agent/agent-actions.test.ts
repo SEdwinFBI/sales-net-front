@@ -145,46 +145,75 @@ describe('navegar', () => {
   })
 })
 
-describe('agregar_item', () => {
-  it('acota la cantidad al stock: stock 3 y cantidad 5 → 3', async () => {
-    const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 5 })
+describe('agregar_al_carrito', () => {
+  const add = (items: unknown) => ({ items })
+  const polo: Product = { ...camisa, id: 8, name: 'Camisa Polo', variants: [{ id: 81, size: 'M', stock: 5, price: 120 }] }
 
-    expect(result).toMatchObject({ ok: true, data: { cantidad_en_carrito: 3, ajustado_por_stock: true } })
-    expect(sales().items).toHaveLength(1)
-    expect(sales().items[0]).toMatchObject({ id: '7::71', qty: 3, stock: 3 })
+  it('agrega por nombre y talla sin buscar antes, y acota la cantidad al stock', async () => {
+    const { actions } = setup()
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'camisa', talla: 'm', cantidad: 5 }]))
+    expect(result).toEqual({
+      ok: true,
+      data: { agregados: [{ producto: 'Camisa', talla: 'M', cantidad_en_carrito: 3, ajustado_por_stock: true }] },
+    })
+    expect(sales().items[0]).toMatchObject({ id: '7::71', qty: 3 })
   })
 
   it('suma sobre lo que ya hay en el carrito', async () => {
     const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 2 })
-
-    expect(result).toMatchObject({ ok: true, data: { cantidad_en_carrito: 3, ajustado_por_stock: false } })
-    expect(sales().items[0].qty).toBe(3)
+    await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    expect(sales().items[0].qty).toBe(2)
   })
 
-  it('rechaza un artículo que no está en la caché de búsquedas', async () => {
+  it('varios productos en una llamada: agrega los claros y devuelve pendientes con opciones', async () => {
+    const searchArticles = vi.fn(async (texto: string) => (texto.includes('polo') ? [polo] : [camisa, polo]))
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles })
+    const result = await actions.execute(
+      'agregar_al_carrito',
+      add([{ producto: 'camisa polo', talla: 'M', cantidad: 2 }, { producto: 'camisa', cantidad: 1 }]),
+    )
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        agregados: [{ producto: 'Camisa Polo', cantidad_en_carrito: 2 }],
+        pendientes: [{ pedido: 'camisa' }],
+        aviso: expect.stringMatching(/Pregunta/),
+      },
+    })
+    expect(sales().items).toHaveLength(1)
+  })
+
+  it('nombre exacto gana aunque haya otros parecidos', async () => {
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles: vi.fn(async () => [polo, camisa]) })
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    expect(result).toMatchObject({ ok: true, data: { agregados: [{ producto: 'Camisa' }] } })
+  })
+
+  it('sin talla, talla inexistente o sin stock: pendiente con las tallas con stock', async () => {
     const { actions } = setup()
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
-    expect(result.ok).toBe(false)
+    for (const talla of [undefined, 'XL', 'L']) {
+      const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla, cantidad: 1 }]))
+      expect(result, String(talla)).toMatchObject({ ok: true, data: { agregados: [], pendientes: [{ opciones: ['M'] }] } })
+    }
     expect(sales().items).toHaveLength(0)
   })
 
-  it('rechaza variantes ajenas al artículo, sin stock o argumentos inválidos', async () => {
+  it('error de dictado: sugiere sin agregar', async () => {
+    const marcador = { ...camisa, id: 9, name: 'Marcador con Brich' }
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, {
+      searchArticles: vi.fn(async () => []),
+      suggestArticles: vi.fn(async () => [marcador]),
+    })
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'marcador con bridge', cantidad: 1 }]))
+    expect(result).toMatchObject({ ok: true, data: { agregados: [], pendientes: [{ opciones: ['Marcador con Brich'] }] } })
+    expect(sales().items).toHaveLength(0)
+  })
+
+  it('rechaza argumentos invalidos sin tocar el carrito', async () => {
     const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    for (const args of [
-      { articulo_id: 7, variante_id: 999, cantidad: 1 },
-      { articulo_id: 7, variante_id: 72, cantidad: 1 },
-      { articulo_id: 7, variante_id: 71, cantidad: 0 },
-      { articulo_id: 7, variante_id: 71, cantidad: 1.5 },
-      { articulo_id: '7', variante_id: 71, cantidad: 1 },
-      { articulo_id: 7, variante_id: 71, cantidad: 100000 },
-    ]) {
-      expect((await actions.execute('agregar_item', args)).ok).toBe(false)
+    for (const items of [[], 'x', [{ producto: '', cantidad: 1 }], [{ producto: 'Camisa', cantidad: 0 }], [{ producto: 'Camisa', cantidad: 1.5 }], [{ producto: 'Camisa', cantidad: 100000 }], Array.from({ length: 11 }, () => ({ producto: 'Camisa', cantidad: 1 }))]) {
+      expect((await actions.execute('agregar_al_carrito', add(items))).ok, JSON.stringify(items).slice(0, 40)).toBe(false)
     }
     expect(sales().items).toHaveLength(0)
   })
@@ -193,8 +222,7 @@ describe('agregar_item', () => {
 describe('carrito', () => {
   async function conUnItem() {
     const ctx = setup()
-    await ctx.actions.execute('buscar_articulos', { texto: 'camisa' })
-    await ctx.actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
+    await ctx.actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
     return ctx
   }
 
@@ -281,12 +309,11 @@ describe('carrito y cobro requieren el punto de venta', () => {
     }
   })
 
-  it('abrir_checkout deja el cobro listo pero nunca envía la venta', async () => {
+  it('preparar_venta deja el cobro listo pero nunca envía la venta', async () => {
     const { actions, navigate } = setup('vendedor', '/home')
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
+    await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
 
-    const result = await actions.execute('abrir_checkout', {})
+    const result = await actions.execute('preparar_venta', {})
     expect(result.ok).toBe(true)
     expect(navigate).toHaveBeenCalledWith(POS_PATH)
     expect(sales().activeDialog).toBe('checkout')
@@ -294,9 +321,9 @@ describe('carrito y cobro requieren el punto de venta', () => {
     expect(sales().lastSale).toBeNull()
   })
 
-  it('abrir_checkout con el carrito vacío falla', async () => {
+  it('preparar_venta con el carrito vacío falla', async () => {
     const { actions } = setup()
-    expect((await actions.execute('abrir_checkout', {})).ok).toBe(false)
+    expect((await actions.execute('preparar_venta', {})).ok).toBe(false)
     expect(sales().activeDialog).toBeNull()
   })
 
@@ -304,12 +331,124 @@ describe('carrito y cobro requieren el punto de venta', () => {
     const { actions, searchArticles, navigate } = setup('admin')
     for (const [name, args] of [
       ['abrir_carrito', {}],
-      ['abrir_checkout', {}],
+      ['preparar_venta', {}],
       ['seleccionar_cliente', { cliente_id: 12 }],
     ] as const) {
       expect((await actions.execute(name, args)).ok).toBe(false)
     }
     expect(searchArticles).not.toHaveBeenCalled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+})
+
+describe('preparar_venta: cliente por nombre y forma de pago', () => {
+  const conCarrito = async (overrides: Partial<AgentDeps> = {}) => {
+    const ctx = setup('vendedor', POS_PATH, allFeatureRoutes, overrides)
+    await ctx.actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
+    return ctx
+  }
+  /** Imita la tool del CheckoutDialog; `listoTras` simula que el credito del cliente tarda en cargar. */
+  const formaDePago = (listoTras = 0) => {
+    let intentos = 0
+    const run = vi.fn(async () => ({ ok: true as const, data: {} }))
+    registrar('checkout', herramienta('elegir_forma_pago', run, { validar: () => (intentos++ < listoTras ? 'cargando' : null) }))
+    return run
+  }
+
+  it('selecciona al cliente por nombre, abre el cobro y elige credito en una llamada', async () => {
+    const { actions } = await conCarrito()
+    const run = formaDePago()
+    const result = await actions.execute('preparar_venta', { cliente: 'juan perez', forma_pago: 'credito' })
+    expect(result).toMatchObject({ ok: true, data: { cliente: 'Juan Pérez', forma_pago: 'credito' } })
+    expect(sales().selectedCustomerId).toBe('12')
+    expect(sales().activeDialog).toBe('checkout')
+    expect(run).toHaveBeenCalledWith({ forma: 'credito' })
+    expect(sales().lastSale).toBeNull()
+  })
+
+  it('espera a que el cobro cargue el credito antes de elegir la forma de pago', async () => {
+    const { actions } = await conCarrito()
+    const run = formaDePago(2)
+    expect(await actions.execute('preparar_venta', { cliente: 'Juan Pérez', forma_pago: 'credito' })).toMatchObject({ ok: true, data: { forma_pago: 'credito' } })
+    expect(run).toHaveBeenCalledOnce()
+  })
+
+  it('credito a un cliente sin credito o sin cliente: falla antes de abrir el cobro', async () => {
+    const { actions } = await conCarrito({ searchClients: vi.fn(async () => [{ id: 5, nombre: 'Ana', permiteCredito: false }]) })
+    expect(await actions.execute('preparar_venta', { cliente: 'Ana', forma_pago: 'credito' })).toMatchObject({ ok: false, error: expect.stringMatching(/no tiene credito/) })
+    expect((await actions.execute('preparar_venta', { forma_pago: 'credito' })).ok).toBe(false)
+    expect(sales().activeDialog).toBeNull()
+  })
+
+  it('varios clientes parecidos: pregunta cual sin seleccionar', async () => {
+    const { actions } = await conCarrito({
+      searchClients: vi.fn(async () => [{ id: 1, nombre: 'Juan Perez' }, { id: 2, nombre: 'Juan Lopez' }]),
+    })
+    expect(await actions.execute('preparar_venta', { cliente: 'juan' })).toMatchObject({ ok: false, error: expect.stringMatching(/Cual cliente: .*Juan Perez.*Juan Lopez/) })
+    expect(sales().selectedCustomerId).toBe('')
+  })
+
+  it('rechaza una forma de pago invalida', async () => {
+    const { actions } = await conCarrito()
+    expect((await actions.execute('preparar_venta', { forma_pago: 'tarjeta' })).ok).toBe(false)
+  })
+})
+
+describe('abrir_formulario_cliente', () => {
+  /** Imita la ficha del cliente: registra sus tools al navegar a ella (con o sin credito). */
+  const ficha = (conCredito = true) => {
+    const run = vi.fn(async () => ({ ok: true as const, data: { mensaje: 'Formulario de abono abierto.' } }))
+    const navigate = vi.fn()
+    return {
+      run,
+      overrides: {
+        navigate: (to: string) => {
+          navigate(to)
+          registrar('ficha', herramienta('leer_cliente'), ...(conCredito ? [herramienta('abrir_registrar_abono', run)] : []))
+        },
+      },
+      navigate,
+    }
+  }
+
+  it('busca al cliente, abre su ficha y el formulario en una llamada, con su saldo', async () => {
+    const f = ficha()
+    let path = '/home'
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 12, nombre: 'Sheny', permiteCredito: true, saldo: 9095 }]),
+      getPathname: () => path,
+      navigate: (to: string) => {
+        path = to
+        f.overrides.navigate(to)
+      },
+    })
+    const result = await actions.execute('abrir_formulario_cliente', { cliente: 'sheny', tipo: 'abono', valores: { monto: 100 } })
+    expect(result).toMatchObject({ ok: true, data: { cliente: 'Sheny', saldo: 9095, mensaje: expect.stringMatching(/abono/) } })
+    expect(f.navigate).toHaveBeenCalledWith('/clientes/listado/12')
+    expect(f.run).toHaveBeenCalledWith({ valores: { monto: 100 } })
+  })
+
+  it('cliente sin credito: avisa que no admite abonos', async () => {
+    const f = ficha(false)
+    let path = '/home'
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 12, nombre: 'Sheny', permiteCredito: false }]),
+      getPathname: () => path,
+      navigate: (to: string) => {
+        path = to
+        f.overrides.navigate(to)
+      },
+    })
+    expect(await actions.execute('abrir_formulario_cliente', { cliente: 'Sheny', tipo: 'abono' })).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/no tiene credito/),
+    })
+  })
+
+  it('rechaza un tipo invalido o sin cliente, sin navegar', async () => {
+    const { actions, navigate } = setup('admin')
+    expect((await actions.execute('abrir_formulario_cliente', { cliente: 'Sheny', tipo: 'devolucion' })).ok).toBe(false)
+    expect((await actions.execute('abrir_formulario_cliente', { tipo: 'abono' })).ok).toBe(false)
     expect(navigate).not.toHaveBeenCalled()
   })
 })
@@ -337,10 +476,9 @@ describe('buscar_articulos', () => {
     expect(searchArticles).not.toHaveBeenCalled()
   })
 
-  it('lo que devuelve el catálogo no sirve para agregar_item', async () => {
+  it('sin POS no se puede agregar al carrito', async () => {
     const { actions } = setup('admin')
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    expect((await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })).ok).toBe(false)
+    expect((await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })).ok).toBe(false)
     expect(sales().items).toHaveLength(0)
   })
 
@@ -355,6 +493,18 @@ describe('buscar_articulos', () => {
   })
 })
 
+describe('buscar_cliente', () => {
+  it('devuelve el saldo para responder cuanto debe sin navegar', async () => {
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 1, nombre: 'Sheny', permiteCredito: true, saldo: 9095 }]),
+    })
+    expect(await actions.execute('buscar_cliente', { texto: 'sheny' })).toEqual({
+      ok: true,
+      data: [{ id: 1, nombre: 'Sheny', permite_credito: true, saldo: 9095 }],
+    })
+  })
+})
+
 describe('sugerencias por parecido (errores de dictado)', () => {
   const marcador = { ...camisa, id: 9, name: 'Marcador con Brich', variants: camisa.variants.map((v) => ({ ...v, id: 91 })) }
 
@@ -365,13 +515,12 @@ describe('sugerencias por parecido (errores de dictado)', () => {
     expect(suggestArticles).not.toHaveBeenCalled()
   })
 
-  it('sin resultado exacto devuelve sugerencias con aviso y sirven para agregar_item', async () => {
+  it('sin resultado exacto devuelve sugerencias con aviso', async () => {
     const suggestArticles = vi.fn(async () => [marcador])
     const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles: vi.fn(async () => []), suggestArticles })
     const result = await actions.execute('buscar_articulos', { texto: 'marcador con bridge' })
     expect(result).toMatchObject({ ok: true, data: { aviso: expect.stringMatching(/pregunta/), sugerencias: [{ id: 9, nombre: 'Marcador con Brich' }] } })
     expect(suggestArticles).toHaveBeenCalledWith('marcador con bridge')
-    expect((await actions.execute('agregar_item', { articulo_id: 9, variante_id: 91, cantidad: 1 })).ok).toBe(true)
   })
 
   it('sin resultado ni sugerencias devuelve la lista vacia', async () => {
@@ -720,8 +869,7 @@ describe('admin: sin POS pero con acceso a clientes', () => {
 describe('leer_estado y robustez', () => {
   it('devuelve ruta, carrito y diálogo', async () => {
     const { actions } = setup('vendedor', POS_PATH)
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 2 })
+    await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 2 }] })
     await actions.execute('abrir_carrito', {})
 
     const result = await actions.execute('leer_estado', {})

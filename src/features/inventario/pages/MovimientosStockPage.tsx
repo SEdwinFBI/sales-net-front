@@ -69,10 +69,10 @@ export default function MovimientosStockPage() {
         setPdfBusy(true)
         try {
           await downloadMovimientosPdf(filters)
-          toast.success('PDF descargado correctamente')
+          toast.success('Reporte listo para configurar')
           return true
         } catch (error) {
-          toast.error(getApiErrorMessage(error, 'Error al descargar el PDF'))
+          toast.error(getApiErrorMessage(error, 'No se pudo preparar el reporte'))
           return false
         } finally {
           setPdfBusy(false)

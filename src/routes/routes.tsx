@@ -22,6 +22,11 @@ const mainLayoutRoutes: RouteObject = {
       index: true,
       element: <RedirectIndex />,
     },
+    {
+      // Vista contextual: no se publica como entrada de sidebar ni como ruta del agente.
+      path: 'reportes/configurar-pdf',
+      lazy: async () => ({ Component: (await import('@/features/reporting/pages/PdfWorkspacePage')).default }),
+    },
     ...buildReactRoutes([...adminRoutes, ...clientesRoutes, ...reportingRoutes, ...salesRoutes, ...cashRoutes, ...catalogRoutes, ...inventarioRoutes]),
   ],
 }

@@ -34,6 +34,8 @@ const usuario = (id: number, extra: Partial<Usuario> = {}): Usuario => ({
   is_active: true,
   puede_anular: true,
   evidencia_fotografica: true,
+  transmision_audio: false,
+  agente_ia: false,
   created_at: '2026-01-01',
   hora_entrada: '04:00:00',
   hora_salida: '16:00:00',
