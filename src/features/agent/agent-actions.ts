@@ -41,6 +41,16 @@ const MAX_ITEMS_PER_ACTION = 10
 const CLEAR_MARGIN = 0.15
 /** Espera maxima para que el cobro cargue el credito del cliente antes de elegir la forma de pago. */
 const PAYMENT_WAIT_MS = 2000
+/** Espera maxima a que la ficha del cliente cargue y registre sus formularios. */
+const SCREEN_TOOL_WAIT_MS = 4000
+const LOADED_GRACE_MS = 300
+const CLIENT_DETAIL_ROUTE = '/clientes/listado/:id'
+/** Tool de la ficha del cliente que abre cada formulario de abrir_formulario_cliente. */
+const CLIENT_FORM_TOOLS: Record<string, string> = {
+  abono: 'abrir_registrar_abono',
+  venta: 'abrir_registrar_venta_cliente',
+  ajuste: 'abrir_registrar_ajuste',
+}
 const NAVIGATION_TIMEOUT_MS = 3000
 /** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
 const CONFIRM_MARGIN_MS = 3000
@@ -256,6 +266,24 @@ export function createAgentActions(deps: AgentDeps) {
     }
   }
 
+  /**
+   * Espera a que una pantalla registre `name`. Si aparece `loadedMarker` y `name` no, la pantalla ya
+   * cargo y no la ofrece: se deja de esperar. Devuelve la tool o undefined.
+   */
+  const waitForTool = async (name: string, loadedMarker: string): Promise<AgentToolDef | undefined> => {
+    const deadline = Date.now() + SCREEN_TOOL_WAIT_MS
+    let markerSince: number | null = null
+    for (;;) {
+      const tools = deps.getRegisteredTools()
+      const found = tools.find((t) => t.name === name)
+      if (found) return found
+      if (tools.some((t) => t.name === loadedMarker)) markerSince ??= Date.now()
+      // Con la pantalla ya cargada se da un margen corto por si registra sus formularios despues.
+      if (Date.now() >= deadline || (markerSince !== null && Date.now() - markerSince >= LOADED_GRACE_MS)) return undefined
+      await sleep(pollMs)
+    }
+  }
+
   const cartLine = (productId: number, variantId: number) =>
     deps.getSales().items.find((item) => item.id === itemKey(productId, variantId))
 
@@ -314,6 +342,34 @@ export function createAgentActions(deps: AgentDeps) {
       if (!(await waitForPath(resolved.path))) return fail('No se pudo completar la navegacion.')
       await settleRegistry(before)
       return ok({ ruta: resolved.path })
+    },
+
+    async abrir_formulario_cliente(args) {
+      const tipo = typeof args.tipo === 'string' ? args.tipo : ''
+      const toolName = CLIENT_FORM_TOOLS[tipo]
+      if (!toolName) return fail("tipo debe ser 'abono', 'venta' o 'ajuste'.")
+      const texto = textArg(args, 'cliente')
+      if (!texto) return fail('Indica el cliente por su nombre.')
+      if (!catalog().some((r) => r.path === CLIENT_DETAIL_ROUTE)) return fail('Tu rol no tiene acceso a la ficha de clientes.')
+      const resolved = await resolveClient(texto)
+      if ('error' in resolved) return fail(resolved.error)
+      const { client } = resolved
+
+      const path = `${CLIENTES_PATH}/${client.id}`
+      if (deps.getPathname() !== path) {
+        const moved = await actions.navegar({ ruta: path })
+        if (!moved.ok) return moved
+      }
+      // La ficha registra sus formularios al cargar al cliente, y solo si tiene credito.
+      const def = await waitForTool(toolName, 'leer_cliente')
+      if (!def) return fail(`${client.nombre} no tiene credito: no admite ${tipo}s. Su ficha quedo abierta.`)
+      const formArgs = args.valores && typeof args.valores === 'object' ? { valores: args.valores } : {}
+      const invalid = def.validar?.(formArgs)
+      if (invalid) return fail(invalid)
+      const before = deps.getRegistryVersion()
+      const result = await def.run(formArgs)
+      if (result.ok) await settleRegistry(before)
+      return result.ok ? ok({ cliente: client.nombre, saldo: client.saldo, ...(result.data as object) }) : result
     },
 
     async leer_estado() {

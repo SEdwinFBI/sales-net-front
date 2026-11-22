@@ -394,6 +394,65 @@ describe('preparar_venta: cliente por nombre y forma de pago', () => {
   })
 })
 
+describe('abrir_formulario_cliente', () => {
+  /** Imita la ficha del cliente: registra sus tools al navegar a ella (con o sin credito). */
+  const ficha = (conCredito = true) => {
+    const run = vi.fn(async () => ({ ok: true as const, data: { mensaje: 'Formulario de abono abierto.' } }))
+    const navigate = vi.fn()
+    return {
+      run,
+      overrides: {
+        navigate: (to: string) => {
+          navigate(to)
+          registrar('ficha', herramienta('leer_cliente'), ...(conCredito ? [herramienta('abrir_registrar_abono', run)] : []))
+        },
+      },
+      navigate,
+    }
+  }
+
+  it('busca al cliente, abre su ficha y el formulario en una llamada, con su saldo', async () => {
+    const f = ficha()
+    let path = '/home'
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 12, nombre: 'Sheny', permiteCredito: true, saldo: 9095 }]),
+      getPathname: () => path,
+      navigate: (to: string) => {
+        path = to
+        f.overrides.navigate(to)
+      },
+    })
+    const result = await actions.execute('abrir_formulario_cliente', { cliente: 'sheny', tipo: 'abono', valores: { monto: 100 } })
+    expect(result).toMatchObject({ ok: true, data: { cliente: 'Sheny', saldo: 9095, mensaje: expect.stringMatching(/abono/) } })
+    expect(f.navigate).toHaveBeenCalledWith('/clientes/listado/12')
+    expect(f.run).toHaveBeenCalledWith({ valores: { monto: 100 } })
+  })
+
+  it('cliente sin credito: avisa que no admite abonos', async () => {
+    const f = ficha(false)
+    let path = '/home'
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 12, nombre: 'Sheny', permiteCredito: false }]),
+      getPathname: () => path,
+      navigate: (to: string) => {
+        path = to
+        f.overrides.navigate(to)
+      },
+    })
+    expect(await actions.execute('abrir_formulario_cliente', { cliente: 'Sheny', tipo: 'abono' })).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/no tiene credito/),
+    })
+  })
+
+  it('rechaza un tipo invalido o sin cliente, sin navegar', async () => {
+    const { actions, navigate } = setup('admin')
+    expect((await actions.execute('abrir_formulario_cliente', { cliente: 'Sheny', tipo: 'devolucion' })).ok).toBe(false)
+    expect((await actions.execute('abrir_formulario_cliente', { tipo: 'abono' })).ok).toBe(false)
+    expect(navigate).not.toHaveBeenCalled()
+  })
+})
+
 describe('buscar_articulos', () => {
   it('con POS busca en el POS (con stock)', async () => {
     const { actions, searchArticles, searchCatalog } = setup('vendedor')
