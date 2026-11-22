@@ -150,7 +150,8 @@ export default function MainLayout() {
         </div>
       </div>
 
-      <AgentWidget onLogout={handleLogout} />
+      {/* El asistente es un permiso por usuario que enciende el admin. */}
+      {user.agente_ia === true && <AgentWidget onLogout={handleLogout} />}
     </div>
   )
 }

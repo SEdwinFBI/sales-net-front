@@ -92,7 +92,8 @@ function LayoutHeader({
   const theme = useThemeStore((state) => state.theme)
   const toggleTheme = useThemeStore((state) => state.toggleTheme)
 
-  const isSeller = user.role === 'vendedor'
+  // El indicador de microfono solo aplica a vendedores con la transmision de audio encendida.
+  const isSeller = user.role === 'vendedor' && user.transmision_audio === true
   const micStatus = useMicArbitratorStore((state) => state.micStatus)
   const isStreaming = useMicArbitratorStore((state) => state.isStreamingToAdmin)
   const promptTrigger = useMicArbitratorStore((state) => state.promptTrigger)
