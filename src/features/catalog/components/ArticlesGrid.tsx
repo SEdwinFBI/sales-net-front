@@ -17,6 +17,7 @@ import DeleteArticleDialog from './DeleteArticleDialog'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildArticulosTools, type ArticuloFormValues } from '../agent/articulos-tools'
 import { paginationTool, slicePagination } from '@/features/agent/pagination-tools'
+import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
 type Props = {
   data: Article[]
@@ -33,6 +34,11 @@ export default function ArticlesGrid({ data, variants = [], isLoading }: Props) 
   const [sizeFilter, setSizeFilter] = useState<'all' | ArticleSize>('all')
   const [sizesStateFilter, setSizesStateFilter] = useState<'all' | 'with-sizes' | 'without-sizes'>('all')
   const [currentPage, setCurrentPage] = useState(1)
+  // La busqueda rapida del encabezado abre la lista ya filtrada.
+  useBuscarParam((texto) => {
+    setGlobalFilter(texto)
+    setCurrentPage(1)
+  })
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [articleToDelete, setArticleToDelete] = useState<Article | null>(null)

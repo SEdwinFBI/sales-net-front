@@ -9,6 +9,8 @@ import { allFeatureRoutes } from '@/routes/feature-routes'
 import type { User } from '@/features/auth/types/auth'
 import { useThemeStore } from '@/features/core/store/theme-store'
 import { useMicArbitratorStore, type MicPermissionStatus } from '@/features/core/store/useMicArbitratorStore'
+import QuickSearchBar from '@/features/core/quick-search/QuickSearchBar'
+import { useQuickSearchSources } from '@/features/core/quick-search/useQuickSearchSources'
 
 type LayoutHeaderProps = {
   hasSidebarNavigation: boolean
@@ -90,7 +92,8 @@ function LayoutHeader({
   const theme = useThemeStore((state) => state.theme)
   const toggleTheme = useThemeStore((state) => state.toggleTheme)
 
-  const isSeller = user.role === 'vendedor'
+  // El indicador de microfono solo aplica a vendedores con la transmision de audio encendida.
+  const isSeller = user.role === 'vendedor' && user.transmision_audio === true
   const micStatus = useMicArbitratorStore((state) => state.micStatus)
   const isStreaming = useMicArbitratorStore((state) => state.isStreamingToAdmin)
   const promptTrigger = useMicArbitratorStore((state) => state.promptTrigger)
@@ -101,6 +104,9 @@ function LayoutHeader({
     [location.pathname],
   )
   const activePageName = routeTrail.at(-1)
+  // Accesos de busqueda rapida que el usuario tiene encendidos. En el telefono ocupan el lugar del titulo.
+  const { visibles: quickSources, rutas: quickRutas } = useQuickSearchSources(user)
+  const hasQuickSearch = quickSources.length > 0
   const parentSectionName = routeTrail.length > 1 ? routeTrail[0] : null
   void sidebarItems
 
@@ -145,7 +151,7 @@ function LayoutHeader({
             )}
           </button>
 
-          <div className="min-w-0">
+          <div className={cn('min-w-0', hasQuickSearch && 'hidden sm:block')}>
             <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
               {parentSectionName ? `Distribuidora MZ · ${parentSectionName}` : 'Distribuidora MZ'}
             </p>
@@ -153,6 +159,8 @@ function LayoutHeader({
               {activePageName ?? 'Tablero comercial'}
             </p>
           </div>
+
+          <QuickSearchBar sources={quickSources} rutas={quickRutas} className="sm:ml-2" />
         </div>
 
         {/* Derecha: estado mic vendedor + usuario + acciones rápidas */}
@@ -216,17 +224,15 @@ function LayoutHeader({
 
           {/* Acciones */}
           <div className="flex items-center gap-1 rounded-xl border border-border/70 bg-muted/35 p-1">
-            {user.permissions.includes('admin') && (
-              <button
-                type="button"
-                onClick={onSettings}
-                aria-label="Configurar notificaciones"
-                title="Configurar notificaciones"
-                className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground hover:shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Settings className="size-4" aria-hidden="true" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onSettings}
+              aria-label="Configuración"
+              title="Configuración"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground hover:shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={toggleTheme}
@@ -255,7 +261,10 @@ function LayoutHeader({
 
       {/* Identidad compacta en mobile */}
       <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/50 pt-1.5 text-[11px] sm:hidden">
-        <span className="truncate font-semibold text-foreground">{displayName}</span>
+        <span className="truncate font-semibold text-foreground">
+          {/* Con los accesos en el lugar del titulo, el nombre de la pagina baja aqui. */}
+          {hasQuickSearch ? `${activePageName ?? 'Tablero comercial'} · ${displayName}` : displayName}
+        </span>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted/70 px-2 py-0.5 font-medium text-muted-foreground">
           <Store className="size-3 text-primary" aria-hidden="true" />
           <span className="max-w-32 truncate">{user.sucursalActual?.nombre ?? user.username}</span>
