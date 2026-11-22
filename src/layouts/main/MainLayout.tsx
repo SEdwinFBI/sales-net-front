@@ -10,6 +10,7 @@ import MobileSidebar from './MobileSidebar'
 import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
 import AgentWidget from '@/features/agent/components/AgentWidget'
+import PdfWorkspaceNavigation from '@/components/shared/PdfWorkspaceNavigation'
 import { useSellerLiveAudio } from '@/features/audit/hooks/useSellerLiveAudio'
 
 export default function MainLayout() {
@@ -98,6 +99,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen text-foreground">
+      <PdfWorkspaceNavigation />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lg"

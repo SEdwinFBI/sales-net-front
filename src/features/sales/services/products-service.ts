@@ -1,6 +1,6 @@
 import { api } from '@/lib/api'
 import { formatCurrency } from '@/helpers/money'
-import { triggerBlobDownload } from '@/lib/download-blob'
+import { previewReport } from '@/lib/report-pdf'
 import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse, BranchAvailability } from '../types/sales'
 
 /**
@@ -41,10 +41,9 @@ export interface HistorialPdfFiltros {
  * filtradas en pantalla) para que el documento refleje exactamente lo mostrado.
  */
 export const downloadHistorialVentasPdf = async (ids: number[], filtros: HistorialPdfFiltros) => {
-  const response = await api.post('/ventas/historial/pdf', { ids, filtros }, {
-    responseType: 'blob',
+  await previewReport('/ventas/historial/pdf', `historial_ventas_${new Date().toISOString().slice(0, 10)}.pdf`, {
+    method: 'post', data: { ids: [...ids], filtros: { ...filtros } },
   })
-  triggerBlobDownload(response.data, `historial_ventas_${new Date().toISOString().slice(0, 10)}.pdf`)
 }
 
 export const submitSale = async (payload: SubmitSalePayload): Promise<SubmitSaleResponse> => {

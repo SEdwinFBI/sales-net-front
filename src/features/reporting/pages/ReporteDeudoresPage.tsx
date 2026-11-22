@@ -28,10 +28,10 @@ export default function ReporteDeudoresPage() {
     setPdfLoading(true)
     try {
       await downloadReporteDeudoresPdf(activeFilters)
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch {
-      toast.error('Error al descargar el PDF')
+      toast.error('No se pudo preparar el reporte')
       return false
     } finally {
       setPdfLoading(false)
@@ -94,7 +94,7 @@ export default function ReporteDeudoresPage() {
             )}
             <Button onClick={handleExportPdf} disabled={pdfLoading} className="h-9 flex-1">
               <FileDown />
-              {pdfLoading ? 'Descargando...' : 'Descargar'}
+              {pdfLoading ? 'Preparando...' : 'Configurar reporte'}
             </Button>
           </div>
         </div>

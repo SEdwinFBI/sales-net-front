@@ -93,10 +93,10 @@ export default function CashAuditsPage() {
         id_sucursal: branchId ?? undefined,
         id_usuario: userId ?? undefined,
       })
-      toast.success('Reporte descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'No se pudo descargar el reporte'))
+      toast.error(getApiErrorMessage(error, 'No se pudo preparar el reporte'))
       return false
     } finally {
       setDownloading(false)
@@ -176,7 +176,7 @@ export default function CashAuditsPage() {
                 </Button>
                 <Button className="self-end" onClick={downloadReport} disabled={downloading}>
                   {downloading ? <Loader2 className="animate-spin" /> : <FileDown />}
-                  {downloading ? 'Generando…' : 'Descargar'}
+                  {downloading ? 'Preparando…' : 'Configurar reporte'}
                 </Button>
               </div>
             </div>

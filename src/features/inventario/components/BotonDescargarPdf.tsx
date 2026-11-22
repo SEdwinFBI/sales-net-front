@@ -6,23 +6,23 @@ import { Button } from '@/components/ui/button'
 import { getApiErrorMessage } from '@/lib/api-error'
 
 type Props = {
-  /** Debe descargar el PDF; el botón sólo maneja el estado y los avisos. */
+  /** Genera el PDF y solicita abrir su vista de configuración. */
   onDownload: () => Promise<void>
   disabled?: boolean
   label?: string
 }
 
-/** Botón de descarga compartido por las pantallas de inventario. */
-export default function BotonDescargarPdf({ onDownload, disabled, label = 'Descargar PDF' }: Props) {
+/** Acceso al configurador compartido por las pantallas de inventario. */
+export default function BotonDescargarPdf({ onDownload, disabled, label = 'Configurar reporte' }: Props) {
   const [loading, setLoading] = useState(false)
 
   const handleClick = async () => {
     setLoading(true)
     try {
       await onDownload()
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Error al descargar el PDF'))
+      toast.error(getApiErrorMessage(error, 'No se pudo preparar el reporte'))
     } finally {
       setLoading(false)
     }
@@ -31,7 +31,7 @@ export default function BotonDescargarPdf({ onDownload, disabled, label = 'Desca
   return (
     <Button onClick={handleClick} disabled={loading || disabled} className="h-9 shrink-0">
       <FileDown />
-      {loading ? 'Descargando…' : label}
+      {loading ? 'Generando…' : label}
     </Button>
   )
 }

@@ -116,10 +116,10 @@ export default function HistorialVentasPage() {
           busqueda: searchText || undefined,
         },
       )
-      toast.success('PDF descargado correctamente')
+      toast.success('Reporte listo para configurar')
       return true
     } catch {
-      toast.error('Error al descargar el PDF')
+      toast.error('No se pudo preparar el reporte')
       return false
     } finally {
       setPdfLoading(false)
@@ -241,7 +241,7 @@ export default function HistorialVentasPage() {
               className="h-9"
             >
               <FileDown />
-              {pdfLoading ? 'Descargando...' : 'Descargar PDF'}
+              {pdfLoading ? 'Preparando...' : 'Configurar reporte'}
             </Button>
           </div>
 

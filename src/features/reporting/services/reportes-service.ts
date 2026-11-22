@@ -1,4 +1,5 @@
 import { api } from '@/lib/api'
+import { previewReport } from '@/lib/report-pdf'
 import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters, ReporteCobros, ReporteCobrosFilters } from '../types/reportes'
 
 
@@ -45,19 +46,9 @@ export const getReporteVentas = async (filters?: ReporteVentasFilters): Promise<
 
 /** Descarga un PDF vía blob y dispara el guardado en el navegador. */
 async function downloadPdf(url: string, filename: string, params?: Record<string, unknown>) {
-  const response = await api.get(url, {
+  await previewReport(url, filename, {
     params: { ...params, output: 'pdf' },
-    responseType: 'blob',
   })
-  const blob = new Blob([response.data], { type: 'application/pdf' })
-  const blobUrl = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = blobUrl
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  window.URL.revokeObjectURL(blobUrl)
 }
 
 export const downloadReporteVentasPdf = async (filters?: ReporteVentasFilters) => {
@@ -105,4 +96,3 @@ export const getDashboardData = async (filters?: DashboardFilters): Promise<Dash
   const { data } = await api.get<{ status: string; data: DashboardData }>('/reportes/dashboard', { params })
   return data.data
 }
-
