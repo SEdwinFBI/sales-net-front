@@ -17,7 +17,7 @@ export const salesRoutes: AppRoute[] = [
           description: 'Venta de productos',
           icon: Store,
           permissions: ['vendedor'],
-          agentHint: 'Punto de venta: HACER una venta. Carrito: buscar y agregar productos, elegir o crear cliente, existencias en otras sucursales, cobro.',
+          agentHint: 'Punto de venta: HACER una venta. Carrito: buscar y agregar productos, elegir o crear cliente, existencias en otras sucursales, cobrar la venta.',
           lazy: () => import('./pages/PosPage'),
         },
       },

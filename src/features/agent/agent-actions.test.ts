@@ -355,6 +355,18 @@ describe('buscar_articulos', () => {
   })
 })
 
+describe('buscar_cliente', () => {
+  it('devuelve el saldo para responder cuanto debe sin navegar', async () => {
+    const { actions } = setup('admin', '/home', allFeatureRoutes, {
+      searchClients: vi.fn(async () => [{ id: 1, nombre: 'Sheny', permiteCredito: true, saldo: 9095 }]),
+    })
+    expect(await actions.execute('buscar_cliente', { texto: 'sheny' })).toEqual({
+      ok: true,
+      data: [{ id: 1, nombre: 'Sheny', permite_credito: true, saldo: 9095 }],
+    })
+  })
+})
+
 describe('sugerencias por parecido (errores de dictado)', () => {
   const marcador = { ...camisa, id: 9, name: 'Marcador con Brich', variants: camisa.variants.map((v) => ({ ...v, id: 91 })) }
 

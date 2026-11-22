@@ -39,7 +39,7 @@ const NAVIGATION_TIMEOUT_MS = 3000
 const CONFIRM_MARGIN_MS = 3000
 const MIN_CONFIRM_MS = 5000
 
-export type AgentClient = { id: number; nombre: string; telefono?: string; permiteCredito?: boolean }
+export type AgentClient = { id: number; nombre: string; telefono?: string; permiteCredito?: boolean; saldo?: number }
 
 /** Dependencias externas de las acciones; se inyectan para poder probarlas sin red ni router. */
 export type AgentDeps = {
@@ -119,7 +119,7 @@ type Args = Record<string, unknown>
 type Action = (args: Args) => Promise<ToolResult>
 
 function toAgentClient(c: Awaited<ReturnType<typeof getClientes>>['results'][number]): AgentClient {
-  return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito }
+  return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito, saldo: Number(c.balance) || 0 }
 }
 
 const fail = (error: string): ToolResult => ({ ok: false, error })
@@ -363,6 +363,8 @@ export function createAgentActions(deps: AgentDeps) {
         nombre: c.nombre,
         ...(c.telefono ? { telefono: c.telefono } : {}),
         ...(c.permiteCredito !== undefined ? { permite_credito: c.permiteCredito } : {}),
+        // Lo que debe: responde "cuanto debe X" sin navegar a su ficha ni a reportes.
+        ...(c.saldo !== undefined ? { saldo: c.saldo } : {}),
       }))
       return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
