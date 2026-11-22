@@ -15,6 +15,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-32.png', 'icons/apple-touch-icon-180.png'],
+      // Avisos push: se suman al service worker generado sin reemplazarlo.
+      workbox: { importScripts: ['push-sw.js'] },
       manifest: {
         name: 'SalesNet Distribuidora Mendez',
         short_name: 'SalesNet',
