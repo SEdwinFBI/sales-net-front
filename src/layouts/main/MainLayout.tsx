@@ -137,7 +137,7 @@ export default function MainLayout() {
             user={user}
             onLogout={handleLogout}
             onSidebarToggle={handleSidebarToggle}
-            onSettings={() => navigate('/administracion/notificaciones')}
+            onSettings={() => navigate('/administracion/configuracion')}
           />
 
           <main id="main-content" className="min-w-0 flex-1 py-3 pb-10 sm:py-4">

@@ -30,6 +30,7 @@ import { useSucursales } from '../../branches/hooks/useSucursales'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildUsuariosTools, type UsuarioFormValues } from '../../agent/usuarios-tools'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
+import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
 type Props = {
   data: Usuario[]
@@ -64,6 +65,8 @@ function PresenceDot({ sessions }: { sessions: number }) {
 
 export default function UsuariosTable({ data, isLoading, online }: Props) {
   const [globalFilter, setGlobalFilter] = useState('')
+  // La busqueda rapida del encabezado abre la lista ya filtrada.
+  useBuscarParam(setGlobalFilter)
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null)

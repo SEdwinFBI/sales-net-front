@@ -11,6 +11,17 @@ export const adminRoutes: AppRoute[] = [
     },
     children: [
       {
+        path: 'configuracion',
+        meta: {
+          name: 'Configuración',
+          description: 'Ajustes de tu cuenta',
+          permissions: ['admin', 'vendedor'],
+          hideFromSidebar: true,
+          agentHint: 'Configuracion: elegir que accesos de busqueda rapida se ven en el encabezado. Solo navegar.',
+          lazy: () => import('./settings/pages/ConfiguracionPage'),
+        },
+      },
+      {
         path: 'sucursales',
         meta: {
           name: 'Sucursales',

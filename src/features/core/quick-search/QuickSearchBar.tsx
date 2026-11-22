@@ -7,14 +7,15 @@ import QuickSearchDrawer from './QuickSearchDrawer'
 
 type Props = {
   sources: QuickSearchSource[]
+  rutas: ReadonlySet<string>
   className?: string
 }
 
 /**
- * Accesos directos de búsqueda del header. En el teléfono, ícono con la etiqueta debajo (como una
- * barra de pestañas, para que quepan tres); desde `sm`, ícono y etiqueta en línea.
+ * Accesos rápidos de búsqueda del header: solo íconos (el nombre va como texto accesible y en la
+ * ayuda al pasar el mouse) bajo un título pequeño, para que quepan todos sin desplazamiento.
  */
-export default function QuickSearchBar({ sources, className }: Props) {
+export default function QuickSearchBar({ sources, rutas, className }: Props) {
   const [open, setOpen] = useState(false)
   const [sourceId, setSourceId] = useState<QuickSearchSourceId>(sources[0]?.id ?? 'clientes')
 
@@ -27,26 +28,31 @@ export default function QuickSearchBar({ sources, className }: Props) {
 
   return (
     <>
-      <nav aria-label="Busqueda rapida" className={cn('flex min-w-0 items-center gap-1 sm:gap-1.5', className)}>
-        {sources.map((source) => (
-          <button
-            key={source.id}
-            type="button"
-            onClick={() => abrir(source.id)}
-            aria-label={`Buscar ${source.label.toLowerCase()}`}
-            title={`Buscar ${source.label.toLowerCase()}`}
-            className="inline-flex min-w-14 cursor-pointer flex-col items-center gap-0.5 rounded-xl border border-border/70 bg-background/70 px-2 py-1 text-[10px] font-semibold text-foreground transition-colors hover:border-primary/35 hover:bg-accent/70 hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60 sm:min-w-0 sm:flex-row sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-xs"
-          >
-            <source.icon className="size-4 text-primary" aria-hidden="true" />
-            <span className="leading-none">{source.label}</span>
-          </button>
-        ))}
+      <nav aria-labelledby="accesos-rapidos" className={cn('min-w-0', className)}>
+        <p id="accesos-rapidos" className="text-[10px] font-semibold uppercase leading-none tracking-[0.14em] text-primary">
+          Accesos rápidos
+        </p>
+        <div className="mt-1 flex items-center gap-1.5">
+          {sources.map((source) => (
+            <button
+              key={source.id}
+              type="button"
+              onClick={() => abrir(source.id)}
+              aria-label={`Buscar ${source.label.toLowerCase()}`}
+              title={`Buscar ${source.label.toLowerCase()}`}
+              className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border/70 bg-background/70 text-primary transition-colors hover:border-primary/35 hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/60"
+            >
+              <source.icon className="size-4" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
       </nav>
 
       <QuickSearchDrawer
         open={open}
         onOpenChange={setOpen}
         sources={sources}
+        rutas={rutas}
         sourceId={sourceId}
         onSourceChange={setSourceId}
       />

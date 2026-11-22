@@ -15,11 +15,13 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   sources: QuickSearchSource[]
+  /** Rutas que el rol puede abrir (Productos busca en el POS o en el catalogo segun cual tenga). */
+  rutas: ReadonlySet<string>
   sourceId: QuickSearchSourceId
   onSourceChange: (id: QuickSearchSourceId) => void
 }
 
-export default function QuickSearchDrawer({ open, onOpenChange, sources, sourceId, onSourceChange }: Props) {
+export default function QuickSearchDrawer({ open, onOpenChange, sources, rutas, sourceId, onSourceChange }: Props) {
   const navigate = useNavigate()
   const source = sources.find((s) => s.id === sourceId) ?? sources[0]
   const [texto, setTexto] = useState('')
@@ -33,7 +35,7 @@ export default function QuickSearchDrawer({ open, onOpenChange, sources, sourceI
   const habilitado = open && Boolean(source) && buscado.length >= MIN_CHARS
   const { data: resultados = [], isFetching, isError } = useQuery({
     queryKey: ['quick-search', source?.id, buscado],
-    queryFn: () => (source ? source.search(buscado) : Promise.resolve([])),
+    queryFn: () => (source ? source.search(buscado, rutas) : Promise.resolve([])),
     enabled: habilitado,
     staleTime: 30_000,
   })

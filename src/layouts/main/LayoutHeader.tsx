@@ -10,7 +10,7 @@ import type { User } from '@/features/auth/types/auth'
 import { useThemeStore } from '@/features/core/store/theme-store'
 import { useMicArbitratorStore, type MicPermissionStatus } from '@/features/core/store/useMicArbitratorStore'
 import QuickSearchBar from '@/features/core/quick-search/QuickSearchBar'
-import { sourcesForPermissions } from '@/features/core/quick-search/quick-search-config'
+import { useQuickSearchSources } from '@/features/core/quick-search/useQuickSearchSources'
 
 type LayoutHeaderProps = {
   hasSidebarNavigation: boolean
@@ -103,8 +103,8 @@ function LayoutHeader({
     [location.pathname],
   )
   const activePageName = routeTrail.at(-1)
-  // Accesos de busqueda rapida que el rol puede usar. En el telefono ocupan el lugar del titulo.
-  const quickSources = useMemo(() => sourcesForPermissions(user.permissions), [user.permissions])
+  // Accesos de busqueda rapida que el usuario tiene encendidos. En el telefono ocupan el lugar del titulo.
+  const { visibles: quickSources, rutas: quickRutas } = useQuickSearchSources(user)
   const hasQuickSearch = quickSources.length > 0
   const parentSectionName = routeTrail.length > 1 ? routeTrail[0] : null
   void sidebarItems
@@ -159,7 +159,7 @@ function LayoutHeader({
             </p>
           </div>
 
-          <QuickSearchBar sources={quickSources} className="sm:ml-2" />
+          <QuickSearchBar sources={quickSources} rutas={quickRutas} className="sm:ml-2" />
         </div>
 
         {/* Derecha: estado mic vendedor + usuario + acciones rápidas */}
@@ -223,17 +223,15 @@ function LayoutHeader({
 
           {/* Acciones */}
           <div className="flex items-center gap-1 rounded-xl border border-border/70 bg-muted/35 p-1">
-            {user.permissions.includes('admin') && (
-              <button
-                type="button"
-                onClick={onSettings}
-                aria-label="Configurar notificaciones"
-                title="Configurar notificaciones"
-                className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground hover:shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Settings className="size-4" aria-hidden="true" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onSettings}
+              aria-label="Configuración"
+              title="Configuración"
+              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground hover:shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Settings className="size-4" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={toggleTheme}
