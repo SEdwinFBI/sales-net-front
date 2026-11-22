@@ -309,11 +309,11 @@ describe('carrito y cobro requieren el punto de venta', () => {
     }
   })
 
-  it('abrir_checkout deja el cobro listo pero nunca envía la venta', async () => {
+  it('preparar_venta deja el cobro listo pero nunca envía la venta', async () => {
     const { actions, navigate } = setup('vendedor', '/home')
     await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
 
-    const result = await actions.execute('abrir_checkout', {})
+    const result = await actions.execute('preparar_venta', {})
     expect(result.ok).toBe(true)
     expect(navigate).toHaveBeenCalledWith(POS_PATH)
     expect(sales().activeDialog).toBe('checkout')
@@ -321,9 +321,9 @@ describe('carrito y cobro requieren el punto de venta', () => {
     expect(sales().lastSale).toBeNull()
   })
 
-  it('abrir_checkout con el carrito vacío falla', async () => {
+  it('preparar_venta con el carrito vacío falla', async () => {
     const { actions } = setup()
-    expect((await actions.execute('abrir_checkout', {})).ok).toBe(false)
+    expect((await actions.execute('preparar_venta', {})).ok).toBe(false)
     expect(sales().activeDialog).toBeNull()
   })
 
@@ -331,13 +331,66 @@ describe('carrito y cobro requieren el punto de venta', () => {
     const { actions, searchArticles, navigate } = setup('admin')
     for (const [name, args] of [
       ['abrir_carrito', {}],
-      ['abrir_checkout', {}],
+      ['preparar_venta', {}],
       ['seleccionar_cliente', { cliente_id: 12 }],
     ] as const) {
       expect((await actions.execute(name, args)).ok).toBe(false)
     }
     expect(searchArticles).not.toHaveBeenCalled()
     expect(navigate).not.toHaveBeenCalled()
+  })
+})
+
+describe('preparar_venta: cliente por nombre y forma de pago', () => {
+  const conCarrito = async (overrides: Partial<AgentDeps> = {}) => {
+    const ctx = setup('vendedor', POS_PATH, allFeatureRoutes, overrides)
+    await ctx.actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
+    return ctx
+  }
+  /** Imita la tool del CheckoutDialog; `listoTras` simula que el credito del cliente tarda en cargar. */
+  const formaDePago = (listoTras = 0) => {
+    let intentos = 0
+    const run = vi.fn(async () => ({ ok: true as const, data: {} }))
+    registrar('checkout', herramienta('elegir_forma_pago', run, { validar: () => (intentos++ < listoTras ? 'cargando' : null) }))
+    return run
+  }
+
+  it('selecciona al cliente por nombre, abre el cobro y elige credito en una llamada', async () => {
+    const { actions } = await conCarrito()
+    const run = formaDePago()
+    const result = await actions.execute('preparar_venta', { cliente: 'juan perez', forma_pago: 'credito' })
+    expect(result).toMatchObject({ ok: true, data: { cliente: 'Juan Pérez', forma_pago: 'credito' } })
+    expect(sales().selectedCustomerId).toBe('12')
+    expect(sales().activeDialog).toBe('checkout')
+    expect(run).toHaveBeenCalledWith({ forma: 'credito' })
+    expect(sales().lastSale).toBeNull()
+  })
+
+  it('espera a que el cobro cargue el credito antes de elegir la forma de pago', async () => {
+    const { actions } = await conCarrito()
+    const run = formaDePago(2)
+    expect(await actions.execute('preparar_venta', { cliente: 'Juan Pérez', forma_pago: 'credito' })).toMatchObject({ ok: true, data: { forma_pago: 'credito' } })
+    expect(run).toHaveBeenCalledOnce()
+  })
+
+  it('credito a un cliente sin credito o sin cliente: falla antes de abrir el cobro', async () => {
+    const { actions } = await conCarrito({ searchClients: vi.fn(async () => [{ id: 5, nombre: 'Ana', permiteCredito: false }]) })
+    expect(await actions.execute('preparar_venta', { cliente: 'Ana', forma_pago: 'credito' })).toMatchObject({ ok: false, error: expect.stringMatching(/no tiene credito/) })
+    expect((await actions.execute('preparar_venta', { forma_pago: 'credito' })).ok).toBe(false)
+    expect(sales().activeDialog).toBeNull()
+  })
+
+  it('varios clientes parecidos: pregunta cual sin seleccionar', async () => {
+    const { actions } = await conCarrito({
+      searchClients: vi.fn(async () => [{ id: 1, nombre: 'Juan Perez' }, { id: 2, nombre: 'Juan Lopez' }]),
+    })
+    expect(await actions.execute('preparar_venta', { cliente: 'juan' })).toMatchObject({ ok: false, error: expect.stringMatching(/Cual cliente: .*Juan Perez.*Juan Lopez/) })
+    expect(sales().selectedCustomerId).toBe('')
+  })
+
+  it('rechaza una forma de pago invalida', async () => {
+    const { actions } = await conCarrito()
+    expect((await actions.execute('preparar_venta', { forma_pago: 'tarjeta' })).ok).toBe(false)
   })
 })
 

@@ -39,6 +39,8 @@ const MAX_QTY_PER_ACTION = 999
 const MAX_ITEMS_PER_ACTION = 10
 /** Ventaja minima de parecido para elegir un producto entre varios sin preguntar. */
 const CLEAR_MARGIN = 0.15
+/** Espera maxima para que el cobro cargue el credito del cliente antes de elegir la forma de pago. */
+const PAYMENT_WAIT_MS = 2000
 const NAVIGATION_TIMEOUT_MS = 3000
 /** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
 const CONFIRM_MARGIN_MS = 3000
@@ -217,6 +219,42 @@ export function createAgentActions(deps: AgentDeps) {
   /** Todas las tools de venta exigen acceso a la pantalla del punto de venta. */
   const posGuard = (): ToolResult | null =>
     canUsePos() ? null : fail('Tu rol no tiene acceso al punto de venta.')
+
+  /** Cliente por nombre: exacto, unico o claramente mas parecido; si no, error con las opciones. */
+  const resolveClient = async (texto: string): Promise<{ client: AgentClient } | { error: string }> => {
+    const found = (await deps.searchClients(texto)).slice(0, 10)
+    const candidates = found.length > 0 ? found : deps.suggestClients ? await deps.suggestClients(texto) : []
+    if (candidates.length === 0) return { error: `No encontre al cliente ${texto}.` }
+    candidates.forEach((c) => knownClients.set(c.id, c.nombre))
+    const scored = candidates
+      .map((client) => ({ client, score: similarity(texto, client.nombre) }))
+      .sort((a, b) => b.score - a.score)
+    const exact = found.find((c) => fold(c.nombre) === fold(texto))
+    const clear = found.length > 0 && (scored.length === 1 || scored[0].score - scored[1].score >= CLEAR_MARGIN)
+    const client = exact ?? (clear ? scored[0].client : undefined)
+    if (client) return { client }
+    return { error: `Cual cliente: ${scored.slice(0, 5).map((s) => s.client.nombre).join(', ')}? Pregunta al usuario.` }
+  }
+
+  /**
+   * Elige la forma de pago con la tool del cobro abierto (vive en CheckoutDialog). El credito del
+   * cliente se carga al abrir el cobro, asi que se reintenta la validacion un momento.
+   * Devuelve un aviso si no se pudo, o null si quedo elegida.
+   */
+  const choosePayment = async (forma: string): Promise<string | null> => {
+    const deadline = Date.now() + PAYMENT_WAIT_MS
+    for (;;) {
+      const tool = deps.getRegisteredTools().find((t) => t.name === 'elegir_forma_pago')
+      const args = { forma }
+      const invalid = tool ? tool.validar?.(args) ?? null : 'No pude elegir la forma de pago: usa elegir_forma_pago.'
+      if (tool && !invalid) {
+        const result = await tool.run(args)
+        return result.ok ? null : result.error
+      }
+      if (Date.now() >= deadline) return invalid
+      await sleep(pollMs)
+    }
+  }
 
   const cartLine = (productId: number, variantId: number) =>
     deps.getSales().items.find((item) => item.id === itemKey(productId, variantId))
@@ -465,16 +503,42 @@ export function createAgentActions(deps: AgentDeps) {
       return ok({ carrito_abierto: false })
     },
 
-    async abrir_checkout() {
+    async preparar_venta(args) {
       const blocked = posGuard()
       if (blocked) return blocked
-      if (deps.getSales().items.length === 0) return fail('El carrito esta vacio.')
+      if (deps.getSales().items.length === 0) return fail('El carrito esta vacio: agrega productos con agregar_al_carrito.')
+      const forma = args.forma_pago
+      if (forma !== undefined && forma !== 'efectivo' && forma !== 'credito') return fail("forma_pago debe ser 'efectivo' o 'credito'.")
+
+      let cliente: AgentClient | undefined
+      if (args.cliente !== undefined) {
+        const texto = textArg(args, 'cliente')
+        if (!texto) return fail('cliente debe ser el nombre del cliente.')
+        const resolved = await resolveClient(texto)
+        if ('error' in resolved) return fail(resolved.error)
+        cliente = resolved.client
+        if (forma === 'credito' && cliente.permiteCredito === false) {
+          return fail(`${cliente.nombre} no tiene credito habilitado: ofrece efectivo.`)
+        }
+        // Igual que seleccionar_cliente: no toca el modo de precios por cliente.
+        deps.getSales().setSelectedCustomerId(String(cliente.id))
+      }
+      if (forma === 'credito' && !deps.getSales().selectedCustomerId) return fail('Para vender a credito indica el cliente.')
+
       const moved = await ensureOnPos()
       if (moved) return moved
-
-      // Solo abre el cobro: la venta la confirma el usuario con el boton del dialogo.
-      deps.getSales().openDialog('checkout')
-      return ok({ mensaje: 'Cobro abierto. El usuario debe confirmar la venta con el boton del dialogo.' })
+      if (deps.getSales().activeDialog !== 'checkout') {
+        const before = deps.getRegistryVersion()
+        deps.getSales().openDialog('checkout')
+        await settleRegistry(before)
+      }
+      const aviso = forma ? await choosePayment(forma) : null
+      return ok({
+        ...(cliente ? { cliente: cliente.nombre } : {}),
+        ...(forma && !aviso ? { forma_pago: forma } : {}),
+        ...(aviso ? { aviso } : {}),
+        mensaje: 'Cobro abierto. El usuario revisa y confirma la venta con el boton del dialogo.',
+      })
     },
   }
 

@@ -32,7 +32,7 @@ const ACTION_LABELS: Record<string, string> = {
   seleccionar_cliente: 'Seleccionando cliente…',
   abrir_carrito: 'Abriendo el carrito…',
   cerrar_carrito: 'Cerrando el carrito…',
-  abrir_checkout: 'Abriendo el cobro…',
+  preparar_venta: 'Preparando la venta…',
   cerrar_dialogo: 'Cerrando el diálogo…',
 }
 
