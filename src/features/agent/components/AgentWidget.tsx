@@ -122,7 +122,7 @@ export default function AgentWidget({ onLogout }: Props) {
   useEffect(() => cancelConfirmation, [cancelConfirmation])
 
   // --- voz: un toque prende, otro apaga y envía --------------------------------
-  const speech = useSpeechRecognition({ enabled: holding })
+  const speech = useSpeechRecognition({ enabled: holding, source: 'agent' })
   const setAgentListening = useAgentStore((state) => state.setListening)
   const pendingVoiceSend = useRef(false)
   const holdingRef = useRef(false)

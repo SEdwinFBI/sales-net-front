@@ -11,8 +11,10 @@ import LayoutHeader from './LayoutHeader'
 import { useDesktopMediaQuery } from '@/features/core/hooks/useDesktopMediaQuery'
 import AgentWidget from '@/features/agent/components/AgentWidget'
 import PdfWorkspaceNavigation from '@/components/shared/PdfWorkspaceNavigation'
+import { useSellerLiveAudio } from '@/features/audit/hooks/useSellerLiveAudio'
 
 export default function MainLayout() {
+  useSellerLiveAudio()
   const user = useAuthStore((state) => state.user)
   const token = useAuthStore((state) => state.token)
   const refreshExpiresAt = useAuthStore((state) => state.refreshExpiresAt)

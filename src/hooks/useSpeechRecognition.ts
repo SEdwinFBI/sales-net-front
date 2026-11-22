@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMicArbitratorStore, type SpeechSource } from '@/features/core/store/useMicArbitratorStore'
 
 /** Máximo de caracteres que se conservan del dictado (se trunca al llegar aquí). */
 export const MAX_TRANSCRIPT_LENGTH = 1500
@@ -72,7 +73,7 @@ type AudioMonitor = {
 }
 
 /**
- * Abre el micrófono sin procesamiento 
+ * Abre el micrófono sin procesamiento
  */
 async function createMonitor(): Promise<AudioMonitor> {
   const stream = await navigator.mediaDevices.getUserMedia({
@@ -114,6 +115,18 @@ function destroyMonitor(m: AudioMonitor | null) {
   m.ctx.close().catch(() => {})
 }
 
+function monitorErrorMessage(err: unknown): string {
+  if (err instanceof DOMException && err.name === 'NotAllowedError') {
+    return 'Permiso de micrófono denegado.'
+  }
+  if (err instanceof DOMException && err.name === 'NotFoundError') {
+    return 'No se detectó un micrófono.'
+  }
+  if (err instanceof DOMException && err.name === 'NotReadableError') {
+    return 'Micrófono en uso por otra app.'
+  }
+  return 'No se pudo acceder al micrófono.'
+}
 
 /**
  * Dictado continuo de voz a texto para el POS. Envuelve la Web Speech API,
@@ -127,8 +140,9 @@ function destroyMonitor(m: AudioMonitor | null) {
 export function useSpeechRecognition(options: {
   enabled: boolean
   lang?: string
+  source?: SpeechSource
 }): SpeechRecognitionResult {
-  const { enabled, lang } = options
+  const { enabled, lang, source = 'agent' } = options
 
   const [transcript, setTranscript] = useState('')
   const [interimTranscript, setInterimTranscript] = useState('')
@@ -140,22 +154,22 @@ export function useSpeechRecognition(options: {
     rec: null as SpeechRecognition | null,
     monitor: null as AudioMonitor | null,
     acc: '',                 // final acumulado
-    interimPending: '',      
-    active: false,           
-    generation: 0,           
-    sessionStart: 0,         
-    lastActivity: 0,         
-    speakingMs: 0,           
+    interimPending: '',
+    active: false,
+    generation: 0,
+    sessionStart: 0,
+    lastActivity: 0,
+    speakingMs: 0,
     restarts: [] as number[],
     gotResultsSinceStorm: false,
     watchdog: null as ReturnType<typeof setInterval> | null,
     langChain: [...LANG_CHAIN],
     langIndex: 0,
-    /** Invalida un arranque en curso (getUserMedia pendiente) si se pidió parar antes de que termine. */
+    /** Invalida un arranque en curso (getUserMedia o cesión pendiente) si se pidió parar antes de que termine. */
     startSeq: 0,
+    holdsArbitrator: false,
     mobile: isMobileBrowser(),
   })
-
 
   useEffect(() => {
     if (lang && lang !== r.current.langChain[0]) {
@@ -165,8 +179,16 @@ export function useSpeechRecognition(options: {
 
   const isSupported = getCtor() !== null
 
+  const releaseArbitrator = useCallback(() => {
+    const s = r.current
+    if (!s.holdsArbitrator) return
+    s.holdsArbitrator = false
+    useMicArbitratorStore.getState().releaseSpeechMic()
+  }, [])
+
   const teardown = useCallback((clearText: boolean) => {
     const s = r.current
+    s.startSeq++
     s.active = false
     s.generation++
     if (s.watchdog) { clearInterval(s.watchdog); s.watchdog = null }
@@ -186,7 +208,8 @@ export function useSpeechRecognition(options: {
     }
     setIsListening(false)
     setAudioLevel(0)
-  }, [])
+    releaseArbitrator()
+  }, [releaseArbitrator])
 
   // ---- crear una sesión de reconocimiento ----
   const spawnSession = useCallback(function spawn(gen: number) {
@@ -270,6 +293,7 @@ export function useSpeechRecognition(options: {
 
       if (!s.active) {
         setIsListening(false)
+        releaseArbitrator()
         return
       }
 
@@ -309,7 +333,7 @@ export function useSpeechRecognition(options: {
         setError(`No se pudo iniciar: ${detail}`)
       }
     }
-  }, [teardown])
+  }, [releaseArbitrator, teardown])
 
   const startListening = useCallback(async () => {
     const s = r.current
@@ -320,17 +344,24 @@ export function useSpeechRecognition(options: {
       return
     }
 
-    
     s.generation++
     if (s.watchdog) { clearInterval(s.watchdog); s.watchdog = null }
     if (s.rec) { try { s.rec.abort() } catch { /* noop */ } s.rec = null }
     destroyMonitor(s.monitor)
     s.monitor = null
 
-    
     const seq = ++s.startSeq
+
     if (s.mobile) {
-      // El permiso del micrófono lo pide el reconocedor (error not-allowed si se niega).
+      // En móvil el audio en vivo cede el micrófono físico antes de abrir SpeechRecognition.
+      if (!s.holdsArbitrator) {
+        s.holdsArbitrator = true
+        await useMicArbitratorStore.getState().acquireSpeechMic(source, true)
+      }
+      if (seq !== s.startSeq) {
+        releaseArbitrator()
+        return
+      }
       s.active = true
       s.langIndex = 0
       s.restarts = []
@@ -340,25 +371,45 @@ export function useSpeechRecognition(options: {
       spawnSession(s.generation)
       return
     }
+
+    // En escritorio no se pausa el audio en vivo salvo que el driver bloquee el acceso concurrente.
+    if (!s.holdsArbitrator) {
+      s.holdsArbitrator = true
+      void useMicArbitratorStore.getState().acquireSpeechMic(source, false)
+    }
+
     let monitor: AudioMonitor
     try {
       monitor = await createMonitor()
       if (seq !== s.startSeq) {
-        // Se pidió parar (o arrancar de nuevo) mientras se concedía el micrófono.
         destroyMonitor(monitor)
+        releaseArbitrator()
         return
       }
-    } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'NotAllowedError') {
-        setError('Permiso de micrófono denegado.')
-      } else if (err instanceof DOMException && err.name === 'NotFoundError') {
-        setError('No se detectó un micrófono.')
-      } else if (err instanceof DOMException && err.name === 'NotReadableError') {
-        setError('Micrófono en uso por otra app.')
+    } catch (firstErr: unknown) {
+      if (firstErr instanceof DOMException && firstErr.name === 'NotReadableError') {
+        await useMicArbitratorStore.getState().requestYieldNow(source)
+        if (seq !== s.startSeq) {
+          releaseArbitrator()
+          return
+        }
+        try {
+          monitor = await createMonitor()
+          if (seq !== s.startSeq) {
+            destroyMonitor(monitor)
+            releaseArbitrator()
+            return
+          }
+        } catch (retryErr: unknown) {
+          releaseArbitrator()
+          setError(monitorErrorMessage(retryErr))
+          return
+        }
       } else {
-        setError('No se pudo acceder al micrófono.')
+        releaseArbitrator()
+        setError(monitorErrorMessage(firstErr))
+        return
       }
-      return
     }
 
     s.monitor = monitor
@@ -372,33 +423,28 @@ export function useSpeechRecognition(options: {
 
     const gen = s.generation
 
-    
     let lastLevel = -1
     s.watchdog = setInterval(() => {
       if (gen !== s.generation || !s.active || !s.monitor) return
       const level = s.monitor.level
 
-      
       if (Math.abs(level - lastLevel) > 2) {
         lastLevel = level
         setAudioLevel(level)
       }
 
-      
       if (level > AUDIO_THRESHOLD) s.speakingMs += WATCHDOG_TICK
       else s.speakingMs = 0
 
       const now = Date.now()
       const idleMs = now - s.lastActivity
 
-      
       if (s.speakingMs >= ZOMBIE_MS && idleMs >= ZOMBIE_MS && s.rec) {
-        s.lastActivity = now 
-        try { s.rec.stop() } catch { /* noop */ } 
+        s.lastActivity = now
+        try { s.rec.stop() } catch { /* noop */ }
         return
       }
 
-      
       if (
         now - s.sessionStart > ROTATE_MS &&
         level <= AUDIO_THRESHOLD &&
@@ -411,7 +457,7 @@ export function useSpeechRecognition(options: {
     }, WATCHDOG_TICK)
 
     spawnSession(gen)
-  }, [spawnSession])
+  }, [releaseArbitrator, source, spawnSession])
 
   const stopListening = useCallback(() => {
     const s = r.current
@@ -422,8 +468,6 @@ export function useSpeechRecognition(options: {
     s.monitor = null
     setAudioLevel(0)
     if (s.rec) {
-      
-      
       const rec = s.rec
       const seq = s.startSeq
       try { rec.stop() } catch { /* noop */ }
@@ -434,11 +478,13 @@ export function useSpeechRecognition(options: {
         if (s.active || s.startSeq !== seq) return
         try { rec.abort() } catch { /* noop */ }
         setIsListening(false)
+        releaseArbitrator()
       }, STOP_FORCE_CLOSE_MS)
     } else {
       setIsListening(false)
+      releaseArbitrator()
     }
-  }, [])
+  }, [releaseArbitrator])
 
   const resetTranscript = useCallback(() => {
     r.current.acc = ''
@@ -447,19 +493,16 @@ export function useSpeechRecognition(options: {
     setInterimTranscript('')
   }, [])
 
-  
-  
   useEffect(() => {
     if (enabled) {
       startListening()
     } else {
       stopListening()
     }
-    
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled])
 
-  
   useEffect(() => {
     return () => teardown(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
