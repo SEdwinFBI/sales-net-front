@@ -10,7 +10,7 @@ import type { Product } from '@/features/sales/types/sales'
 import type { AppRoute } from '@/lib/app-routes'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import { searchCatalogArticles, suggestCatalogArticles, type CatalogSearchResult } from './catalog-search'
-import { candidatePrefixes, rankBySimilarity } from './fuzzy-search'
+import { MIN_SIMILARITY, candidatePrefixes, rankBySimilarity, similarity } from './fuzzy-search'
 import { buildCartSnapshot } from './context-snapshot'
 import { closeTopDialog, type CloseDialogOutcome } from './dialog-control'
 import {
@@ -20,6 +20,7 @@ import {
 } from './registry/agent-tool-registry'
 import { getCatalogRoutes, resolveNavigation, type CatalogRoute } from './route-catalog'
 import { useAgentStore } from './store/useAgentStore'
+import { fold } from './tool-helpers'
 import type { ToolResult } from './types'
 
 export const POS_PATH = '/venta/punto-de-venta'
@@ -34,6 +35,10 @@ const GLOBAL_CONFIRMATION: Record<string, string> = {
 
 /** Máximo de unidades que el agente agrega en una sola acción (evita errores de dictado como "mil"). */
 const MAX_QTY_PER_ACTION = 999
+/** Productos distintos por llamada a agregar_al_carrito. */
+const MAX_ITEMS_PER_ACTION = 10
+/** Ventaja minima de parecido para elegir un producto entre varios sin preguntar. */
+const CLEAR_MARGIN = 0.15
 const NAVIGATION_TIMEOUT_MS = 3000
 /** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
 const CONFIRM_MARGIN_MS = 3000
@@ -122,6 +127,28 @@ function toAgentClient(c: Awaited<ReturnType<typeof getClientes>>['results'][num
   return { id: c.id, nombre: c.nombre_completo, telefono: c.telefono, permiteCredito: c.permitir_credito, saldo: Number(c.balance) || 0 }
 }
 
+type CartRequest = { producto: string; talla?: string; cantidad: number }
+
+/** Valida items=[{producto, talla?, cantidad}] de agregar_al_carrito; devuelve el error si no sirve. */
+function parseCartRequests(raw: unknown): CartRequest[] | string {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_ITEMS_PER_ACTION) {
+    return `items debe ser una lista de 1 a ${MAX_ITEMS_PER_ACTION} productos {producto, talla, cantidad}.`
+  }
+  const pedidos: CartRequest[] = []
+  for (const item of raw) {
+    const entry = (item ?? {}) as { producto?: unknown; talla?: unknown; cantidad?: unknown }
+    const producto = typeof entry.producto === 'string' ? entry.producto.trim().slice(0, 100) : ''
+    const cantidad = entry.cantidad
+    if (!producto) return 'Cada item necesita producto (el nombre que dijo el usuario).'
+    if (typeof cantidad !== 'number' || !Number.isInteger(cantidad) || cantidad < 1 || cantidad > MAX_QTY_PER_ACTION) {
+      return `cantidad de ${producto} debe ser un entero entre 1 y ${MAX_QTY_PER_ACTION}.`
+    }
+    if (entry.talla !== undefined && typeof entry.talla !== 'string') return `talla de ${producto} debe ser un texto.`
+    pedidos.push({ producto, cantidad, ...(typeof entry.talla === 'string' && entry.talla.trim() ? { talla: entry.talla.trim() } : {}) })
+  }
+  return pedidos
+}
+
 const fail = (error: string): ToolResult => ({ ok: false, error })
 const ok = (data: unknown): ToolResult => ({ ok: true, data })
 
@@ -148,7 +175,6 @@ const itemKey = (productId: number, variantId: number) => `${productId}::${varia
  * modelo solo pueda actuar sobre ids que las búsquedas realmente devolvieron.
  */
 export function createAgentActions(deps: AgentDeps) {
-  const productCache = new Map<number, Product>()
   const knownClients = new Map<number, string>()
   const pollMs = deps.pollMs ?? 50
 
@@ -194,6 +220,40 @@ export function createAgentActions(deps: AgentDeps) {
 
   const cartLine = (productId: number, variantId: number) =>
     deps.getSales().items.find((item) => item.id === itemKey(productId, variantId))
+
+  /**
+   * Identifica producto y talla de un pedido por nombre. Solo elige sin preguntar si no hay duda:
+   * nombre exacto, una sola coincidencia, o una claramente mas parecida. Las sugerencias por error
+   * de dictado y las tallas faltantes vuelven como opciones para que el usuario elija.
+   */
+  const resolveCartRequest = async (
+    pedido: CartRequest,
+  ): Promise<{ product: Product; variant: Product['variants'][number] } | { motivo: string; opciones?: string[] }> => {
+    const found = (await deps.searchArticles(pedido.producto)).slice(0, 10)
+    if (found.length === 0) {
+      const similar = deps.suggestArticles ? await deps.suggestArticles(pedido.producto) : []
+      return similar.length > 0
+        ? { motivo: 'Sin coincidencia exacta; quizas quiso decir', opciones: similar.map((p) => p.name) }
+        : { motivo: 'No encontre ese producto.' }
+    }
+    const scored = found
+      .map((product) => ({ product, score: similarity(pedido.producto, product.name) }))
+      .sort((a, b) => b.score - a.score)
+    const exact = found.find((product) => fold(product.name) === fold(pedido.producto))
+    const clear = scored.length === 1 || (scored[0].score >= MIN_SIMILARITY && scored[0].score - scored[1].score >= CLEAR_MARGIN)
+    const product = exact ?? (clear ? scored[0].product : undefined)
+    if (!product) return { motivo: 'Hay varios productos con ese nombre; cual', opciones: scored.slice(0, 5).map((s) => s.product.name) }
+
+    const conStock = product.variants.filter((v) => v.stock > 0)
+    if (conStock.length === 0) return { motivo: `${product.name} no tiene stock.` }
+    const variant = pedido.talla
+      ? product.variants.find((v) => fold(v.size) === fold(pedido.talla ?? ''))
+      : product.variants.length === 1 ? product.variants[0] : undefined
+    const tallas = conStock.map((v) => v.size)
+    if (!variant) return { motivo: `${product.name}: ${pedido.talla ? 'esa talla no existe' : 'falta la talla'}; tallas con stock`, opciones: tallas }
+    if (variant.stock <= 0) return { motivo: `${product.name} talla ${variant.size} no tiene stock; tallas con stock`, opciones: tallas }
+    return { product, variant }
+  }
 
   const readState = () => {
     const sales = deps.getSales()
@@ -253,7 +313,7 @@ export function createAgentActions(deps: AgentDeps) {
       if (!texto) return fail('Indica el texto a buscar.')
 
       // Sin POS (p. ej. el admin) se busca en el catálogo de administración, que no trae stock
-      // ni sirve para agregar_item: eso solo se hace con artículos de la búsqueda del POS.
+      // ni sirve para el carrito.
       if (!canUsePos()) {
         if (!canAccess(CATALOGO_ARTICULOS_PATH)) return fail('Tu rol no tiene acceso a articulos.')
         const found = await deps.searchCatalog(texto)
@@ -265,8 +325,6 @@ export function createAgentActions(deps: AgentDeps) {
       let products = (await deps.searchArticles(texto)).slice(0, 10)
       const exact = products.length > 0
       if (!exact && deps.suggestArticles) products = await deps.suggestArticles(texto)
-      // Las sugerencias también van a la caché: si el usuario elige una, agregar_item no necesita otra búsqueda.
-      products.forEach((product) => productCache.set(product.id, product))
       const rows = products.map((p) => ({
         id: p.id,
         nombre: p.name,
@@ -276,36 +334,43 @@ export function createAgentActions(deps: AgentDeps) {
       return exact || rows.length === 0 ? ok(rows) : withSuggestions(rows)
     },
 
-    async agregar_item(args) {
+    async agregar_al_carrito(args) {
       const blocked = posGuard()
       if (blocked) return blocked
-      const productId = positiveInt(args, 'articulo_id')
-      const variantId = positiveInt(args, 'variante_id')
-      const cantidad = positiveInt(args, 'cantidad')
-      if (!productId || !variantId || !cantidad) return fail('Argumentos invalidos.')
-      if (cantidad > MAX_QTY_PER_ACTION) return fail(`La cantidad maxima por accion es ${MAX_QTY_PER_ACTION}.`)
+      const pedidos = parseCartRequests(args.items)
+      if (typeof pedidos === 'string') return fail(pedidos)
 
-      const product = productCache.get(productId)
-      if (!product) return fail('Articulo desconocido: busca primero con buscar_articulos.')
-      const variant = product.variants.find((v) => v.id === variantId)
-      if (!variant) return fail('Esa variante no pertenece al articulo.')
-      if (variant.stock <= 0) return fail(`${product.name} talla ${variant.size} no tiene stock.`)
-
-      const sales = deps.getSales()
-      const previous = cartLine(productId, variantId)?.qty ?? 0
-      // addItem exige el Product y suma de 1 en 1: crea la linea y setQty fija el total pedido.
-      if (!previous) sales.addItem(product, variantId)
-      const target = previous + cantidad
-      deps.getSales().setQty(itemKey(productId, variantId), target)
-
-      const line = cartLine(productId, variantId)
-      if (!line) return fail('No se pudo agregar al carrito.')
+      // Se resuelven todos los nombres en paralelo; luego se agregan en orden.
+      const resueltos = await Promise.all(pedidos.map((pedido) => resolveCartRequest(pedido)))
+      const agregados: unknown[] = []
+      const pendientes: unknown[] = []
+      resueltos.forEach((resuelto, index) => {
+        const pedido = pedidos[index]
+        if ('motivo' in resuelto) {
+          pendientes.push({ pedido: pedido.producto, ...resuelto })
+          return
+        }
+        const { product, variant } = resuelto
+        const previous = cartLine(product.id, variant.id)?.qty ?? 0
+        // addItem exige el Product y suma de 1 en 1: crea la linea y setQty fija el total pedido.
+        if (!previous) deps.getSales().addItem(product, variant.id)
+        const target = previous + pedido.cantidad
+        deps.getSales().setQty(itemKey(product.id, variant.id), target)
+        const line = cartLine(product.id, variant.id)
+        if (!line) {
+          pendientes.push({ pedido: pedido.producto, motivo: 'No se pudo agregar al carrito.' })
+          return
+        }
+        agregados.push({
+          producto: product.name,
+          talla: line.size,
+          cantidad_en_carrito: line.qty,
+          ...(line.qty < target ? { ajustado_por_stock: true } : {}),
+        })
+      })
       return ok({
-        articulo: product.name,
-        talla: line.size,
-        cantidad_en_carrito: line.qty,
-        ajustado_por_stock: line.qty < target,
-        stock: line.stock,
+        agregados,
+        ...(pendientes.length > 0 ? { pendientes, aviso: 'Pregunta al usuario por los pendientes con sus opciones.' } : {}),
       })
     },
 

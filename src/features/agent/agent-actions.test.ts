@@ -145,46 +145,75 @@ describe('navegar', () => {
   })
 })
 
-describe('agregar_item', () => {
-  it('acota la cantidad al stock: stock 3 y cantidad 5 → 3', async () => {
-    const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 5 })
+describe('agregar_al_carrito', () => {
+  const add = (items: unknown) => ({ items })
+  const polo: Product = { ...camisa, id: 8, name: 'Camisa Polo', variants: [{ id: 81, size: 'M', stock: 5, price: 120 }] }
 
-    expect(result).toMatchObject({ ok: true, data: { cantidad_en_carrito: 3, ajustado_por_stock: true } })
-    expect(sales().items).toHaveLength(1)
-    expect(sales().items[0]).toMatchObject({ id: '7::71', qty: 3, stock: 3 })
+  it('agrega por nombre y talla sin buscar antes, y acota la cantidad al stock', async () => {
+    const { actions } = setup()
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'camisa', talla: 'm', cantidad: 5 }]))
+    expect(result).toEqual({
+      ok: true,
+      data: { agregados: [{ producto: 'Camisa', talla: 'M', cantidad_en_carrito: 3, ajustado_por_stock: true }] },
+    })
+    expect(sales().items[0]).toMatchObject({ id: '7::71', qty: 3 })
   })
 
   it('suma sobre lo que ya hay en el carrito', async () => {
     const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 2 })
-
-    expect(result).toMatchObject({ ok: true, data: { cantidad_en_carrito: 3, ajustado_por_stock: false } })
-    expect(sales().items[0].qty).toBe(3)
+    await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    expect(sales().items[0].qty).toBe(2)
   })
 
-  it('rechaza un artículo que no está en la caché de búsquedas', async () => {
+  it('varios productos en una llamada: agrega los claros y devuelve pendientes con opciones', async () => {
+    const searchArticles = vi.fn(async (texto: string) => (texto.includes('polo') ? [polo] : [camisa, polo]))
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles })
+    const result = await actions.execute(
+      'agregar_al_carrito',
+      add([{ producto: 'camisa polo', talla: 'M', cantidad: 2 }, { producto: 'camisa', cantidad: 1 }]),
+    )
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        agregados: [{ producto: 'Camisa Polo', cantidad_en_carrito: 2 }],
+        pendientes: [{ pedido: 'camisa' }],
+        aviso: expect.stringMatching(/Pregunta/),
+      },
+    })
+    expect(sales().items).toHaveLength(1)
+  })
+
+  it('nombre exacto gana aunque haya otros parecidos', async () => {
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles: vi.fn(async () => [polo, camisa]) })
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'M', cantidad: 1 }]))
+    expect(result).toMatchObject({ ok: true, data: { agregados: [{ producto: 'Camisa' }] } })
+  })
+
+  it('sin talla, talla inexistente o sin stock: pendiente con las tallas con stock', async () => {
     const { actions } = setup()
-    const result = await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
-    expect(result.ok).toBe(false)
+    for (const talla of [undefined, 'XL', 'L']) {
+      const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla, cantidad: 1 }]))
+      expect(result, String(talla)).toMatchObject({ ok: true, data: { agregados: [], pendientes: [{ opciones: ['M'] }] } })
+    }
     expect(sales().items).toHaveLength(0)
   })
 
-  it('rechaza variantes ajenas al artículo, sin stock o argumentos inválidos', async () => {
+  it('error de dictado: sugiere sin agregar', async () => {
+    const marcador = { ...camisa, id: 9, name: 'Marcador con Brich' }
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, {
+      searchArticles: vi.fn(async () => []),
+      suggestArticles: vi.fn(async () => [marcador]),
+    })
+    const result = await actions.execute('agregar_al_carrito', add([{ producto: 'marcador con bridge', cantidad: 1 }]))
+    expect(result).toMatchObject({ ok: true, data: { agregados: [], pendientes: [{ opciones: ['Marcador con Brich'] }] } })
+    expect(sales().items).toHaveLength(0)
+  })
+
+  it('rechaza argumentos invalidos sin tocar el carrito', async () => {
     const { actions } = setup()
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    for (const args of [
-      { articulo_id: 7, variante_id: 999, cantidad: 1 },
-      { articulo_id: 7, variante_id: 72, cantidad: 1 },
-      { articulo_id: 7, variante_id: 71, cantidad: 0 },
-      { articulo_id: 7, variante_id: 71, cantidad: 1.5 },
-      { articulo_id: '7', variante_id: 71, cantidad: 1 },
-      { articulo_id: 7, variante_id: 71, cantidad: 100000 },
-    ]) {
-      expect((await actions.execute('agregar_item', args)).ok).toBe(false)
+    for (const items of [[], 'x', [{ producto: '', cantidad: 1 }], [{ producto: 'Camisa', cantidad: 0 }], [{ producto: 'Camisa', cantidad: 1.5 }], [{ producto: 'Camisa', cantidad: 100000 }], Array.from({ length: 11 }, () => ({ producto: 'Camisa', cantidad: 1 }))]) {
+      expect((await actions.execute('agregar_al_carrito', add(items))).ok, JSON.stringify(items).slice(0, 40)).toBe(false)
     }
     expect(sales().items).toHaveLength(0)
   })
@@ -193,8 +222,7 @@ describe('agregar_item', () => {
 describe('carrito', () => {
   async function conUnItem() {
     const ctx = setup()
-    await ctx.actions.execute('buscar_articulos', { texto: 'camisa' })
-    await ctx.actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
+    await ctx.actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
     return ctx
   }
 
@@ -283,8 +311,7 @@ describe('carrito y cobro requieren el punto de venta', () => {
 
   it('abrir_checkout deja el cobro listo pero nunca envía la venta', async () => {
     const { actions, navigate } = setup('vendedor', '/home')
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })
+    await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })
 
     const result = await actions.execute('abrir_checkout', {})
     expect(result.ok).toBe(true)
@@ -337,10 +364,9 @@ describe('buscar_articulos', () => {
     expect(searchArticles).not.toHaveBeenCalled()
   })
 
-  it('lo que devuelve el catálogo no sirve para agregar_item', async () => {
+  it('sin POS no se puede agregar al carrito', async () => {
     const { actions } = setup('admin')
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    expect((await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 1 })).ok).toBe(false)
+    expect((await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 1 }] })).ok).toBe(false)
     expect(sales().items).toHaveLength(0)
   })
 
@@ -377,13 +403,12 @@ describe('sugerencias por parecido (errores de dictado)', () => {
     expect(suggestArticles).not.toHaveBeenCalled()
   })
 
-  it('sin resultado exacto devuelve sugerencias con aviso y sirven para agregar_item', async () => {
+  it('sin resultado exacto devuelve sugerencias con aviso', async () => {
     const suggestArticles = vi.fn(async () => [marcador])
     const { actions } = setup('vendedor', '/home', allFeatureRoutes, { searchArticles: vi.fn(async () => []), suggestArticles })
     const result = await actions.execute('buscar_articulos', { texto: 'marcador con bridge' })
     expect(result).toMatchObject({ ok: true, data: { aviso: expect.stringMatching(/pregunta/), sugerencias: [{ id: 9, nombre: 'Marcador con Brich' }] } })
     expect(suggestArticles).toHaveBeenCalledWith('marcador con bridge')
-    expect((await actions.execute('agregar_item', { articulo_id: 9, variante_id: 91, cantidad: 1 })).ok).toBe(true)
   })
 
   it('sin resultado ni sugerencias devuelve la lista vacia', async () => {
@@ -732,8 +757,7 @@ describe('admin: sin POS pero con acceso a clientes', () => {
 describe('leer_estado y robustez', () => {
   it('devuelve ruta, carrito y diálogo', async () => {
     const { actions } = setup('vendedor', POS_PATH)
-    await actions.execute('buscar_articulos', { texto: 'camisa' })
-    await actions.execute('agregar_item', { articulo_id: 7, variante_id: 71, cantidad: 2 })
+    await actions.execute('agregar_al_carrito', { items: [{ producto: 'Camisa', talla: 'M', cantidad: 2 }] })
     await actions.execute('abrir_carrito', {})
 
     const result = await actions.execute('leer_estado', {})

@@ -121,7 +121,7 @@ const everythingTrue = <T>() => new Proxy({}, { get: () => () => true }) as unkn
 
 /** Tools estáticas del back (`agent/tools.py`): una pantalla no puede usar estos nombres. */
 const STATIC_TOOL_NAMES = [
-  'navegar', 'leer_estado', 'cambiar_tema', 'cerrar_sesion', 'cerrar_dialogo', 'buscar_articulos', 'agregar_item', 'cambiar_cantidad',
+  'navegar', 'leer_estado', 'cambiar_tema', 'cerrar_sesion', 'cerrar_dialogo', 'buscar_articulos', 'agregar_al_carrito', 'cambiar_cantidad',
   'quitar_item', 'vaciar_carrito', 'buscar_cliente', 'seleccionar_cliente', 'abrir_carrito', 'cerrar_carrito', 'abrir_checkout',
 ]
 
