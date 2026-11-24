@@ -60,6 +60,8 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
   const [monto, setMonto] = useState('0.00')
   const [observacion, setObservacion] = useState('')
   const [montoError, setMontoError] = useState('')
+  const [conceptoError, setConceptoError] = useState('')
+  const exigeConcepto = paymentMethod === 'credito'
 
   // Al abrir con valores del agente se precargan los campos, en el mismo render en que `open` cambia
   // (sin valores, el diálogo se abre como siempre).
@@ -115,6 +117,10 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
       return false
     }
     setMontoError('')
+    if (exigeConcepto && !observacion.trim()) {
+      setConceptoError('Ingresa el concepto de la venta')
+      return false
+    }
 
     const estado = paymentMethod === 'credito' ? 'PENDIENTE' : 'PAGADA'
     const id_forma_pago = paymentMethod === 'credito' ? 2 : 1
@@ -152,7 +158,8 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
               if (isPending) return 'Ya se esta registrando.'
               if (necesitaSucursal && (cargandoSucursales || errorSucursales || !sucursalSeleccionada)) return 'Falta elegir la sucursal de la venta.'
               const montoNum = Number(monto)
-              return isNaN(montoNum) || montoNum < 0 ? 'El monto debe ser un numero mayor o igual a 0.' : null
+              if (isNaN(montoNum) || montoNum < 0) return 'El monto debe ser un numero mayor o igual a 0.'
+              return exigeConcepto && !observacion.trim() ? 'Falta el concepto de la venta al credito (campo observacion).' : null
             },
             texto: () => `Registrar una venta de Q${Number(monto).toFixed(2)} (${paymentMethod}) a ${clienteNombre}`,
             run: handleSubmit,
@@ -200,7 +207,7 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setPaymentMethod(opt.value)}
+                    onClick={() => { setPaymentMethod(opt.value); setConceptoError('') }}
                     className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-colors cursor-pointer ${selected
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-border bg-background text-muted-foreground hover:border-muted-foreground/30'
@@ -225,14 +232,17 @@ export default function CrearVentaEncabezadoDialog({ open, idCliente, clienteNom
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="observacion">Observación (opcional)</FieldLabel>
+            {/* Al credito la venta solo lleva un monto: el concepto dice que se vendio (como en el ajuste). */}
+            <FieldLabel htmlFor="observacion">{exigeConcepto ? 'Concepto' : 'Observación (opcional)'}</FieldLabel>
             <Textarea
               id="observacion"
               value={observacion}
-              onChange={(e) => setObservacion(e.target.value)}
-              placeholder="Notas adicionales…"
+              onChange={(e) => { setObservacion(e.target.value); setConceptoError('') }}
+              placeholder={exigeConcepto ? 'Qué se vendió…' : 'Notas adicionales…'}
+              aria-invalid={conceptoError !== ''}
               rows={3}
             />
+            <FieldError errors={conceptoError ? [{ message: conceptoError }] : []} />
           </Field>
         </div>
 
