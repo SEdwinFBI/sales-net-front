@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api } from '@/lib/api'
-import { activarPush, desactivarPush, estadoPush } from './push-service'
+import { activarPush, desactivarPush, estadoPush, esperaLlamado, llamarAdministrador } from './push-service'
 
 vi.mock('@/lib/api', () => ({ api: { get: vi.fn(), post: vi.fn(), delete: vi.fn() } }))
 
@@ -32,6 +32,14 @@ describe('avisos push en el telefono', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     Reflect.deleteProperty(navigator, 'serviceWorker')
+  })
+
+  it('el vendedor consulta la espera y avisa al administrador', async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: { status: 'success', data: { espera: 120 } } })
+    expect(await esperaLlamado()).toBe(120)
+    vi.mocked(api.post).mockResolvedValue({ data: { status: 'success', data: { enviados: 2, espera: 300 } } })
+    expect(await llamarAdministrador()).toEqual({ enviados: 2, espera: 300 })
+    expect(api.post).toHaveBeenCalledWith('/presence/push/llamado/')
   })
 
   it('sin service worker (p. ej. en desarrollo) no esta disponible', async () => {
