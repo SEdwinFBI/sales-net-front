@@ -20,6 +20,12 @@ export const getArticleAvailability = async (articleId: number): Promise<ApiResp
   return data
 }
 
+/** Busqueda rapida del encabezado: ventas por numero o por nombre del cliente, las mas recientes primero. */
+export const searchVentas = async (buscar: string, limite = 10): Promise<Venta[]> => {
+  const { data } = await api.get<ApiResponse<Venta[]>>('/ventas/historial', { params: { buscar, limite } })
+  return data.data
+}
+
 export const getSalesHistory = async (filters?: SalesHistoryFilters): Promise<ApiResponse<Venta[]>> => {
   const { data } = await api.get<ApiResponse<Venta[]>>('/ventas/historial', {
     params: filters,

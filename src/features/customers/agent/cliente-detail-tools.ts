@@ -41,7 +41,7 @@ const ABONO_PARAMETERS = {
   type: 'object',
   properties: {
     id_venta: { type: 'integer', description: 'Venta del cliente con saldo pendiente.' },
-    monto: { type: 'number', exclusiveMinimum: 0 },
+    monto: { type: 'number', exclusiveMinimum: 0, description: 'Solo si el usuario dijo el monto; nunca el saldo por defecto.' },
     observacion: { type: 'string' },
   },
   additionalProperties: false,

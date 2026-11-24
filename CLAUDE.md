@@ -130,8 +130,8 @@ La confirmación con clic caduca sola poco antes de que el back deje de esperar 
 
 Interacciones que aún no existen:
 
-- Manejar el selector de tallas (`VariantSelectionDrawer`): no hace falta, `agregar_item` ya recibe
-  la variante.
+- Manejar el selector de tallas (`VariantSelectionDrawer`): no hace falta, `agregar_al_carrito` ya recibe
+  la talla.
 - Paginar las tablas de cobros por usuario (hay una por sucursal y chocarían los nombres);
   `leer_cobros` ya devuelve esos datos.
 - En «Guardar precios» de la venta, `elegir_precios_venta` solo acepta clientes que el selector ya

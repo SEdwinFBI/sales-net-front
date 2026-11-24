@@ -15,6 +15,7 @@ import { downloadHistorialVentasPdf } from '../services/products-service'
 import { toast } from 'sonner'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildHistorialPageTools } from '../agent/historial-tools'
+import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
 export default function HistorialVentasPage() {
 
@@ -29,6 +30,13 @@ export default function HistorialVentasPage() {
   })
   const [formaPagoFilter, setFormaPagoFilter] = useState('')
   const [searchText, setSearchText] = useState('')
+  // La busqueda rapida abre una venta: su numero y el dia en que se hizo.
+  useBuscarParam((texto, params) => {
+    setSearchText(texto)
+    const desde = params.get('fecha_desde')
+    const hasta = params.get('fecha_hasta')
+    if (desde && hasta) _setFilters((prev) => ({ ...prev, fecha_desde: desde, fecha_hasta: hasta }))
+  })
   const { ventas, isLoading } = useSalesHistory(filters, String(user?.id))
   const [estados, setEstados] = useState<string[]>([])
   const [formasPago, setFormasPago] = useState<string[]>([])

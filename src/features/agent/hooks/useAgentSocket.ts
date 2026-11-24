@@ -24,7 +24,7 @@ const ACTION_LABELS: Record<string, string> = {
   navegar: 'Navegando…',
   leer_estado: 'Revisando la pantalla…',
   buscar_articulos: 'Buscando artículos…',
-  agregar_item: 'Agregando al carrito…',
+  agregar_al_carrito: 'Agregando al carrito…',
   cambiar_cantidad: 'Cambiando la cantidad…',
   quitar_item: 'Quitando del carrito…',
   vaciar_carrito: 'Pidiendo confirmación para vaciar…',
@@ -32,7 +32,8 @@ const ACTION_LABELS: Record<string, string> = {
   seleccionar_cliente: 'Seleccionando cliente…',
   abrir_carrito: 'Abriendo el carrito…',
   cerrar_carrito: 'Cerrando el carrito…',
-  abrir_checkout: 'Abriendo el cobro…',
+  preparar_venta: 'Preparando la venta…',
+  abrir_formulario_cliente: 'Abriendo el formulario…',
   cerrar_dialogo: 'Cerrando el diálogo…',
 }
 

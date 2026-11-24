@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { Headphones, Mic, MicOff, Radio, Search, Users, Wifi, WifiOff, X } from 'lucide-react'
 import PageTemplateSimple from '@/components/page-template/PageTemplateSimple'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import { Select } from '@/components/ui/select'
 import { useSucursales } from '@/features/admin/branches/hooks/useSucursales'
 import { useUsuarios } from '@/features/admin/users/hooks/useUsuarios'
 import { useAuthStore } from '@/features/core/store/auth-store'
+import { cn } from '@/lib/utils'
 import AuditUserCard from '../components/AuditUserCard'
 import LiveAudioBar from '../components/LiveAudioBar'
 import { useAdminAudit } from '../hooks/useAdminAudit'
@@ -81,6 +83,10 @@ export default function AuditoriaPage() {
     }
   }, [usuarios, liveUsers])
 
+  // El aviso push "un vendedor entro" abre esta pantalla con ?vendedor=<id>: ese vendedor va primero y resaltado.
+  const [searchParams] = useSearchParams()
+  const destacadoId = Number(searchParams.get('vendedor')) || null
+
   const filteredUsers = useMemo(() => {
     const term = search.trim().toLowerCase()
 
@@ -132,6 +138,8 @@ export default function AuditoriaPage() {
     list.sort((a, b) => {
       if (a.id === listeningSellerId && b.id !== listeningSellerId) return -1
       if (b.id === listeningSellerId && a.id !== listeningSellerId) return 1
+      if (a.id === destacadoId && b.id !== destacadoId) return -1
+      if (b.id === destacadoId && a.id !== destacadoId) return 1
 
       const aOnline = Boolean(liveUsers.get(a.id)?.connections)
       const bOnline = Boolean(liveUsers.get(b.id)?.connections)
@@ -146,7 +154,7 @@ export default function AuditoriaPage() {
     })
 
     return list
-  }, [usuarios, liveUsers, search, statusFilter, roleFilter, micFilter, branchNames, listeningSellerId])
+  }, [usuarios, liveUsers, search, statusFilter, roleFilter, micFilter, branchNames, listeningSellerId, destacadoId])
 
   const activeListeningUser = useMemo(() => {
     if (listeningSellerId === null) return null
@@ -350,16 +358,17 @@ export default function AuditoriaPage() {
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
             {filteredUsers.map((usuario) => (
-              <AuditUserCard
-                key={usuario.id}
-                user={usuario}
-                live={liveUsers.get(usuario.id)}
-                branchNames={branchNames}
-                isListeningThis={listeningSellerId === usuario.id}
-                audioConnected={audioConnected}
-                onListen={startListening}
-                onStop={stopListening}
-              />
+              <div key={usuario.id} className={cn('rounded-xl', usuario.id === destacadoId && 'ring-2 ring-primary/40')}>
+                <AuditUserCard
+                  user={usuario}
+                  live={liveUsers.get(usuario.id)}
+                  branchNames={branchNames}
+                  isListeningThis={listeningSellerId === usuario.id}
+                  audioConnected={audioConnected}
+                  onListen={startListening}
+                  onStop={stopListening}
+                />
+              </div>
             ))}
           </div>
         )}

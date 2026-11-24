@@ -46,6 +46,7 @@ import type {
 } from '../types/notificaciones-types'
 import HorarioCobrosSection from '../components/HorarioCobrosSection'
 import StockMeterSettingsSection from '../components/StockMeterSettingsSection'
+import AvisoIngresoSection from '../components/AvisoIngresoSection'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { commitTool } from '@/features/agent/commit-tools'
 import { buildDestinatarioDialogTools, buildDestinatariosTools } from '../../agent/notificaciones-tools'
@@ -589,6 +590,10 @@ export default function NotificacionesPage() {
               </div>
             </div>
           )}
+        </Card>
+        {/* Avisos push en el telefono del admin, debajo de los avisos por correo. */}
+        <Card className="p-4 sm:p-5">
+          <AvisoIngresoSection />
         </Card>
       </div>
 
