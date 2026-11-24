@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import Paginator from '@/components/shared/table/Paginator'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildClientesPageTools, type ClientesPageAgentContext } from '../agent/clientes-page-tools'
 import type { ClienteFormValues } from '../agent/cliente-form-values'
 import { getClienteById } from '../services/clientes-service'
@@ -75,7 +76,7 @@ export default function ClientesPage() {
     openDelete: setClienteToDelete,
     fetchCliente: getClienteById,
   }
-  useAgentTools('clientes-page', buildClientesPageTools(agentContext, user?.role === 'admin'))
+  useAgentTools('clientes-page', buildClientesPageTools(useLiveContext(agentContext), user?.role === 'admin'))
   useAgentTools('paginacion-clientes', [
     paginationTool('clientes', 'la lista de clientes', {
       get: () => ({ pagina: page, paginas: Math.ceil(count / pageSize), tamano: pageSize, total: count }),

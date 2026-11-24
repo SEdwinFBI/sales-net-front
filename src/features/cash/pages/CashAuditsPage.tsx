@@ -23,6 +23,7 @@ import type { Caja } from '../types/cash'
 import { downloadCashReport } from '../services/cash-service'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildArqueosTools, buildCajaDetalleTools } from '../agent/arqueos-tools'
 
 type Totals = Pick<Caja, 'entradas' | 'salidas' | 'ventas_efectivo' | 'efectivo_esperado'>
@@ -106,7 +107,7 @@ export default function CashAuditsPage() {
   // Tools del agente (la ruta ya es solo admin): navegar general → sucursal → usuario, filtrar fechas, leer y descargar.
   useAgentTools(
     'arqueos-page',
-    buildArqueosTools({
+    buildArqueosTools(useLiveContext({
       getFilters: () => filters,
       setFilters,
       getLevel: () => (userId !== null ? 'usuario' : branchId !== null ? 'sucursal' : 'general'),
@@ -123,7 +124,7 @@ export default function CashAuditsPage() {
       openDetalle: setCashId,
       isDownloading: () => downloading,
       download: downloadReport,
-    }),
+    })),
   )
 
   // Con el detalle de una caja abierto, el agente puede leer sus movimientos.

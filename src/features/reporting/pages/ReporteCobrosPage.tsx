@@ -10,6 +10,7 @@ import CobrosPorSucursal from '../components/CobrosPorSucursal'
 import { downloadReporteCobrosPdf } from '../services/reportes-service'
 import type { ReporteCobrosFilters as Filters } from '../types/reportes'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildCobrosTools } from '../agent/reportes-tools'
 
 export default function ReporteCobrosPage() {
@@ -56,7 +57,7 @@ export default function ReporteCobrosPage() {
   // Tools del agente: los filtros son estado local de esta pantalla (la fecha puntual es opcional, como en la UI).
   useAgentTools(
     'reporte-cobros-page',
-    buildCobrosTools({
+    buildCobrosTools(useLiveContext({
       getFilters: () => ({ nombre: filters.nombre, fecha: filters.fecha }),
       setFilters: ({ nombre, fecha }) => setFilters({ nombre: nombre || undefined, fecha: fecha || undefined }),
       getPorSucursal: () => porSucursal,
@@ -65,7 +66,7 @@ export default function ReporteCobrosPage() {
       download: handleExportPdf,
       downloadUser: (usuarioId, sucursalId) =>
         downloadUserPdf({ id_usuario: usuarioId, fecha: filters.fecha, id_sucursal: sucursalId ?? 'sin_sucursal' }),
-    }),
+    })),
   )
 
   return (

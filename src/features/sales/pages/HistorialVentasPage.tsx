@@ -14,6 +14,7 @@ import { useAuthStore } from '@/features/core/store/auth-store'
 import { downloadHistorialVentasPdf } from '../services/products-service'
 import { toast } from 'sonner'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildHistorialPageTools } from '../agent/historial-tools'
 import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
 
@@ -137,7 +138,7 @@ export default function HistorialVentasPage() {
   // Tools del agente: filtran, leen y descargan el PDF con lo que esta pantalla ya muestra.
   useAgentTools(
     'historial-page',
-    buildHistorialPageTools({
+    buildHistorialPageTools(useLiveContext({
       getFilters: () => ({
         fecha_desde: filters.fecha_desde ?? '',
         fecha_hasta: filters.fecha_hasta ?? '',
@@ -161,9 +162,11 @@ export default function HistorialVentasPage() {
       clearFilters,
       getFilteredVentas: () => filteredVentas,
       isLoading: () => isLoading,
+      getAlcance: () =>
+        user?.role === 'vendedor' ? `solo ventas de tu sucursal ${user.sucursalActual?.nombre ?? ''}`.trim() : 'ventas de todas las sucursales',
       isExporting: () => pdfLoading,
       exportPdf: handleExportPdf,
-    }),
+    })),
   )
 
   return (
