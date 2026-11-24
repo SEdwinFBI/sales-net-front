@@ -15,6 +15,8 @@ import { getDefaultDateRange } from '@/lib/dates'
 import type { ReporteVentasFilters as Filters } from '../types/reportes'
 import { Card } from '@/components/ui/card'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import SoloPosTag from '../components/SoloPosTag'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildReporteVentasTools } from '../agent/reportes-tools'
 
 type Option = { id?: number; label: string }
@@ -123,7 +125,7 @@ export default function ReporteVentasPage() {
   // Tools del agente: fechas en la URL y artículo/talla/sucursal en estado local, igual que el formulario de filtros.
   useAgentTools(
     'reporte-ventas-page',
-    buildReporteVentasTools({
+    buildReporteVentasTools(useLiveContext({
       getFilters: () => ({
         fecha_desde: filters.fecha_desde ?? '',
         fecha_hasta: filters.fecha_hasta ?? '',
@@ -141,7 +143,7 @@ export default function ReporteVentasPage() {
       isLoading: () => isLoading,
       isDownloading: () => pdfLoading,
       download: handleExportPdf,
-    }),
+    })),
   )
 
   return (
@@ -176,6 +178,7 @@ export default function ReporteVentasPage() {
               </div>
 
               <TabsContent value="variante" className="mt-4">
+                <SoloPosTag className="mb-2" />
                 <PorVarianteTable data={porVariante} isLoading={isLoading} />
               </TabsContent>
 

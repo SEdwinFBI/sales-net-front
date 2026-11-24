@@ -25,6 +25,9 @@ import { useSucursales } from '@/features/admin'
 import { useVariantes } from '@/features/catalog/hooks/useVariantes'
 import { useMediaQuery } from '@/features/core/hooks/useMediaQuery'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { getDefaultDateRange } from '@/lib/dates'
+import { desgloseOrigen } from '../utils/origen'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildDashboardTools } from '../agent/reportes-tools'
 import { getDashboardData, type DashboardFilters } from '../services/reportes-service'
 import type { DashboardData } from '../types/reportes'
@@ -73,19 +76,13 @@ const formatAxisMoney = (value: unknown, compact = false) => {
   return `Q${n}`
 }
 
-/** Rango por defecto: lo que va del mes (del 1 al día de hoy). */
-function getDefaultDateRange() {
-  const today = new Date()
-  const end = today.toISOString().slice(0, 10)
-  const start = `${end.slice(0, 8)}01`
-  return { fecha_desde: start, fecha_hasta: end }
-}
-
 // ─── KPI ejecutivo con acento de color tematizable ───
-function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
+function Kpi({ label, value, sub, detail, icon: Icon, accent, trend, trendLabel }: {
   label: string
   value: string
   sub?: string
+  /** Segunda línea, más discreta (lo que solo existe en el POS, por ejemplo). */
+  detail?: string
   icon: React.ComponentType<{ className?: string }>
   accent: string
   trend?: number
@@ -136,6 +133,7 @@ function Kpi({ label, value, sub, icon: Icon, accent, trend, trendLabel }: {
           {sub}
         </p>
       )}
+      {detail && <p className="mt-0.5 truncate pl-1 text-[10.5px] text-muted-foreground/80">{detail}</p>}
     </div>
   )
 }
@@ -227,7 +225,7 @@ export default function DashboardPage() {
   // Tools del agente: escriben los mismos searchParams que los selectores (la talla se borra al cambiar de artículo).
   useAgentTools(
     'dashboard-page',
-    buildDashboardTools({
+    buildDashboardTools(useLiveContext({
       getFilters: () => ({
         fecha_desde: filters.fecha_desde ?? def.fecha_desde,
         fecha_hasta: filters.fecha_hasta ?? def.fecha_hasta,
@@ -258,7 +256,7 @@ export default function DashboardPage() {
       }),
       getData: () => data,
       isLoading: () => isLoading || isFetching,
-    }),
+    })),
   )
 
   const d = data ?? ({} as DashboardData)
@@ -275,17 +273,18 @@ export default function DashboardPage() {
     : { top: 6, left: 4, right: 12, bottom: 0 }
   const xAxisHeight = isMobile ? 28 : undefined
   const axisMoney = (v: unknown) => formatAxisMoney(v, true)
+  const formasPago = useMemo(() => d.formas_pago_global ?? d.formas_pago ?? [], [d.formas_pago_global, d.formas_pago])
   const formaPagoTotal = useMemo(
-    () => (d.formas_pago ?? []).reduce((acc, item) => acc + Number(item.total_neto ?? 0), 0),
-    [d.formas_pago],
+    () => formasPago.reduce((acc, item) => acc + Number(item.total_neto ?? 0), 0),
+    [formasPago],
   )
   const pieData = useMemo(
     () =>
-      (d.formas_pago ?? []).map((item) => {
+      formasPago.map((item) => {
         const pct = formaPagoTotal > 0 ? Math.round((Number(item.total_neto ?? 0) / formaPagoTotal) * 100) : 0
         return { ...item, displayName: `${item.nombre} (${pct}%)` }
       }),
-    [d.formas_pago, formaPagoTotal],
+    [formasPago, formaPagoTotal],
   )
   const row1Count =
     Number((d.top_articulos?.length ?? 0) > 0) +
@@ -293,10 +292,10 @@ export default function DashboardPage() {
     Number((d.ventas_por_dia_semana?.length ?? 0) > 0)
   const row2Count =
     Number((d.top_sucursales?.length ?? 0) > 0) +
-    Number((d.formas_pago?.length ?? 0) > 0) +
+    Number(formasPago.length > 0) +
     Number((d.ventas_acumuladas_mes?.length ?? 0) > 0)
 
-  const sinDatos = !isLoading && !(d.top_articulos?.length) && !(d.ventas_por_dia?.length)
+  const sinDatos = !isLoading && !(d.top_articulos?.length) && !(d.ventas_por_dia?.length) && !r.por_origen?.cliente?.total_neto
 
   if (isLoading) {
     return (
@@ -416,14 +415,18 @@ export default function DashboardPage() {
 
       {/* ─── KPIs ejecutivos ─── */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Kpi label="Total neto" value={Q(r.total_neto ?? 0)} accent="blue" icon={ShoppingCart}
-          trend={cmp.ven_mes_anterior} trendLabel="vs mes anterior"
-          sub={`Bruto ${Q(r.total_bruto ?? 0)} · Desc ${Q(r.total_descuento ?? 0)}`} />
-        <Kpi label="Ventas" value={formatNumber(r.cantidad_ventas ?? 0)} accent="green" icon={BarChart3}
-          sub={`${formatNumber(r.cantidad_unidades ?? 0)} uds · Prom ${Q(r.promedio_por_venta ?? 0)}`} />
-        <Kpi label="Hoy" value={Q(vhoy.total_neto ?? 0)} accent="cyan" icon={CalendarDays}
-          trend={vhoy.variacion_ayer} trendLabel="vs ayer"
-          sub={`${formatNumber(vhoy.cantidad_ventas ?? 0)} ventas hoy`} />
+        {/* Valor principal: global (POS + ventas registradas en el cliente); debajo, el desglose. */}
+        <Kpi label="Total neto" value={Q(r.por_origen?.global.total_neto ?? r.total_neto ?? 0)} accent="blue" icon={ShoppingCart}
+          trend={cmp.por_origen?.global.ven_mes_anterior ?? cmp.ven_mes_anterior} trendLabel="vs mes anterior"
+          sub={desgloseOrigen(r.por_origen, 'total_neto', Q) ?? `Bruto ${Q(r.total_bruto ?? 0)} · Desc ${Q(r.total_descuento ?? 0)}`}
+          detail={r.por_origen ? `POS bruto ${Q(r.total_bruto ?? 0)} · desc ${Q(r.total_descuento ?? 0)}` : undefined} />
+        <Kpi label="Ventas" value={formatNumber(r.por_origen?.global.cantidad_ventas ?? r.cantidad_ventas ?? 0)} accent="green" icon={BarChart3}
+          sub={desgloseOrigen(r.por_origen, 'cantidad_ventas', formatNumber) ?? `${formatNumber(r.cantidad_unidades ?? 0)} uds · Prom ${Q(r.promedio_por_venta ?? 0)}`}
+          detail={r.por_origen ? `${formatNumber(r.cantidad_unidades ?? 0)} uds POS · Prom POS ${Q(r.promedio_por_venta ?? 0)}` : undefined} />
+        <Kpi label="Hoy" value={Q(vhoy.por_origen?.global.total_neto ?? vhoy.total_neto ?? 0)} accent="cyan" icon={CalendarDays}
+          trend={vhoy.por_origen?.global.variacion_ayer ?? vhoy.variacion_ayer} trendLabel="vs ayer"
+          sub={desgloseOrigen(vhoy.por_origen, 'total_neto', Q) ?? `${formatNumber(vhoy.cantidad_ventas ?? 0)} ventas hoy`}
+          detail={vhoy.por_origen ? `${formatNumber(vhoy.por_origen.global.cantidad_ventas ?? 0)} ventas hoy` : undefined} />
         <Kpi label="Por cobrar" value={Q(r.total_adeudado ?? 0)} accent="amber" icon={Wallet}
           sub={`${formatNumber(r.total_deudores ?? 0)} deudores`} />
         <Kpi label="Stock bajo" value={formatNumber(r.stock_bajo ?? 0)} accent="red" icon={AlertTriangle}
@@ -431,6 +434,7 @@ export default function DashboardPage() {
         <Kpi label="Negocio" value={formatNumber(r.total_clientes ?? 0)} accent="purple" icon={Users}
           sub={`clientes · ${formatNumber(r.total_articulos ?? 0)} arts · ${formatNumber(r.total_sucursales ?? 0)} suc`} />
       </div>
+      {r.por_origen?.nota && <p className="-mt-1 px-1 text-xs text-muted-foreground">{r.por_origen.nota}</p>}
 
       {sinDatos ? (
         <EmptyState icon={Package} title="Sin ventas en este período"
@@ -440,7 +444,7 @@ export default function DashboardPage() {
           {/* ─── Fila 1: Artículos + Tallas + Día de semana ─── */}
           <div className={cn('grid gap-4', row1Count === 1 ? 'grid-cols-1' : row1Count === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3')}>
             {(d.top_articulos?.length ?? 0) > 0 && (
-              <ChartCard title="Top artículos por venta" badge={`Top ${d.top_articulos?.length ?? 0}`}>
+              <ChartCard title="Top artículos por venta · solo POS" badge={`Top ${d.top_articulos?.length ?? 0}`}>
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_articulos} layout="vertical" margin={verticalChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
@@ -469,7 +473,7 @@ export default function DashboardPage() {
             )}
 
             {(d.top_tallas?.length ?? 0) > 0 && (
-              <ChartCard title="Ventas por talla">
+              <ChartCard title="Ventas por talla · solo POS">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_tallas} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -532,7 +536,7 @@ export default function DashboardPage() {
           {/* ─── Fila 2: Sucursales + Pago + Acumulado ─── */}
           <div className={cn('grid gap-4', row2Count === 1 ? 'grid-cols-1' : row2Count === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3')}>
             {(d.top_sucursales?.length ?? 0) > 0 && (
-              <ChartCard title="Sucursales — bruto vs neto">
+              <ChartCard title="Sucursales — POS bruto vs neto, y cliente">
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <BarChart data={d.top_sucursales} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -553,14 +557,17 @@ export default function DashboardPage() {
                       formatter={v => [money(v), '']}
                     />
                     <Legend wrapperStyle={{ fontSize: isMobile ? '10px' : '11px' }} />
-                    <Bar dataKey="total_bruto" name="Bruto" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
-                    <Bar dataKey="total_neto" name="Neto" fill="#22c55e" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    <Bar dataKey="total_bruto" name="Bruto POS" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    <Bar dataKey="total_neto" name="Neto POS" fill="#22c55e" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    {d.top_sucursales?.some((t) => Number(t.total_cliente ?? 0) > 0) && (
+                      <Bar dataKey="total_cliente" name="Cliente" fill="#8b5cf6" radius={[5, 5, 0, 0]} barSize={isMobile ? 9 : 14} />
+                    )}
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             )}
 
-            {(d.formas_pago?.length ?? 0) > 0 && (
+            {formasPago.length > 0 && (
               <ChartCard title="Forma de pago" badge={Q(formaPagoTotal)}>
                 <ResponsiveContainer width="100%" height={chartHeight} debounce={200}>
                   <PieChart margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
