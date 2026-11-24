@@ -5,6 +5,7 @@ import {
   cleanText,
   fail,
   fold,
+  isIsoDate,
   limitRows,
   mergeDateRange,
   ok,
@@ -490,13 +491,13 @@ export function buildDeudoresTools(ctx: DeudoresAgentContext): AgentToolDef[] {
 
 /** Lo que ReporteCobrosPage le presta al agente (filtros en estado local). */
 export type CobrosAgentContext = {
-  getFilters: () => { nombre?: string; fecha?: string }
-  setFilters: (filters: { nombre?: string; fecha?: string }) => void
+  getFilters: () => { nombre?: string; fecha?: string; fecha_desde?: string; fecha_hasta?: string }
+  setFilters: (filters: { nombre?: string; fecha?: string; fecha_desde?: string; fecha_hasta?: string }) => void
   getPorSucursal: () => ReporteCobrosSucursal[]
   isLoading: () => boolean
   isDownloading: () => boolean
   download: () => Promise<boolean>
-  /** PDF de un usuario (sucursal null = cobros sin sucursal), con la fecha filtrada. */
+  /** PDF de un usuario (sucursal null = cobros sin sucursal), con la fecha o rango filtrado. */
   downloadUser: (usuarioId: number, sucursalId: number | null) => Promise<boolean>
 }
 
@@ -505,7 +506,7 @@ const MAX_CLIENTES_RESUMEN = 25
 const CLIENTES_POR_USUARIO = 3
 const MAX_COBROS_DETALLE = 10
 
-type FiltrosCobrosVista = { vendedor: string; fecha: string }
+type FiltrosCobrosVista = { vendedor: string; fecha: string; fecha_desde: string; fecha_hasta: string }
 
 const resumenCliente = (c: ReturnType<typeof getClienteRows>[number]) => ({
   cliente_id: c.id_cliente,
@@ -519,6 +520,9 @@ const resumenCliente = (c: ReturnType<typeof getClienteRows>[number]) => ({
 function sinCobros(filtros: FiltrosCobrosVista): string {
   if (filtros.vendedor) {
     return `Sin cobros del vendedor '${filtros.vendedor}'. Si '${filtros.vendedor}' es un cliente, quita el filtro con filtrar_cobros({vendedor:''}) y usa leer_cobros({cliente:'${filtros.vendedor}'}), o buscar_cliente y su ficha.`
+  }
+  if (filtros.fecha_desde || filtros.fecha_hasta) {
+    return `No hay cobros del ${filtros.fecha_desde || 'inicio'} al ${filtros.fecha_hasta || 'fin'}. Amplia o quita el rango con filtrar_cobros({fecha_desde:null,fecha_hasta:null}).`
   }
   return filtros.fecha ? `Nadie cobro el ${filtros.fecha}. Quita o cambia la fecha con filtrar_cobros({fecha:null}).` : 'El reporte no trae cobros.'
 }
@@ -572,7 +576,12 @@ function leerPorCliente(sucursales: ReporteCobrosSucursal[], texto: string, filt
   if (cargando) sugerencia = 'El reporte aun esta cargando: vuelve a llamar leer_cobros con cliente.'
   else if (clientes.length === 0) {
     const vendedor = filtros.vendedor ? ` Hay un filtro de vendedor ('${filtros.vendedor}'): solo cuenta lo que cobro ese vendedor; quitalo con filtrar_cobros({vendedor:''}).` : ''
-    const fecha = filtros.fecha ? ` El reporte esta filtrado al ${filtros.fecha}: si no aparece, ese cliente no abono ese dia.` : ''
+    const fecha =
+      filtros.fecha_desde || filtros.fecha_hasta
+        ? ` El reporte esta filtrado del ${filtros.fecha_desde || 'inicio'} al ${filtros.fecha_hasta || 'fin'}: si no aparece, ese cliente no abono en ese rango.`
+        : filtros.fecha
+          ? ` El reporte esta filtrado al ${filtros.fecha}: si no aparece, ese cliente no abono ese dia.`
+          : ''
     sugerencia =
       clientesConCobros === 0
         ? `El reporte no trae cobros con estos filtros.${vendedor}${fecha}`
@@ -589,23 +598,38 @@ function leerPorCliente(sucursales: ReporteCobrosSucursal[], texto: string, filt
 
 /** Tools de /reportes/cobros. */
 export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
-  const parse = (args: Record<string, unknown>): { changes: { nombre?: string; fecha?: string } } | { error: string } => {
-    if (!('vendedor' in args) && !('fecha' in args)) return { error: 'Indica al menos un filtro: vendedor (quien recibio el abono) o fecha.' }
-    const changes: { nombre?: string; fecha?: string } = {}
+  const parse = (
+    args: Record<string, unknown>,
+  ): { changes: { nombre?: string; fecha?: string; fecha_desde?: string; fecha_hasta?: string } } | { error: string } => {
+    if (!('vendedor' in args) && !('fecha' in args) && !('fecha_desde' in args) && !('fecha_hasta' in args)) {
+      return { error: 'Indica al menos un filtro: vendedor (quien recibio el abono), fecha, fecha_desde o fecha_hasta.' }
+    }
+    const changes: { nombre?: string; fecha?: string; fecha_desde?: string; fecha_hasta?: string } = {}
     if ('vendedor' in args) {
       if (typeof args.vendedor !== 'string') return { error: 'vendedor debe ser un texto con el nombre del vendedor que cobro (vacio para quitar el filtro). Para un cliente usa leer_cobros con cliente.' }
       // El API llama `nombre` a este filtro: busca por el usuario que recibio el abono.
       changes.nombre = args.vendedor.trim().slice(0, 100)
     }
-    if ('fecha' in args) {
-      // Igual que la pantalla, esta fecha puntual es opcional: null o vacio la quita.
-      if (args.fecha === null || args.fecha === '') changes.fecha = ''
-      else if (typeof args.fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(args.fecha) && !Number.isNaN(Date.parse(args.fecha))) {
-        const [y, m, d] = args.fecha.split('-').map(Number)
-        const date = new Date(Date.UTC(y, m - 1, d))
-        if (date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return { error: 'fecha debe ser una fecha real AAAA-MM-DD (null la quita).' }
-        changes.fecha = args.fecha
-      } else return { error: 'fecha debe ser una fecha real AAAA-MM-DD (null la quita).' }
+    for (const key of ['fecha', 'fecha_desde', 'fecha_hasta'] as const) {
+      if (!(key in args)) continue
+      if (args[key] === null || args[key] === '') changes[key] = ''
+      else if (isIsoDate(args[key])) changes[key] = args[key]
+      else return { error: `${key} debe ser una fecha real AAAA-MM-DD (null la quita).` }
+    }
+    const setsRange = Boolean(changes.fecha_desde || changes.fecha_hasta)
+    const setsSingle = Boolean(changes.fecha)
+    if (setsRange && setsSingle) {
+      return { error: 'Usa fecha puntual o rango fecha_desde/fecha_hasta, no ambos a la vez.' }
+    }
+    // Al fijar un modo de fecha, el otro se limpia para que la UI y el API no mezclen ambos filtros.
+    if (setsRange) changes.fecha = ''
+    else if (setsSingle) {
+      changes.fecha_desde = ''
+      changes.fecha_hasta = ''
+    }
+    const merged = { ...ctx.getFilters(), ...changes }
+    if (merged.fecha_desde && merged.fecha_hasta && merged.fecha_desde > merged.fecha_hasta) {
+      return { error: 'fecha_desde no puede ser posterior a fecha_hasta.' }
     }
     return { changes }
   }
@@ -622,18 +646,25 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
     return { usuarioId, sucursalId, nombre: usuario.nombre }
   }
 
-  const filtrosVista = (f: { nombre?: string; fecha?: string }): FiltrosCobrosVista => ({ vendedor: f.nombre ?? '', fecha: f.fecha ?? '' })
+  const filtrosVista = (f: { nombre?: string; fecha?: string; fecha_desde?: string; fecha_hasta?: string }): FiltrosCobrosVista => ({
+    vendedor: f.nombre ?? '',
+    fecha: f.fecha ?? '',
+    fecha_desde: f.fecha_desde ?? '',
+    fecha_hasta: f.fecha_hasta ?? '',
+  })
 
   return [
     {
       name: 'filtrar_cobros',
       description:
-        'Filtra el reporte de cobros por VENDEDOR que recibio el abono (NO filtra por cliente: para un cliente usa leer_cobros con cliente) y/o fecha puntual AAAA-MM-DD. vendedor vacio o fecha null quitan el filtro. Despues usa leer_cobros.',
+        'Filtra el reporte de cobros por VENDEDOR que recibio el abono (NO filtra por cliente: para un cliente usa leer_cobros con cliente), fecha puntual o rango fecha_desde/fecha_hasta (AAAA-MM-DD). vendedor vacio o null en fechas quitan el filtro. Despues usa leer_cobros.',
       parameters: {
         type: 'object',
         properties: {
           vendedor: { type: 'string', description: 'Nombre o usuario del vendedor que cobro; nunca el nombre de un cliente.' },
-          fecha: { type: ['string', 'null'], description: 'AAAA-MM-DD' },
+          fecha: { type: ['string', 'null'], description: 'AAAA-MM-DD (fecha puntual; limpia fecha_desde/fecha_hasta).' },
+          fecha_desde: { type: ['string', 'null'], description: 'AAAA-MM-DD (inicio del rango; limpia fecha).' },
+          fecha_hasta: { type: ['string', 'null'], description: 'AAAA-MM-DD (fin del rango; limpia fecha).' },
         },
         additionalProperties: false,
       },
@@ -719,7 +750,7 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
     },
     {
       name: 'descargar_pdf_cobros_usuario',
-      description: 'Descarga el PDF de cobros de un usuario de una sucursal (ids de leer_cobros; sucursal_id null = sin sucursal), con la fecha filtrada.',
+      description: 'Descarga el PDF de cobros de un usuario de una sucursal (ids de leer_cobros; sucursal_id null = sin sucursal), con la fecha o rango filtrado.',
       parameters: {
         type: 'object',
         properties: {

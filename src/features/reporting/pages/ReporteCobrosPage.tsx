@@ -54,18 +54,35 @@ export default function ReporteCobrosPage() {
     void downloadUserPdf(userFilters)
   }, [downloadUserPdf])
 
-  // Tools del agente: los filtros son estado local de esta pantalla (la fecha puntual es opcional, como en la UI).
+  // Tools del agente: los filtros son estado local de esta pantalla (fecha puntual o rango opcionales, como en la UI).
   useAgentTools(
     'reporte-cobros-page',
     buildCobrosTools(useLiveContext({
-      getFilters: () => ({ nombre: filters.nombre, fecha: filters.fecha }),
-      setFilters: ({ nombre, fecha }) => setFilters({ nombre: nombre || undefined, fecha: fecha || undefined }),
+      getFilters: () => ({
+        nombre: filters.nombre,
+        fecha: filters.fecha,
+        fecha_desde: filters.fecha_desde,
+        fecha_hasta: filters.fecha_hasta,
+      }),
+      setFilters: ({ nombre, fecha, fecha_desde, fecha_hasta }) =>
+        setFilters({
+          nombre: nombre || undefined,
+          fecha: fecha || undefined,
+          fecha_desde: fecha_desde || undefined,
+          fecha_hasta: fecha_hasta || undefined,
+        }),
       getPorSucursal: () => porSucursal,
       isLoading: () => isLoading,
       isDownloading: () => pdfLoading || pdfUserLoading !== null,
       download: handleExportPdf,
       downloadUser: (usuarioId, sucursalId) =>
-        downloadUserPdf({ id_usuario: usuarioId, fecha: filters.fecha, id_sucursal: sucursalId ?? 'sin_sucursal' }),
+        downloadUserPdf({
+          id_usuario: usuarioId,
+          fecha: filters.fecha,
+          fecha_desde: filters.fecha_desde,
+          fecha_hasta: filters.fecha_hasta,
+          id_sucursal: sucursalId ?? 'sin_sucursal',
+        }),
     })),
   )
 
@@ -90,6 +107,8 @@ export default function ReporteCobrosPage() {
               onDownloadUserPdf={handleExportUserPdf}
               pdfUserLoading={pdfUserLoading}
               fecha={filters.fecha}
+              fechaDesde={filters.fecha_desde}
+              fechaHasta={filters.fecha_hasta}
             />
           </div>
         </div>

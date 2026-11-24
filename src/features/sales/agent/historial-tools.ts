@@ -52,7 +52,7 @@ const ESTADOS_SIN_VALOR = new Set(['CANCELADA', 'REVERTIDA', 'REVERSION'])
 /** Pista cuando no hay ventas: dice el rango usado, porque filtrar por un nombre no cambia las fechas. */
 function sinVentas(filtros: HistorialFilters): string {
   const otros = [filtros.estado && 'estado', filtros.forma_pago && 'forma de pago', filtros.texto && 'texto'].filter(Boolean)
-  return `Sin ventas con estos filtros. Las fechas van de ${filtros.fecha_desde} a ${filtros.fecha_hasta}: amplialas con filtrar_historial${otros.length ? ` o quita ${otros.join(', ')} con limpiar_filtros_historial` : ''}.`
+  return `Sin ventas con estos filtros (rango ${filtros.fecha_desde} a ${filtros.fecha_hasta}). Si buscas una venta por ID o un cliente de meses anteriores, amplia fecha_desde (p. ej. 1 ano atras) con filtrar_historial y vuelve a leer_historial${otros.length ? ` o quita ${otros.join(', ')} con limpiar_filtros_historial` : ''}.`
 }
 
 /** Totales de TODAS las ventas filtradas (no solo las 30 que se listan), sin anuladas ni revertidas. */
@@ -114,7 +114,7 @@ export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentTo
     {
       name: 'filtrar_historial',
       description:
-        'Filtra el historial de ventas: fecha_desde y fecha_hasta (AAAA-MM-DD, siempre con valor), estado, forma_pago y texto (ID, cliente, sucursal o vendedor). "todos" quita estado o forma de pago.',
+        'Filtra el historial de ventas: fecha_desde y fecha_hasta (AAAA-MM-DD, siempre con valor; por defecto mes actual), estado, forma_pago y texto (ID, cliente, sucursal o vendedor). Amplia fecha_desde si buscas un ID o cliente anterior.',
       parameters: {
         type: 'object',
         properties: {

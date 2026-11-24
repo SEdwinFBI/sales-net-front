@@ -20,6 +20,8 @@ export interface ReporteCobrosFilters {
   id_sucursal?: number | 'sin_sucursal'
   nombre?: string
   fecha?: string
+  fecha_desde?: string
+  fecha_hasta?: string
   id_usuario?: number
   output?: 'json' | 'pdf'
 }
