@@ -33,13 +33,15 @@ type Props = {
   onDownloadUserPdf: (filters: ReporteCobrosFilters) => void
   pdfUserLoading?: number | null
   fecha?: string
+  fechaDesde?: string
+  fechaHasta?: string
 }
 
 function getDebtValue(row: ReporteCobroCliente) {
   return Number(row.balance ?? row.saldo_restante ?? 0)
 }
 
-export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserPdf, pdfUserLoading, fecha }: Props) {
+export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserPdf, pdfUserLoading, fecha, fechaDesde, fechaHasta }: Props) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -88,7 +90,7 @@ export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserP
             disabled={!idUsuario || pdfUserLoading === idUsuario}
             onClick={() => {
               if (!idUsuario) return
-              onDownloadUserPdf({ id_usuario: idUsuario, fecha })
+              onDownloadUserPdf({ id_usuario: idUsuario, fecha, fecha_desde: fechaDesde, fecha_hasta: fechaHasta })
             }}
             aria-label={`Configurar reporte de ${row.original.nombre}`}
           >
@@ -100,7 +102,7 @@ export default function CobrosPorUsuarioTable({ data, isLoading, onDownloadUserP
       enableSorting: false,
       enableColumnFilter: false,
     },
-  ], [fecha, onDownloadUserPdf, pdfUserLoading])
+  ], [fecha, fechaDesde, fechaHasta, onDownloadUserPdf, pdfUserLoading])
 
   const table = useReactTable({
     data,

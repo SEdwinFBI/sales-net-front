@@ -352,9 +352,31 @@ describe('reporte de cobros', () => {
     await ejecutar(def, { fecha: null })
     expect(setFilters).toHaveBeenCalledWith({ nombre: 'an', fecha: '' })
     await ejecutar(def, { fecha: '2026-10-12' })
-    expect(setFilters).toHaveBeenLastCalledWith({ nombre: 'an', fecha: '2026-10-12' })
+    expect(setFilters).toHaveBeenLastCalledWith({ nombre: 'an', fecha: '2026-10-12', fecha_desde: '', fecha_hasta: '' })
     expect((await ejecutar(def, { fecha: '2026-13-40' })).ok).toBe(false)
     expect((await ejecutar(def, {})).ok).toBe(false)
+  })
+
+  it('acepta rango fecha_desde/fecha_hasta, limpia fecha puntual y rechaza rangos invertidos', async () => {
+    const { ctx, setFilters } = context()
+    const def = tool(buildCobrosTools(ctx), 'filtrar_cobros')
+    expect((await ejecutar(def, { fecha_desde: '2026-08-01', fecha_hasta: '2026-08-31' })).ok).toBe(true)
+    expect(setFilters).toHaveBeenLastCalledWith({
+      nombre: 'an',
+      fecha: '',
+      fecha_desde: '2026-08-01',
+      fecha_hasta: '2026-08-31',
+    })
+    expect(errorOf(await ejecutar(def, { fecha_desde: '2026-09-01', fecha_hasta: '2026-08-31' }))).toMatch(/posterior/)
+    expect((await ejecutar(def, { fecha: '2026-08-15', fecha_desde: '2026-08-01' })).ok).toBe(false)
+
+    await ejecutar(def, { fecha_desde: null, fecha_hasta: '' })
+    expect(setFilters).toHaveBeenLastCalledWith({
+      nombre: 'an',
+      fecha: '2026-10-10',
+      fecha_desde: '',
+      fecha_hasta: '',
+    })
   })
 
   it('descargar_pdf_cobros_usuario valida usuario y sucursal contra el reporte cargado', async () => {

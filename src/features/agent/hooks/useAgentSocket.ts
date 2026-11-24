@@ -42,10 +42,12 @@ const ACTION_LABELS: Record<string, string> = {
   consultar_stock: 'Consultando existencias…',
   consultar_precios_especiales: 'Consultando precios especiales…',
   consultar_cajas: 'Consultando cajas…',
+  consultar_equipo_sucursal: 'Consultando equipo de la sucursal…',
 }
 
 /** Etiqueta de las tools de pantalla según su prefijo (las convenciones del manual). */
 const PREFIX_LABELS: [string, string][] = [
+  ['consultar_', 'Consultando…'],
   ['leer_', 'Leyendo la pantalla…'],
   ['opciones_', 'Leyendo las opciones…'],
   ['filtrar_', 'Aplicando filtros…'],
@@ -84,6 +86,78 @@ type Options = {
   onTurnEnd?: () => void
 }
 
+export type ServerMessageHandlerContext = {
+  streamingId: { current: number | null }
+  assistantText: { current: string }
+  nextMessageId: () => number
+  setMessages: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void
+  pushMessage: (role: ChatMessage['role'], text: string) => void
+  setBusy: (busy: boolean) => void
+  executeTool: Options['executeTool']
+  getTools: Options['getTools']
+  onAssistantDone?: (text: string) => void
+  onTurnEnd?: () => void
+  sendToolResult: (payload: Extract<ClientMessage, { type: 'tool_result' }>) => void
+}
+
+/** Procesa un mensaje entrante del servidor del agente y actualiza el estado de la conversación. */
+export function applyAgentServerMessage(message: ServerMessage, ctx: ServerMessageHandlerContext) {
+  switch (message.type) {
+    case 'assistant_delta': {
+      ctx.assistantText.current += message.text
+      const current = ctx.streamingId.current
+      if (current === null) {
+        const id = ctx.nextMessageId()
+        ctx.streamingId.current = id
+        ctx.setMessages((prev) => [...prev, { id, role: 'assistant', text: message.text }])
+      } else {
+        ctx.setMessages((prev) =>
+          prev.map((m) => (m.id === current ? { ...m, text: m.text + message.text } : m)),
+        )
+      }
+      break
+    }
+    case 'assistant_done': {
+      const text = ctx.assistantText.current
+      ctx.streamingId.current = null
+      ctx.assistantText.current = ''
+      ctx.setBusy(false)
+      ctx.onTurnEnd?.()
+      if (text.trim()) ctx.onAssistantDone?.(text)
+      break
+    }
+    case 'tool_progress': {
+      ctx.streamingId.current = null
+      ctx.pushMessage('action', actionLabel(message.name))
+      break
+    }
+    case 'tool_call': {
+      // Cada tool_call arranca un mensaje nuevo del asistente si vuelve a hablar.
+      ctx.streamingId.current = null
+      ctx.pushMessage('action', actionLabel(message.name))
+      const options = { confirmTimeoutMs: typeof message.timeout_ms === 'number' ? message.timeout_ms : undefined }
+      void ctx.executeTool(message.name, message.args ?? {}, options).then((result) => {
+        // La lista de tools va con cada resultado: si la acción cambió de pantalla, el modelo
+        // ve las tools nuevas dentro del mismo turno.
+        ctx.sendToolResult({ type: 'tool_result', id: message.id, ...result, tools: ctx.getTools() })
+      })
+      break
+    }
+    case 'reset_ok': {
+      ctx.streamingId.current = null
+      ctx.assistantText.current = ''
+      break
+    }
+    case 'error': {
+      ctx.streamingId.current = null
+      ctx.assistantText.current = ''
+      ctx.setBusy(false)
+      ctx.pushMessage('error', message.message)
+      break
+    }
+  }
+}
+
 /**
  * Conexión WebSocket con el agente (`/ws/agent/`). Mismo patrón que
  * `usePresenceSocket`, más el bucle de mensajes: el back manda `tool_call`,
@@ -120,55 +194,19 @@ export function useAgentSocket({ enabled, token, executeTool, getContext, getToo
     }
 
     const handleServerMessage = (ws: WebSocket, message: ServerMessage) => {
-      switch (message.type) {
-        case 'assistant_delta': {
-          assistantText.current += message.text
-          const current = streamingId.current
-          if (current === null) {
-            const id = nextId.current++
-            streamingId.current = id
-            setMessages((prev) => [...prev, { id, role: 'assistant', text: message.text }])
-          } else {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === current ? { ...m, text: m.text + message.text } : m)),
-            )
-          }
-          break
-        }
-        case 'assistant_done': {
-          const text = assistantText.current
-          streamingId.current = null
-          assistantText.current = ''
-          setBusy(false)
-          latest.current.onTurnEnd?.()
-          if (text.trim()) latest.current.onAssistantDone?.(text)
-          break
-        }
-        case 'tool_call': {
-          // Cada tool_call arranca un mensaje nuevo del asistente si vuelve a hablar.
-          streamingId.current = null
-          pushMessage('action', actionLabel(message.name))
-          const options = { confirmTimeoutMs: typeof message.timeout_ms === 'number' ? message.timeout_ms : undefined }
-          void latest.current.executeTool(message.name, message.args ?? {}, options).then((result) => {
-            // La lista de tools va con cada resultado: si la acción cambió de pantalla, el modelo
-            // ve las tools nuevas dentro del mismo turno.
-            send(ws, { type: 'tool_result', id: message.id, ...result, tools: latest.current.getTools() })
-          })
-          break
-        }
-        case 'reset_ok': {
-          streamingId.current = null
-          assistantText.current = ''
-          break
-        }
-        case 'error': {
-          streamingId.current = null
-          assistantText.current = ''
-          setBusy(false)
-          pushMessage('error', message.message)
-          break
-        }
-      }
+      applyAgentServerMessage(message, {
+        streamingId,
+        assistantText,
+        nextMessageId: () => nextId.current++,
+        setMessages,
+        pushMessage,
+        setBusy,
+        executeTool: (...args) => latest.current.executeTool(...args),
+        getTools: () => latest.current.getTools(),
+        onAssistantDone: (text) => latest.current.onAssistantDone?.(text),
+        onTurnEnd: () => latest.current.onTurnEnd?.(),
+        sendToolResult: (payload) => send(ws, payload),
+      })
     }
 
     const connect = () => {

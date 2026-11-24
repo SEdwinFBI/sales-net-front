@@ -27,6 +27,8 @@ export type ServerMessage =
   | { type: 'assistant_done' }
   /** `timeout_ms`: cuánto espera el back el resultado (la confirmación del widget caduca antes). */
   | { type: 'tool_call'; id: string; name: string; args: Record<string, unknown>; timeout_ms?: number }
+  /** Progreso de una consulta ejecutada en el back (`consultar_*`); solo informativa en el chat. */
+  | { type: 'tool_progress'; name: string }
   | { type: 'error'; message: string }
   /** El back olvidó la conversación (respuesta a `reset`). */
   | { type: 'reset_ok' }

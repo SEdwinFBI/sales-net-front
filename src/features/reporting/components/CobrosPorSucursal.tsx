@@ -11,9 +11,11 @@ type Props = {
   onDownloadUserPdf: (filters: ReporteCobrosFilters) => void
   pdfUserLoading?: number | null
   fecha?: string
+  fechaDesde?: string
+  fechaHasta?: string
 }
 
-export default function CobrosPorSucursal({ data, isLoading, onDownloadUserPdf, pdfUserLoading, fecha }: Props) {
+export default function CobrosPorSucursal({ data, isLoading, onDownloadUserPdf, pdfUserLoading, fecha, fechaDesde, fechaHasta }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-3" aria-label="Cargando cobros">
@@ -65,6 +67,8 @@ export default function CobrosPorSucursal({ data, isLoading, onDownloadUserPdf, 
               }
               pdfUserLoading={pdfUserLoading}
               fecha={fecha}
+              fechaDesde={fechaDesde}
+              fechaHasta={fechaHasta}
             />
           </div>
         </details>

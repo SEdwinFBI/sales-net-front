@@ -126,6 +126,7 @@ const STATIC_TOOL_NAMES = [
   'abrir_formulario_cliente',
   // El back las ejecuta (agent/queries.py); no pasan por el front.
   'consultar_ventas', 'consultar_abonos', 'consultar_clientes', 'consultar_stock', 'consultar_precios_especiales', 'consultar_cajas',
+  'consultar_equipo_sucursal',
 ]
 
 type Screen = { name: string; tools: AgentToolDef[] }
