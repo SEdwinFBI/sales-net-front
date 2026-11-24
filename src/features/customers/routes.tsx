@@ -28,7 +28,7 @@ export const clientesRoutes: AppRoute[] = [
           description: 'Información del cliente',
           icon: Users,
           permissions: ['admin', 'vendedor'],
-          agentHint: 'Ficha del cliente: saldo, HACER una venta, abono (pago de deuda) o ajuste (solo con credito), ver compras y abonos, anular, precios.',
+          agentHint: 'Ficha de UN cliente: saldo, cuanto abono o compro y cuando; HACER venta, abono (pago de deuda) o ajuste (con credito); anular; precios.',
           lazy: () => import('./pages/ClienteDetailPage'),
           hideFromSidebar: true,
         },

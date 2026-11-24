@@ -2,6 +2,7 @@ import { api } from '@/lib/api'
 import { formatCurrency } from '@/helpers/money'
 import { previewReport } from '@/lib/report-pdf'
 import type { SalesArticlesResponse, ApiResponse, Venta, SalesHistoryFilters, SubmitSalePayload, SubmitSaleResponse, CreateVentaPayload, CreateVentaResponse, AdminVentaFilters, VentaListResponse, BranchAvailability } from '../types/sales'
+import { getToday } from '@/lib/dates'
 
 /**
  * Lista los artículos del POS. El orden lo resuelve el servidor ANTES de
@@ -47,7 +48,7 @@ export interface HistorialPdfFiltros {
  * filtradas en pantalla) para que el documento refleje exactamente lo mostrado.
  */
 export const downloadHistorialVentasPdf = async (ids: number[], filtros: HistorialPdfFiltros) => {
-  await previewReport('/ventas/historial/pdf', `historial_ventas_${new Date().toISOString().slice(0, 10)}.pdf`, {
+  await previewReport('/ventas/historial/pdf', `historial_ventas_${getToday()}.pdf`, {
     method: 'post', data: { ids: [...ids], filtros: { ...filtros } },
   })
 }

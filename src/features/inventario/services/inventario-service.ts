@@ -7,6 +7,7 @@ import type {
   ResumenExistencias,
   ResumenFilters,
 } from '../types/inventario'
+import { getToday } from '@/lib/dates'
 
 /** Descarta vacíos para que el backend no reciba filtros fantasma. */
 function limpiar(filters?: Record<string, unknown>): Record<string, unknown> {
@@ -44,7 +45,7 @@ export const downloadMovimientosPdf = async (
   delete sinPaginar.page_size
 
   const sufijo = agruparPorVendedor ? '_por_vendedor' : ''
-  await previewReport('/movimientos', `movimientos_stock${sufijo}_${new Date().toISOString().slice(0, 10)}.pdf`, {
+  await previewReport('/movimientos', `movimientos_stock${sufijo}_${getToday()}.pdf`, {
     params: {
       ...limpiar(sinPaginar),
       output: 'pdf',
@@ -63,7 +64,7 @@ export const getResumenExistencias = async (filters?: ResumenFilters): Promise<R
 
 /** PDF del resumen de existencias, con los mismos filtros que la pantalla. */
 export const downloadResumenPdf = async (filters?: ResumenFilters, incluirDetalle = false) => {
-  await previewReport('/stock/movimientos/resumen', `movimientos_stock_${new Date().toISOString().slice(0, 10)}.pdf`, {
+  await previewReport('/stock/movimientos/resumen', `movimientos_stock_${getToday()}.pdf`, {
     params: { ...limpiar(filters), output: 'pdf', ...(incluirDetalle ? { incluir_detalle: 1 } : {}) },
   })
 }

@@ -28,7 +28,7 @@ export const salesRoutes: AppRoute[] = [
           description: 'Historial de ventas',
           icon: Store,
           permissions: ['admin', 'vendedor'],
-          agentHint: 'Historial: CONSULTAR ventas ya hechas (ultimas, por fecha, cliente o vendedor), detalle, foto, anular y PDF. No registra ventas.',
+          agentHint: 'Historial: CONSULTAR ventas ya hechas (por fecha, cliente o vendedor) con sus totales, detalle, foto, anular y PDF. No registra ventas.',
           lazy: () => import('./pages/HistorialVentasPage'),
         },
       },

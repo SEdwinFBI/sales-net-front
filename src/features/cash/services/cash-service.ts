@@ -1,6 +1,7 @@
 import { api } from '@/lib/api'
 import type { Caja, CajaFilters, TipoMovimientoCaja } from '../types/cash'
 import { previewReport } from '@/lib/report-pdf'
+import { getToday } from '@/lib/dates'
 
 type ApiResponse<T> = { status: string; data: T }
 
@@ -25,5 +26,5 @@ export async function getCaja(id: number) {
 }
 
 export async function downloadCashReport(filters: CajaFilters) {
-  await previewReport('/cajas/reporte/pdf', `arqueos_caja_${new Date().toISOString().slice(0, 10)}.pdf`, { params: { ...filters } })
+  await previewReport('/cajas/reporte/pdf', `arqueos_caja_${getToday()}.pdf`, { params: { ...filters } })
 }

@@ -1,6 +1,7 @@
 import { api } from '@/lib/api'
 import { previewReport } from '@/lib/report-pdf'
 import type { DashboardData, ReporteVentas, ReporteVentasFilters, ReporteDeudores, ReporteDeudoresFilters, ReporteCobros, ReporteCobrosFilters } from '../types/reportes'
+import { getToday } from '@/lib/dates'
 
 
 function setParam(params: Record<string, unknown>, key: string, value: unknown) {
@@ -52,11 +53,11 @@ async function downloadPdf(url: string, filename: string, params?: Record<string
 }
 
 export const downloadReporteVentasPdf = async (filters?: ReporteVentasFilters) => {
-  await downloadPdf('/reportes/ventas', `reporte_ventas_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteVentasParams(filters))
+  await downloadPdf('/reportes/ventas', `reporte_ventas_${getToday()}.pdf`, cleanReporteVentasParams(filters))
 }
 
 export const downloadReporteDeudoresPdf = async (filters?: ReporteDeudoresFilters) => {
-  await downloadPdf('/reportes/deudores', `reporte_deudores_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteDeudoresParams(filters))
+  await downloadPdf('/reportes/deudores', `reporte_deudores_${getToday()}.pdf`, cleanReporteDeudoresParams(filters))
 }
 
 export const getReporteCobros = async (filters?: ReporteCobrosFilters): Promise<ReporteCobros['data']> => {
@@ -68,7 +69,7 @@ export const getReporteCobros = async (filters?: ReporteCobrosFilters): Promise<
 
 export const downloadReporteCobrosPdf = async (filters?: ReporteCobrosFilters) => {
   const userSuffix = filters?.id_usuario ? `_usuario_${filters.id_usuario}` : ''
-  await downloadPdf('/reportes/cobros', `reporte_cobros${userSuffix}_${new Date().toISOString().slice(0, 10)}.pdf`, cleanReporteCobrosParams(filters))
+  await downloadPdf('/reportes/cobros', `reporte_cobros${userSuffix}_${getToday()}.pdf`, cleanReporteCobrosParams(filters))
 }
 
 export const getReporteDeudores = async (filters?: ReporteDeudoresFilters): Promise<ReporteDeudores['data']> => {

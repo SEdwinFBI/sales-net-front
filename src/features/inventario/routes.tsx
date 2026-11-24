@@ -28,7 +28,7 @@ export const inventarioRoutes: AppRoute[] = [
           description: 'Disminuciones y resurtidos de cada vendedor',
           icon: Users,
           permissions: ['admin'],
-          agentHint: 'Movimientos por vendedor: filtrar y leer los movimientos de stock de cada vendedor y descargar el PDF.',
+          agentHint: 'Movimientos de stock (mercaderia) de cada vendedor/usuario: filtrar y leer, y descargar el PDF. No son ventas ni cobros.',
           lazy: () => import('./pages/MovimientosPorVendedorPage'),
         },
       },
