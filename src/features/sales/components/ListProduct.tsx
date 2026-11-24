@@ -7,6 +7,9 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Select } from '@/components/ui/select'
 import Paginator from '@/components/shared/table/Paginator'
+import { useAuthStore } from '@/features/core/store/auth-store'
+import { usePosSettings } from '../hooks/usePosSettings'
+import { canShowStockMeter } from '@/lib/pos-settings'
 
 type ListProductProps = {
   data: Product[]
@@ -28,6 +31,9 @@ const ListProduct = ({
   onPageSizeChange,
 }: ListProductProps) => {
   const addItem = useSalesStore((state) => state.addItem)
+  const role = useAuthStore((state) => state.user?.role)
+  const settings = usePosSettings(role === 'vendedor')
+  const showStockMeter = canShowStockMeter(role, !settings.isError && settings.data?.mostrar_barras_stock_vendedores === true)
 
   if (isLoading) {
     return (
@@ -53,7 +59,7 @@ const ListProduct = ({
     <>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(9.75rem,1fr))] gap-3.5 sm:grid-cols-[repeat(auto-fill,minmax(11.5rem,1fr))] sm:gap-4">
         {data.map((product) => (
-          <ProductItem key={product.id} item={product} onClick={addItem} />
+          <ProductItem key={product.id} item={product} onClick={addItem} showStockMeter={showStockMeter} />
         ))}
       </div>
 

@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { formatDisplayDate } from '@/lib/dates'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 import { CashSummary } from '../components/CashSummary'
 import { MovementsTable } from '../components/MovementsTable'
@@ -30,6 +31,7 @@ import { commitTool } from '@/features/agent/commit-tools'
 import { buildMiCajaTools, buildMovimientoDialogTools } from '../agent/mi-caja-tools'
 
 export default function MyCashPage() {
+  const isAdmin = useAuthStore((state) => state.user?.role === 'admin')
   const { data: caja, isLoading } = useMiCaja()
   const mutation = useCreateMovimientoCaja()
   const [open, setOpen] = useState(false)
@@ -82,7 +84,9 @@ export default function MyCashPage() {
   useAgentTools(
     'mi-caja-page',
     buildMiCajaTools({
-      getCaja: () => caja,
+      getCaja: () => caja && !isAdmin ? {
+        ...caja, ventas_efectivo: undefined, efectivo_esperado: undefined,
+      } : caja,
       isLoading: () => isLoading,
       isDialogOpen: () => open,
       openMovimiento: (valores) => {
@@ -136,8 +140,8 @@ export default function MyCashPage() {
 
           {isLoading ? (
             <>
-              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                {Array.from({ length: 5 }).map((_, index) => (
+              <div className={`grid gap-4 sm:grid-cols-2 md:grid-cols-3 ${isAdmin ? 'lg:grid-cols-5' : ''}`}>
+                {Array.from({ length: isAdmin ? 5 : 3 }).map((_, index) => (
                   <Skeleton key={index} className="h-24 rounded-xl" />
                 ))}
               </div>

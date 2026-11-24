@@ -45,6 +45,7 @@ import type {
   PreferenciaNotificacion,
 } from '../types/notificaciones-types'
 import HorarioCobrosSection from '../components/HorarioCobrosSection'
+import StockMeterSettingsSection from '../components/StockMeterSettingsSection'
 import AvisoIngresoSection from '../components/AvisoIngresoSection'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { commitTool } from '@/features/agent/commit-tools'
@@ -352,6 +353,7 @@ export default function NotificacionesPage() {
         <Card className="gap-4 p-4 sm:p-5">
           <HorarioCobrosSection />
         </Card>
+        <StockMeterSettingsSection />
         {/* Barra Superior con Métricas, Búsqueda y Acciones */}
         <Card className="border-border/70 bg-card p-3 shadow-2xs sm:p-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -725,5 +727,4 @@ export default function NotificacionesPage() {
     </PageTemplateSimple>
   )
 }
-
 

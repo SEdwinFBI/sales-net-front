@@ -72,6 +72,15 @@ function miCajaCtx(overrides: Partial<MiCajaAgentContext> = {}) {
 }
 
 describe('tools de /caja/mi-caja', () => {
+  it('no expone los totales restringidos cuando la caja pertenece a un vendedor', async () => {
+    const ctx = miCajaCtx({ getCaja: () => caja(9, { ventas_efectivo: undefined, efectivo_esperado: undefined }) })
+    const result = await tool(buildMiCajaTools(ctx), 'leer_mi_caja').run({})
+    expect(result).toMatchObject({ ok: true, data: { entradas: 200, gastos: 50 } })
+    if (result.ok) {
+      expect(result.data).not.toHaveProperty('ventas_efectivo')
+      expect(result.data).not.toHaveProperty('saldo_esperado')
+    }
+  })
   it('leer_mi_caja resume la caja de hoy', async () => {
     const result = await tool(buildMiCajaTools(miCajaCtx()), 'leer_mi_caja').run({})
     expect(result).toMatchObject({

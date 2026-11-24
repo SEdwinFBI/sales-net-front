@@ -9,9 +9,10 @@ import { useSalesStore } from "../store/useSalesStore"
 type Props = {
     onClick: (product: Product, variantId: number) => void
     item: Product
+    showStockMeter?: boolean
 }
 
-const ProductItem: FC<Props> = ({ onClick, item }) => {
+const ProductItem: FC<Props> = ({ onClick, item, showStockMeter = false }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [checkedVariantIds, setCheckedVariantIds] = useState<number[]>([])
     const [variantSelected, setVariantSelected] = useState<ProductVariant | null>(
@@ -68,9 +69,10 @@ const ProductItem: FC<Props> = ({ onClick, item }) => {
             setCheckedVariantIds([])
         }}>
             <DrawerTrigger asChild>
-                <ProductCard item={item} />
+                <ProductCard item={item} showStockMeter={showStockMeter} />
             </DrawerTrigger>
             <VariantSelectionDrawer
+                showStockMeter={showStockMeter}
                 item={availableItem}
                 variantSelected={availableSelected}
                 onVariantChange={(variant) => {
