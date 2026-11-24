@@ -7,13 +7,15 @@ import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/helpers/money'
 import { getStockBadgeClass, getStockStatus, getStockTextClass } from '@/lib/stock-status'
+import StockLevelMeter from './StockLevelMeter'
 
 type Props = {
   item: Product
   onClick?: () => void
+  showStockMeter?: boolean
 }
 
-const ProductCard: FC<Props> = ({ item, onClick }) => {
+const ProductCard: FC<Props> = ({ item, onClick, showStockMeter = false }) => {
   const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = imageUrl
   }, [])
@@ -98,6 +100,9 @@ const ProductCard: FC<Props> = ({ item, onClick }) => {
           </div>
         </CardDescription>
       </CardHeader>
+      {showStockMeter && <div className="border-t border-border/60 px-3 py-2.5">
+        <StockLevelMeter quantity={totalStock} />
+      </div>}
     </Card>
   )
 }
