@@ -28,6 +28,8 @@ export type ServerMessage =
   /** `timeout_ms`: cuánto espera el back el resultado (la confirmación del widget caduca antes). */
   | { type: 'tool_call'; id: string; name: string; args: Record<string, unknown>; timeout_ms?: number }
   | { type: 'error'; message: string }
+  /** El back olvidó la conversación (respuesta a `reset`). */
+  | { type: 'reset_ok' }
 
 /** Tools que registran las pantallas montadas; el back las ofrece al modelo junto con las estáticas. */
 export type ContextTool = {
@@ -38,6 +40,8 @@ export type ContextTool = {
 }
 
 export type ClientMessage =
+  /** Pide al back olvidar el historial y cancelar el turno y las tools pendientes. */
+  | { type: 'reset' }
   | { type: 'user_message'; text: string; context: AgentContext; context_tools: ContextTool[] }
   | ({ type: 'tool_result'; id: string; tools: ContextTool[] } & (
       | { ok: true; data: unknown }

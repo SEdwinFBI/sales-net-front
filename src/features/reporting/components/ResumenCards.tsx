@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import { cn } from '@/lib/utils'
 import type { ReporteResumen } from '../types/reportes'
+import { desgloseOrigen } from '../utils/origen'
 
 type Props = {
   resumen?: ReporteResumen
@@ -22,10 +23,21 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
 
   if (!resumen) return null
 
-  const cards = [
+  const origen = resumen.por_origen
+  const SOLO_POS = 'Solo POS'
+  const cards: {
+    label: string
+    value: string
+    sub?: string
+    color: string
+    bar: string
+    chip: string
+    icon: typeof Receipt
+  }[] = [
     {
       label: 'Total bruto',
       value: formatCurrency(Number(resumen.total_bruto)),
+      sub: origen ? SOLO_POS : undefined,
       color: 'text-primary',
       bar: 'bg-primary',
       chip: 'bg-primary/12 text-primary',
@@ -33,7 +45,9 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
     },
     {
       label: 'Total neto',
-      value: formatCurrency(Number(resumen.total_neto)),
+      // El valor principal es el global (POS + ventas registradas en el cliente); debajo, el desglose.
+      value: formatCurrency(Number(origen?.global.total_neto ?? resumen.total_neto)),
+      sub: desgloseOrigen(origen, 'total_neto', formatCurrency) ?? undefined,
       color: 'text-emerald-600 dark:text-emerald-400',
       bar: 'bg-emerald-500',
       chip: 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400',
@@ -42,6 +56,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
     {
       label: 'Unidades vendidas',
       value: formatNumber(resumen.cantidad_total),
+      sub: origen ? SOLO_POS : undefined,
       color: 'text-foreground',
       bar: 'bg-sky-500',
       chip: 'bg-sky-500/12 text-sky-600 dark:text-sky-400',
@@ -50,6 +65,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
     {
       label: 'Total descuento',
       value: formatCurrency(Number(resumen.total_descuento)),
+      sub: origen ? SOLO_POS : undefined,
       color: 'text-destructive',
       bar: 'bg-destructive',
       chip: 'bg-destructive/12 text-destructive',
@@ -58,6 +74,7 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
   ]
 
   return (
+    <div className="space-y-2">
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon
@@ -78,9 +95,12 @@ export default function ResumenCards({ resumen, isLoading }: Props) {
             <p className={cn('mt-2 font-heading text-2xl font-bold tabular-nums', card.color)}>
               {card.value}
             </p>
+            {card.sub && <p className="mt-1 truncate text-[11px] text-muted-foreground tabular-nums">{card.sub}</p>}
           </div>
         )
       })}
+    </div>
+    {origen?.nota && <p className="text-xs text-muted-foreground">{origen.nota}</p>}
     </div>
   )
 }

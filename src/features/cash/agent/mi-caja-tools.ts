@@ -95,6 +95,9 @@ export function buildMiCajaTools(ctx: MiCajaAgentContext): AgentToolDef[] {
           gastos: Number(caja.salidas),
           ...(caja.ventas_efectivo !== undefined ? { ventas_efectivo: Number(caja.ventas_efectivo) } : {}),
           ...(caja.efectivo_esperado !== undefined ? { saldo_esperado: Number(caja.efectivo_esperado) } : {}),
+          ...(caja.ventas_efectivo === undefined && caja.efectivo_esperado === undefined
+            ? { nota: 'el saldo esperado y las ventas en efectivo solo los ve el administrador' }
+            : {}),
           total_movimientos: movimientos.length,
           mostrando: Math.min(movimientos.length, MAX_READ_ROWS),
           movimientos: limitRows(movimientos).map((m) => ({

@@ -35,6 +35,13 @@ const ACTION_LABELS: Record<string, string> = {
   preparar_venta: 'Preparando la venta…',
   abrir_formulario_cliente: 'Abriendo el formulario…',
   cerrar_dialogo: 'Cerrando el diálogo…',
+  // Consultas que el back resuelve sin pasar por el front.
+  consultar_ventas: 'Consultando ventas…',
+  consultar_abonos: 'Consultando abonos…',
+  consultar_clientes: 'Consultando clientes…',
+  consultar_stock: 'Consultando existencias…',
+  consultar_precios_especiales: 'Consultando precios especiales…',
+  consultar_cajas: 'Consultando cajas…',
 }
 
 /** Etiqueta de las tools de pantalla según su prefijo (las convenciones del manual). */
@@ -149,6 +156,11 @@ export function useAgentSocket({ enabled, token, executeTool, getContext, getToo
           })
           break
         }
+        case 'reset_ok': {
+          streamingId.current = null
+          assistantText.current = ''
+          break
+        }
         case 'error': {
           streamingId.current = null
           assistantText.current = ''
@@ -229,7 +241,17 @@ export function useAgentSocket({ enabled, token, executeTool, getContext, getToo
     [pushMessage],
   )
 
-  const clearMessages = useCallback(() => setMessages([]), [])
+  /** Limpia la pantalla y le pide al back olvidar la conversación (si no, seguiría respondiendo con ese contexto). */
+  const clearMessages = useCallback(() => {
+    const ws = wsRef.current
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'reset' } satisfies ClientMessage))
+    streamingId.current = null
+    assistantText.current = ''
+    setBusy(false)
+    setMessages([])
+    // El back cancela las tools pendientes: una tarjeta de confirmación abierta ya no tiene a quién responder.
+    latest.current.onTurnEnd?.()
+  }, [])
 
   return { status, messages, busy, sendUserMessage, clearMessages }
 }

@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useUsuarios } from '@/features/admin'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildMovimientosTools } from '../agent/movimientos-tools'
 import { TIPOS_STOCK } from '../utils/tipos-movimiento'
 import BotonDescargarPdf from '../components/BotonDescargarPdf'
@@ -65,7 +66,7 @@ export default function MovimientosPorVendedorPage() {
     modulo: 'STOCK',
     ...getTodayRange(),
   })
-  const { movimientos, pagination, isLoading } = useMovimientos(filters)
+  const { movimientos, pagination, isLoading, isPlaceholderData } = useMovimientos(filters)
 
   // Paginación para el agente (la página se pide al servidor).
   useAgentTools('paginacion-movimientos', [
@@ -86,7 +87,7 @@ export default function MovimientosPorVendedorPage() {
   const [pdfBusy, setPdfBusy] = useState(false)
   useAgentTools(
     'movimientos-page',
-    buildMovimientosTools({
+    buildMovimientosTools(useLiveContext({
       getFilters: () => filters,
       setFilters,
       resetFilters: () =>
@@ -98,7 +99,8 @@ export default function MovimientosPorVendedorPage() {
       }),
       getMovimientos: () => movimientos,
       getPagination: () => pagination,
-      isLoading: () => isLoading,
+      // Con keepPreviousData, isLoading es false mientras se ven los datos del filtro anterior.
+      isLoading: () => isLoading || isPlaceholderData,
       isDownloading: () => pdfBusy,
       download: async () => {
         setPdfBusy(true)
@@ -114,7 +116,7 @@ export default function MovimientosPorVendedorPage() {
         }
       },
       today: getToday,
-    }),
+    })),
   )
 
   const grupos = useMemo(() => agruparPorVendedor(movimientos), [movimientos])

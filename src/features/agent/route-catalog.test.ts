@@ -96,10 +96,12 @@ describe('catálogo de rutas del agente', () => {
     for (const listed of getListedRoutes(catalog)) expect(listed.acciones, listed.path).toBeTruthy()
   })
 
-  it('las rutas con credenciales solo se navegan: su pista lo dice', () => {
+  it('las rutas con credenciales solo se navegan: su pista dice que las configura el usuario', () => {
     const catalog = getCatalogRoutes(allFeatureRoutes, ['admin'])
     for (const path of ['/administracion/passkeys', '/administracion/patron-acceso']) {
-      expect(catalog.find((r) => r.path === path)?.agentHint).toMatch(/Solo navegar/)
+      const hint = catalog.find((r) => r.path === path)?.agentHint
+      expect(hint, path).toMatch(/Navega aqui cuando el usuario quiera/)
+      expect(hint, path).toMatch(/el agente no/)
     }
   })
 

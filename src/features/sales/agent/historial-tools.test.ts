@@ -47,6 +47,7 @@ function pageCtx(overrides: Partial<HistorialPageAgentContext> = {}) {
     clearFilters: vi.fn(),
     getFilteredVentas: () => [venta(1), venta(2, { estado: 'PENDIENTE', saldo: 40, foto_url: 'http://x/f.jpg' })],
     isLoading: () => false,
+    getAlcance: () => 'ventas de todas las sucursales',
     isExporting: () => false,
     exportPdf: vi.fn(async () => true),
     ...overrides,
@@ -143,6 +144,63 @@ describe('otras tools de la página', () => {
     const muchas = Array.from({ length: 70 }, (_, i) => venta(i + 1))
     const limitado = await tool(buildHistorialPageTools(pageCtx({ getFilteredVentas: () => muchas })), 'leer_historial').run({})
     expect(limitado).toMatchObject({ data: { total: 70, mostrando: 30 } })
+  })
+
+  it('leer_historial totaliza TODAS las filtradas sin anuladas y sugiere que hacer si no hay ventas', async () => {
+    const ventas = [
+      ...Array.from({ length: 40 }, (_, i) => venta(i + 1, { total_neto: 10, abonado: 4, saldo: 6 })),
+      venta(99, { estado: 'REVERTIDA', total_neto: 1000, abonado: 0, saldo: 0 }),
+    ]
+    const lleno = await tool(buildHistorialPageTools(pageCtx({ getFilteredVentas: () => ventas })), 'leer_historial').run({})
+    expect(lleno).toMatchObject({ data: { mostrando: 30, totales: { ventas_vigentes: 40, total_neto: 400, abonado: 160, saldo: 240 } } })
+    const vacio = await tool(buildHistorialPageTools(pageCtx({ getFilteredVentas: () => [] })), 'leer_historial').run({})
+    expect(JSON.stringify(vacio)).toMatch(/Sin ventas con estos filtros/)
+    expect(vacio).toMatchObject({ data: { alcance: 'ventas de todas las sucursales' } })
+  })
+
+  it('filtrar y leer enseguida devuelve los datos nuevos, no los del filtro anterior', async () => {
+    // La pantalla tarda en pintar los filtros y en traer los datos: el mismo ctx cambia con el tiempo.
+    let filtros = { fecha_desde: '2026-07-01', fecha_hasta: '2026-07-31', texto: '' }
+    let ventas = [venta(1)]
+    let cargando = false
+    const ctx = pageCtx({
+      getFilters: () => filtros,
+      getFilteredVentas: () => ventas,
+      isLoading: () => cargando,
+      setFilters: vi.fn((next) => {
+        setTimeout(() => {
+          filtros = { ...filtros, ...next }
+          cargando = true
+        }, 5)
+        setTimeout(() => {
+          ventas = Array.from({ length: 83 }, (_, i) => venta(i + 100))
+          cargando = false
+        }, 120)
+      }),
+    })
+    const tools = buildHistorialPageTools(ctx)
+    const filtrado = await ejecutar(tool(tools, 'filtrar_historial'), { fecha_desde: '2026-08-01', fecha_hasta: '2026-08-31' })
+    expect(filtrado).toMatchObject({ ok: true, data: { cargando: false, mensaje: expect.stringContaining('datos cargados') } })
+    const leido = await tool(tools, 'leer_historial').run({})
+    expect(leido).toMatchObject({ ok: true, data: { cargando: false, total: 83, filtros: { fecha_desde: '2026-08-01' } } })
+  })
+
+  it('leer_historial avisa que los datos aun cargan en vez de decir que no hay ventas', async () => {
+    const ctx = pageCtx({ getFilteredVentas: () => [], isLoading: () => true })
+    const result = await tool(buildHistorialPageTools(ctx), 'leer_historial').run({})
+    expect(result).toMatchObject({ ok: true, data: { cargando: true, aviso: expect.stringContaining('vuelve a llamar leer_historial') } })
+  })
+
+  it('si la consulta no termina en el tope, filtrar lo dice y no promete datos', async () => {
+    vi.useFakeTimers()
+    try {
+      const ctx = pageCtx({ isLoading: () => true })
+      const pendiente = ejecutar(tool(buildHistorialPageTools(ctx), 'filtrar_historial'), { estado: 'PAGADA' })
+      await vi.advanceTimersByTimeAsync(9000)
+      expect(await pendiente).toMatchObject({ ok: true, data: { cargando: true, mensaje: expect.stringContaining('aun cargan') } })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   describe('descargar_pdf_historial', () => {

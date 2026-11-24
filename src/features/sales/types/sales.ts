@@ -77,6 +77,8 @@ export type SubmitSalePayload = {
   customerPricingEnabled?: boolean
   total: number
   observacion?: string
+  /** Obligatorio en ventas al credito; el back lo antepone a la observacion. */
+  concepto?: string
   /** Foto de entrega en data URL, cuando está habilitada para el usuario. */
   foto?: string
 }
@@ -166,6 +168,7 @@ export interface CreateVentaPayload {
   estado: string
   idempotencia_key: string
   observacion?: string
+  concepto?: string
   /** Data URL `data:image/jpeg;base64,...` ya comprimida en el navegador. */
   foto?: string
   detalles: {

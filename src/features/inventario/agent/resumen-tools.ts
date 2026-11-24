@@ -1,5 +1,5 @@
 import { type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
-import { MAX_READ_ROWS, NO_PARAMS, fail, limitRows, mergeDateRange, ok, positiveInt } from '@/features/agent/tool-helpers'
+import { MAX_READ_ROWS, NO_PARAMS, fail, limitRows, mergeDateRange, ok, positiveInt, filtersAppliedMessage, loadingNotice, waitForLoad } from '@/features/agent/tool-helpers'
 import type { ResumenFilaExistencias, ResumenFilters, ResumenTotales } from '../types/inventario'
 import type { OpcionNombre } from './movimientos-tools'
 
@@ -98,7 +98,9 @@ export function buildResumenTools(ctx: ResumenAgentContext): AgentToolDef[] {
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters(parsed.filters)
+        const cargado = await waitForLoad(ctx.isLoading)
         return ok({
+          cargando: !cargado,
           filtros: {
             fecha_desde: parsed.filters.fecha_desde ?? ctx.today(),
             fecha_hasta: parsed.filters.fecha_hasta ?? ctx.today(),
@@ -106,7 +108,7 @@ export function buildResumenTools(ctx: ResumenAgentContext): AgentToolDef[] {
             cliente_id: parsed.filters.id_cliente ? Number(parsed.filters.id_cliente) : null,
           },
           ...(parsed.aviso ? { aviso: parsed.aviso } : {}),
-          mensaje: 'Filtros aplicados. Usa leer_resumen para ver el resultado (puede tardar un instante en cargar).',
+          mensaje: filtersAppliedMessage('leer_resumen', cargado),
         })
       },
     },
@@ -141,8 +143,12 @@ export function buildResumenTools(ctx: ResumenAgentContext): AgentToolDef[] {
           },
           incluir_detalle_pdf: ctx.getIncluirDetalle(),
           cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_resumen') } : {}),
           total: filas.length,
           mostrando: Math.min(filas.length, MAX_READ_ROWS),
+          ...(filas.length === 0 && !ctx.isLoading()
+            ? { sugerencia: 'Sin existencias con estos filtros. Amplia las fechas o quita sucursal y cliente con filtrar_resumen (null).' }
+            : {}),
           ...(ctx.getTotales() ? { totales: ctx.getTotales() } : {}),
           filas: limitRows(filas).map((f) => ({
             variante_id: f.id_variante,

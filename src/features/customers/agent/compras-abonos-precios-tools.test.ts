@@ -67,6 +67,22 @@ describe('tools de la pestaña Compras', () => {
     })
   })
 
+  it('leer_compras_cliente filtra por rango de fechas y totaliza sin anuladas ni revertidas', async () => {
+    const ventas = [
+      venta(1, 'PENDIENTE', { fecha: '2026-11-20', total_neto: 100, abonado: 20, saldo: 80 }),
+      venta(2, 'PAGADA', { fecha: '2026-11-22', total_neto: 50, abonado: 50, saldo: 0 }),
+      venta(3, 'REVERTIDA', { fecha: '2026-11-22', total_neto: 999, abonado: 0, saldo: 0 }),
+    ]
+    const def = tool(buildComprasTools(comprasCtx({ getVentas: () => ventas })), 'leer_compras_cliente')
+    expect(await ejecutar(def, { fecha_desde: '2026-11-22' })).toMatchObject({
+      ok: true,
+      data: { total: 2, total_comprado: 50, total_abonado: 50, saldo_pendiente: 0 },
+    })
+    expect(await ejecutar(def, {})).toMatchObject({ data: { total: 3, total_comprado: 150, saldo_pendiente: 80 } })
+    expect(JSON.stringify(await ejecutar(def, { fecha_desde: '2027-01-01' }))).toMatch(/no tiene compras en ese rango \(tiene 3 en total\)/)
+    expect((await ejecutar(def, { fecha_hasta: 'ayer' })).ok).toBe(false)
+  })
+
   it('limita a 30 filas', async () => {
     const muchas = Array.from({ length: 80 }, (_, i) => venta(i + 1, 'PAGADA'))
     const result = await tool(buildComprasTools(comprasCtx({ getVentas: () => muchas })), 'leer_compras_cliente').run({})
@@ -153,6 +169,63 @@ describe('tools de la pestaña Abonos', () => {
           { id: 12, monto: -100 },
         ],
       },
+    })
+  })
+
+  it('leer_abonos_cliente dice quien cobro cada abono', async () => {
+    const abonos = [
+      abono(1, { usuario: { id: 3, username: 'vendedor1', full_name: 'Ana Perez' } }),
+      abono(2, { usuario: { id: 4, username: 'vendedor2', full_name: '' } }),
+      abono(3, { usuario: null }),
+    ]
+    const result = await tool(buildAbonosTools(abonosCtx({ getAbonos: () => abonos })), 'leer_abonos_cliente').run({})
+    expect(result).toMatchObject({ ok: true, data: { abonos: [{ cobrado_por: 'Ana Perez' }, { cobrado_por: 'vendedor2' }, { cobrado_por: null }] } })
+  })
+
+  describe('rango de fechas y totales', () => {
+    const delDia = [
+      abono(1, { fecha_abono: '2026-11-21', monto: 500 }),
+      abono(2, { fecha_abono: '2026-11-22', monto: 100 }),
+      abono(3, { fecha_abono: '2026-11-22', monto: 40 }),
+      abono(4, { fecha_abono: '2026-11-22', monto: 70, revertido: true }),
+      abono(5, { fecha_abono: '2026-11-22', monto: -70, id_abono_original: 4 }),
+      abono(6, { fecha_abono: '2026-11-23', monto: 9 }),
+    ]
+    const leer = async (args: Record<string, unknown>, abonos = delDia) => {
+      const def = tool(buildAbonosTools(abonosCtx({ getAbonos: () => abonos })), 'leer_abonos_cliente')
+      return ejecutar(def, args)
+    }
+
+    it('"cuanto abono ayer" es una sola llamada: total del rango sin revertidos ni reversiones', async () => {
+      expect(await leer({ fecha_desde: '2026-11-22', fecha_hasta: '2026-11-22' })).toMatchObject({
+        ok: true,
+        data: { total: 4, total_monto: 140, cantidad_vigentes: 2, excluidos_revertidos_o_reversiones: 2, rango: { fecha_desde: '2026-11-22', fecha_hasta: '2026-11-22' } },
+      })
+    })
+
+    it('el total no depende del limite de 30 filas', async () => {
+      const muchos = Array.from({ length: 80 }, (_, i) => abono(i + 1, { fecha_abono: '2026-11-22', monto: 10 }))
+      expect(await leer({ fecha_desde: '2026-11-22' }, muchos)).toMatchObject({ data: { total: 80, mostrando: 30, total_monto: 800 } })
+    })
+
+    it('sin rango suma todos los vigentes', async () => {
+      expect(await leer({})).toMatchObject({ data: { total: 6, total_monto: 649 } })
+    })
+
+    it('una fecha con hora cuenta en el dia local, como la muestra la tabla', async () => {
+      const tarde = new Date(2026, 10, 22, 22, 30).toISOString()
+      expect(await leer({ fecha_desde: '2026-11-22', fecha_hasta: '2026-11-22' }, [abono(1, { fecha_abono: tarde, monto: 25 })])).toMatchObject({ data: { total_monto: 25 } })
+    })
+
+    it('sin abonos en el rango da una sugerencia con la siguiente accion', async () => {
+      const result = await leer({ fecha_desde: '2027-01-01' })
+      expect(result).toMatchObject({ ok: true, data: { total: 0, total_monto: 0 } })
+      expect(JSON.stringify(result)).toMatch(/no abono en ese rango \(tiene 6 abonos en total\)/)
+    })
+
+    it('rechaza fechas invalidas o un rango invertido', async () => {
+      expect((await leer({ fecha_desde: '22/11/2026' })).ok).toBe(false)
+      expect((await leer({ fecha_desde: '2026-11-23', fecha_hasta: '2026-11-22' })).ok).toBe(false)
     })
   })
 

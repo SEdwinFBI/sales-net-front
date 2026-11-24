@@ -22,6 +22,7 @@ import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
 import type { ReporteVentaSucursal } from '../types/reportes'
+import SoloPosTag from './SoloPosTag'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
@@ -70,7 +71,23 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
       accessorFn: (row) => Number(row.descuento_total),
       cell: ({ getValue }) => <span className="text-destructive">{formatCurrency(Number(getValue()))}</span>,
     },
-    { accessorKey: 'total_neto', header: 'Total Neto', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_neto))}</span> },
+    { accessorKey: 'total_neto', header: 'Neto POS', cell: ({ row }) => <span className="font-semibold">{formatCurrency(Number(row.original.total_neto))}</span> },
+    {
+      id: 'total_cliente',
+      header: 'Cliente',
+      accessorFn: (row) => (row.total_cliente == null ? null : Number(row.total_cliente)),
+      cell: ({ getValue }) => {
+        const valor = getValue<number | null>()
+        return valor === null ? <span className="text-muted-foreground">—</span> : <span>{formatCurrency(valor)}</span>
+      },
+    },
+    {
+      id: 'total_global',
+      header: 'Global',
+      // El global es la cifra principal; un API sin ventas de cliente solo trae el POS.
+      accessorFn: (row) => Number(row.total_global ?? row.total_neto),
+      cell: ({ getValue }) => <span className="font-bold text-primary">{formatCurrency(Number(getValue()))}</span>,
+    },
   ], [])
 
   const table = useReactTable({
@@ -161,6 +178,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
                       <div className="border-t border-border/30 px-6 py-3">
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Artículos vendidos por {row.original.nombre}
+                          <SoloPosTag className="ml-2 align-middle normal-case tracking-normal" />
                         </p>
                         <div className="overflow-x-auto rounded-lg border border-border/50">
                           <table className="w-full text-left">

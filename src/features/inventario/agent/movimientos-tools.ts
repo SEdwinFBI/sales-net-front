@@ -8,6 +8,9 @@ import {
   mergeDateRange,
   ok,
   positiveInt,
+  filtersAppliedMessage,
+  loadingNotice,
+  waitForLoad,
 } from '@/features/agent/tool-helpers'
 import type { Movimiento, MovimientosFilters, Paginacion } from '../types/inventario'
 
@@ -114,9 +117,11 @@ export function buildMovimientosTools(ctx: MovimientosAgentContext): AgentToolDe
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters(parsed.filters)
+        const cargado = await waitForLoad(ctx.isLoading)
         return ok({
           filtros: describeFilters(parsed.filters),
-          mensaje: 'Filtros aplicados. Usa leer_movimientos para ver el resultado (puede tardar un instante en cargar).',
+          cargando: !cargado,
+          mensaje: filtersAppliedMessage('leer_movimientos', cargado),
         })
       },
     },
@@ -126,7 +131,8 @@ export function buildMovimientosTools(ctx: MovimientosAgentContext): AgentToolDe
       parameters: NO_PARAMS,
       run: async () => {
         ctx.resetFilters()
-        return ok({ mensaje: 'Filtros limpiados; las fechas vuelven a hoy.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ cargando: !cargado, mensaje: 'Filtros limpiados; las fechas vuelven a hoy.' + (cargado ? '' : ' Los datos aun cargan: espera y llama leer_movimientos.') })
       },
     },
     {
@@ -152,8 +158,12 @@ export function buildMovimientosTools(ctx: MovimientosAgentContext): AgentToolDe
         return ok({
           filtros: describeFilters(ctx.getFilters()),
           cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_movimientos') } : {}),
           ...(pagination ? { pagina: pagination.page, paginas: pagination.total_pages, total: pagination.total } : {}),
           mostrando: Math.min(movimientos.length, MAX_READ_ROWS),
+          ...(movimientos.length === 0 && !ctx.isLoading()
+            ? { sugerencia: 'Sin movimientos con estos filtros (las fechas empiezan en hoy). Amplia las fechas o quita tipo, sucursal y usuario con limpiar_filtros_movimientos.' }
+            : {}),
           movimientos: limitRows(movimientos).map((m) => ({
             id: m.id,
             fecha: m.fecha,

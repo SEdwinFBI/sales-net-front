@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
 import type { ReporteDeudoresFilters } from '../types/reportes'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildDeudoresTools } from '../agent/reportes-tools'
 
 export default function ReporteDeudoresPage() {
@@ -41,7 +42,7 @@ export default function ReporteDeudoresPage() {
   // Tools del agente: los filtros son estado local de esta pantalla (texto vacío = sin filtro).
   useAgentTools(
     'reporte-deudores-page',
-    buildDeudoresTools({
+    buildDeudoresTools(useLiveContext({
       getFilters: () => ({ nombre: filters.nombre, lugar: filters.lugar }),
       setFilters: ({ nombre, lugar }) => {
         setFilter('nombre', nombre)
@@ -52,7 +53,7 @@ export default function ReporteDeudoresPage() {
       isLoading: () => isLoading,
       isDownloading: () => pdfLoading,
       download: handleExportPdf,
-    }),
+    })),
   )
 
   return (

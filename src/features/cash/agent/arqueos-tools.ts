@@ -8,6 +8,9 @@ import {
   ok,
   positiveInt,
   type DateRange,
+  filtersAppliedMessage,
+  loadingNotice,
+  waitForLoad,
 } from '@/features/agent/tool-helpers'
 import type { Caja } from '../types/cash'
 
@@ -79,7 +82,8 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
         const merged = mergeDateRange(args, ctx.getFilters())
         if ('error' in merged) return fail(merged.error)
         ctx.setFilters(merged.range)
-        return ok({ filtros: merged.range, mensaje: 'Rango aplicado. Usa leer_arqueos para ver el resultado.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ filtros: merged.range, cargando: !cargado, mensaje: filtersAppliedMessage('leer_arqueos', cargado) })
       },
     },
     {
@@ -88,7 +92,12 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
       parameters: NO_PARAMS,
       run: async () => {
         const level = ctx.getLevel()
-        const base = { nivel: level, filtros: ctx.getFilters(), cargando: ctx.isLoading() }
+        const base = {
+          nivel: level,
+          filtros: ctx.getFilters(),
+          cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_arqueos') } : {}),
+        }
         const today = ctx.getTodayCajas()
 
         if (level === 'general') {
@@ -133,6 +142,7 @@ export function buildArqueosTools(ctx: ArqueosAgentContext): AgentToolDef[] {
           hoy: sumCajas(today),
           total_cajas: periodo.length,
           mostrando: Math.min(periodo.length, MAX_READ_ROWS),
+          ...(periodo.length === 0 && !ctx.isLoading() ? { sugerencia: 'Sin cajas en este rango: amplia fecha_desde/fecha_hasta con filtrar_arqueos.' } : {}),
           cajas: limitRows(periodo).map((c) => ({
             caja_id: c.id,
             fecha: c.fecha,

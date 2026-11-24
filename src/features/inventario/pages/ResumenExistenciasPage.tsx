@@ -11,6 +11,7 @@ import { getToday, getTodayRange } from '@/lib/dates'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/api-error'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
+import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildResumenTools } from '../agent/resumen-tools'
 import BotonDescargarPdf from '../components/BotonDescargarPdf'
 import ResumenExistenciasTable from '../components/ResumenExistenciasTable'
@@ -35,7 +36,7 @@ export default function ResumenExistenciasPage() {
   const [pdfBusy, setPdfBusy] = useState(false)
   useAgentTools(
     'resumen-page',
-    buildResumenTools({
+    buildResumenTools(useLiveContext({
       getFilters: () => filters,
       setFilters,
       getSucursales: () => sucursales.map((s) => ({ id: s.id, nombre: s.nombre })),
@@ -60,7 +61,7 @@ export default function ResumenExistenciasPage() {
         }
       },
       today: getToday,
-    }),
+    })),
   )
 
   const set = (key: keyof ResumenFilters, value: string | undefined) => {

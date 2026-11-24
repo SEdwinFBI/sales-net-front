@@ -24,6 +24,31 @@ export interface ReporteCobrosFilters {
   output?: 'json' | 'pdf'
 }
 
+/** Totales de un origen de ventas: POS (con artículos), cliente (registradas en la ficha, solo monto) o global. */
+export interface OrigenVentas {
+  cantidad_ventas: number
+  total_neto: number
+  efectivo: number
+  credito: number
+}
+
+/** El POS además trae lo que solo existe con artículos. */
+export interface OrigenVentasPos extends OrigenVentas {
+  total_bruto?: number
+  total_descuento?: number
+}
+
+/**
+ * Global = POS + cliente. Con filtro de artículo o talla `cliente` es null (esas ventas no tienen
+ * artículos) y llega `nota`.
+ */
+export interface PorOrigen<P = OrigenVentasPos, C = OrigenVentas> {
+  global: C
+  pos: P
+  cliente: C | null
+  nota?: string
+}
+
 export interface ReporteVentas {
   status: 'success'
   data: {
@@ -39,6 +64,8 @@ export interface ReporteResumen {
   total_descuento: number
   cantidad_total: number
   total_ventas: number
+  /** Aditivo: los campos de arriba siguen siendo solo del POS. */
+  por_origen?: PorOrigen
 }
 
 export interface ReporteVentaItem {
@@ -95,6 +122,11 @@ export interface ReporteVentaSucursal {
   descuento_total: number
   total_neto: number
   articulos: VendedorArticulo[]
+  /** Ventas registradas en la ficha del cliente (null si el filtro las excluye). */
+  total_cliente?: number | null
+  cantidad_ventas_cliente?: number | null
+  /** POS + cliente. */
+  total_global?: number
 }
 
 export interface VendedorArticulo {
@@ -110,6 +142,17 @@ export interface VendedorArticulo {
   total_neto: number
 }
 
+export interface ComparacionOrigen {
+  ven_semana_anterior: number
+  ven_mes_anterior: number
+}
+
+export interface VentasHoyOrigen {
+  total_neto: number
+  cantidad_ventas: number
+  variacion_ayer: number
+}
+
 export interface DashboardData {
   periodo: string
   resumen: {
@@ -121,6 +164,7 @@ export interface DashboardData {
     promedio_por_venta: number
     efectivo: number
     credito: number
+    por_origen?: PorOrigen
     total_clientes: number
     total_deudores: number
     total_adeudado: number
@@ -132,12 +176,14 @@ export interface DashboardData {
   comparacion: {
     ven_semana_anterior: number
     ven_mes_anterior: number
+    por_origen?: PorOrigen<ComparacionOrigen, ComparacionOrigen>
   }
   ventas_hoy: {
     total_neto: number
     total_bruto: number
     cantidad_ventas: number
     variacion_ayer: number
+    por_origen?: PorOrigen<VentasHoyOrigen, VentasHoyOrigen>
   }
   ventas_por_dia: {
     fecha: string
@@ -174,8 +220,16 @@ export interface DashboardData {
     total_neto: number
     total_bruto: number
     cantidad_ventas: number
+    total_cliente?: number | null
+    cantidad_ventas_cliente?: number | null
+    total_global?: number
   }[]
   formas_pago: {
+    nombre: string
+    total_neto: number
+  }[]
+  /** Formas de pago de POS + ventas del cliente. */
+  formas_pago_global?: {
     nombre: string
     total_neto: number
   }[]
