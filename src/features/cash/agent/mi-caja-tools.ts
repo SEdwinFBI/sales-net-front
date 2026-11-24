@@ -82,7 +82,7 @@ export function buildMiCajaTools(ctx: MiCajaAgentContext): AgentToolDef[] {
   return [
     {
       name: 'leer_mi_caja',
-      description: `Devuelve la caja de hoy: sucursal, entradas, gastos, ventas en efectivo, saldo esperado y los movimientos (maximo ${MAX_READ_ROWS}).`,
+      description: `Devuelve la caja de hoy: sucursal, entradas, gastos y movimientos (maximo ${MAX_READ_ROWS}). Ventas en efectivo y saldo esperado solo para administradores.`,
       parameters: NO_PARAMS,
       run: async () => {
         const caja = ctx.getCaja()
@@ -93,8 +93,8 @@ export function buildMiCajaTools(ctx: MiCajaAgentContext): AgentToolDef[] {
           sucursal: caja.sucursal.nombre,
           entradas: Number(caja.entradas),
           gastos: Number(caja.salidas),
-          ventas_efectivo: Number(caja.ventas_efectivo),
-          saldo_esperado: Number(caja.efectivo_esperado),
+          ...(caja.ventas_efectivo !== undefined ? { ventas_efectivo: Number(caja.ventas_efectivo) } : {}),
+          ...(caja.efectivo_esperado !== undefined ? { saldo_esperado: Number(caja.efectivo_esperado) } : {}),
           total_movimientos: movimientos.length,
           mostrando: Math.min(movimientos.length, MAX_READ_ROWS),
           movimientos: limitRows(movimientos).map((m) => ({

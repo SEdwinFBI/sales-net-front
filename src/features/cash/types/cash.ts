@@ -17,8 +17,9 @@ export type Caja = {
   sucursal: { id: number; nombre: string }
   entradas: string
   salidas: string
-  ventas_efectivo: string
-  efectivo_esperado: string
+  /** Solo presentes para administradores. */
+  ventas_efectivo?: string
+  efectivo_esperado?: string
   cantidad_movimientos: number
   movimientos?: MovimientoCaja[]
 }

@@ -2,10 +2,12 @@ import { ArrowDownLeft, ArrowUpRight, Banknote, Scale, Wallet } from 'lucide-rea
 import { formatCurrency } from '@/helpers/money'
 import { cn } from '@/lib/utils'
 import type { Caja } from '../types/cash'
+import { useAuthStore } from '@/features/core/store/auth-store'
 
 type CashSummaryData = Pick<Caja, 'entradas' | 'salidas' | 'ventas_efectivo' | 'efectivo_esperado'>
 
 export function CashSummary({ caja, expectedLabel = 'Saldo esperado' }: { caja: CashSummaryData; expectedLabel?: string }) {
+  const isAdmin = useAuthStore((state) => state.user?.role === 'admin')
   const entradas = Number(caja.entradas) || 0
   const gastos = Number(caja.salidas) || 0
   const resto = entradas - gastos
@@ -42,6 +44,7 @@ export function CashSummary({ caja, expectedLabel = 'Saldo esperado' }: { caja: 
       bar: 'bg-primary',
       chip: 'bg-primary/12 text-primary',
       icon: Banknote,
+      adminOnly: true,
     },
     {
       label: expectedLabel,
@@ -50,11 +53,12 @@ export function CashSummary({ caja, expectedLabel = 'Saldo esperado' }: { caja: 
       bar: 'bg-amber-500',
       chip: 'bg-amber-500/12 text-amber-600 dark:text-amber-400',
       icon: Wallet,
+      adminOnly: true,
     },
-  ]
+  ].filter((item) => !item.adminOnly || isAdmin)
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <div className={cn('grid gap-3 sm:grid-cols-2 md:grid-cols-3', isAdmin && 'lg:grid-cols-5')}>
       {items.map(({ label, value, color, bar, chip, icon: Icon }) => (
         <div
           key={label}
@@ -70,7 +74,7 @@ export function CashSummary({ caja, expectedLabel = 'Saldo esperado' }: { caja: 
             </span>
           </div>
           <p className={cn('mt-2 font-heading text-xl font-bold tabular-nums', color)}>
-            {formatCurrency(Number(value))}
+            {value === undefined ? '—' : formatCurrency(Number(value))}
           </p>
         </div>
       ))}

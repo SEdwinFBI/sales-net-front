@@ -9,8 +9,10 @@ import imageUrl from '@/assets/img.jpg'
 import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/helpers/money'
 import { getStockBadgeClassDrawer, getStockStatus, getStockTextClass } from '@/lib/stock-status'
+import StockLevelMeter from './StockLevelMeter'
 
 type Props = {
+  showStockMeter?: boolean
   item: Product
   variantSelected: ProductVariant | null
   onVariantChange: (variant: ProductVariant) => void
@@ -21,6 +23,7 @@ type Props = {
 }
 
 const VariantSelectionDrawer: FC<Props> = ({
+  showStockMeter = false,
   item,
   variantSelected,
   onVariantChange,
@@ -93,6 +96,8 @@ const VariantSelectionDrawer: FC<Props> = ({
             </div>
           </div>
         </div>
+
+        {showStockMeter && <StockLevelMeter quantity={item.variants.reduce((sum, variant) => sum + variant.stock, 0)} />}
 
         <div className="space-y-2.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
