@@ -38,6 +38,14 @@ const Sales = () => {
   const { articles, pagination, isLoading, isPlaceholderData } = useArticles(page, pageSize, debouncedSearch, String(user?.id))
   const { config: pricingConfig, isError: pricingError } = useEffectivePricing()
 
+  // Los diálogos del cobro solo existen montados aquí: al salir del POS no puede quedar uno "activo" sin pantalla.
+  useEffect(
+    () => () => {
+      useSalesStore.setState({ activeDialog: null })
+    },
+    [],
+  )
+
   // Paginación de los productos del punto de venta para el agente.
   useAgentTools('paginacion-productos', [
     paginationTool('productos', 'los productos del punto de venta', {

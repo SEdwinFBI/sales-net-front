@@ -162,7 +162,7 @@ describe('leer_usuarios', () => {
     const text = JSON.stringify(result)
     expect(text).not.toMatch(/email|correo|@|password|contrase|hora_/i)
     const lista = result.ok ? (result.data as { usuarios: Record<string, unknown>[] }).usuarios : []
-    expect(Object.keys(lista[0]).sort()).toEqual(['evidencia_fotografica', 'id', 'nombre', 'puede_anular', 'rol', 'username'])
+    expect(Object.keys(lista[0]).sort()).toEqual(['agente_ia', 'evidencia_fotografica', 'id', 'nombre', 'puede_anular', 'rol', 'transmision_audio', 'username'])
     // El admin siempre puede anular, aunque el dato guardado diga otra cosa.
     expect(lista[1]).toMatchObject({ rol: 'admin', puede_anular: true })
   })
@@ -230,6 +230,34 @@ describe('cambiar_permisos_usuario [conf]', () => {
   it('no acepta cambios mientras otro se está aplicando', () => {
     const def = tool(buildUsuariosTools(context({ isUpdating: () => true })), 'cambiar_permisos_usuario')
     expect(def.validar?.({ usuario_id: 1, puede_anular: false })).toMatch(/actualizando/)
+  })
+})
+
+describe('permisos de audio y de agente de IA', () => {
+  it('leer_usuarios muestra transmision_audio y agente_ia', async () => {
+    const ctx = context({ getFiltered: () => [usuario(1, { transmision_audio: true }), usuario(2, { role: 'admin', agente_ia: true })] })
+    const result = await tool(buildUsuariosTools(ctx), 'leer_usuarios').run({})
+    const lista = result.ok ? (result.data as { usuarios: Record<string, unknown>[] }).usuarios : []
+    expect(lista[0]).toMatchObject({ transmision_audio: true, agente_ia: false })
+    expect(lista[1]).toMatchObject({ transmision_audio: false, agente_ia: true })
+  })
+
+  it('cambiar_permisos_usuario cambia agente_ia y transmision_audio con un texto de confirmacion claro', async () => {
+    const ctx = context()
+    const def = tool(buildUsuariosTools(ctx), 'cambiar_permisos_usuario')
+    const args = { usuario_id: 1, transmision_audio: true, agente_ia: true }
+    expect(def.validar?.(args)).toBeNull()
+    const texto = def.textoConfirmacion?.(args)
+    expect(texto).toContain('Transmision de audio (el admin podra escucharlo en vivo): desactivada → activada')
+    expect(texto).toContain('Agente de IA: desactivado → activado')
+    expect((await def.run(args)).ok).toBe(true)
+    expect(ctx.updatePermisos).toHaveBeenCalledWith(1, { transmision_audio: true, agente_ia: true })
+  })
+
+  it('la transmision de audio solo aplica a vendedores', () => {
+    const def = tool(buildUsuariosTools(context()), 'cambiar_permisos_usuario')
+    expect(def.validar?.({ usuario_id: 2, transmision_audio: true })).toMatch(/solo aplica a vendedores/)
+    expect(def.validar?.({ usuario_id: 1, agente_ia: 'si' })).toMatch(/true o false/)
   })
 })
 

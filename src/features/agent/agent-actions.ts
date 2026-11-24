@@ -4,15 +4,15 @@ import { getClientes } from '@/features/customers/services/clientes-service'
 import type { AuthUser } from '@/features/core/store/auth-store'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { useThemeStore } from '@/features/core/store/theme-store'
-import { getArticles } from '@/features/sales/services/products-service'
+import { getArticleAvailability, getArticles } from '@/features/sales/services/products-service'
 import { useSalesStore, type SalesState } from '@/features/sales/store/useSalesStore'
-import type { Product } from '@/features/sales/types/sales'
+import type { BranchAvailability, Product } from '@/features/sales/types/sales'
 import type { AppRoute } from '@/lib/app-routes'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import { searchCatalogArticles, suggestCatalogArticles, type CatalogSearchResult } from './catalog-search'
 import { MIN_SIMILARITY, candidatePrefixes, rankBySimilarity, similarity } from './fuzzy-search'
 import { buildCartSnapshot } from './context-snapshot'
-import { closeTopDialog, type CloseDialogOutcome } from './dialog-control'
+import { closeTopDialog, readTopDialog, type CloseDialogOutcome, type OpenDialogInfo } from './dialog-control'
 import {
   useAgentToolRegistry,
   waitForRegistryChange,
@@ -52,6 +52,15 @@ const CLIENT_FORM_TOOLS: Record<string, string> = {
   ajuste: 'abrir_registrar_ajuste',
 }
 const NAVIGATION_TIMEOUT_MS = 3000
+/** Máximo de sucursales alternativas que se ofrecen cuando un producto no tiene stock en la propia. */
+const MAX_OTHER_BRANCHES = 5
+/** Cómo se llama cada diálogo del punto de venta cuando se le dice al usuario qué se descartó. */
+const SALES_DIALOG_NAMES: Record<string, string> = {
+  checkout: 'cobro',
+  'clear-cart': 'vaciar el carrito',
+  summary: 'resumen de la venta',
+  'customer-prices': 'precios del cliente',
+}
 /** La confirmación caduca este margen antes que la espera del back (latencia de red incluida). */
 const CONFIRM_MARGIN_MS = 3000
 const MIN_CONFIRM_MS = 5000
@@ -82,6 +91,10 @@ export type AgentDeps = {
   requestConfirmation: (texto: string, timeoutMs?: number) => Promise<boolean>
   /** Cierra el diálogo o drawer de más arriba sin guardar (como el X del usuario). Opcional en tests. */
   closeDialog?: () => Promise<CloseDialogOutcome>
+  /** Diálogo de más arriba con lo que el usuario tiene escrito, o null. Opcional en tests. */
+  getOpenDialog?: () => OpenDialogInfo | null
+  /** Existencias de un artículo en cada sucursal (para ofrecer alternativas sin stock). Opcional en tests. */
+  getAvailability?: (articleId: number) => Promise<BranchAvailability>
   getRegisteredTools: () => AgentToolDef[]
   getRegistryVersion: () => number
   /** Opciones de la espera del registro tras navegar o abrir UI (los tests acortan los tiempos). */
@@ -105,6 +118,8 @@ export function createDefaultDeps(
     setTheme: (theme) => useThemeStore.getState().setTheme(theme),
     requestConfirmation: (texto, timeoutMs) => useAgentStore.getState().requestConfirmation(texto, timeoutMs),
     closeDialog: () => closeTopDialog(),
+    getOpenDialog: () => readTopDialog(),
+    getAvailability: async (articleId) => (await getArticleAvailability(articleId)).data,
     getRegisteredTools: () => useAgentToolRegistry.getState().getAll(),
     getRegistryVersion: () => useAgentToolRegistry.getState().version,
     searchCatalog: async (text) => {
@@ -284,6 +299,41 @@ export function createAgentActions(deps: AgentDeps) {
     }
   }
 
+  /** Trabajo del usuario a medias: un cobro abierto o un formulario con datos escritos. */
+  const pendingWork = (): string | null => {
+    const sales = deps.getSales()
+    if (sales.activeDialog === 'checkout') {
+      const { items, total } = buildCartSnapshot(sales)
+      return `Hay un cobro pendiente (${items.length} articulos, total ${total}): confirmalo o pidele al usuario que lo cierre antes de cambiar de pantalla. Usa cerrar_dialogo solo si el usuario quiere descartarlo.`
+    }
+    const open = deps.getOpenDialog?.()
+    if (open && open.valores.length > 0) {
+      const titulo = open.titulo ? ` "${open.titulo}"` : ''
+      return `Hay un formulario${titulo} con datos escritos (${open.valores.map((v) => v.campo).join(', ')}): guardalo o pidele al usuario que lo cierre antes de cambiar de pantalla. Usa cerrar_dialogo solo si el usuario quiere descartarlo.`
+    }
+    return null
+  }
+
+  /** Otras sucursales con existencia del producto (de la talla pedida si se conoce, si no de cualquiera). */
+  const otherBranchesWithStock = async (product: Product, talla?: string) => {
+    if (!deps.getAvailability) return undefined
+    try {
+      const data = await deps.getAvailability(product.id)
+      const pedida = talla ? data.tallas.find((t) => fold(t.talla) === fold(talla)) : undefined
+      const tallas = pedida ? [pedida] : data.tallas
+      return data.sucursales
+        .filter((s) => !s.es_propia)
+        .map((s) => ({
+          sucursal: s.nombre,
+          tallas: Object.fromEntries(tallas.filter((t) => (s.existencias[String(t.id_variante)] ?? 0) > 0).map((t) => [t.talla, s.existencias[String(t.id_variante)]])),
+        }))
+        .filter((s) => Object.keys(s.tallas).length > 0)
+        .slice(0, MAX_OTHER_BRANCHES)
+    } catch {
+      return undefined
+    }
+  }
+
   const cartLine = (productId: number, variantId: number) =>
     deps.getSales().items.find((item) => item.id === itemKey(productId, variantId))
 
@@ -294,7 +344,10 @@ export function createAgentActions(deps: AgentDeps) {
    */
   const resolveCartRequest = async (
     pedido: CartRequest,
-  ): Promise<{ product: Product; variant: Product['variants'][number] } | { motivo: string; opciones?: string[] }> => {
+  ): Promise<
+    | { product: Product; variant: Product['variants'][number] }
+    | { motivo: string; opciones?: string[]; otras_sucursales?: { sucursal: string; tallas: Record<string, number> }[] }
+  > => {
     const found = (await deps.searchArticles(pedido.producto)).slice(0, 10)
     if (found.length === 0) {
       const similar = deps.suggestArticles ? await deps.suggestArticles(pedido.producto) : []
@@ -311,13 +364,23 @@ export function createAgentActions(deps: AgentDeps) {
     if (!product) return { motivo: 'Hay varios productos con ese nombre; cual', opciones: scored.slice(0, 5).map((s) => s.product.name) }
 
     const conStock = product.variants.filter((v) => v.stock > 0)
-    if (conStock.length === 0) return { motivo: `${product.name} no tiene stock.` }
+    if (conStock.length === 0) {
+      const otras = await otherBranchesWithStock(product, pedido.talla)
+      return { motivo: `${product.name} no tiene stock en tu sucursal.`, ...(otras ? { otras_sucursales: otras } : {}) }
+    }
     const variant = pedido.talla
       ? product.variants.find((v) => fold(v.size) === fold(pedido.talla ?? ''))
       : product.variants.length === 1 ? product.variants[0] : undefined
     const tallas = conStock.map((v) => v.size)
     if (!variant) return { motivo: `${product.name}: ${pedido.talla ? 'esa talla no existe' : 'falta la talla'}; tallas con stock`, opciones: tallas }
-    if (variant.stock <= 0) return { motivo: `${product.name} talla ${variant.size} no tiene stock; tallas con stock`, opciones: tallas }
+    if (variant.stock <= 0) {
+      const otras = await otherBranchesWithStock(product, variant.size)
+      return {
+        motivo: `${product.name} talla ${variant.size} no tiene stock en tu sucursal; otras tallas con stock`,
+        opciones: tallas,
+        ...(otras ? { otras_sucursales: otras } : {}),
+      }
+    }
     return { product, variant }
   }
 
@@ -337,6 +400,10 @@ export function createAgentActions(deps: AgentDeps) {
     async navegar(args) {
       const resolved = resolveNavigation(args.ruta, catalog(), new Set(knownClients.keys()))
       if (!resolved.ok) return fail(resolved.error)
+      if (resolved.path !== deps.getPathname()) {
+        const pending = pendingWork()
+        if (pending) return fail(pending)
+      }
       const before = deps.getRegistryVersion()
       deps.navigate(resolved.path)
       if (!(await waitForPath(resolved.path))) return fail('No se pudo completar la navegacion.')
@@ -386,14 +453,25 @@ export function createAgentActions(deps: AgentDeps) {
     async cerrar_dialogo() {
       if (!deps.closeDialog) return fail('No se pueden cerrar dialogos desde el asistente.')
       const before = deps.getRegistryVersion()
-      const { resultado, titulo } = await deps.closeDialog()
+      const sales = deps.getSales()
+      const tipo = sales.activeDialog ? (SALES_DIALOG_NAMES[sales.activeDialog] ?? sales.activeDialog) : undefined
+      const carrito = sales.activeDialog === 'checkout' ? buildCartSnapshot(sales) : undefined
+      const { resultado, titulo, valores } = await deps.closeDialog()
       const cual = titulo ? ` "${titulo}"` : ''
       if (resultado === 'sin_dialogo') return fail('No hay ningun dialogo abierto.')
       if (resultado === 'ocupado') return fail(`El dialogo${cual} esta procesando; espera a que termine.`)
       if (resultado === 'no_cerro') return fail(`El dialogo${cual} no se cerro; pidele al usuario que lo cierre.`)
       // Al cerrarse, el diálogo quita sus tools (y puede volver a registrar las de la pantalla).
       await settleRegistry(before)
-      return ok({ mensaje: `Dialogo${cual} cerrado sin guardar.` })
+      return ok({
+        mensaje: `Dialogo${cual} cerrado sin guardar: se descarto lo que tenia. Dile al usuario que se descarto.`,
+        descartado: {
+          ...(tipo ? { tipo } : {}),
+          ...(titulo ? { titulo } : {}),
+          valores: valores ?? [],
+          ...(carrito ? { carrito: { articulos: carrito.items.length, total: carrito.total } } : {}),
+        },
+      })
     },
 
     async cerrar_sesion() {

@@ -12,6 +12,7 @@ import {
   positiveInt,
 } from '@/features/agent/tool-helpers'
 import type { ToolResult } from '@/features/agent/types'
+import { PERMISOS, type PermisoKey } from '../users/permisos'
 import type { Usuario } from '../users/types/usuario-types'
 
 export type UsuarioFormValues = {
@@ -136,7 +137,7 @@ export type UsuariosAgentContext = {
   openEdit: (usuario: Usuario, valores?: Partial<UsuarioFormValues>) => void
   openDelete: (usuario: Usuario) => void
   /** Misma `updateUsuario` que los checkboxes de la tabla; true si salió bien (el error ya se muestra). */
-  updatePermisos: (usuarioId: number, cambios: { evidencia_fotografica?: boolean; puede_anular?: boolean }) => Promise<boolean>
+  updatePermisos: (usuarioId: number, cambios: PermisosCambios) => Promise<boolean>
   isUpdating: () => boolean
 }
 
@@ -145,14 +146,22 @@ const ROLES = ['todos', 'admin', 'vendedor'] as const
 
 const nombreDe = (u: Pick<Usuario, 'fullName' | 'username'>) => u.fullName || u.username
 
-/** Valores efectivos de los permisos, como los muestran los checkboxes de la tabla. */
-export const permisosActuales = (u: Pick<Usuario, 'role' | 'evidencia_fotografica' | 'puede_anular'>) => ({
-  evidencia_fotografica: u.evidencia_fotografica ?? true,
-  puede_anular: u.role === 'admin' || (u.puede_anular ?? true),
-})
+export type PermisosCambios = Partial<Record<PermisoKey, boolean>>
+
+/** Valores efectivos de los permisos, como los muestran las columnas de la tabla. */
+export const permisosActuales = (u: Usuario) =>
+  Object.fromEntries(PERMISOS.map((permiso) => [permiso.key, permiso.valor(u)])) as Record<PermisoKey, boolean>
+
+/** Cómo se dice cada permiso en la tarjeta de confirmación: etiqueta, texto activado y texto desactivado. */
+const TEXTO_PERMISO: Record<PermisoKey, [string, string, string]> = {
+  evidencia_fotografica: ['Evidencia fotografica', 'activada', 'desactivada'],
+  puede_anular: ['Anular ventas y abonos', 'permitido', 'no permitido'],
+  transmision_audio: ['Transmision de audio (el admin podra escucharlo en vivo)', 'activada', 'desactivada'],
+  agente_ia: ['Agente de IA', 'activado', 'desactivado'],
+}
 
 export type PermisosPlan =
-  | { usuario: Usuario; cambios: { evidencia_fotografica?: boolean; puede_anular?: boolean }; antes: ReturnType<typeof permisosActuales> }
+  | { usuario: Usuario; cambios: PermisosCambios; antes: Record<PermisoKey, boolean> }
   | { error: string }
 
 /** Valida cambiar_permisos_usuario contra la lista cargada y deja solo lo que realmente cambia. */
@@ -161,20 +170,24 @@ export function planPermisos(args: Record<string, unknown>, usuarios: Usuario[])
   const usuario = id === null ? undefined : usuarios.find((u) => u.id === id)
   if (!usuario) return { error: 'No encontre ese usuario (ver leer_usuarios).' }
 
-  const pedidos: { evidencia_fotografica?: boolean; puede_anular?: boolean } = {}
-  for (const key of ['evidencia_fotografica', 'puede_anular'] as const) {
+  const claves = PERMISOS.map((permiso) => permiso.key)
+  const pedidos: PermisosCambios = {}
+  for (const key of claves) {
     if (!(key in args)) continue
     if (typeof args[key] !== 'boolean') return { error: `${key} debe ser true o false.` }
     pedidos[key] = args[key]
   }
-  if (Object.keys(pedidos).length === 0) return { error: 'Indica al menos un permiso: evidencia_fotografica o puede_anular.' }
+  if (Object.keys(pedidos).length === 0) return { error: `Indica al menos un permiso: ${claves.join(', ')}.` }
   if ('puede_anular' in pedidos && usuario.role === 'admin') {
     return { error: 'puede_anular no aplica a un administrador: los administradores siempre pueden anular.' }
   }
+  if ('transmision_audio' in pedidos && usuario.role !== 'vendedor') {
+    return { error: 'transmision_audio solo aplica a vendedores.' }
+  }
 
   const antes = permisosActuales(usuario)
-  const cambios: { evidencia_fotografica?: boolean; puede_anular?: boolean } = {}
-  for (const key of ['evidencia_fotografica', 'puede_anular'] as const) {
+  const cambios: PermisosCambios = {}
+  for (const key of claves) {
     if (key in pedidos && pedidos[key] !== antes[key]) cambios[key] = pedidos[key]
   }
   if (Object.keys(cambios).length === 0) return { error: `No cambia nada: ${nombreDe(usuario)} ya tiene esos valores.` }
@@ -254,7 +267,7 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
     },
     {
       name: 'leer_usuarios',
-      description: `Lista los usuarios tras los filtros (maximo ${MAX_READ_ROWS}): id, nombre, username, rol, evidencia fotografica y si puede anular, mas las sucursales disponibles para asignar.`,
+      description: `Lista los usuarios tras los filtros (maximo ${MAX_READ_ROWS}): id, nombre, username, rol y permisos (evidencia, anular, transmision de audio, agente IA), mas las sucursales disponibles.`,
       parameters: NO_PARAMS,
       run: async () => {
         const filtrados = ctx.getFiltered()
@@ -343,13 +356,15 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
     {
       name: 'cambiar_permisos_usuario',
       description:
-        'Cambia la evidencia fotografica y/o el permiso de anular ventas y abonos de un usuario (puede_anular no aplica a admin). Se aplica al instante: el usuario debe confirmarlo con un clic en el asistente.',
+        'Cambia permisos de un usuario: evidencia fotografica, anular ventas y abonos (no aplica a admin), transmision de audio (solo vendedores) y agente de IA. Se aplica al instante: el usuario lo confirma con un clic.',
       parameters: {
         type: 'object',
         properties: {
           usuario_id: USUARIO_ID,
           evidencia_fotografica: { type: 'boolean' },
-          puede_anular: { type: 'boolean' },
+          puede_anular: { type: 'boolean', description: 'Anular ventas y abonos; no aplica a admin.' },
+          transmision_audio: { type: 'boolean', description: 'El admin puede escuchar al vendedor en vivo; solo vendedores.' },
+          agente_ia: { type: 'boolean', description: 'Puede usar el asistente de voz y chat.' },
         },
         required: ['usuario_id'],
         additionalProperties: false,
@@ -364,13 +379,10 @@ export function buildUsuariosTools(ctx: UsuariosAgentContext): AgentToolDef[] {
       textoConfirmacion: (args) => {
         const plan = planPermisos(args, ctx.getUsuarios())
         if ('error' in plan) return ''
-        const partes: string[] = []
-        if ('evidencia_fotografica' in plan.cambios) {
-          partes.push(`Evidencia fotografica: ${plan.antes.evidencia_fotografica ? 'activada' : 'desactivada'} → ${plan.cambios.evidencia_fotografica ? 'activada' : 'desactivada'}`)
-        }
-        if ('puede_anular' in plan.cambios) {
-          partes.push(`Anular ventas y abonos: ${plan.antes.puede_anular ? 'permitido' : 'no permitido'} → ${plan.cambios.puede_anular ? 'permitido' : 'no permitido'}`)
-        }
+        const partes = (Object.keys(plan.cambios) as PermisoKey[]).map((key) => {
+          const [etiqueta, si, no] = TEXTO_PERMISO[key]
+          return `${etiqueta}: ${plan.antes[key] ? si : no} → ${plan.cambios[key] ? si : no}`
+        })
         return `Cambiar permisos de ${nombreDe(plan.usuario)} (${plan.usuario.username}): ${partes.join('; ')}`
       },
       run: async (args) => {

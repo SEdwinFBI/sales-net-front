@@ -79,7 +79,13 @@ describe('tools de /caja/mi-caja', () => {
     if (result.ok) {
       expect(result.data).not.toHaveProperty('ventas_efectivo')
       expect(result.data).not.toHaveProperty('saldo_esperado')
+      expect(result.data).toMatchObject({ nota: 'el saldo esperado y las ventas en efectivo solo los ve el administrador' })
     }
+  })
+
+  it('para el administrador no agrega la nota de totales restringidos', async () => {
+    const result = await tool(buildMiCajaTools(miCajaCtx()), 'leer_mi_caja').run({})
+    if (result.ok) expect(result.data).not.toHaveProperty('nota')
   })
   it('leer_mi_caja resume la caja de hoy', async () => {
     const result = await tool(buildMiCajaTools(miCajaCtx()), 'leer_mi_caja').run({})

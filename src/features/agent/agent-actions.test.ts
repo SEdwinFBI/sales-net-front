@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AuthUser } from '@/features/core/store/auth-store'
 import { useSalesStore } from '@/features/sales/store/useSalesStore'
-import type { Product } from '@/features/sales/types/sales'
+import type { BranchAvailability, Product } from '@/features/sales/types/sales'
 import { allFeatureRoutes } from '@/routes/feature-routes'
 import { POS_PATH, createAgentActions, type AgentDeps } from './agent-actions'
 import type { CloseDialogOutcome } from './dialog-control'
@@ -197,6 +197,51 @@ describe('agregar_al_carrito', () => {
       expect(result, String(talla)).toMatchObject({ ok: true, data: { agregados: [], pendientes: [{ opciones: ['M'] }] } })
     }
     expect(sales().items).toHaveLength(0)
+  })
+
+  describe('sin stock en la sucursal propia', () => {
+    const disponibilidad: BranchAvailability = {
+      articulo: { id: 7, nombre: 'Camisa', imagen: null },
+      tallas: [
+        { id_variante: 71, id_talla: 1, talla: 'M', precio: 100 },
+        { id_variante: 72, id_talla: 2, talla: 'L', precio: 100 },
+      ],
+      sucursales: [
+        { id_sucursal: 1, nombre: 'Mia', es_propia: true, existencias: { '71': 3 }, total: 3 },
+        { id_sucursal: 2, nombre: 'Sucursal salida', es_propia: false, existencias: { '72': 5, '71': 1 }, total: 6 },
+        { id_sucursal: 3, nombre: 'Vacia', es_propia: false, existencias: {}, total: 0 },
+      ],
+    }
+
+    it('una talla sin stock ofrece otras tallas y las sucursales que si tienen esa talla', async () => {
+      const getAvailability = vi.fn(async () => disponibilidad)
+      const { actions } = setup('vendedor', '/home', allFeatureRoutes, { getAvailability })
+      const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'L', cantidad: 1 }]))
+      expect(getAvailability).toHaveBeenCalledWith(7)
+      expect(result).toMatchObject({
+        ok: true,
+        data: { agregados: [], pendientes: [{ opciones: ['M'], otras_sucursales: [{ sucursal: 'Sucursal salida', tallas: { L: 5 } }] }] },
+      })
+    })
+
+    it('un producto sin nada de stock ofrece las sucursales que lo tienen', async () => {
+      const agotada = { ...camisa, variants: camisa.variants.map((v) => ({ ...v, stock: 0 })) }
+      const { actions } = setup('vendedor', '/home', allFeatureRoutes, {
+        searchArticles: vi.fn(async () => [agotada]),
+        getAvailability: vi.fn(async () => disponibilidad),
+      })
+      const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', cantidad: 1 }]))
+      expect(result).toMatchObject({
+        data: { pendientes: [{ motivo: expect.stringContaining('no tiene stock en tu sucursal'), otras_sucursales: [{ sucursal: 'Sucursal salida', tallas: { M: 1, L: 5 } }] }] },
+      })
+    })
+
+    it('si no se pueden consultar las otras sucursales el pendiente sale igual, sin ellas', async () => {
+      const { actions } = setup('vendedor', '/home', allFeatureRoutes, { getAvailability: vi.fn(async () => Promise.reject(new Error('red'))) })
+      const result = await actions.execute('agregar_al_carrito', add([{ producto: 'Camisa', talla: 'L', cantidad: 1 }]))
+      expect(result).toMatchObject({ ok: true, data: { pendientes: [{ opciones: ['M'] }] } })
+      expect(JSON.stringify(result)).not.toContain('otras_sucursales')
+    })
   })
 
   it('error de dictado: sugiere sin agregar', async () => {
@@ -586,6 +631,34 @@ describe('cambiar_tema y cerrar_sesion', () => {
   })
 })
 
+describe('navegar con trabajo pendiente', () => {
+  afterEach(() => useSalesStore.setState({ activeDialog: null }))
+
+  it('con un cobro abierto no cambia de pantalla y explica que hacer', async () => {
+    const { actions, navigate } = setup('admin', '/venta/punto-de-venta')
+    useSalesStore.setState({ activeDialog: 'checkout' })
+    const result = await actions.execute('navegar', { ruta: '/clientes/listado' })
+    expect(result).toMatchObject({ ok: false, error: expect.stringContaining('cobro pendiente') })
+    expect(result).toMatchObject({ error: expect.stringContaining('cerrar_dialogo solo si el usuario quiere descartarlo') })
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('con un formulario con datos escritos tampoco navega', async () => {
+    const getOpenDialog = vi.fn(() => ({ titulo: 'Nuevo cliente', valores: [{ campo: 'Nombre', valor: 'Juan' }] }))
+    const { actions, navigate } = setup('admin', '/home', allFeatureRoutes, { getOpenDialog })
+    const result = await actions.execute('navegar', { ruta: '/clientes/listado' })
+    expect(result).toMatchObject({ ok: false, error: expect.stringContaining('formulario "Nuevo cliente" con datos escritos (Nombre)') })
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('un dialogo sin datos escritos no bloquea la navegacion', async () => {
+    const getOpenDialog = vi.fn(() => ({ titulo: 'Detalle', valores: [] }))
+    const { actions, navigate } = setup('admin', '/home', allFeatureRoutes, { getOpenDialog })
+    expect((await actions.execute('navegar', { ruta: '/clientes/listado' })).ok).toBe(true)
+    expect(navigate).toHaveBeenCalledWith('/clientes/listado')
+  })
+})
+
 describe('cerrar_dialogo', () => {
   const conCierre = (resultado: CloseDialogOutcome['resultado'], titulo?: string) =>
     vi.fn(async (): Promise<CloseDialogOutcome> => ({ resultado, titulo }))
@@ -593,11 +666,30 @@ describe('cerrar_dialogo', () => {
   it('cierra el diálogo y espera a que la pantalla actualice sus tools', async () => {
     const closeDialog = conCierre('cerrado', 'Nuevo cliente')
     const { actions } = setup('vendedor', '/home', allFeatureRoutes, { closeDialog })
-    expect(await actions.execute('cerrar_dialogo', {})).toEqual({
+    expect(await actions.execute('cerrar_dialogo', {})).toMatchObject({
       ok: true,
-      data: { mensaje: 'Dialogo "Nuevo cliente" cerrado sin guardar.' },
+      data: { mensaje: expect.stringContaining('Dialogo "Nuevo cliente" cerrado sin guardar'), descartado: { titulo: 'Nuevo cliente', valores: [] } },
     })
     expect(closeDialog).toHaveBeenCalledOnce()
+  })
+
+  it('dice que se descarto: el tipo de dialogo, lo que tenia escrito y el carrito de un cobro', async () => {
+    const closeDialog = vi.fn(async (): Promise<CloseDialogOutcome> => ({
+      resultado: 'cerrado',
+      titulo: 'Confirmar venta',
+      valores: [{ campo: 'Nombre', valor: 'Juan' }],
+    }))
+    const { actions } = setup('vendedor', '/home', allFeatureRoutes, { closeDialog })
+    useSalesStore.setState({ activeDialog: 'checkout' })
+    try {
+      const result = await actions.execute('cerrar_dialogo', {})
+      expect(result).toMatchObject({
+        ok: true,
+        data: { descartado: { tipo: 'cobro', titulo: 'Confirmar venta', valores: [{ campo: 'Nombre', valor: 'Juan' }], carrito: { articulos: 0 } } },
+      })
+    } finally {
+      useSalesStore.setState({ activeDialog: null })
+    }
   })
 
   it.each([
