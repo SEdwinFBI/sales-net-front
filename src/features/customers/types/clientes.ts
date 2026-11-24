@@ -27,6 +27,8 @@ export interface CreateClientePayload {
   telefono: string
   balance: number
   activo?: boolean
+  /** Obligatoria si balance > 0: sucursal a la que pertenece el saldo inicial. */
+  id_sucursal_saldo?: number
 }
 
 export interface UpdateClientePayload {
