@@ -1,6 +1,8 @@
 import { type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
+import { MIN_SIMILARITY, similarity } from '@/features/agent/fuzzy-search'
 import {
   NO_PARAMS,
+  cleanText,
   fail,
   fold,
   limitRows,
@@ -8,9 +10,14 @@ import {
   ok,
   positiveInt,
   type DateRange,
+  filtersAppliedMessage,
+  loadingNotice,
+  waitForLoad,
 } from '@/features/agent/tool-helpers'
+import { getClienteRows } from '../utils/cobros-clientes'
 import type {
   DashboardData,
+  ReporteCobroItem,
   ReporteCobrosSucursal,
   ReporteDeudores,
   ReporteResumen,
@@ -143,7 +150,8 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.apply(parsed.changes)
-        return ok({ aplicado: parsed.changes, mensaje: 'Filtros aplicados. Usa leer_dashboard para ver el resultado (puede tardar un instante en cargar).' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ aplicado: parsed.changes, cargando: !cargado, mensaje: filtersAppliedMessage('leer_dashboard', cargado) })
       },
     },
     {
@@ -173,12 +181,13 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
       parameters: NO_PARAMS,
       run: async () => {
         ctx.clear()
-        return ok({ mensaje: 'Filtros limpiados.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ cargando: !cargado, mensaje: 'Filtros limpiados.' + (cargado ? '' : ' Los datos aun cargan: espera y llama leer_dashboard.') })
       },
     },
     {
       name: 'leer_dashboard',
-      description: `Lee el dashboard: KPIs, comparaciones, ventas de hoy, top articulos y sucursales, stock bajo y top deudores (maximo ${TOP} por lista).`,
+      description: 'Lee el dashboard: KPIs, comparaciones, hoy, top articulos y sucursales, stock bajo y deudores. Totales en por_origen {global,pos,cliente}: usa global (tambien por sucursal o cliente) salvo que el usuario pida explicitamente POS o registradas en cliente; por articulo o talla solo hay POS.',
       parameters: NO_PARAMS,
       run: async () => {
         const data = ctx.getData()
@@ -187,6 +196,7 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
         return ok({
           filtros,
           periodo: data.periodo,
+          ...(data.resumen?.por_origen?.nota ? { nota: data.resumen.por_origen.nota } : {}),
           kpis: data.resumen,
           comparacion: data.comparacion,
           ventas_hoy: data.ventas_hoy,
@@ -197,7 +207,7 @@ export function buildDashboardTools(ctx: DashboardAgentContext): AgentToolDef[] 
             unidades: a.unidades,
           })),
           top_sucursales: limitRows(data.top_sucursales ?? [], TOP),
-          formas_pago: data.formas_pago,
+          formas_pago: data.formas_pago_global ?? data.formas_pago,
           stock_bajo: limitRows(data.stock_bajo ?? [], TOP),
           top_deudores: limitRows(data.top_deudores ?? [], TOP).map((d) => ({
             cliente_id: d.id_cliente,
@@ -291,7 +301,8 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.change(parsed.filters)
-        return ok({ filtros: parsed.filters, mensaje: 'Filtros aplicados. Usa leer_reporte_ventas para ver el resultado (puede tardar un instante en cargar).' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ filtros: parsed.filters, cargando: !cargado, mensaje: filtersAppliedMessage('leer_reporte_ventas', cargado) })
       },
     },
     {
@@ -333,7 +344,7 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
     },
     {
       name: 'leer_reporte_ventas',
-      description: 'Lee el reporte de ventas: resumen (totales) y la lista de la pestana activa (por variante o por sucursal, maximo 30 filas).',
+      description: 'Lee el reporte de ventas: resumen con por_origen {global,pos,cliente} y la pestana activa (variante o sucursal, max 30). Usa global (tambien por sucursal o cliente) salvo que el usuario pida explicitamente POS o registradas en cliente; por articulo o talla solo hay POS.',
       parameters: NO_PARAMS,
       run: async () => {
         const tab = ctx.getTab()
@@ -341,8 +352,13 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
         return ok({
           filtros: ctx.getFilters(),
           cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_reporte_ventas') } : {}),
           pestana: tab === 'sucursal' ? 'sucursales' : 'variante',
           ...(resumen ? { resumen } : {}),
+          ...(resumen?.por_origen?.nota ? { nota: resumen.por_origen.nota } : {}),
+          ...((tab === 'sucursal' ? ctx.getPorSucursal() : ctx.getPorVariante()).length === 0 && !ctx.isLoading()
+            ? { sugerencia: 'Sin ventas con estos filtros. Amplia las fechas o quita articulo, talla y sucursal con filtrar_reporte_ventas.' }
+            : {}),
           ...(tab === 'variante'
             ? {
                 total: ctx.getPorVariante().length,
@@ -362,7 +378,10 @@ export function buildReporteVentasTools(ctx: ReporteVentasAgentContext): AgentTo
                   nombre: s.nombre,
                   ventas: s.cantidad_ventas,
                   unidades: s.unidades,
-                  total_neto: s.total_neto,
+                  total_pos: s.total_neto,
+                  total_cliente: s.total_cliente ?? null,
+                  ventas_cliente: s.cantidad_ventas_cliente ?? null,
+                  total_global: s.total_global ?? s.total_neto,
                 })),
               }),
         })
@@ -410,7 +429,10 @@ export function buildDeudoresTools(ctx: DeudoresAgentContext): AgentToolDef[] {
       description: 'Filtra el reporte de deudores por nombre del cliente y/o lugar (direccion). Texto vacio quita el filtro. Despues usa leer_deudores.',
       parameters: {
         type: 'object',
-        properties: { nombre: { type: 'string' }, lugar: { type: 'string' } },
+        properties: {
+          nombre: { type: 'string', description: 'Nombre del CLIENTE deudor (no del vendedor).' },
+          lugar: { type: 'string', description: 'Direccion o lugar del cliente.' },
+        },
         additionalProperties: false,
       },
       validar: (args) => {
@@ -421,7 +443,8 @@ export function buildDeudoresTools(ctx: DeudoresAgentContext): AgentToolDef[] {
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters({ ...ctx.getFilters(), ...parsed.changes })
-        return ok({ filtros: { ...ctx.getFilters(), ...parsed.changes }, mensaje: 'Filtros aplicados. Usa leer_deudores para ver el resultado.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ filtros: { ...ctx.getFilters(), ...parsed.changes }, cargando: !cargado, mensaje: filtersAppliedMessage('leer_deudores', cargado) })
       },
     },
     {
@@ -434,8 +457,12 @@ export function buildDeudoresTools(ctx: DeudoresAgentContext): AgentToolDef[] {
         return ok({
           filtros: ctx.getFilters(),
           cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_deudores') } : {}),
           ...(resumen ? { resumen } : {}),
           total: clientes.length,
+          ...(clientes.length === 0 && !ctx.isLoading()
+            ? { sugerencia: 'Ningun deudor con estos filtros. Quita el filtro con filtrar_deudores({nombre:"",lugar:""}); si el cliente no aparece, no debe nada o usa buscar_cliente y su ficha.' }
+            : {}),
           clientes: limitRows(clientes).map((c) => ({
             cliente_id: c.id,
             nombre: c.nombre_completo,
@@ -473,14 +500,102 @@ export type CobrosAgentContext = {
   downloadUser: (usuarioId: number, sucursalId: number | null) => Promise<boolean>
 }
 
+/** Clientes que el resumen de `leer_cobros` muestra en total y por vendedor (cuidan el límite de lo que se manda al modelo). */
+const MAX_CLIENTES_RESUMEN = 25
+const CLIENTES_POR_USUARIO = 3
+const MAX_COBROS_DETALLE = 10
+
+type FiltrosCobrosVista = { vendedor: string; fecha: string }
+
+const resumenCliente = (c: ReturnType<typeof getClienteRows>[number]) => ({
+  cliente_id: c.id_cliente,
+  nombre: c.nombre_completo.slice(0, 40),
+  total_cobrado: Number(c.total_cobrado),
+  cantidad_cobros: c.cantidad_cobros ?? null,
+  saldo_restante: c.saldo_restante ?? c.balance ?? null,
+})
+
+/** Pista para el modelo cuando el reporte no trae nada con los filtros actuales. */
+function sinCobros(filtros: FiltrosCobrosVista): string {
+  if (filtros.vendedor) {
+    return `Sin cobros del vendedor '${filtros.vendedor}'. Si '${filtros.vendedor}' es un cliente, quita el filtro con filtrar_cobros({vendedor:''}) y usa leer_cobros({cliente:'${filtros.vendedor}'}), o buscar_cliente y su ficha.`
+  }
+  return filtros.fecha ? `Nadie cobro el ${filtros.fecha}. Quita o cambia la fecha con filtrar_cobros({fecha:null}).` : 'El reporte no trae cobros.'
+}
+
+/** Cuánto abonó un cliente, sumando lo que cobró cada vendedor (agrupado en el front con los datos ya cargados). */
+function leerPorCliente(sucursales: ReporteCobrosSucursal[], texto: string, filtros: FiltrosCobrosVista, cargando: boolean) {
+  const needle = fold(texto)
+  const coincide = (nombre: string) => fold(nombre).includes(needle) || similarity(texto, nombre) >= MIN_SIMILARITY
+  type Cobro = { abono_id: number; fecha: string; monto: number; venta_id: number }
+  const porCliente = new Map<
+    number,
+    {
+      cliente_id: number
+      nombre: string
+      total_cobrado: number
+      cantidad_cobros: number
+      cobrado_por: { vendedor: string; usuario_id: number | null; sucursal: string; total_cobrado: number; cantidad_cobros: number | null; saldo_restante: number | null }[]
+      cobros: Cobro[]
+    }
+  >()
+  let clientesConCobros = 0
+
+  for (const s of sucursales) {
+    for (const u of s.por_usuario) {
+      const items: ReporteCobroItem[] = u.cobros ?? []
+      for (const c of getClienteRows(u)) {
+        clientesConCobros++
+        if (!coincide(c.nombre_completo)) continue
+        const total = Number(c.total_cobrado)
+        const propios = items.filter((item) => item.cliente.id === c.id_cliente)
+        const acc = porCliente.get(c.id_cliente) ?? { cliente_id: c.id_cliente, nombre: c.nombre_completo, total_cobrado: 0, cantidad_cobros: 0, cobrado_por: [], cobros: [] }
+        acc.total_cobrado += total
+        acc.cantidad_cobros += c.cantidad_cobros ?? propios.length
+        acc.cobrado_por.push({
+          vendedor: u.nombre,
+          usuario_id: u.id_usuario,
+          sucursal: s.nombre,
+          total_cobrado: total,
+          cantidad_cobros: c.cantidad_cobros ?? null,
+          saldo_restante: c.saldo_restante ?? c.balance ?? null,
+        })
+        acc.cobros.push(...propios.map((item) => ({ abono_id: item.id_abono, fecha: item.fecha_abono, monto: Number(item.monto), venta_id: item.id_venta })))
+        porCliente.set(c.id_cliente, acc)
+      }
+    }
+  }
+
+  const clientes = [...porCliente.values()].sort((a, b) => b.total_cobrado - a.total_cobrado)
+  const mostrados = limitRows(clientes, 10).map((c) => ({ ...c, nombre: c.nombre.slice(0, 40), cobros: c.cobros.slice(0, MAX_COBROS_DETALLE) }))
+  let sugerencia: string | undefined
+  if (cargando) sugerencia = 'El reporte aun esta cargando: vuelve a llamar leer_cobros con cliente.'
+  else if (clientes.length === 0) {
+    const vendedor = filtros.vendedor ? ` Hay un filtro de vendedor ('${filtros.vendedor}'): solo cuenta lo que cobro ese vendedor; quitalo con filtrar_cobros({vendedor:''}).` : ''
+    const fecha = filtros.fecha ? ` El reporte esta filtrado al ${filtros.fecha}: si no aparece, ese cliente no abono ese dia.` : ''
+    sugerencia =
+      clientesConCobros === 0
+        ? `El reporte no trae cobros con estos filtros.${vendedor}${fecha}`
+        : `Ningun cliente parecido a '${texto}' entre los ${clientesConCobros} con cobros.${vendedor}${fecha} Para su historial completo usa buscar_cliente y la ficha (leer_abonos_cliente con fecha_desde y fecha_hasta).`
+  }
+  return {
+    cliente_buscado: texto,
+    total_cobrado: clientes.reduce((sum, c) => sum + c.total_cobrado, 0),
+    total_clientes_encontrados: clientes.length,
+    clientes: mostrados,
+    ...(sugerencia ? { sugerencia } : {}),
+  }
+}
+
 /** Tools de /reportes/cobros. */
 export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
   const parse = (args: Record<string, unknown>): { changes: { nombre?: string; fecha?: string } } | { error: string } => {
-    if (!('nombre' in args) && !('fecha' in args)) return { error: 'Indica al menos un filtro: nombre o fecha.' }
+    if (!('vendedor' in args) && !('fecha' in args)) return { error: 'Indica al menos un filtro: vendedor (quien recibio el abono) o fecha.' }
     const changes: { nombre?: string; fecha?: string } = {}
-    if ('nombre' in args) {
-      if (typeof args.nombre !== 'string') return { error: 'nombre debe ser un texto (vacio para quitar el filtro).' }
-      changes.nombre = args.nombre.trim().slice(0, 100)
+    if ('vendedor' in args) {
+      if (typeof args.vendedor !== 'string') return { error: 'vendedor debe ser un texto con el nombre del vendedor que cobro (vacio para quitar el filtro). Para un cliente usa leer_cobros con cliente.' }
+      // El API llama `nombre` a este filtro: busca por el usuario que recibio el abono.
+      changes.nombre = args.vendedor.trim().slice(0, 100)
     }
     if ('fecha' in args) {
       // Igual que la pantalla, esta fecha puntual es opcional: null o vacio la quita.
@@ -507,13 +622,19 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
     return { usuarioId, sucursalId, nombre: usuario.nombre }
   }
 
+  const filtrosVista = (f: { nombre?: string; fecha?: string }): FiltrosCobrosVista => ({ vendedor: f.nombre ?? '', fecha: f.fecha ?? '' })
+
   return [
     {
       name: 'filtrar_cobros',
-      description: 'Filtra el reporte de cobros por nombre del usuario y/o fecha puntual (AAAA-MM-DD). Nombre vacio o fecha null quitan el filtro. Despues usa leer_cobros.',
+      description:
+        'Filtra el reporte de cobros por VENDEDOR que recibio el abono (NO filtra por cliente: para un cliente usa leer_cobros con cliente) y/o fecha puntual AAAA-MM-DD. vendedor vacio o fecha null quitan el filtro. Despues usa leer_cobros.',
       parameters: {
         type: 'object',
-        properties: { nombre: { type: 'string' }, fecha: { type: ['string', 'null'], description: 'AAAA-MM-DD' } },
+        properties: {
+          vendedor: { type: 'string', description: 'Nombre o usuario del vendedor que cobro; nunca el nombre de un cliente.' },
+          fecha: { type: ['string', 'null'], description: 'AAAA-MM-DD' },
+        },
         additionalProperties: false,
       },
       validar: (args) => {
@@ -524,16 +645,39 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters({ ...ctx.getFilters(), ...parsed.changes })
-        return ok({ filtros: { ...ctx.getFilters(), ...parsed.changes }, mensaje: 'Filtros aplicados. Usa leer_cobros para ver el resultado.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({
+          filtros: filtrosVista({ ...ctx.getFilters(), ...parsed.changes }),
+          cargando: !cargado,
+          mensaje: filtersAppliedMessage('leer_cobros', cargado, ' El vendedor es quien recibio el abono, no el cliente (para un cliente: leer_cobros con cliente).'),
+        })
       },
     },
     {
       name: 'leer_cobros',
-      description: 'Lee los cobros por sucursal y usuario (maximo 30 usuarios): sucursal_id, usuario_id, cantidad de cobros, total abonado y restante.',
-      parameters: NO_PARAMS,
-      run: async () => {
+      description:
+        'Lee los cobros (abonos recibidos) por sucursal y VENDEDOR que cobro, con total y top clientes. Con cliente="X" da cuanto abono ese cliente (total, cantidad, quien cobro) segun los filtros. Maximo 30 vendedores.',
+      parameters: {
+        type: 'object',
+        properties: { cliente: { type: 'string', description: 'Nombre (o parte) del CLIENTE que abono. Omitir = resumen por vendedor.' } },
+        additionalProperties: false,
+      },
+      run: async (args) => {
         const sucursales = ctx.getPorSucursal()
+        const filtros = filtrosVista(ctx.getFilters())
+        const cargando = ctx.isLoading()
+        if ('cliente' in args) {
+          const texto = cleanText(args.cliente, 100)
+          if (!texto) return fail('cliente debe ser el nombre (o parte) del cliente; omitelo para ver el resumen por vendedor.')
+          return ok({ filtros, cargando, ...leerPorCliente(sucursales, texto, filtros, cargando) })
+        }
+
+        const totales = {
+          total_abonado: sucursales.reduce((sum, s) => sum + Number(s.total_abonado ?? 0), 0),
+          total_cobros: sucursales.reduce((sum, s) => sum + s.por_usuario.reduce((n, u) => n + Number(u.cantidad_cobros ?? 0), 0), 0),
+        }
         let restantes = 30
+        let clientesRestantes = MAX_CLIENTES_RESUMEN
         const lista = sucursales.map((s) => {
           const usuarios = s.por_usuario.slice(0, Math.max(restantes, 0))
           restantes -= usuarios.length
@@ -541,16 +685,29 @@ export function buildCobrosTools(ctx: CobrosAgentContext): AgentToolDef[] {
             sucursal_id: s.id_sucursal,
             nombre: s.nombre,
             total_abonado: s.total_abonado,
-            usuarios: usuarios.map((u) => ({
-              usuario_id: u.id_usuario,
-              nombre: u.nombre,
-              cobros: u.cantidad_cobros,
-              total_abonado: u.total_abonado,
-              total_restante: u.total_restante,
-            })),
+            usuarios: usuarios.map((u) => {
+              const clientes = [...getClienteRows(u)].sort((a, b) => Number(b.total_cobrado) - Number(a.total_cobrado))
+              const top = clientes.slice(0, Math.max(Math.min(CLIENTES_POR_USUARIO, clientesRestantes), 0))
+              clientesRestantes -= top.length
+              return {
+                usuario_id: u.id_usuario,
+                nombre: u.nombre,
+                cobros: u.cantidad_cobros,
+                total_abonado: u.total_abonado,
+                total_restante: u.total_restante,
+                top_clientes: top.map(resumenCliente),
+                clientes_omitidos: clientes.length - top.length,
+              }
+            }),
           }
         })
-        return ok({ filtros: ctx.getFilters(), cargando: ctx.isLoading(), total_sucursales: sucursales.length, sucursales: lista })
+        const hayUsuarios = sucursales.some((s) => s.por_usuario.length > 0)
+        const sugerencia = cargando
+          ? 'El reporte aun esta cargando: vuelve a llamar leer_cobros.'
+          : hayUsuarios
+            ? 'Los clientes mostrados son solo los de mayor monto. Para uno concreto usa leer_cobros con cliente.'
+            : sinCobros(filtros)
+        return ok({ filtros, cargando, ...totales, total_sucursales: sucursales.length, sucursales: lista, sugerencia })
       },
     },
     {

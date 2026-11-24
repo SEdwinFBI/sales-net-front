@@ -9,6 +9,9 @@ import {
   ok,
   positiveInt,
   type DateRange,
+  filtersAppliedMessage,
+  loadingNotice,
+  waitForLoad,
 } from '@/features/agent/tool-helpers'
 import type { AuthUser } from '@/features/core/store/auth-store'
 import type { Venta } from '../types/sales'
@@ -33,6 +36,8 @@ export type HistorialPageAgentContext = {
   /** Ventas que quedan tras TODOS los filtros (los de la página y los de columna), sin paginar. */
   getFilteredVentas: () => Venta[]
   isLoading: () => boolean
+  /** Qué ventas ve este usuario: para un vendedor, solo las de su sucursal. */
+  getAlcance: () => string
   isExporting: () => boolean
   /** Descarga el PDF; true si salió bien (el error ya lo muestra la página). */
   exportPdf: () => Promise<boolean>
@@ -40,6 +45,29 @@ export type HistorialPageAgentContext = {
 
 const FILTER_KEYS = ['fecha_desde', 'fecha_hasta', 'estado', 'forma_pago', 'texto'] as const
 const ALL = ['todos', 'todas', '']
+
+/** Estados de venta que ya no cuentan para los totales. */
+const ESTADOS_SIN_VALOR = new Set(['CANCELADA', 'REVERTIDA', 'REVERSION'])
+
+/** Pista cuando no hay ventas: dice el rango usado, porque filtrar por un nombre no cambia las fechas. */
+function sinVentas(filtros: HistorialFilters): string {
+  const otros = [filtros.estado && 'estado', filtros.forma_pago && 'forma de pago', filtros.texto && 'texto'].filter(Boolean)
+  return `Sin ventas con estos filtros. Las fechas van de ${filtros.fecha_desde} a ${filtros.fecha_hasta}: amplialas con filtrar_historial${otros.length ? ` o quita ${otros.join(', ')} con limpiar_filtros_historial` : ''}.`
+}
+
+/** Totales de TODAS las ventas filtradas (no solo las 30 que se listan), sin anuladas ni revertidas. */
+function totalesVentas(ventas: readonly Venta[]) {
+  const vigentes = ventas.filter((v) => !ESTADOS_SIN_VALOR.has(v.estado))
+  const sum = (get: (v: Venta) => number) => vigentes.reduce((acc, v) => acc + get(v), 0)
+  return {
+    totales: {
+      ventas_vigentes: vigentes.length,
+      total_neto: sum((v) => Number(v.total_neto)),
+      abonado: sum((v) => Number(v.abonado)),
+      saldo: sum((v) => Number(v.saldo)),
+    },
+  }
+}
 
 /** Tools de /venta/historial (nivel página: filtros, lectura y PDF). */
 export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentToolDef[] {
@@ -94,7 +122,7 @@ export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentTo
           fecha_hasta: { type: 'string', description: 'AAAA-MM-DD' },
           estado: { type: 'string', description: "Un estado que exista en la lista, o 'todos'." },
           forma_pago: { type: 'string', description: "Una forma de pago que exista en la lista, o 'todas'." },
-          texto: { type: 'string', description: 'Vacio para quitar el filtro de texto.' },
+          texto: { type: 'string', description: 'Busca a la vez en ID, cliente, sucursal y vendedor (un nombre puede ser de cualquiera). Vacio quita el filtro.' },
         },
         additionalProperties: false,
       },
@@ -106,9 +134,11 @@ export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentTo
         const parsed = parse(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters(parsed.filters)
+        const cargado = await waitForLoad(ctx.isLoading)
         return ok({
           filtros: { ...ctx.getFilters(), ...parsed.filters },
-          mensaje: 'Filtros aplicados. Usa leer_historial para ver el resultado (puede tardar un instante en cargar).',
+          cargando: !cargado,
+          mensaje: filtersAppliedMessage('leer_historial', cargado),
         })
       },
     },
@@ -118,21 +148,28 @@ export function buildHistorialPageTools(ctx: HistorialPageAgentContext): AgentTo
       parameters: NO_PARAMS,
       run: async () => {
         ctx.clearFilters()
-        return ok({ mensaje: 'Filtros limpiados; las fechas se conservan.' })
+        const cargado = await waitForLoad(ctx.isLoading)
+        return ok({ cargando: !cargado, mensaje: 'Filtros limpiados; las fechas se conservan.' + (cargado ? '' : ' Los datos aun cargan: espera y llama leer_historial.') })
       },
     },
     {
       name: 'leer_historial',
-      description: `Lista las ventas tras los filtros, de la mas reciente a la mas antigua (maximo ${MAX_READ_ROWS}; por defecto el mes actual): id, fecha, cliente, vendedor, sucursal, totales, saldo, estado, forma de pago, foto.`,
+      description: `Lista las ventas tras los filtros, de la mas reciente a la mas antigua (maximo ${MAX_READ_ROWS}; por defecto el mes actual): id, fecha, cliente, vendedor, totales, saldo, estado. Incluye los totales de todas las filtradas.`,
       parameters: NO_PARAMS,
       run: async () => {
         const ventas = ctx.getFilteredVentas()
         return ok({
           filtros: ctx.getFilters(),
           opciones: ctx.getOptions(),
+          alcance: ctx.getAlcance(),
           cargando: ctx.isLoading(),
+          ...(ctx.isLoading() ? { aviso: loadingNotice('leer_historial') } : {}),
           total: ventas.length,
           mostrando: Math.min(ventas.length, MAX_READ_ROWS),
+          ...totalesVentas(ventas),
+          ...(ventas.length === 0 && !ctx.isLoading()
+            ? { sugerencia: sinVentas(ctx.getFilters()) }
+            : {}),
           ventas: limitRows(ventas).map((v) => ({
             id: v.id,
             fecha: v.fecha,

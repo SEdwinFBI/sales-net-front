@@ -113,6 +113,58 @@ describe('filtrar_dashboard', () => {
     expect(result.ok && (result.data as { top_articulos: unknown[] }).top_articulos).toHaveLength(10)
   })
 
+  describe('ventas globales, POS y de la ficha del cliente', () => {
+    const por_origen = {
+      global: { cantidad_ventas: 83, total_neto: 51202, efectivo: 29001, credito: 22201 },
+      pos: { cantidad_ventas: 59, total_neto: 28591, efectivo: 28591, credito: 0, total_bruto: 30000, total_descuento: 1409 },
+      cliente: { cantidad_ventas: 24, total_neto: 22611, efectivo: 410, credito: 22201 },
+    }
+    const dato = {
+      resumen: { total_neto: 28591, por_origen },
+      comparacion: { ven_mes_anterior: 3, por_origen: { global: { ven_mes_anterior: 5 } } },
+      ventas_hoy: { total_neto: 100, por_origen: { global: { total_neto: 150 } } },
+      top_sucursales: [{ id_sucursal: 1, nombre: 'Centro', total_neto: 20, total_cliente: 30, total_global: 50 }],
+      formas_pago: [{ nombre: 'Efectivo', total_neto: 28591 }],
+      formas_pago_global: [{ nombre: 'Credito', total_neto: 22201 }, { nombre: 'Efectivo', total_neto: 29001 }],
+    }
+
+    it('leer_dashboard devuelve global, POS y cliente en el resumen, hoy, comparacion y sucursales', async () => {
+      const { ctx } = dashboardContext({ getData: () => dato as never })
+      const result = await tool(buildDashboardTools(ctx), 'leer_dashboard').run({})
+      type Dato = {
+        kpis: { por_origen: { global: unknown; cliente: { total_neto: number } } }
+        ventas_hoy: { por_origen: { global: { total_neto: number } } }
+        comparacion: { por_origen: { global: { ven_mes_anterior: number } } }
+        top_sucursales: unknown[]
+        formas_pago: { nombre: string }[]
+      }
+      const data = (result.ok ? result.data : {}) as Dato
+      expect(data.kpis.por_origen.global).toMatchObject({ cantidad_ventas: 83, total_neto: 51202 })
+      expect(data.kpis.por_origen.cliente.total_neto).toBe(22611)
+      expect(data.ventas_hoy.por_origen.global.total_neto).toBe(150)
+      expect(data.comparacion.por_origen.global.ven_mes_anterior).toBe(5)
+      expect(data.top_sucursales[0]).toMatchObject({ total_cliente: 30, total_global: 50 })
+      expect(data.formas_pago.map((f) => f.nombre)).toEqual(['Credito', 'Efectivo'])
+      expect(data).not.toHaveProperty('alcance')
+    })
+
+    it('con filtro de articulo o talla llega la nota y el cliente es null', async () => {
+      const nota = 'Con filtro de articulo o talla solo cuentan las ventas del POS.'
+      const filtrado = { ...dato, resumen: { total_neto: 5, por_origen: { ...por_origen, cliente: null, nota } } }
+      const { ctx } = dashboardContext({ getData: () => filtrado as never })
+      const result = await tool(buildDashboardTools(ctx), 'leer_dashboard').run({})
+      expect(result).toMatchObject({ ok: true, data: { nota, kpis: { por_origen: { cliente: null } } } })
+    })
+
+    it('la descripcion dice que global es el defecto y que por articulo o talla solo hay POS', () => {
+      const { ctx } = dashboardContext()
+      const description = tool(buildDashboardTools(ctx), 'leer_dashboard').description
+      expect(description).toMatch(/usa global \(tambien por sucursal o cliente\) salvo que el usuario pida explicitamente POS o registradas en cliente/i)
+      expect(description).toMatch(/por articulo o talla solo hay POS/)
+      expect(description.length).toBeLessThanOrEqual(300)
+    })
+  })
+
   it('limpiar_filtros_dashboard llama a clear', async () => {
     const { ctx } = dashboardContext()
     await tool(buildDashboardTools(ctx), 'limpiar_filtros_dashboard').run({})
@@ -166,6 +218,44 @@ describe('reporte de ventas', () => {
     expect((await ejecutar(def, { talla_id: 77 })).ok).toBe(false)
     expect((await ejecutar(def, { fecha_desde: '' })).ok).toBe(false)
     expect(change).not.toHaveBeenCalled()
+  })
+
+  it('leer_reporte_ventas da por_origen en el resumen y global, POS y cliente por sucursal', async () => {
+    const resumen = {
+      total_neto: 28591,
+      por_origen: {
+        global: { cantidad_ventas: 83, total_neto: 51202, efectivo: 0, credito: 22201 },
+        pos: { cantidad_ventas: 59, total_neto: 28591, efectivo: 0, credito: 0 },
+        cliente: { cantidad_ventas: 24, total_neto: 22611, efectivo: 0, credito: 22201 },
+      },
+    }
+    const sucursales = [
+      { id_sucursal: 1, nombre: 'Centro', cantidad_ventas: 5, unidades: 9, total_neto: 100, total_cliente: 40, cantidad_ventas_cliente: 2, total_global: 140, articulos: [] },
+      { id_sucursal: 2, nombre: 'Norte', cantidad_ventas: 1, unidades: 1, total_neto: 10, articulos: [] },
+    ]
+    const { ctx } = ventasContext({ getTab: () => 'sucursal', getResumen: () => resumen as never, getPorSucursal: () => sucursales as never })
+    const result = await tool(buildReporteVentasTools(ctx), 'leer_reporte_ventas').run({})
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        resumen: { por_origen: { global: { total_neto: 51202 }, pos: { total_neto: 28591 }, cliente: { total_neto: 22611 } } },
+        sucursales: [
+          { nombre: 'Centro', total_pos: 100, total_cliente: 40, ventas_cliente: 2, total_global: 140 },
+          { nombre: 'Norte', total_pos: 10, total_cliente: null, total_global: 10 },
+        ],
+      },
+    })
+    expect(result.ok && result.data).not.toHaveProperty('alcance')
+  })
+
+  it('leer_reporte_ventas pasa la nota del filtro de articulo o talla y su descripcion fija el defecto', async () => {
+    const nota = 'Con filtro de articulo o talla solo cuentan las ventas del POS.'
+    const { ctx } = ventasContext({ getResumen: () => ({ total_neto: 5, por_origen: { cliente: null, nota } }) as never })
+    const def = tool(buildReporteVentasTools(ctx), 'leer_reporte_ventas')
+    expect(await def.run({})).toMatchObject({ ok: true, data: { nota } })
+    expect(def.description).toMatch(/usa global \(tambien por sucursal o cliente\) salvo que el usuario pida explicitamente POS o registradas en cliente/i)
+    expect(def.description).toMatch(/por articulo o talla solo hay POS/)
+    expect(def.description.length).toBeLessThanOrEqual(300)
   })
 
   it("cambiar_pestana_reporte_ventas traduce 'sucursales' a la pestaña interna", async () => {
@@ -291,6 +381,105 @@ describe('reporte de cobros', () => {
     const result = await tool(buildCobrosTools(ctx), 'leer_cobros').run({})
     const sucursales = result.ok ? (result.data as { sucursales: { usuarios: unknown[] }[] }).sucursales : []
     expect(sucursales[0].usuarios).toHaveLength(30)
+  })
+
+  describe('preguntas sobre un cliente', () => {
+    type Leida = {
+      total_abonado?: number
+      sugerencia?: string
+      filtros: { vendedor: string; fecha: string }
+      total_cobrado?: number
+      total_clientes_encontrados?: number
+      clientes?: { nombre: string; total_cobrado: number; cantidad_cobros: number; cobrado_por: { vendedor: string; sucursal: string }[]; cobros: unknown[] }[]
+      sucursales?: { usuarios: { top_clientes: { nombre: string }[]; clientes_omitidos: number }[] }[]
+    }
+    const cobro = (id: number, clienteId: number, nombre: string, monto: number) => ({
+      id_abono: id,
+      fecha_abono: '2026-11-22',
+      id_venta: id * 10,
+      monto,
+      saldo_restante: 20,
+      cliente: { id: clienteId, nombre_completo: nombre },
+    })
+    const conClientes = [
+      {
+        id_sucursal: 1,
+        nombre: 'Centro',
+        total_abonado: 170,
+        por_usuario: [
+          { id_usuario: 7, nombre: 'Ana', cantidad_cobros: 3, total_abonado: 150, total_restante: 40, cobros: [cobro(1, 50, 'Sheny Lopez', 100), cobro(2, 51, 'Pedro Ruiz', 20), cobro(3, 50, 'Sheny Lopez', 30)] },
+          { id_usuario: 9, nombre: 'Marta', cantidad_cobros: 1, total_abonado: 20, total_restante: 0, clientes: [{ id_cliente: 50, nombre_completo: 'Sheny Lopez', total_cobrado: 20, cantidad_cobros: 1, saldo_restante: 0 }] },
+        ],
+      },
+    ] as never
+    const leer = async (args: Record<string, unknown>, over: Partial<CobrosAgentContext> = {}) => {
+      const { ctx } = context({ getPorSucursal: () => conClientes, getFilters: () => ({}), ...over })
+      const result = await ejecutar(tool(buildCobrosTools(ctx), 'leer_cobros'), args)
+      if (!result.ok) throw new Error(errorOf(result))
+      return result.data as Leida
+    }
+
+    it('filtrar_cobros recibe el vendedor (no un cliente) y lo manda como nombre del API', async () => {
+      const { ctx, setFilters } = context()
+      const def = tool(buildCobrosTools(ctx), 'filtrar_cobros')
+      expect(def.description).toMatch(/NO filtra por cliente/)
+      const result = await ejecutar(def, { vendedor: ' Ana ' })
+      expect(setFilters).toHaveBeenCalledWith({ nombre: 'Ana', fecha: '2026-10-10' })
+      expect(result).toMatchObject({ ok: true, data: { filtros: { vendedor: 'Ana', fecha: '2026-10-10' } } })
+      expect(errorOf(await ejecutar(def, { nombre: 'Sheny' }))).toMatch(/vendedor/)
+      expect((await ejecutar(def, { vendedor: 5 })).ok).toBe(false)
+    })
+
+    it('leer_cobros con cliente suma lo que cobro cada vendedor y dice quien cobro', async () => {
+      const data = await leer({ cliente: 'sheny' })
+      expect(data.total_clientes_encontrados).toBe(1)
+      expect(data.total_cobrado).toBe(150)
+      expect(data.clientes?.[0]).toMatchObject({ nombre: 'Sheny Lopez', total_cobrado: 150, cantidad_cobros: 3 })
+      expect(data.clientes?.[0].cobrado_por.map((c) => c.vendedor + '/' + c.sucursal)).toEqual(['Ana/Centro', 'Marta/Centro'])
+      expect(data.clientes?.[0].cobros).toHaveLength(2)
+      expect(data.sugerencia).toBeUndefined()
+    })
+
+    it('leer_cobros con cliente tolera el nombre mal dictado', async () => {
+      expect((await leer({ cliente: 'Cheni Lopes' })).total_clientes_encontrados).toBe(1)
+    })
+
+    it('sin coincidencias dice que el vendedor filtrado puede ser el motivo', async () => {
+      const data = await leer({ cliente: 'Zoila' }, { getFilters: () => ({ nombre: 'Sheny', fecha: '2026-11-22' }) })
+      expect(data.clientes).toEqual([])
+      expect(data.sugerencia).toMatch(/filtro de vendedor \('Sheny'\)/)
+      expect(data.sugerencia).toMatch(/2026-11-22/)
+    })
+
+    it('sin cobros y con un vendedor filtrado sugiere que ese nombre quiza es un cliente', async () => {
+      const data = await leer({}, { getPorSucursal: () => [], getFilters: () => ({ nombre: 'Sheny' }) })
+      expect(data.sugerencia).toBe(
+        "Sin cobros del vendedor 'Sheny'. Si 'Sheny' es un cliente, quita el filtro con filtrar_cobros({vendedor:''}) y usa leer_cobros({cliente:'Sheny'}), o buscar_cliente y su ficha.",
+      )
+    })
+
+    it('rechaza un cliente vacio', async () => {
+      const { ctx } = context({ getPorSucursal: () => conClientes })
+      expect((await ejecutar(tool(buildCobrosTools(ctx), 'leer_cobros'), { cliente: '  ' })).ok).toBe(false)
+    })
+
+    it('sin cliente devuelve el top de clientes por vendedor y el total calculado', async () => {
+      const data = await leer({})
+      expect(data.total_abonado).toBe(170)
+      const [ana, marta] = data.sucursales?.[0].usuarios ?? []
+      expect(ana.top_clientes.map((c) => c.nombre)).toEqual(['Sheny Lopez', 'Pedro Ruiz'])
+      expect(marta.top_clientes.map((c) => c.nombre)).toEqual(['Sheny Lopez'])
+    })
+
+    it('acota los clientes del resumen para no pasar el limite del back', async () => {
+      const clientes = Array.from({ length: 10 }, (_, i) => ({ id_cliente: i + 1, nombre_completo: `Cliente ${i}`, total_cobrado: 10 - i }))
+      const muchos = [{ id_sucursal: 1, nombre: 'Centro', total_abonado: 1, por_usuario: Array.from({ length: 30 }, (_, i) => ({ id_usuario: i + 1, nombre: `U${i}`, cantidad_cobros: 1, total_abonado: 1, total_restante: 0, clientes })) }] as never
+      const data = await leer({}, { getPorSucursal: () => muchos })
+      const usuarios = data.sucursales?.[0].usuarios ?? []
+      expect(usuarios.reduce((n, u) => n + u.top_clientes.length, 0)).toBe(25)
+      expect(usuarios[0]).toMatchObject({ clientes_omitidos: 7 })
+      expect(JSON.stringify(data).length).toBeLessThan(8000)
+    })
   })
 })
 

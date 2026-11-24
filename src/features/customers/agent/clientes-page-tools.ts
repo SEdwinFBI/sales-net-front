@@ -1,4 +1,5 @@
 import { dialogAlreadyOpenError, type AgentToolDef } from '@/features/agent/registry/agent-tool-registry'
+import { filtersAppliedMessage, loadingNotice, waitForLoad } from '@/features/agent/tool-helpers'
 import type { ToolResult } from '@/features/agent/types'
 import type { Cliente } from '../types/clientes'
 import { CLIENTE_FORM_PARAMETERS } from './cliente-dialog-tools'
@@ -94,9 +95,11 @@ export function buildClientesPageTools(ctx: ClientesPageAgentContext, isAdmin: b
         const parsed = parseFilterArgs(args)
         if ('error' in parsed) return fail(parsed.error)
         ctx.setFilters(parsed.filters)
+        const cargado = await waitForLoad(() => ctx.readList().cargando)
         return ok({
           filtros: { ...ctx.readFilters(), ...parsed.filters },
-          mensaje: 'Filtros aplicados. Usa leer_clientes para ver el resultado.',
+          cargando: !cargado,
+          mensaje: filtersAppliedMessage('leer_clientes', cargado),
         })
       },
     },
@@ -111,6 +114,10 @@ export function buildClientesPageTools(ctx: ClientesPageAgentContext, isAdmin: b
           total,
           mostrando: Math.min(clientes.length, MAX_ROWS),
           cargando,
+          ...(cargando ? { aviso: loadingNotice('leer_clientes') } : {}),
+          ...(clientes.length === 0 && !cargando
+            ? { sugerencia: 'Ningun cliente con estos filtros. Quitalos con filtrar_clientes({texto:"",credito:"todos",estado:"todos"}) o prueba con otra parte del nombre.' }
+            : {}),
           clientes: clientes.slice(0, MAX_ROWS).map((c) => ({
             id: c.id,
             nombre: c.nombre_completo,
