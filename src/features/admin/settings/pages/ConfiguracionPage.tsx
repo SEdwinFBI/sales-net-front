@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/features/core/store/auth-store'
 import { useQuickSearchPrefs } from '@/features/core/quick-search/quick-search-prefs'
 import { useQuickSearchSources } from '@/features/core/quick-search/useQuickSearchSources'
+import LlamarAdminSection from '../components/LlamarAdminSection'
 
 const NO_USER = { id: 0, permissions: [] }
 
@@ -63,6 +64,9 @@ export default function ConfiguracionPage() {
             })}
           </ul>
         </section>
+
+        {/* Solo vendedores con transmision de audio: si el admin no puede escucharlo, el aviso no sirve. */}
+        {user.role === 'vendedor' && user.transmision_audio === true && <LlamarAdminSection />}
 
         {esAdmin && (
           <Link

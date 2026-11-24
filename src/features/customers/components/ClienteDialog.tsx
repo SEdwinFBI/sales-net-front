@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,7 +17,9 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useSucursales } from '@/features/admin/branches/hooks/useSucursales'
 import { useCreateCliente } from '../hooks/useCreateCliente'
 import { useUpdateCliente } from '../hooks/useUpdateCliente'
 import type { Cliente } from '../types/clientes'
@@ -105,6 +107,12 @@ export default function ClienteDialog({
   const sinCredito = !watch('permitir_credito')
   const creditoBloqueado = !!cliente && Number(cliente.balance) !== 0
 
+  // Un cliente nuevo con saldo inicial pide la sucursal del saldo: sin ella, sus abonos quedan sin sucursal.
+  const pideSucursal = !isEdit && !sinCredito && Number(watch('balance')) > 0
+  const { data: sucursales } = useSucursales()
+  const [sucursalSaldo, setSucursalSaldo] = useState('')
+  const [errorSucursal, setErrorSucursal] = useState<string | null>(null)
+
   // En una ref para que cambiar la identidad del prop no reinicie el formulario ya abierto
   // (borraría lo que el usuario está escribiendo): solo se usa al abrir.
   const initialRef = useRef(initialValues)
@@ -127,6 +135,8 @@ export default function ClienteDialog({
         }
       : EMPTY_FORM
     reset({ ...base, ...initialRef.current })
+    setSucursalSaldo('')
+    setErrorSucursal(null)
   }, [open, cliente, reset])
 
   // Mientras el diálogo está abierto, el agente puede llenar el formulario (nunca guardarlo).
@@ -151,12 +161,17 @@ export default function ClienteDialog({
       ? values
       : { ...values, balance: 0 }
 
+    if (pideSucursal && !sucursalSaldo) {
+      setErrorSucursal('Elige la sucursal del saldo inicial.')
+      return false
+    }
+
     try {
       if (cliente) {
         await updateCliente({ id: cliente.id, data })
         toast.success('Cliente actualizado correctamente')
       } else {
-        await createCliente(data)
+        await createCliente(pideSucursal ? { ...data, id_sucursal_saldo: Number(sucursalSaldo) } : data)
         toast.success('Cliente creado correctamente')
       }
 
@@ -260,6 +275,28 @@ export default function ClienteDialog({
                   placeholder="0.00"
                 />
                 <FieldError errors={[errors.balance]} />
+              </Field>
+            )}
+
+            {pideSucursal && (
+              <Field>
+                <FieldLabel htmlFor="cliente-sucursal-saldo">Sucursal del saldo inicial</FieldLabel>
+                <Select
+                  id="cliente-sucursal-saldo"
+                  value={sucursalSaldo}
+                  aria-invalid={errorSucursal !== null}
+                  onChange={(event) => {
+                    setSucursalSaldo(event.target.value)
+                    setErrorSucursal(null)
+                  }}
+                >
+                  <option value="">Elige una sucursal</option>
+                  {sucursales.filter((s) => s.activo !== false).map((s) => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </Select>
+                <p className="text-xs text-muted-foreground">Los abonos a este saldo contarán para esta sucursal.</p>
+                {errorSucursal && <p className="text-sm text-destructive">{errorSucursal}</p>}
               </Field>
             )}
 

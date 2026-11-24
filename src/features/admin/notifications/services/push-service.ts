@@ -66,3 +66,17 @@ export async function desactivarPush(): Promise<EstadoPush> {
   }
   return 'inactivo'
 }
+
+type Llamado = { espera: number; enviados?: number }
+
+/** Segundos que faltan para que el vendedor pueda volver a avisar al administrador (0 si ya puede). */
+export async function esperaLlamado(): Promise<number> {
+  const { data } = await api.get<ApiResponse<Llamado>>(`${ENDPOINT}llamado/`)
+  return data.data.espera
+}
+
+/** El vendedor avisa a los administradores que lo escuchen. Devuelve la nueva espera (5 minutos). */
+export async function llamarAdministrador(): Promise<Llamado> {
+  const { data } = await api.post<ApiResponse<Llamado>>(`${ENDPOINT}llamado/`)
+  return data.data
+}

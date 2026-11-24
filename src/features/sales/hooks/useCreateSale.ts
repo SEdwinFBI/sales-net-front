@@ -29,6 +29,7 @@ export const useCreateSale = () => {
         idempotencia_key: crypto.randomUUID(),
         foto: payload.foto,
         ...(payload.observacion ? { observacion: payload.observacion } : {}),
+        ...(payload.concepto ? { concepto: payload.concepto } : {}),
         detalles: payload.items.map((item) => ({
           id_variante: item.variantId,
           cantidad: item.qty,

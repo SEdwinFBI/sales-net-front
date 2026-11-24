@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 import { useSalesStore } from '../store/useSalesStore'
 import CustomerSelect from './CustomerSelect'
 import VentaFotoCapture from './VentaFotoCapture'
@@ -64,6 +65,7 @@ const CheckoutDialog = () => {
   const { mutateAsync: createSale, isPending } = useCreateSale()
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('efectivo')
+  const [concepto, setConcepto] = useState('')
   const [selectedCustomerId, setSelectedCustomerId] = useState(storeCustomerId)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
   const { data: selectedCliente } = useCliente(activeDialog === 'checkout' ? Number(selectedCustomerId) : 0)
@@ -95,7 +97,10 @@ const CheckoutDialog = () => {
 
   // El servidor indica si este usuario tiene habilitada la evidencia.
   const pagoValido = paymentMethod === 'efectivo' || (paymentMethod === 'credito' && selectedCustomerId && permiteCredito)
-  const canConfirm = Boolean(pagoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
+  // La venta al credito exige un concepto (como el ajuste); se guarda antes de la observacion.
+  const exigeConcepto = paymentMethod === 'credito'
+  const conceptoValido = !exigeConcepto || concepto.trim().length > 0
+  const canConfirm = Boolean(pagoValido && conceptoValido && (!evidenciaFotografica || ventaFoto) && cotizacion && !isQuoting && !quoteError)
 
   const handleConfirm = async (): Promise<boolean> => {
     if (!canConfirm) return false
@@ -109,6 +114,7 @@ const CheckoutDialog = () => {
         customerPricingEnabled,
         total,
         observacion: voiceTranscript.trim() || undefined,
+        ...(exigeConcepto ? { concepto: concepto.trim() } : {}),
         foto: evidenciaFotografica ? ventaFoto ?? undefined : undefined,
       })
       // Snapshot ANTES de limpiar el carrito
@@ -127,6 +133,7 @@ const CheckoutDialog = () => {
       clearCart()
       voiceResetFn?.()
       setVentaFoto(null)
+      setConcepto('')
       openDialog('summary')
       return true
     } catch (error) {
@@ -174,6 +181,7 @@ const CheckoutDialog = () => {
             validar: () => {
               if (isPending) return 'La venta ya se esta procesando.'
               if (!pagoValido) return 'La forma de pago no es valida: el credito exige un cliente con credito habilitado.'
+              if (!conceptoValido) return 'Falta el concepto de la venta al credito: el usuario lo escribe en el cobro.'
               if (evidenciaFotografica && !ventaFoto) return 'Falta la foto de entrega: el usuario debe tomarla en el dialogo de cobro.'
               return canConfirm ? null : 'El total aun se esta calculando o no se pudo cotizar; intenta de nuevo.'
             },
@@ -262,6 +270,20 @@ const CheckoutDialog = () => {
             <p className="text-xs text-warning -mt-3">
               Selecciona un cliente para venta a crédito
             </p>
+          )}
+
+          {exigeConcepto && (
+            <div className="space-y-1.5">
+              <label htmlFor="venta-concepto" className="text-sm font-medium">Concepto</label>
+              <Input
+                id="venta-concepto"
+                value={concepto}
+                onChange={(event) => setConcepto(event.target.value)}
+                placeholder="Qué se vendió…"
+                maxLength={200}
+              />
+              {!conceptoValido && <p className="text-xs text-warning">Escribe el concepto para confirmar la venta a crédito</p>}
+            </div>
           )}
 
           {quoteError ? (
