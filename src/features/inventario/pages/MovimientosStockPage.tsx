@@ -56,7 +56,7 @@ export default function MovimientosStockPage() {
       getFilters: () => filters,
       setFilters,
       resetFilters: () =>
-        setFilters((previo) => ({ ...previo, page: 1, tipo: undefined, id_sucursal: undefined, id_usuario: undefined, ...getTodayRange() })),
+        setFilters((previo) => ({ ...previo, page: 1, tipo: undefined, id_sucursal: undefined, id_usuario: undefined, buscar: undefined, ...getTodayRange() })),
       getOptions: () => ({
         tipos: TIPOS_STOCK,
         sucursales: sucursales.map((s) => ({ id: s.id, nombre: s.nombre })),

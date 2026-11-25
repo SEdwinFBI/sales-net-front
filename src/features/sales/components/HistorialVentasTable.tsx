@@ -35,6 +35,7 @@ import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { buildHistorialTableTools } from '../agent/historial-tools'
 import VentaDetallesTable from './VentaDetallesTable'
 import { formatDisplayDateTime } from '@/lib/dates'
+import { filtrarPorTexto } from '../utils/historial-filtros'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Props = {
@@ -150,6 +151,8 @@ export default function HistorialVentasTable({ data, isLoading, onFilteredChange
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
     getRowCanExpand: () => true,
+    // Sin esto TanStack elige el filtro segun la primera fila y Observacion y las columnas numericas no filtran.
+    defaultColumn: { filterFn: filtrarPorTexto },
   })
 
   // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.

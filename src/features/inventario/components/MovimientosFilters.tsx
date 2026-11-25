@@ -1,4 +1,5 @@
-import { RotateCcw } from 'lucide-react'
+import { useState } from 'react'
+import { RotateCcw, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,9 +16,21 @@ type Props = {
   tipos?: { value: TipoMovimiento | ''; label: string }[]
 }
 
+const ESPERA_BUSQUEDA_MS = 350
+
 export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_STOCK }: Props) {
   const { data: sucursales } = useSucursales()
   const { data: usuarios } = useUsuarios()
+
+  // La busqueda se escribe sin pedir al servidor en cada letra; si el filtro cambia desde fuera (limpiar,
+  // asistente) el cuadro se actualiza en el mismo render.
+  const [texto, setTexto] = useState(filters.buscar ?? '')
+  const [aplicado, setAplicado] = useState(filters.buscar)
+  const [espera, setEspera] = useState<ReturnType<typeof setTimeout>>()
+  if (filters.buscar !== aplicado) {
+    setAplicado(filters.buscar)
+    if ((filters.buscar ?? '') !== texto.trim()) setTexto(filters.buscar ?? '')
+  }
 
   // Cualquier cambio de filtro vuelve a la página 1: si no, se puede quedar
   // en una página que ya no existe con el filtro nuevo.
@@ -35,7 +48,13 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
     onChange({ ...filters, page: 1, [key]: value || getToday() })
   }
 
-  const hayFiltrosExtra = Boolean(filters.tipo || filters.id_sucursal || filters.id_usuario)
+  const escribirBusqueda = (valor: string) => {
+    setTexto(valor)
+    clearTimeout(espera)
+    setEspera(setTimeout(() => set('buscar', valor.trim()), ESPERA_BUSQUEDA_MS))
+  }
+
+  const hayFiltrosExtra = Boolean(filters.tipo || filters.id_sucursal || filters.id_usuario || filters.buscar)
 
   return (
     <div
@@ -128,6 +147,7 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
               tipo: undefined,
               id_sucursal: undefined,
               id_usuario: undefined,
+              buscar: undefined,
               ...getTodayRange(),
             })}
             className="h-9 w-full"
@@ -138,6 +158,20 @@ export default function MovimientosFilters({ filters, onChange, tipos = TIPOS_ST
           </Button>
         </div>
       )}
+
+      <div className="col-span-full min-w-0">
+        <label htmlFor="mov-buscar" className="mb-1 block text-xs text-muted-foreground">Buscar</label>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="mov-buscar"
+            value={texto}
+            onChange={(e) => escribirBusqueda(e.target.value)}
+            placeholder="Número, venta, tipo, sucursal, quién registró, detalle o artículo..."
+            className="w-full pl-9"
+          />
+        </div>
+      </div>
     </div>
   )
 }

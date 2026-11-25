@@ -3,11 +3,9 @@ import React, { useMemo, useState } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
   getSortedRowModel,
   flexRender,
   type ColumnDef,
-  type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table'
 import {
@@ -24,7 +22,6 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Input } from '@/components/ui/input'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -69,7 +66,6 @@ const nombreRegistro = (m: Movimiento) => m.usuario_registra?.full_name || m.usu
 export default function MovimientosTable({ movimientos, isLoading, ocultarVendedor }: Props) {
   const [expandidos, setExpandidos] = useState<Record<number, boolean>>({})
   const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const alternar = (id: number) =>
     setExpandidos((previo) => ({ ...previo, [id]: !previo[id] }))
@@ -187,12 +183,13 @@ export default function MovimientosTable({ movimientos, isLoading, ocultarVended
   const table = useReactTable({
     data: movimientos,
     columns,
-    state: { sorting, columnFilters },
+    state: { sorting },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    // La tabla es una pagina que trae el servidor: filtrar por columna solo vería esa pagina. Los filtros y la
+    // busqueda de la pantalla se aplican en el servidor, antes de paginar.
+    enableColumnFilters: false,
   })
 
   if (isLoading) {
@@ -217,16 +214,10 @@ export default function MovimientosTable({ movimientos, isLoading, ocultarVended
     )
   }
 
-  const filasFiltradas = table.getFilteredRowModel().rows
+  const filas = table.getRowModel().rows
 
   return (
     <div className="space-y-2">
-      {filasFiltradas.length !== movimientos.length && (
-        <p className="text-xs text-muted-foreground">
-          {filasFiltradas.length} de {movimientos.length} movimientos de esta página
-        </p>
-      )}
-
       <div className="overflow-x-auto rounded-xl border border-border/70 bg-card shadow-sm">
         <Table>
           <TableHeader>
@@ -252,14 +243,6 @@ export default function MovimientosTable({ movimientos, isLoading, ocultarVended
                           {flexRender(header.column.columnDef.header, header.getContext())}
                         </span>
                       )}
-                      {header.column.getCanFilter() && (
-                        <Input
-                          value={(header.column.getFilterValue() ?? '') as string}
-                          onChange={(e) => header.column.setFilterValue(e.target.value || undefined)}
-                          placeholder="Filtrar..."
-                          className="hidden h-7 rounded-none border-0 border-b border-transparent px-0 text-[11px] placeholder:text-muted-foreground/40 focus-visible:border-primary focus-visible:ring-0 md:block"
-                        />
-                      )}
                     </div>
                   </TableHead>
                 ))}
@@ -267,14 +250,8 @@ export default function MovimientosTable({ movimientos, isLoading, ocultarVended
             ))}
           </TableHeader>
           <TableBody>
-            {filasFiltradas.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="py-8 text-center text-sm text-muted-foreground">
-                  Ningún movimiento coincide con los filtros de la tabla.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filasFiltradas.map((row, i) => {
+            {(
+              filas.map((row, i) => {
                 const movimiento = row.original
                 const abierto = Boolean(expandidos[movimiento.id])
 

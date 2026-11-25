@@ -17,6 +17,7 @@ import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { useLiveContext } from '@/features/agent/registry/useLiveContext'
 import { buildHistorialPageTools } from '../agent/historial-tools'
 import { useBuscarParam } from '@/features/core/quick-search/useBuscarParam'
+import { coincideBusqueda } from '../utils/historial-filtros'
 
 export default function HistorialVentasPage() {
 
@@ -89,14 +90,7 @@ export default function HistorialVentasPage() {
 
   const filtered = ventas.filter((v) => {
     if (formaPagoFilter && v.forma_pago !== formaPagoFilter) return false
-    if (!searchText) return true
-    const q = searchText.toLowerCase()
-    return (
-      String(v.id).includes(q) ||
-      v.cliente_info.nombre_completo.toLowerCase().includes(q) ||
-      v.sucursal.nombre.toLowerCase().includes(q) ||
-      (v.vendedor?.full_name.toLowerCase().includes(q) ?? false)
-    )
+    return coincideBusqueda(v, searchText)
   })
 
 
@@ -225,7 +219,7 @@ export default function HistorialVentasPage() {
                 <Input
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="ID, cliente o vendedor..."
+                  placeholder="ID, cliente, vendedor u observación..."
                   className="w-full pl-9"
                 />
               </div>
