@@ -72,6 +72,8 @@ export type MovimientosFilters = {
   tipo?: string
   modulo?: ModuloMovimiento
   id_variante?: number | string
+  /** Busqueda libre en el servidor: numero, venta, tipo, sucursal, quien registro, detalle y articulo. */
+  buscar?: string
   page?: number
   page_size?: number
 }
