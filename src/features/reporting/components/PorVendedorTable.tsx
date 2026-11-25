@@ -21,12 +21,24 @@ import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
+import { crearFiltroTexto } from '@/lib/table-filters'
 import type { ReporteVentaSucursal } from '../types/reportes'
 import SoloPosTag from './SoloPosTag'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Row = ReporteVentaSucursal
+
+// Sin esto TanStack elige el filtro por la primera fila y las columnas numericas filtran como rango.
+const filtroTexto = crearFiltroTexto<Row>({
+  cantidad_ventas: (r) => formatNumber(r.cantidad_ventas),
+  unidades: (r) => formatNumber(r.unidades),
+  total_bruto: (r) => formatCurrency(Number(r.total_bruto)),
+  descuento_total: (r) => formatCurrency(Number(r.descuento_total)),
+  total_neto: (r) => formatCurrency(Number(r.total_neto)),
+  total_cliente: (r) => (r.total_cliente == null ? null : formatCurrency(Number(r.total_cliente))),
+  total_global: (r) => formatCurrency(Number(r.total_global ?? r.total_neto)),
+})
 
 type Props = {
   data: Row[]
@@ -104,6 +116,7 @@ export default function PorVendedorTable({ data, isLoading }: Props) {
     getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
+    defaultColumn: { filterFn: filtroTexto },
   })
 
   // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.

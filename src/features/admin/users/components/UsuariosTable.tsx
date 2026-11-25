@@ -1,5 +1,6 @@
 'use no memo';
 import { useState } from 'react'
+import { crearFiltroTexto, normalizarTexto } from '@/lib/table-filters'
 import {
   useReactTable,
   getCoreRowModel,
@@ -62,6 +63,16 @@ function PresenceDot({ sessions }: { sessions: number }) {
         )}
       />
     </span>
+  )
+}
+
+const filtroTexto = crearFiltroTexto<Usuario>()
+
+/** Buscador de la tabla: nombre, usuario, correo y rol, sin importar mayusculas ni tildes. */
+const coincideUsuario = (usuario: Usuario, texto: string) => {
+  const buscado = normalizarTexto(texto)
+  return !buscado || [usuario.fullName, usuario.username, usuario.email, usuario.role].some(
+    (valor) => normalizarTexto(valor).includes(buscado),
   )
 }
 
@@ -193,6 +204,8 @@ export default function UsuariosTable({ data, isLoading, online }: Props) {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
+    defaultColumn: { filterFn: filtroTexto },
+    globalFilterFn: (row, _columnId, filterValue: string) => coincideUsuario(row.original, filterValue),
   })
 
   // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.

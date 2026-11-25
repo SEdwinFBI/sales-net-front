@@ -21,12 +21,21 @@ import { Input } from '@/components/ui/input'
 import { ArrowUpDown, SearchX, ChevronRight, ChevronDown } from 'lucide-react'
 import TablePagination from '@/components/shared/table/TablePagination'
 import { formatCurrency, formatNumber } from '@/helpers/money'
+import { crearFiltroTexto } from '@/lib/table-filters'
 import type { ReporteVentaItem } from '../types/reportes'
 import { formatDisplayDateTime } from '@/lib/dates'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
 import { paginationTool, tablePagination } from '@/features/agent/pagination-tools'
 
 type Row = ReporteVentaItem
+
+// Sin esto TanStack elige el filtro por la primera fila y las columnas numericas filtran como rango.
+const filtroTexto = crearFiltroTexto<Row>({
+  unidades: (r) => formatNumber(r.unidades),
+  total_bruto: (r) => formatCurrency(Number(r.total_bruto)),
+  descuento_total: (r) => formatCurrency(Number(r.descuento_total)),
+  total_neto: (r) => formatCurrency(Number(r.total_neto)),
+})
 
 type Props = {
   data: Row[]
@@ -78,6 +87,7 @@ export default function PorVarianteTable({ data, isLoading }: Props) {
     getExpandedRowModel: getExpandedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
+    defaultColumn: { filterFn: filtroTexto },
   })
 
   // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.

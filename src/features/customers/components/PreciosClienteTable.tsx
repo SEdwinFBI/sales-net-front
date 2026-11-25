@@ -19,6 +19,7 @@ import { useCustomerPricesStore } from '../store/useCustomerPricesStore'
 import type { ClienteVariantePrecioResponse } from '../types/customer-prices'
 import { formatCurrency } from '@/helpers/money'
 import { formatDisplayDate } from '@/lib/dates'
+import { crearFiltroTexto } from '@/lib/table-filters'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -59,6 +60,15 @@ type Props = {
 }
 
 type TabFilter = 'todos' | 'configurados' | 'sin_configurar'
+
+// Sin esto TanStack elige el filtro por la primera fila: los precios filtran como rango y la fecha nula como igualdad.
+const filtroTexto = crearFiltroTexto<ClienteVariantePrecioResponse>({
+  articulo: (r) => `${r.articulo} ${r.sku ?? ''}`,
+  precio_base: (r) => formatCurrency(r.precio_base),
+  precio_cliente: (r) => formatCurrency(r.tiene_config && r.precio_cliente !== null ? r.precio_cliente : r.precio_base),
+  ahorro: (r) => formatCurrency(r.ahorro),
+  fecha_actualizacion: (r) => (r.fecha_actualizacion ? formatDisplayDate(r.fecha_actualizacion) : null),
+})
 
 export default function PreciosClienteTable({
   customerId,
@@ -309,6 +319,7 @@ export default function PreciosClienteTable({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    defaultColumn: { filterFn: filtroTexto },
     initialState: {
       pagination: {
         pageSize: 10,

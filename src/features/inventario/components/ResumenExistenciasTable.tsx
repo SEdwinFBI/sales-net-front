@@ -20,6 +20,7 @@ import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { formatNumber } from '@/helpers/money'
+import { crearFiltroTexto } from '@/lib/table-filters'
 import { getStockTextClass } from '@/lib/stock-status'
 import type { ResumenFilaExistencias, ResumenTotales } from '../types/inventario'
 import { useAgentTools } from '@/features/agent/registry/useAgentTools'
@@ -32,6 +33,8 @@ type Props = {
   /** Rotula que "Vendido" cuenta sólo las compras del cliente filtrado. */
   filtradoPorCliente?: boolean
 }
+
+const filtroTexto = crearFiltroTexto<ResumenFilaExistencias>()
 
 export default function ResumenExistenciasTable({
   data,
@@ -96,6 +99,7 @@ export default function ResumenExistenciasTable({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 25 } },
+    defaultColumn: { filterFn: filtroTexto },
   })
 
   // Paginación para el agente: leer la página visible y cambiar de página o de tamaño.
@@ -124,6 +128,21 @@ export default function ResumenExistenciasTable({
   }
 
   const numericas = new Set(['habia', 'entradas', 'salidas', 'vendido', 'hay'])
+
+  // Con filtros activos el pie suma solo lo que se ve; sin filtros usa los totales exactos del servidor.
+  const filtrado = columnFilters.length > 0
+  const totalesVisibles = filtrado
+    ? table.getFilteredRowModel().rows.reduce(
+      (acc, { original: f }) => ({
+        habia: acc.habia + f.habia,
+        entradas: acc.entradas + f.entradas,
+        salidas: acc.salidas + f.salidas,
+        vendido: acc.vendido + f.vendido,
+        hay: acc.hay + f.hay,
+      }),
+      { habia: 0, entradas: 0, salidas: 0, vendido: 0, hay: 0 },
+    )
+    : totales
 
   return (
     <>
@@ -182,15 +201,15 @@ export default function ResumenExistenciasTable({
             ))}
           </TableBody>
 
-          {totales && (
+          {totalesVisibles && (
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={3} className="font-semibold">TOTAL</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totales.habia)}</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totales.entradas)}</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totales.salidas)}</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totales.vendido)}</TableCell>
-                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totales.hay)}</TableCell>
+                <TableCell colSpan={3} className="font-semibold">{filtrado ? 'TOTAL (filtrado)' : 'TOTAL'}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totalesVisibles.habia)}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totalesVisibles.entradas)}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totalesVisibles.salidas)}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totalesVisibles.vendido)}</TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">{formatNumber(totalesVisibles.hay)}</TableCell>
               </TableRow>
             </TableFooter>
           )}
