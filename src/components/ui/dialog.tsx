@@ -51,26 +51,31 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-80 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl border border-border/80 bg-popover p-5 text-sm text-popover-foreground shadow-elevated duration-150 outline-none sm:max-w-md sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // Alto maximo y desplazamiento: un formulario largo no se sale de la pantalla (ni la X ni los botones).
+          "fixed top-1/2 left-1/2 z-80 flex flex-col *:shrink-0 max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain rounded-2xl border border-border/80 bg-popover p-5 text-sm text-popover-foreground shadow-elevated duration-150 outline-none sm:max-w-md sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
-                size="icon-sm"
-              />
-            }
-          >
-            <XIcon />
-            <span className="sr-only">Cerrar</span>
-          </DialogPrimitive.Close>
+          // La X se ve arriba y queda fija al desplazarse (order-first), pero sigue al final en el orden del foco.
+          // Alto 0 y -mb-4 (anula el gap): no mueve el contenido.
+          <div className="sticky top-5 z-10 order-first -mb-4 h-0 self-end sm:top-6">
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              render={
+                <Button
+                  variant="ghost"
+                  className="absolute -top-2 -right-2 bg-popover/90 text-muted-foreground backdrop-blur-sm hover:text-foreground"
+                  size="icon-sm"
+                />
+              }
+            >
+              <XIcon />
+              <span className="sr-only">Cerrar</span>
+            </DialogPrimitive.Close>
+          </div>
         )}
       </DialogPrimitive.Popup>
     </DialogPortal>
